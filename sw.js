@@ -1,5 +1,5 @@
-const CACHE_NAME='zipper-app-v11';
-const APP_SHELL=['./','./index.html','./styles.css','./app.js','./routes.js','./manifest.json','./data/zipper-seed.json'];
+const CACHE_NAME='zipper-app-v12';
+const APP_SHELL=['./','./index.html','./styles.css','./app.js','./routes.js','./navigation.js','./manifest.json','./data/zipper-seed.json'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(APP_SHELL)));
