@@ -1,4 +1,4 @@
-const CACHE_NAME='zipper-app-v16';
+const CACHE_NAME='zipper-app-v17';
 const APP_SHELL=['./','./index.html','./styles.css','./app.js','./routes.js','./navigation.js','./manifest.json','./data/zipper-seed.json'];
 
 self.addEventListener('install',event=>{
