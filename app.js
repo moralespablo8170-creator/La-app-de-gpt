@@ -6,11 +6,11 @@ let editingProductId=null;
 const DEFAULT_CATEGORIES=['Tabaquería','Caramelos','Arcor','Nestlé','Remedios','Alcohol'];
 function getCategories(){const saved=readArray('zipperCategorias').filter(x=>typeof x==='string'&&x.trim()).map(x=>x.trim());return [...new Set([...DEFAULT_CATEGORIES,...saved])]}
 function normalizeProductCategory(name,category){
- const n=String(name??'').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/[-_]/g,' ');
+ const n=String(name??'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[-_]/g,' ');
  const current=String(category??'').trim();
  if(/alcohol/.test(n)) return 'Alcohol';
- if(/(2\\s*en\\s*1|2\\s*en\\s*uno|dos\\s*en\\s*uno)/.test(n) && /caramelos|alcohol/.test(current.toLowerCase())) return 'Alcohol';
- if(/(triton|kuky|super\\s*8|kit\\s*-?\\s*kat|sahne\\s*-?\\s*nuss|trencito|cracker|galleta\\s+vino|conquista\\s+rollo)/.test(n)) return 'Nestlé';
+ if(/(2\s*en\s*1|2\s*en\s*uno|dos\s*en\s*uno)/.test(n) && /caramelos|alcohol/.test(current.toLowerCase())) return 'Alcohol';
+ if(/(triton|kuky|super\s*8|kit\s*-?\s*kat|sahne\s*-?\s*nuss|trencito|cracker|galleta\s+vino|conquista\s+rollo)/.test(n)) return 'Nestlé';
  return current || 'Caramelos';
 }
 function getProducts(){return readArray('zipperProductos').filter(p=>p&&typeof p==='object'&&p.id!=null&&typeof p.name==='string'&&p.name.trim()&&typeof p.category==='string'&&p.category.trim()).map(p=>({...p,name:p.name.trim(),category:p.category.trim(),pricePurchase:Math.max(0,Number(p.pricePurchase??p.purchasePrice)||0),price:Math.max(0,Number(p.price??p.priceSale)||0),active:p.active!==false}))}
