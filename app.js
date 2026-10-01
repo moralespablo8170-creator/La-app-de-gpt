@@ -104,6 +104,6 @@ function scheduleBackgroundDataLoad(){
  if('requestIdleCallback' in window) requestIdleCallback(run,{timeout:5000});
  else setTimeout(run,3500);
 }
-scheduleBackgroundDataLoad();
+// v21: la carga del seed se desactiva durante el uso para no bloquear el teclado ni la interacción móvil.
 
-if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').then(r=>r.update()).catch(()=>{}));
+// v21: no registrar Service Worker durante la prueba móvil; evita bloqueos por caché/actualizaciones.
