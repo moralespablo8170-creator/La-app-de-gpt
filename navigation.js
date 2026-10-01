@@ -15,6 +15,11 @@
   function init(){
     bind('homeTab',goHome);bind('newTab',goNew);bind('historyTab',goHistory);bind('clientsTab',goClients);bind('productsTab',goProducts);
     bind('dashboardNew',goNew);bind('dashboardHistory',goHistory);bind('dashboardClientsBtn',goClients);bind('dashboardSeeAll',goHistory);
+    document.getElementById('homeTab')?.addEventListener('touchend',goHome,{passive:false});
+    document.getElementById('newTab')?.addEventListener('touchend',goNew,{passive:false});
+    document.getElementById('historyTab')?.addEventListener('touchend',goHistory,{passive:false});
+    document.getElementById('clientsTab')?.addEventListener('touchend',goClients,{passive:false});
+    document.getElementById('productsTab')?.addEventListener('touchend',goProducts,{passive:false});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
