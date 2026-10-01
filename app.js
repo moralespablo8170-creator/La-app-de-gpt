@@ -3,13 +3,14 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&
 const money=n=>new Intl.NumberFormat('es-CL',{style:'currency',currency:'CLP',maximumFractionDigits:0}).format(n||0);
 let editingId=null,editingClientId=null,clientFilter='all';
 let editingProductId=null;
-const DEFAULT_CATEGORIES=['Tabaquería','Caramelos','Arcor','Nestlé','Remedios','Alcohol'];
+const DEFAULT_CATEGORIES=['Tabaquería','Caramelos','Arcor','Nestlé','Remedios'];
 function getCategories(){const saved=readArray('zipperCategorias').filter(x=>typeof x==='string'&&x.trim()).map(x=>x.trim());return [...new Set([...DEFAULT_CATEGORIES,...saved])]}
 function normalizeProductCategory(name,category){
  const n=String(name??'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[-_]/g,' ');
  const current=String(category??'').trim();
- if(/alcohol/.test(n)) return 'Alcohol';
- if(/(2\s*en\s*1|2\s*en\s*uno|dos\s*en\s*uno)/.test(n) && /caramelos|alcohol/.test(current.toLowerCase())) return 'Alcohol';
+ // No se comercializan bebidas ni líquidos en este catálogo.
+ // Cualquier categoría antigua "Alcohol" se devuelve a Caramelos para limpiar la migración anterior.
+ if(current.toLowerCase()==='alcohol') return 'Caramelos';
  if(/(triton|kuky|super\s*8|kit\s*-?\s*kat|sahne\s*-?\s*nuss|trencito|cracker|galleta\s+vino|conquista\s+rollo)/.test(n)) return 'Nestlé';
  return current || 'Caramelos';
 }
@@ -72,14 +73,21 @@ function formatPhoneInput(v){const d=String(v||'').replace(/\D/g,'').replace(/^5
 $('newProductBtn').onclick=()=>{resetProductForm();$('catalogName').focus()};$('addCategoryBtn').onclick=()=>{const name=$('newCategoryName').value.trim();if(!name)return;const cats=getCategories();if(cats.some(c=>c.toLowerCase()===name.toLowerCase())){$('productStatus').textContent='Esa categoría ya existe.';return}cats.push(name);if(writeStorage('zipperCategorias',JSON.stringify(cats))){$('newCategoryName').value='';renderCategoryOptions();$('catalogCategory').value=name;$('productStatus').textContent='Categoría agregada.'}};$('cancelProductEditBtn').onclick=resetProductForm;
 $('clientRut').addEventListener('input',e=>{const value=e.target.value,oldPos=e.target.selectionStart??value.length;e.target.value=formatRutInput(value);const newPos=Math.min(e.target.value.length,oldPos+(e.target.value.length-value.length));e.target.setSelectionRange(newPos,newPos)});
 $('clientPhone').addEventListener('input',e=>{const value=e.target.value,oldPos=e.target.selectionStart??value.length;e.target.value=formatPhoneInput(value);const newPos=Math.min(e.target.value.length,oldPos+(e.target.value.length-value.length));e.target.setSelectionRange(newPos,newPos)});
-function loadZipperSeed(){return fetch('./data/zipper-seed.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('seed');return r.json()}).then(seed=>{if(!seed||!Array.isArray(seed.clients)||!Array.isArray(seed.products))return;const version=String(seed.version||'1');if(localStorage.getItem('zipperSeedVersion')===version)return;const norm=v=>String(v??'').trim().toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'');const phone=v=>{const d=String(v??'').replace(/\\D/g,'');if(d.length===11&&d.startsWith('569'))return '569 '+d.slice(3,7)+' '+d.slice(7);return String(v??'').trim()};const clients=getClients();(seed.clients||[]).forEach(s=>{const rut=String(s.rut||'').trim().toUpperCase(),name=String(s.name||'').trim(),address=String(s.address||'').trim();if(!name)return;const match=(rut&&rut!=='GUIA'?clients.find(c=>String(c.rut||'').toUpperCase()===rut):null)||clients.find(c=>norm(c.name)===norm(name)&&norm(c.address)===norm(address));if(match){if(!match.rut&&rut&&rut!=='GUIA')match.rut=rut;if(!match.phone&&s.phone)match.phone=phone(s.phone);if(!match.address&&address)match.address=address;if(!match.razonSocial&&s.razonSocial)match.razonSocial=s.razonSocial;if(!match.comuna&&s.comuna)match.comuna=s.comuna}else clients.push({...s,id:crypto.randomUUID(),phone:phone(s.phone),active:s.active!==false})});const products=getProducts();products.forEach(p=>{const next=normalizeProductCategory(p.name,p.category);if(next&&p.category!==next)p.category=next});(seed.products||[]).forEach(s=>{const name=String(s.name||'').trim(),cat=normalizeProductCategory(s.name,s.category);if(!name||!cat)return;const match=products.find(p=>norm(p.name)===norm(name)&&norm(p.category)===norm(cat));if(!match)products.push({...s,id:crypto.randomUUID(),pricePurchase:Number(s.pricePurchase)||0,price:Number(s.price)||0,active:s.active!==false})});const cats=[...new Set([...getCategories(),...(seed.categories||[]).filter(x=>typeof x==='string'&&x.trim()),'Alcohol'])];if(writeStorage('zipperClientes',JSON.stringify(clients))&&writeStorage('zipperProductos',JSON.stringify(products))&&writeStorage('zipperCategorias',JSON.stringify(cats))){localStorage.setItem('zipperSeedVersion',version);refreshClientSelect();renderCategoryOptions();renderProducts();renderClients();renderDashboard()}}).catch(()=>{});}
+function loadZipperSeed(){return fetch('./data/zipper-seed.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('seed');return r.json()}).then(seed=>{if(!seed||!Array.isArray(seed.clients)||!Array.isArray(seed.products))return;const version=String(seed.version||'1');if(localStorage.getItem('zipperSeedVersion')===version)return;const norm=v=>String(v??'').trim().toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'');const phone=v=>{const d=String(v??'').replace(/\\D/g,'');if(d.length===11&&d.startsWith('569'))return '569 '+d.slice(3,7)+' '+d.slice(7);return String(v??'').trim()};const clients=getClients();(seed.clients||[]).forEach(s=>{const rut=String(s.rut||'').trim().toUpperCase(),name=String(s.name||'').trim(),address=String(s.address||'').trim();if(!name)return;const match=(rut&&rut!=='GUIA'?clients.find(c=>String(c.rut||'').toUpperCase()===rut):null)||clients.find(c=>norm(c.name)===norm(name)&&norm(c.address)===norm(address));if(match){if(!match.rut&&rut&&rut!=='GUIA')match.rut=rut;if(!match.phone&&s.phone)match.phone=phone(s.phone);if(!match.address&&address)match.address=address;if(!match.razonSocial&&s.razonSocial)match.razonSocial=s.razonSocial;if(!match.comuna&&s.comuna)match.comuna=s.comuna}else clients.push({...s,id:crypto.randomUUID(),phone:phone(s.phone),active:s.active!==false})});const products=getProducts();products.forEach(p=>{const next=normalizeProductCategory(p.name,p.category);if(next&&p.category!==next)p.category=next});(seed.products||[]).forEach(s=>{const name=String(s.name||'').trim(),cat=normalizeProductCategory(s.name,s.category);if(!name||!cat)return;const match=products.find(p=>norm(p.name)===norm(name)&&norm(p.category)===norm(cat));if(!match)products.push({...s,id:crypto.randomUUID(),pricePurchase:Number(s.pricePurchase)||0,price:Number(s.price)||0,active:s.active!==false})});const cats=[...new Set([...getCategories(),...(seed.categories||[]).filter(x=>typeof x==='string'&&x.trim()&&String(x).toLowerCase()!=='alcohol')])];if(writeStorage('zipperClientes',JSON.stringify(clients))&&writeStorage('zipperProductos',JSON.stringify(products))&&writeStorage('zipperCategorias',JSON.stringify(cats))){localStorage.setItem('zipperSeedVersion',version);refreshClientSelect();renderCategoryOptions();renderProducts();renderClients();renderDashboard()}}).catch(()=>{});}
 loadZipperSeed();
 function migrateStoredProductCategories(){
  const ps=getProducts();
  let changed=false;
- ps.forEach(p=>{const next=normalizeProductCategory(p.name,p.category);if(next&&p.category!==next){p.category=next;changed=true}});
+ ps.forEach(p=>{
+   const next=normalizeProductCategory(p.name,p.category);
+   if(next&&p.category!==next){p.category=next;changed=true}
+ });
+ if(changed) writeStorage('zipperProductos',JSON.stringify(ps));
+ const cats=getCategories().filter(x=>String(x).toLowerCase()!=='alcohol');
+ if(JSON.stringify(cats)!==JSON.stringify(getCategories())){
+   writeStorage('zipperCategorias',JSON.stringify(cats));
+ }
  if(changed){
-   writeStorage('zipperProductos',JSON.stringify(ps));
    renderCategoryOptions();
    refreshProductSelect();
    if(typeof window.renderProducts==='function')window.renderProducts();
