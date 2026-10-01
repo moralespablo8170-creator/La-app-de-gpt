@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Prueba de teclado - Distribuidora Zipper</title>
+<style>
+body{font-family:system-ui,sans-serif;margin:0;padding:20px;background:#f3f4f6;color:#111}
+main{max-width:520px;margin:auto;background:#fff;padding:20px;border-radius:16px}
+input{display:block;width:100%;box-sizing:border-box;margin:10px 0 18px;padding:14px;font-size:18px;border:1px solid #bbb;border-radius:10px}
+p{line-height:1.4}
+</style>
+</head>
+<body>
+<main>
+<h2>Prueba directa del teclado</h2>
+<p>Esta pantalla NO carga la aplicación, NO usa JavaScript de la aplicación, NO usa datos, NO usa Service Worker y NO usa estilos de la aplicación.</p>
+<label>Nombre de prueba
+<input id="test1" type="text" autocomplete="off" placeholder="Escribe PRUEBA aquí">
+</label>
+<label>RUT de prueba
+<input id="test2" type="text" inputmode="text" autocomplete="off" placeholder="Escribe 123 aquí">
+</label>
+<p id="result">Si puedes escribir normalmente, el teclado y Chrome están funcionando y el problema está dentro de la aplicación.</p>
+<p><a href="./?v=22">Volver a la aplicación</a></p>
+</main>
+</body>
+</html>
