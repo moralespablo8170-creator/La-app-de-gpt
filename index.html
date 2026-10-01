@@ -16,7 +16,7 @@
 <section id="newView" class="hidden">
 <div class="flow-card" id="newFlow"><div class="flow-step active"><b>1</b><span>Cliente</span></div><div class="flow-line"></div><div class="flow-step"><b>2</b><span>Productos</span></div><div class="flow-line"></div><div class="flow-step"><b>3</b><span>Total</span></div><div class="flow-line"></div><div class="flow-step"><b>4</b><span>Guardar</span></div></div>
 <section class="card new-client-card"><div class="section-title"><div><p class="step-kicker">PASO 1</p><h2>Seleccionar cliente</h2></div></div>
-<div class="grid two"><label>Cliente<select id="clienteSelect"><option value="">Selecciona un cliente</option></select></label><label>Fecha<input id="fecha" type="date"></label></div>
+<div class="grid two"><label>Cliente<select id="clienteSelect"><option value="">Selecciona un cliente</option></select><button class="secondary client-new-from-sale" id="newClientFromSaleBtn" type="button">＋ Nuevo cliente</button></label><label>Fecha<input id="fecha" type="date"></label></div>
 <button class="primary wide step-next" id="toProductsBtn" type="button">Continuar a productos →</button>
 <div class="grid two"><label>Comprobante N.º<input id="folio" type="number" min="1" step="1"></label><label>Vendedor<input id="vendedor" placeholder="Nombre" maxlength="120" autocomplete="name"></label></div></section>
 <section class="card product-picker"><div class="section-title"><div><p class="step-kicker">PASO 2</p><h2>Agregar productos</h2></div><button class="secondary" id="manualAddBtn" type="button">+ Manual</button></div>
