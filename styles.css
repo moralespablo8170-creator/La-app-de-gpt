@@ -17,3 +17,6 @@
   @page{size:80mm auto;margin:3mm 0}
 }
 .phone-input{display:flex;align-items:center;border:1px solid #ccc;border-radius:8px;overflow:hidden}.phone-input span{padding:10px 8px;font-weight:600;background:#f3f3f3;color:#444}.phone-input input{border:0!important;border-radius:0!important;flex:1;min-width:0}
+
+:focus-visible{outline:3px solid #2563eb;outline-offset:2px}
+button:disabled{opacity:.6;cursor:not-allowed}
