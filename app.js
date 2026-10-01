@@ -73,6 +73,31 @@ function formatPhoneInput(v){const d=String(v||'').replace(/\D/g,'').replace(/^5
 $('newProductBtn').onclick=()=>{resetProductForm();$('catalogName').focus()};$('addCategoryBtn').onclick=()=>{const name=$('newCategoryName').value.trim();if(!name)return;const cats=getCategories();if(cats.some(c=>c.toLowerCase()===name.toLowerCase())){$('productStatus').textContent='Esa categoría ya existe.';return}cats.push(name);if(writeStorage('zipperCategorias',JSON.stringify(cats))){$('newCategoryName').value='';renderCategoryOptions();$('catalogCategory').value=name;$('productStatus').textContent='Categoría agregada.'}};$('cancelProductEditBtn').onclick=resetProductForm;
 $('clientRut').addEventListener('input',e=>{const value=e.target.value,oldPos=e.target.selectionStart??value.length;e.target.value=formatRutInput(value);const newPos=Math.min(e.target.value.length,oldPos+(e.target.value.length-value.length));e.target.setSelectionRange(newPos,newPos)});
 $('clientPhone').addEventListener('input',e=>{const value=e.target.value,oldPos=e.target.selectionStart??value.length;e.target.value=formatPhoneInput(value);const newPos=Math.min(e.target.value.length,oldPos+(e.target.value.length-value.length));e.target.setSelectionRange(newPos,newPos)});
+// Mejora de compatibilidad de campos en Android/Chrome móvil.
+// Algunos navegadores pueden dejar el campo enfocado sin mostrar el teclado.
+// Forzamos el foco desde el gesto táctil y declaramos explícitamente el modo de entrada.
+function enableMobileInputs(){
+  const selectors='input:not([type="hidden"]):not([disabled]), textarea:not([disabled])';
+  document.querySelectorAll(selectors).forEach(el=>{
+    el.readOnly=false;
+    el.removeAttribute('readonly');
+    el.style.webkitUserSelect='text';
+    el.style.userSelect='text';
+    el.style.pointerEvents='auto';
+    el.addEventListener('pointerdown',()=>{
+      requestAnimationFrame(()=>{
+        try{
+          el.focus({preventScroll:true});
+        }catch(e){
+          el.focus();
+        }
+      });
+    },{passive:true});
+  });
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',enableMobileInputs);
+else enableMobileInputs();
+
 function loadZipperSeed(){return fetch('./data/zipper-seed.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('seed');return r.json()}).then(seed=>{if(!seed||!Array.isArray(seed.clients)||!Array.isArray(seed.products))return;const version=String(seed.version||'1');if(localStorage.getItem('zipperSeedVersion')===version)return;const norm=v=>String(v??'').trim().toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'');const phone=v=>{const d=String(v??'').replace(/\\D/g,'');if(d.length===11&&d.startsWith('569'))return '569 '+d.slice(3,7)+' '+d.slice(7);return String(v??'').trim()};const clients=getClients();(seed.clients||[]).forEach(s=>{const rut=String(s.rut||'').trim().toUpperCase(),name=String(s.name||'').trim(),address=String(s.address||'').trim();if(!name)return;const match=(rut&&rut!=='GUIA'?clients.find(c=>String(c.rut||'').toUpperCase()===rut):null)||clients.find(c=>norm(c.name)===norm(name)&&norm(c.address)===norm(address));if(match){if(!match.rut&&rut&&rut!=='GUIA')match.rut=rut;if(!match.phone&&s.phone)match.phone=phone(s.phone);if(!match.address&&address)match.address=address;if(!match.razonSocial&&s.razonSocial)match.razonSocial=s.razonSocial;if(!match.comuna&&s.comuna)match.comuna=s.comuna}else clients.push({...s,id:crypto.randomUUID(),phone:phone(s.phone),active:s.active!==false})});const products=getProducts();products.forEach(p=>{const next=normalizeProductCategory(p.name,p.category);if(next&&p.category!==next)p.category=next});(seed.products||[]).forEach(s=>{const name=String(s.name||'').trim(),cat=normalizeProductCategory(s.name,s.category);if(!name||!cat)return;const match=products.find(p=>norm(p.name)===norm(name)&&norm(p.category)===norm(cat));if(!match)products.push({...s,id:crypto.randomUUID(),pricePurchase:Number(s.pricePurchase)||0,price:Number(s.price)||0,active:s.active!==false})});const cats=[...new Set([...getCategories(),...(seed.categories||[]).filter(x=>typeof x==='string'&&x.trim()&&String(x).toLowerCase()!=='alcohol')])];if(writeStorage('zipperClientes',JSON.stringify(clients))&&writeStorage('zipperProductos',JSON.stringify(products))&&writeStorage('zipperCategorias',JSON.stringify(cats))){localStorage.setItem('zipperSeedVersion',version);refreshClientSelect();renderCategoryOptions();renderProducts();renderClients();renderDashboard()}}).catch(()=>{});}
 loadZipperSeed();
 function migrateStoredProductCategories(){
