@@ -32,7 +32,7 @@
 
 <section class="card hidden" id="productsView"><div class="section-title"><div><p class="step-kicker">CATÁLOGO</p><h2>Productos</h2></div><button class="primary" id="newProductBtn" type="button">+ Producto</button></div>
 <p class="muted">Organiza tu catálogo por categoría o empresa y agrega productos rápidamente a una venta.</p>
-<div class="grid two"><label>Producto<input id="catalogName" placeholder="Nombre del producto" maxlength="120" autocomplete="off"></label><label>Precio<input id="catalogPrice" type="number" min="0" step="1" inputmode="decimal" placeholder="0"></label></div>
+<div class="grid three"><label>Producto<input id="catalogName" placeholder="Nombre del producto" maxlength="120" autocomplete="off"></label><label>Precio compra<input id="catalogPurchasePrice" type="number" min="0" step="1" inputmode="decimal" placeholder="0"></label><label>Precio venta<input id="catalogPrice" type="number" min="0" step="1" inputmode="decimal" placeholder="0"></label></div>
 <label>Categoría<select id="catalogCategory"></select></label>
 <div class="actions"><button class="primary wide" id="saveProductBtn" type="button">Guardar producto</button><button class="secondary wide hidden" id="cancelProductEditBtn" type="button">Cancelar edición</button></div><p class="status" id="productStatus" role="status" aria-live="polite"></p>
 <div class="category-manager"><div class="section-title"><h3>Categorías / empresas</h3></div><div class="product-category-add"><input id="newCategoryName" maxlength="60" placeholder="Ej.: Arcor, Nestlé, Tabaquería"><button class="secondary" id="addCategoryBtn" type="button">Agregar</button></div><div id="categoryChips" class="category-chips"></div></div>
