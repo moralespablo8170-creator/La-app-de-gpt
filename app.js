@@ -33,5 +33,5 @@ function importBackup(file){const reader=new FileReader();reader.onload=()=>{try
 function formatRutInput(v){let s=String(v||'').toUpperCase().replace(/[^0-9K]/g,'');if(!s)return '';const dv=s.slice(-1),body=s.slice(0,-1).replace(/K/g,'');if(!body)return dv==='K'?'K':body;const grouped=body.replace(/\B(?=(\d{3})+(?!\d))/g,'.');return grouped+'-'+dv}
 function formatPhoneInput(v){const d=String(v||'').replace(/\D/g,'').replace(/^569/,'').slice(0,8);if(!d)return '';return d.slice(0,4)+(d.length>4?' '+d.slice(4):'')}
 $('clientRut').addEventListener('input',e=>{const value=e.target.value,oldPos=e.target.selectionStart??value.length;e.target.value=formatRutInput(value);const newPos=Math.min(e.target.value.length,oldPos+(e.target.value.length-value.length));e.target.setSelectionRange(newPos,newPos)});
-$('clientPhone').addEventListener('input',e=>{e.target.value=formatPhoneInput(e.target.value)});
+$('clientPhone').addEventListener('input',e=>{const value=e.target.value,oldPos=e.target.selectionStart??value.length;e.target.value=formatPhoneInput(value);const newPos=Math.min(e.target.value.length,oldPos+(e.target.value.length-value.length));e.target.setSelectionRange(newPos,newPos)});
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
