@@ -75,20 +75,25 @@ $('clientRut').addEventListener('input',e=>{const value=e.target.value,oldPos=e.
 $('clientPhone').addEventListener('input',e=>{const value=e.target.value,oldPos=e.target.selectionStart??value.length;e.target.value=formatPhoneInput(value);const newPos=Math.min(e.target.value.length,oldPos+(e.target.value.length-value.length));e.target.setSelectionRange(newPos,newPos)});
 // Solicita el teclado virtual cuando el usuario toca un campo editable.
 // Se ejecuta dentro del gesto del usuario y usa la API disponible en Chrome Android.
-function requestMobileKeyboard(el){
-  if(!el || el.disabled || el.readOnly) return;
-  try{ el.focus({preventScroll:true}); }catch(e){ el.focus(); }
-  try{
-    if(navigator.virtualKeyboard && typeof navigator.virtualKeyboard.show==='function'){
-      navigator.virtualKeyboard.show();
-    }
-  }catch(e){}
-}
 function setupMobileKeyboard(){
-  document.querySelectorAll('input:not([type="hidden"]):not([disabled]), textarea:not([disabled])').forEach(el=>{
-    el.addEventListener('click',()=>requestMobileKeyboard(el));
-    el.addEventListener('touchend',()=>requestMobileKeyboard(el),{passive:true});
-  });
+  const fields=()=>document.querySelectorAll('input:not([type="hidden"]):not([disabled]), textarea:not([disabled])');
+  const focusField=el=>{
+    if(!el || el.disabled || el.readOnly) return;
+    try{el.focus();}catch(e){}
+  };
+  const bind=el=>{
+    if(el.dataset.keyboardBound==='1') return;
+    el.dataset.keyboardBound='1';
+    // En Chrome Android el foco debe ocurrir directamente dentro del gesto.
+    el.addEventListener('pointerdown',()=>focusField(el),{passive:true});
+    el.addEventListener('click',()=>focusField(el),{passive:true});
+  };
+  fields().forEach(bind);
+  // Los campos creados dinámicamente también quedan cubiertos.
+  if(!window._keyboardObserver){
+    window._keyboardObserver=new MutationObserver(()=>fields().forEach(bind));
+    window._keyboardObserver.observe(document.body,{childList:true,subtree:true});
+  }
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setupMobileKeyboard);
 else setupMobileKeyboard();
