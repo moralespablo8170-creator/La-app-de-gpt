@@ -5,3 +5,14 @@
 
 @media(max-width:600px){.client-filters{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.client-filters .client-filter{width:100%;padding:10px 6px;min-height:42px;font-size:14px}.client-search{min-height:42px}}
 .delete-receipt{color:#991b1b;background:#fee2e2}.delete-receipt:active{background:#fecaca}
+
+/* Impresión optimizada para comprobantes térmicos */
+@media print{
+  html,body{width:80mm!important;min-width:80mm!important;margin:0!important;padding:0!important}
+  .app{width:80mm!important;max-width:80mm!important;padding:0 3mm!important;margin:0!important}
+  .print-receipt{width:100%!important;overflow:visible!important;display:block!important}
+  .print-lines>div{break-inside:avoid;page-break-inside:avoid}
+  .print-total{break-inside:avoid;page-break-inside:avoid}
+  .print-notes{white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word}
+  @page{size:80mm auto;margin:3mm 0}
+}
