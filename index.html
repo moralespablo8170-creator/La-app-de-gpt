@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
 <title>Distribuidora Zipper</title>
-<link rel="stylesheet" href="styles.css?v=35">
+<link rel="stylesheet" href="styles.css?v=37">
 </head>
 <body>
 <main class="app">
@@ -16,10 +16,19 @@
 
 <section id="homeView" class="view">
 <section class="hero"><div class="hero-logo">DZ</div><div><div class="eyebrow">INICIO</div><h2>Distribuidora Zipper</h2><p>Ventas por ruta, cliente y carrito.</p></div></section>
-<section class="card"><div class="section-title"><div><div class="kicker">VENTA DIRECTA</div><h2>Rutas</h2></div></div>
-<div class="grid two"><label>Semana<select id="homeWeek"><option value="">Todas</option><option value="1">Semana 1</option><option value="2">Semana 2</option><option value="3">Semana 3</option><option value="4">Semana 4</option></select></label><label>Día<select id="homeDay"><option value="">Todos</option><option>Lunes</option><option>Martes</option><option>Miércoles</option><option>Jueves</option><option>Viernes</option></select></label></div>
-<div class="grid two"><label>Buscar por nombre<input id="homeName" placeholder="Nombre del cliente"></label><label>Buscar por dirección<input id="homeAddress" placeholder="Dirección"></label></div><div id="routeClients" class="client-route-list"></div></section>
-<section id="cartSection" class="card hidden"><div class="section-title"><div><div class="kicker">CARRITO</div><h2 id="cartClientName">Cliente</h2><p id="cartClientMeta" class="muted-inline"></p></div><button id="closeCart" class="secondary" type="button">Cambiar</button></div><div id="cartItems" class="cart-items"></div><div class="cart-total"><span>Subtotal / total</span><strong id="cartTotal">$0</strong></div><div class="cart-actions"><button id="printSale" class="secondary" type="button">Imprimir</button><button id="saveSale" class="primary" type="button">Guardar venta</button></div><p id="saleStatus" class="status"></p></section>
+<section id="routeSetup" class="card"><div class="section-title"><div><div class="kicker">INICIO DE RUTA</div><h2>Selecciona tu ruta de hoy</h2><p class="muted">Se selecciona una sola vez. Quedará activa durante el día.</p></div></div>
+<div class="grid two"><label>Semana<select id="homeWeek"><option value="">Seleccionar semana</option><option value="A">Semana A</option><option value="B">Semana B</option></select></label><label>Día<select id="homeDay"><option value="">Seleccionar día</option><option>Lunes</option><option>Martes</option><option>Miércoles</option><option>Jueves</option><option>Viernes</option></select></label></div>
+<button id="routeStart" class="primary wide route-start" type="button">Comenzar ruta</button>
+</section>
+<section id="activeRouteBox" class="card hidden"><div class="route-header"><div><div class="kicker">RUTA ACTIVA</div><h2 id="activeRouteLabel">Semana A · Lunes</h2></div><div class="route-tools"><button id="visitedButton" class="secondary" type="button">Visitados (0)</button><button id="otherRoute" class="ghost" type="button">Buscar otro cliente de otra ruta</button></div></div>
+<div class="grid two route-search"><label>Buscar cliente por nombre<input id="homeName" placeholder="Escribe el nombre"></label><label>Buscar por dirección<input id="homeAddress" placeholder="Dirección"></label></div>
+<div id="routeClients" class="client-route-list"></div></section>
+<section id="cartSection" class="card hidden"><div class="section-title"><div><div class="kicker">CARRITO</div><h2 id="cartClientName">Cliente</h2><p id="cartClientMeta" class="muted-inline"></p></div><button id="closeCart" class="secondary" type="button">Cambiar</button></div>
+<div class="cart-search-box"><label>Buscar producto por nombre<input id="cartSearchName" autocomplete="off" placeholder="Escribe 2 letras o más..."></label><div id="productSuggestions" class="product-suggestions"></div><label>Categoría<select id="cartCategory"><option value="">Todas las categorías</option></select></label></div>
+<div id="cartItems" class="cart-items"></div>
+<div class="cart-footer"><div class="cart-total"><span>Subtotal / total</span><strong id="cartTotal">$0</strong></div><div class="cart-actions"><button id="saveSale" class="primary wide" type="button">Guardar venta</button></div><p id="saleStatus" class="status"></p></div>
+</section>
+<div id="saveOptions" class="save-options hidden"><div class="save-options-card"><div class="kicker">VENTA LISTA</div><h3>¿Qué deseas hacer?</h3><p class="muted">La venta se guardará en ambos casos.</p><div class="actions"><button id="saveOnly" class="secondary wide" type="button">Solo guardar</button><button id="saveAndPrint" class="primary wide" type="button">Guardar e imprimir</button></div><button id="cancelSave" class="ghost wide" type="button">Cancelar</button></div></div>
 </section>
 
 <section id="cashView" class="view hidden">
@@ -40,13 +49,13 @@
 
 <section id="clientsView" class="view hidden">
 <section class="card"><div class="section-title"><div><div class="kicker">CLIENTES</div><h2 id="clientFormTitle">Nuevo cliente</h2></div><button id="newClient" class="primary" type="button">＋ Nuevo cliente</button></div>
-<div class="grid two"><label>Nombre<input id="clientName" maxlength="120"></label><label>RUT<input id="clientRut" placeholder="123456785" maxlength="12" inputmode="numeric" autocomplete="off"></label><label>Teléfono<input id="clientPhone" placeholder="56912345678" maxlength="12" inputmode="numeric" autocomplete="off"></label><label>Dirección<input id="clientAddress" maxlength="200"></label><label>Semana<select id="clientWeek"><option value="1">Semana 1</option><option value="2">Semana 2</option><option value="3">Semana 3</option><option value="4">Semana 4</option></select></label><label>Día<select id="clientDay"><option value="">Sin asignar</option><option>Lunes</option><option>Martes</option><option>Miércoles</option><option>Jueves</option><option>Viernes</option></select></label></div>
+<div class="grid two"><label>Nombre<input id="clientName" maxlength="120"></label><label>RUT<input id="clientRut" placeholder="123456785" maxlength="12" inputmode="numeric" autocomplete="off"></label><label>Teléfono<input id="clientPhone" placeholder="56912345678" maxlength="12" inputmode="numeric" autocomplete="off"></label><label>Dirección<input id="clientAddress" maxlength="200"></label><label>Semana<select id="clientWeek"><option value="A">Semana A</option><option value="B">Semana B</option></select></label><label>Día<select id="clientDay"><option value="">Sin asignar</option><option>Lunes</option><option>Martes</option><option>Miércoles</option><option>Jueves</option><option>Viernes</option></select></label></div>
 <div id="clientValidation" class="validation"></div><div class="actions"><button id="saveClient" class="primary wide" type="button">Guardar</button><button id="cancelClient" class="secondary wide hidden" type="button">Cancelar</button></div></section>
-<section class="card"><div class="section-title"><div><div class="kicker">BASE DE DATOS</div><h2>Todos los clientes</h2></div></div><div class="grid two"><label>Buscar por nombre<input id="clientSearchName" placeholder="Nombre del cliente"></label><label>Buscar por dirección<input id="clientSearchAddress" placeholder="Dirección"></label></div><div class="grid two"><label>Semana<select id="filterWeek"><option value="">Todas</option><option value="1">Semana 1</option><option value="2">Semana 2</option><option value="3">Semana 3</option><option value="4">Semana 4</option></select></label><label>Día<select id="filterDay"><option value="">Todos</option><option>Lunes</option><option>Martes</option><option>Miércoles</option><option>Jueves</option><option>Viernes</option></select></label></div><div id="clientList" class="client-list"></div></section>
+<section class="card"><div class="section-title"><div><div class="kicker">BASE DE DATOS</div><h2>Todos los clientes</h2></div></div><div class="grid two"><label>Buscar por nombre<input id="clientSearchName" placeholder="Nombre del cliente"></label><label>Buscar por dirección<input id="clientSearchAddress" placeholder="Dirección"></label></div><div class="grid two"><label>Semana<select id="filterWeek"><option value="">Todas</option><option value="A">Semana A</option><option value="B">Semana B</option></select></label><label>Día<select id="filterDay"><option value="">Todos</option><option>Lunes</option><option>Martes</option><option>Miércoles</option><option>Jueves</option><option>Viernes</option></select></label></div><div id="clientList" class="client-list"></div></section>
 </section>
 
 <section id="historyView" class="view hidden"><section class="card"><div class="section-title"><div><div class="kicker">HISTORIAL</div><h2>Registro</h2></div></div><div class="segmented" id="historyType"><button class="active" data-history="sales" type="button">Ventas</button><button data-history="clients" type="button">Clientes</button><button data-history="products" type="button">Productos</button></div><div class="grid two"><label>Desde<input id="historyFrom" type="date"></label><label>Hasta<input id="historyTo" type="date"></label></div><div id="historyOutput" class="history-list"></div></section></section>
 <section id="printArea" class="print-area hidden"></section>
 </main>
-<script src="app.js?v=35"></script>
+<script src="app.js?v=37"></script>
 </body></html>
