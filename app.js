@@ -9,7 +9,7 @@ function readArray(k){try{const v=JSON.parse(localStorage.getItem(k)||'[]');retu
 function writeArray(k,a){try{localStorage.setItem(k,JSON.stringify(a));return true}catch(e){alert('No se pudo guardar en este dispositivo.');return false}}
 function localDate(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function routeSession(){try{const x=JSON.parse(localStorage.getItem('zipperRutaSesion')||'null');return x&&x.date===localDate()&&x.week&&x.day?x:null}catch(e){return null}}
-function setRouteSession(week,day){localStorage.setItem('zipperRutaSesion',JSON.stringify({date:localDate(),week,day}));showVisited=false;renderHome()}
+function setRouteSession(week,day){if(!week||!day){alert('Selecciona semana y día para comenzar la ruta.');return}localStorage.setItem('zipperRutaSesion',JSON.stringify({date:localDate(),week,day}));exceptionSearch=false;showVisited=false;renderHome()}
 function clearRouteSession(){localStorage.removeItem('zipperRutaSesion');showVisited=false;renderHome()}
 function visitedIds(){return readArray('zipperVisitados-'+localDate())}
 function markVisited(id){const a=visitedIds().map(String);if(!a.includes(String(id)))a.push(String(id));writeArray('zipperVisitados-'+localDate(),a)}
