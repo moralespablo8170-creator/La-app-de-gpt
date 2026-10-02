@@ -16,7 +16,7 @@
 .suggestion strong{font-size:13px}
 .suggestion small{color:#6b7280;font-size:11px}
 .color-dot{width:15px;height:15px;border-radius:50%;display:inline-block;flex:none;border:2px solid #fff;box-shadow:0 0 0 1px #cbd5e1}
-.color-azul{background:#2563eb}.color-rojo{background:#ef4444}.color-verde{background:#22c55e}.color-negro{background:#111827}.color-celeste{background:#38bdf8}.color-rosado{background:#ec4899}.color-naranja{background:#f97316}.color-none{background:#e5e7eb}
+.color-azul{background:#2563eb}.color-aqua{background:#06b6d4}.color-rojo{background:#ef4444}.color-verde{background:#22c55e}.color-negro{background:#111827}.color-celeste{background:#38bdf8}.color-rosado{background:#ec4899}.color-naranja{background:#f97316}.color-none{background:#e5e7eb}
 .product-ident{display:flex;gap:8px;align-items:flex-start}
 .stock-highlight{display:inline-flex;align-items:center;justify-content:center;min-width:84px;padding:8px 10px;border-radius:10px;font-size:12px;font-weight:950;box-shadow:0 1px 3px #0001}
 .offer-text{color:#b45309}
@@ -63,3 +63,6 @@
 .chosen-products{padding:8px;margin:8px 0}
 .cart-items{display:none!important}
 @media(max-width:600px){.draft-controls{grid-template-columns:1fr}.draft-controls button{width:100%}}
+
+/* V40 - stock visible en carrito */
+.product-suggestions .stock-badge,.draft-product .stock-badge,.chosen-line .stock-badge{display:inline-flex;align-items:center;width:max-content;margin-top:2px}
