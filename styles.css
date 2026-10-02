@@ -76,3 +76,9 @@
 .brand-logo{display:block;width:100%;max-width:760px;height:auto;max-height:210px;object-fit:contain}
 .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 @media(max-width:600px){.brand-header{min-height:155px;padding:8px 5px 10px;border-radius:16px}.brand-logo{width:100%;max-width:none;max-height:170px}}
+.stock-badge{display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;padding:5px 8px;border-radius:999px;line-height:1.1}
+.stock-ok{background:#dcfce7;color:#166534;border:1px solid #86efac}
+.stock-low{background:#fef3c7;color:#92400e;border:1px solid #fcd34d}
+.stock-zero{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
+.stock-min-label{font-size:10px;font-weight:800;color:#64748b;white-space:nowrap}
+.suggestion .stock-badge,.chosen-line .stock-badge,.draft-product .stock-badge{font-size:10px;margin-left:3px}
