@@ -34,3 +34,17 @@
  .cart-footer{bottom:70px}
 }
 .exception-search{background:#f8fafc;border:1px dashed #cbd5e1;border-radius:12px;padding:10px;margin:10px 0}.exception-search .kicker{margin-bottom:6px}
+/* V38 */
+.chosen-products{margin:14px 0;padding:12px;border:1px solid #d1d5db;border-radius:14px;background:#f9fafb}
+.chosen-list{display:grid;gap:8px;margin-top:8px}
+.chosen-line{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px;border-radius:10px;background:#fff;border:1px solid #e5e7eb}
+.chosen-line>div:first-child{display:flex;flex-direction:column;gap:3px;min-width:0}
+.chosen-line strong{overflow-wrap:anywhere}
+.chosen-line span{font-size:.88rem;color:#6b7280}
+.chosen-actions{display:flex!important;align-items:center;gap:6px;white-space:nowrap}
+.delete-line{border:0;background:#fee2e2;color:#991b1b;border-radius:8px;padding:8px 10px;font-weight:700}
+.visited-back{display:flex;align-items:center;gap:12px;margin:10px 0;padding:10px;border-radius:12px;background:#eef2ff}
+.visited-back span{font-weight:700}
+.visited-sales{margin-top:14px;padding-top:12px;border-top:1px solid #e5e7eb}
+.visited-row .actions-small{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
+@media(max-width:600px){.chosen-line{align-items:flex-start}.chosen-actions{flex-wrap:wrap;justify-content:flex-end}.visited-row .actions-small{justify-content:flex-start}}
