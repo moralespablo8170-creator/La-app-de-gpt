@@ -69,3 +69,10 @@
 
 /* V41 - administrador de categorias */
 .category-launcher .section-title{margin-bottom:0}.category-admin-panel{border:2px solid #cbd5e1}.category-admin-list{display:grid;gap:8px;margin-top:12px}.category-admin-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px;background:#f8fafc;border-radius:10px}.category-admin-row input{margin-top:0}.category-admin-actions{display:flex;gap:6px}.category-admin-actions button{min-height:40px}@media(max-width:600px){.category-launcher .section-title{align-items:flex-start;flex-direction:column}.category-launcher .section-title>button{width:100%}.category-admin-row{grid-template-columns:1fr}.category-admin-actions button{flex:1}}
+
+
+/* V42 — cabecera de marca */
+.brand-header{display:flex;justify-content:center;align-items:center;padding:10px 8px 6px;min-height:92px}
+.brand-logo{display:block;width:min(260px,68vw);height:auto;max-height:92px;object-fit:contain}
+.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+@media (max-width:600px){.brand-header{min-height:76px;padding:6px}.brand-logo{width:min(220px,70vw);max-height:76px}}
