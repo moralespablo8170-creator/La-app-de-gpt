@@ -1,21 +1,32 @@
 (()=>{
-  function show(id,tabId){
-    const views=['homeView','newView','historyView','clientsView','productsView'];
-    views.forEach(v=>{const el=document.getElementById(v);if(el)el.classList.toggle('hidden',v!==id)});
-    document.querySelectorAll('.tabs .tab').forEach(b=>b.classList.remove('active'));
-    const tab=document.getElementById(tabId);if(tab)tab.classList.add('active');
+  const views=['homeView','newView','historyView','clientsView','productsView'];
+  const ids={homeTab:'homeView',newTab:'newView',historyTab:'historyView',clientsTab:'clientsView',productsTab:'productsView'};
+  function go(id){
+    views.forEach(v=>{const e=document.getElementById(v);if(e)e.classList.toggle('hidden',v!==id)});
+    Object.keys(ids).forEach(t=>{const e=document.getElementById(t);if(e)e.classList.toggle('active',ids[t]===id)});
     window.scrollTo(0,0);
+    try{
+      if(id==='newView'&&typeof newClient==='function')newClient();
+      if(id==='historyView'&&typeof showHistory==='function')showHistory();
+      if(id==='clientsView'&&typeof showClients==='function')showClients();
+      if(id==='productsView'&&typeof showProducts==='function')showProducts();
+    }catch(e){}
   }
-  function goHome(){show('homeView','homeTab');}
-  function goNew(){show('newView','newTab');try{if(typeof newClient==='function')newClient()}catch(e){}}
-  function goHistory(){show('historyView','historyTab');try{if(typeof showHistory==='function')showHistory()}catch(e){}}
-  function goClients(){show('clientsView','clientsTab');try{if(typeof showClients==='function')showClients()}catch(e){}}
-  function goProducts(){show('productsView','productsTab');try{if(typeof showProducts==='function')showProducts()}catch(e){}}
   function bind(){
-    const map={homeTab:goHome,newTab:goNew,historyTab:goHistory,clientsTab:goClients,productsTab:goProducts};
-    Object.entries(map).forEach(([id,fn])=>{const b=document.getElementById(id);if(b)b.onclick=e=>{e.preventDefault();e.stopPropagation();fn()}});
-    const dash={dashboardNew:goNew,dashboardHistory:goHistory,dashboardSeeAll:goHistory,dashboardClientsBtn:goClients,dashboardTodayHistory:goHistory,dashboardTodayHistory2:goHistory};
-    Object.entries(dash).forEach(([id,fn])=>{const b=document.getElementById(id);if(b)b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();fn()})});
+    document.documentElement.classList.add('nav-v33');
+    const all=[...document.querySelectorAll('.tabs .tab')];
+    all.forEach(b=>{
+      b.style.pointerEvents='auto';
+      b.style.touchAction='manipulation';
+      b.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();const id=ids[b.id];if(id)go(id)},true);
+      b.addEventListener('touchend',e=>{e.preventDefault();e.stopImmediatePropagation();const id=ids[b.id];if(id)go(id)},true);
+    });
+    document.addEventListener('click',e=>{
+      const b=e.target.closest?.('.tabs .tab');
+      if(!b)return;
+      e.preventDefault();e.stopPropagation();
+      const id=ids[b.id];if(id)go(id);
+    },true);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
 })();
