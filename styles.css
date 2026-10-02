@@ -66,3 +66,6 @@
 
 /* V40 - stock visible en carrito */
 .product-suggestions .stock-badge,.draft-product .stock-badge,.chosen-line .stock-badge{display:inline-flex;align-items:center;width:max-content;margin-top:2px}
+
+/* V41 - administrador de categorias */
+.category-launcher .section-title{margin-bottom:0}.category-admin-panel{border:2px solid #cbd5e1}.category-admin-list{display:grid;gap:8px;margin-top:12px}.category-admin-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px;background:#f8fafc;border-radius:10px}.category-admin-row input{margin-top:0}.category-admin-actions{display:flex;gap:6px}.category-admin-actions button{min-height:40px}@media(max-width:600px){.category-launcher .section-title{align-items:flex-start;flex-direction:column}.category-launcher .section-title>button{width:100%}.category-admin-row{grid-template-columns:1fr}.category-admin-actions button{flex:1}}
