@@ -2,7 +2,7 @@ const $=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,
 const money=n=>new Intl.NumberFormat('es-CL',{style:'currency',currency:'CLP',maximumFractionDigits:0}).format(Number(n)||0);
 const norm=v=>String(v??'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 const DAYS=['Lunes','Martes','Miercoles','Jueves','Viernes','Sabado'],DEFAULT_CATEGORIES=['Tabaquería','Caramelos','Arcor','Nestlé','Remedios'];
-let editingId=null,editingClientId=null,editingProductId=null,clientFilter='all',dashboardAmountsVisible=true,selectedCategory='';
+let editingId=null,editingClientId=null,editingProductId=null,clientFilter='all',dashboardAmountsVisible=false,selectedCategory='';
 function readArray(k){try{const v=JSON.parse(localStorage.getItem(k)||'[]');return Array.isArray(v)?v:[]}catch(e){return[]}}
 function writeStorage(k,v){try{localStorage.setItem(k,v);return true}catch(e){alert('No se pudo guardar la información en este dispositivo.');return false}}
 function localDate(){const d=new Date(),y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return y+'-'+m+'-'+day}
