@@ -37,7 +37,7 @@ function effectivePrice(p,qty){let price=Number(p.price)||0,applied=null;const g
 function productLabel(p){return p.name}
 function normalizeClientFields(){if(!$('clientRut')||!$('clientPhone'))return;$('clientRut').value=formatRut($('clientRut').value);$('clientPhone').value=formatPhone($('clientPhone').value)}
 function showView(name){
-  if(currentView==='clients'&&name!=='clients'){
+  if(name!=='clients'&&$('clientsView')&&!$('clientsView').classList.contains('hidden')){
     normalizeClientFields();
     if(!validateClientField(true)){
       $('clientValidation').scrollIntoView({behavior:'smooth',block:'center'});
@@ -50,7 +50,7 @@ function bindNav(){
   .forEach(([id,v])=>{
     $(id).onclick=e=>{
       e.preventDefault();
-      if(currentView==='clients'&&v!=='clients'){
+      if(v!=='clients'&&$('clientsView')&&!$('clientsView').classList.contains('hidden')){
         normalizeClientFields();
         if(!validateClientField(true)){
           $('clientValidation').scrollIntoView({behavior:'smooth',block:'center'});
