@@ -12,7 +12,7 @@ function routeSession(){try{const x=JSON.parse(localStorage.getItem('zipperRutaS
 function setRouteSession(week,day){if(!week||!day){alert('Selecciona semana y día para comenzar la ruta.');return}localStorage.setItem('zipperRutaSesion',JSON.stringify({date:localDate(),week,day}));exceptionSearch=false;showVisited=false;renderHome()}
 function clearRouteSession(){localStorage.removeItem('zipperRutaSesion');showVisited=false;renderHome()}
 function visitedIds(){return readArray('zipperVisitados-'+localDate())}
-function markClientVisited(id){const c=clientById(id);if(!c)return;markVisited(c.id);selectedClientId='';editingSaleId='';cart=[];draftProductId='';draftQty='';showCartTray=false;showVisited=true;renderHome();$('saleStatus').textContent='Cliente marcado como visitado sin registrar una venta.';}
+function markClientVisited(id){const c=clientById(id);if(!c)return;markVisited(c.id);selectedClientId='';editingSaleId='';cart=[];draftProductId='';draftQty='';showCartTray=false;showVisited=false;renderHome();$('saleStatus').textContent='Cliente marcado como visitado sin registrar una venta.';}
 function markVisited(id){const a=visitedIds().map(String).filter(x=>x!==String(id));a.unshift(String(id));writeArray('zipperVisitados-'+localDate(),a)}
 function uid(){return crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random()}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
