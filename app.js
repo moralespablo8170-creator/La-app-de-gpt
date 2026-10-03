@@ -36,8 +36,31 @@ function promotionGroup(p){return p.variantKey==='bigtime-ultra'?'bigtime-ultra'
 function effectivePrice(p,qty){let price=Number(p.price)||0,applied=null;const group=promotionGroup(p);let effectiveQty=qty;if(group)effectiveQty=cart.reduce((a,i)=>{const x=productById(i.productId);return a+(x&&promotionGroup(x)===group?Number(i.qty||0):0)},0);(p.promotions||[]).slice().sort((a,b)=>Number(b.minQty)-Number(a.minQty)).some(pr=>{if(effectiveQty>=Number(pr.minQty)&&Number(pr.price)>=0){price=Number(pr.price);applied=pr;return true}return false});return{price,applied,effectiveQty}}
 function productLabel(p){return p.name}
 function normalizeClientFields(){if(!$('clientRut')||!$('clientPhone'))return;$('clientRut').value=formatRut($('clientRut').value);$('clientPhone').value=formatPhone($('clientPhone').value)}
-function showView(name){if(currentView==='clients'&&name!=='clients') {normalizeClientFields();if(!validateClientField(true))return}currentView=name;const map={home:'homeView',cash:'cashView',products:'productsView',clients:'clientsView',history:'historyView'};Object.entries(map).forEach(([k,id])=>$(id).classList.toggle('hidden',k!==name));const labels={home:'Inicio',cash:'Caja diaria',products:'Productos',clients:'Clientes',history:'Historial'};$('pageTitle').textContent=labels[name];document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.id===name+'Tab'));window.scrollTo(0,0);if(name==='home')renderHome();if(name==='cash')renderCash();if(name==='products'){renderProductForm();renderInventory();renderCategories()}if(name==='clients'){renderClientForm();renderClients()}if(name==='history')renderHistory()}
-function bindNav(){[['homeTab','home'],['cashTab','cash'],['productsTab','products'],['clientsTab','clients'],['historyTab','history']].forEach(([id,v])=>$(id).onclick=()=>showView(v))}
+function showView(name){
+  if(currentView==='clients'&&name!=='clients'){
+    normalizeClientFields();
+    if(!validateClientField(true)){
+      $('clientValidation').scrollIntoView({behavior:'smooth',block:'center'});
+      return
+    }
+  }
+  currentView=name;const map={home:'homeView',cash:'cashView',products:'productsView',clients:'clientsView',history:'historyView'};Object.entries(map).forEach(([k,id])=>$(id).classList.toggle('hidden',k!==name));const labels={home:'Inicio',cash:'Caja diaria',products:'Productos',clients:'Clientes',history:'Historial'};$('pageTitle').textContent=labels[name];document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.id===name+'Tab'));window.scrollTo(0,0);if(name==='home')renderHome();if(name==='cash')renderCash();if(name==='products'){renderProductForm();renderInventory();renderCategories()}if(name==='clients'){renderClientForm();renderClients()}if(name==='history')renderHistory()}
+function bindNav(){
+  [['homeTab','home'],['cashTab','cash'],['productsTab','products'],['clientsTab','clients'],['historyTab','history']]
+  .forEach(([id,v])=>{
+    $(id).onclick=e=>{
+      e.preventDefault();
+      if(currentView==='clients'&&v!=='clients'){
+        normalizeClientFields();
+        if(!validateClientField(true)){
+          $('clientValidation').scrollIntoView({behavior:'smooth',block:'center'});
+          return
+        }
+      }
+      showView(v)
+    }
+  })
+}
 function migrateVariantInventory(){
   const ps=getRawProducts();
   let changed=false;
@@ -198,9 +221,39 @@ function resetClientForm(){editingClientId=null;$('clientFormTitle').textContent
 function formatRut(r){const s=String(r||'').toUpperCase().replace(/[^0-9K]/g,'');if(s.length<2)return s;return s.slice(0,-1).replace(/\B(?=(\d{3})+(?!\d))/g,'.')+'-'+s.slice(-1)}
 function formatPhone(v){const s=String(v||'').replace(/\D/g,'').replace(/^569/,'').slice(0,8);return '569 '+(s?s.slice(0,4)+(s.length>4?' '+s.slice(4):''):'')}
 function validateRut(r){const s=String(r||'').toUpperCase().replace(/[^0-9K]/g,'');if(!s||s.length<2)return false;const body=s.slice(0,-1),dv=s.slice(-1);let sum=0,m=2;for(let i=body.length-1;i>=0;i--){sum+=Number(body[i])*m;m=m===7?2:m+1}const d=11-(sum%11),want=d===11?'0':d===10?'K':String(d);return want===dv}
-function validateClientField(show=true){const rut=$('clientRut').value.trim(),phone=$('clientPhone').value.replace(/\D/g,'');let msg='';if(rut&&!validateRut(rut))msg='RUT mal ingresado.';else if(phone&&phone!=='569'&&phone.replace(/^569/,'').length!==8)msg='Faltan dígitos en el teléfono. Debe ingresar los 8 números después de 569.';if(show){$('clientValidation').textContent=msg;$('clientValidation').className='validation'+(msg?'':' ok')}return !msg}
-function bindImmediateValidation(id){$(id).addEventListener('blur',()=>{if(id==='clientRut')$(id).value=formatRut($(id).value);if(id==='clientPhone')$(id).value=formatPhone($(id).value);validateClientField(true)});$(id).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();if(id==='clientRut')$(id).value=formatRut($(id).value);if(id==='clientPhone')$(id).value=formatPhone($(id).value);validateClientField(true);$(id).blur()}})}
-function saveClient(){if(!validateClientField(true))return;const name=$('clientName').value.trim(),address=$('clientAddress').value.trim();if(!name||!address){$('clientValidation').textContent='Nombre y dirección son obligatorios.';return}const rut=$('clientRut').value.trim().toUpperCase(),cs=getClients();if(rut&&cs.some(c=>c.rut===rut&&String(c.id)!==String(editingClientId))){$('clientValidation').textContent='Ese RUT ya está registrado.';return}const data={name,rut,phone:($('clientPhone').value.replace(/\D/g,'')==='569'?'':$('clientPhone').value.replace(/\D/g,'')),address,route:'',routeWeek:$('clientWeek').value,routeDay:$('clientDay').value,active:true};if(editingClientId){const c=cs.find(x=>String(x.id)===String(editingClientId));if(c)Object.assign(c,data)}else cs.push({id:uid(),...data});if(writeArray('zipperClientes',cs)){resetClientForm();renderClients();renderHome()}}
+function validateClientField(show=true){
+  const rut=String($('clientRut').value||'').trim();
+  const digits=String($('clientPhone').value||'').replace(/\D/g,'');
+  const phoneBody=digits.replace(/^569/,'');
+  let msg='';
+  if(rut&&!validateRut(rut))msg='RUT mal ingresado. Revisa el número y su dígito verificador.';
+  else if(phoneBody.length>0&&phoneBody.length<8)msg='Teléfono incompleto. Debe ingresar los 8 números después de 569.';
+  else if(phoneBody.length>8)msg='Teléfono mal ingresado. Debe tener 8 números después de 569.';
+  if(show){
+    $('clientValidation').textContent=msg;
+    $('clientValidation').className='validation'+(msg?'':' ok')
+  }
+  return !msg
+}
+function bindImmediateValidation(id){
+  $(id).addEventListener('blur',()=>{
+    if(id==='clientRut')$(id).value=formatRut($(id).value);
+    if(id==='clientPhone')$(id).value=formatPhone($(id).value);
+    validateClientField(true)
+  });
+  $(id).addEventListener('keydown',e=>{
+    if(e.key==='Enter'){
+      e.preventDefault();
+      if(id==='clientRut')$(id).value=formatRut($(id).value);
+      if(id==='clientPhone')$(id).value=formatPhone($(id).value);
+      if(!validateClientField(true))return;
+      $(id).blur()
+    }
+  })
+}
+function saveClient(){
+  normalizeClientFields();
+  if(!validateClientField(true))return;const name=$('clientName').value.trim(),address=$('clientAddress').value.trim();if(!name||!address){$('clientValidation').textContent='Nombre y dirección son obligatorios.';return}const rut=$('clientRut').value.trim().toUpperCase(),cs=getClients();if(rut&&cs.some(c=>c.rut===rut&&String(c.id)!==String(editingClientId))){$('clientValidation').textContent='Ese RUT ya está registrado.';return}const data={name,rut,phone:($('clientPhone').value.replace(/\D/g,'')==='569'?'':$('clientPhone').value.replace(/\D/g,'')),address,route:'',routeWeek:$('clientWeek').value,routeDay:$('clientDay').value,active:true};if(editingClientId){const c=cs.find(x=>String(x.id)===String(editingClientId));if(c)Object.assign(c,data)}else cs.push({id:uid(),...data});if(writeArray('zipperClientes',cs)){resetClientForm();renderClients();renderHome()}}
 function editClient(id){const c=clientById(id);if(!c)return;editingClientId=c.id;$('clientFormTitle').textContent='Editar cliente';$('clientName').value=c.name;$('clientRut').value=c.rut;$('clientPhone').value=formatPhone(c.phone);$('clientAddress').value=c.address;$('clientWeek').value=c.routeWeek||'1';$('clientDay').value=c.routeDay||'';$('cancelClient').classList.remove('hidden');validateClientField(false);window.scrollTo(0,0)}
 function renderClients(){const all=getClients();const qn=norm($('clientSearchName').value),q=norm($('clientSearchAddress').value),w=$('filterWeek').value,d=$('filterDay').value;let rows=all.filter(c=>c.active!==false&&(!qn||norm(c.name).includes(qn))&&(!q||norm(c.address).includes(q))&&(!w||String(c.routeWeek)===String(w))&&(!d||norm(c.routeDay)===norm(d)));rows.sort((a,b)=>a.name.localeCompare(b.name,'es'));$('clientList').innerHTML=rows.length?rows.map(c=>'<article class="client-row"><div><strong>'+esc(c.name)+'</strong><span>'+esc(c.address)+'</span><span>Tel: '+esc(c.phone||'Sin teléfono')+' · RUT: '+esc(c.rut||'Sin RUT')+'</span><span>'+esc(c.route||'Sin ruta')+' · Semana '+esc(c.routeWeek||'—')+' · '+esc(c.routeDay||'Sin día')+'</span></div><div class="actions-small"><button class="secondary edit-client" data-id="'+esc(c.id)+'" type="button">Editar</button><button class="primary client-sale" data-id="'+esc(c.id)+'" type="button">Vender</button></div></article>').join(''):'<p class="muted">No hay clientes para esta selección.</p>';document.querySelectorAll('.edit-client').forEach(b=>b.onclick=()=>editClient(b.dataset.id));document.querySelectorAll('.client-sale').forEach(b=>b.onclick=()=>{showView('home');openClientCart(b.dataset.id)})}
 
