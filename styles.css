@@ -82,3 +82,10 @@
 .stock-zero{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
 .stock-min-label{font-size:10px;font-weight:800;color:#64748b;white-space:nowrap}
 .suggestion .stock-badge,.chosen-line .stock-badge,.draft-product .stock-badge{font-size:10px;margin-left:3px}
+
+/* B81 - identificación visual de productos */
+.cart-product-image{width:42px;height:42px;object-fit:contain;border-radius:8px;background:#fff;border:1px solid #e2e8f0;display:block}
+.cart-product-image-large{width:58px;height:58px}
+.suggestion{grid-template-columns:auto 1fr auto;min-height:58px}
+.chosen-product-info{display:flex;align-items:flex-start;gap:8px;min-width:0}
+.chosen-product-info>div{display:flex;flex-direction:column;gap:2px;min-width:0}
