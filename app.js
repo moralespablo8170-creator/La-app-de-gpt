@@ -104,19 +104,28 @@ function renderCart(){
   $('cartCategory').innerHTML='<option value="">Todas las categorías</option>'+cats.map(c=>'<option value="'+esc(c)+'">'+esc(c)+'</option>').join('');
   $('cartCategory').value=selectedCat;
   const q=norm($('cartSearchName').value);
+  const qWords=q.split(/\s+/).filter(Boolean);
   const suggestions=q?active.filter(p=>{
     const big=q==='bigtime'||q==='big time';
     if(big&&!['bigtime','bigtime-ultra'].includes(p.variantKey))return false;
-    return (!selectedCat||p.category===selectedCat)&&(norm(p.name).includes(q)||norm(p.color||'').includes(q));
+    if(selectedCat&&p.category!==selectedCat)return false;
+    const n=norm(p.name),col=norm(p.color||'');
+    const words=n.split(/[^a-z0-9]+/).filter(Boolean);
+    const colorWords=col.split(/[^a-z0-9]+/).filter(Boolean);
+    const nameMatch=qWords.every(w=>words.some(x=>x.startsWith(w)));
+    const colorMatch=qWords.every(w=>colorWords.some(x=>x.startsWith(w)));
+    return nameMatch||colorMatch;
   }).sort((a,b)=>{
     const an=norm(a.name),bn=norm(b.name),ac=norm(a.color||''),bc=norm(b.color||'');
     const score=x=>{
       const n=norm(x.name),col=norm(x.color||'');
+      const words=n.split(/[^a-z0-9]+/).filter(Boolean);
+      const colorWords=col.split(/[^a-z0-9]+/).filter(Boolean);
       if(n===q)return 0;
       if(n.startsWith(q))return 1;
-      if(n.split(/\s+/).some(w=>w.startsWith(q)))return 2;
+      if(qWords.every(w=>words.some(x=>x.startsWith(w))))return 2;
       if(col===q)return 3;
-      if(col.startsWith(q))return 4;
+      if(qWords.every(w=>colorWords.some(x=>x.startsWith(w))))return 4;
       return 5;
     };
     return score(a)-score(b)||an.localeCompare(bn,'es',{sensitivity:'base'})||ac.localeCompare(bc,'es',{sensitivity:'base'});
