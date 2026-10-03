@@ -235,19 +235,52 @@ function validateClientField(show=true){
   }
   return !msg
 }
+function validateClientInput(id,announce=true){
+  if(id==='clientRut'){
+    const value=String($(id).value||'').trim();
+    $(id).value=formatRut(value);
+    if(value&&!validateRut(value)){
+      if(announce)alert('RUT mal ingresado. Revisa el número y su dígito verificador antes de continuar.');
+      $(id).focus();
+      return false
+    }
+    return true
+  }
+  if(id==='clientPhone'){
+    const digits=String($(id).value||'').replace(/\\D/g,'');
+    const body=digits.replace(/^569/,'');
+    $(id).value=formatPhone(digits);
+    if(body.length>0&&body.length<8){
+      if(announce)alert('Teléfono incompleto. Debes ingresar los 8 números después de 569 antes de continuar.');
+      $(id).focus();
+      return false
+    }
+    if(body.length>8){
+      if(announce)alert('Teléfono mal ingresado. Debe tener 8 números después de 569.');
+      $(id).focus();
+      return false
+    }
+    return true
+  }
+  return true
+}
 function bindImmediateValidation(id){
   $(id).addEventListener('blur',()=>{
-    if(id==='clientRut')$(id).value=formatRut($(id).value);
-    if(id==='clientPhone')$(id).value=formatPhone($(id).value);
-    validateClientField(true)
+    const ok=validateClientInput(id,true);
+    validateClientField(true);
+    if(!ok)setTimeout(()=>$(id).focus(),0)
   });
   $(id).addEventListener('keydown',e=>{
-    if(e.key==='Enter'){
-      e.preventDefault();
-      if(id==='clientRut')$(id).value=formatRut($(id).value);
-      if(id==='clientPhone')$(id).value=formatPhone($(id).value);
-      if(!validateClientField(true))return;
-      $(id).blur()
+    if(e.key==='Tab'||e.key==='Enter'){
+      const ok=validateClientInput(id,true);
+      if(!ok){
+        e.preventDefault();
+        return
+      }
+      if(e.key==='Enter'){
+        e.preventDefault();
+        $(id).blur()
+      }
     }
   })
 }
