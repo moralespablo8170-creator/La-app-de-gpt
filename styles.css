@@ -157,3 +157,5 @@
 #productsView .search-label{font-weight:800}
 #productsView .search-label input{border:2px solid #e5e7eb;background:#fafafa}
 #productsView .search-label input:focus{border-color:#7c3aed;background:#fff}
+
+.daily-routes{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.daily-routes button.active{background:#2563eb;color:#fff;border-color:#2563eb}.route-tools #otherRoute{font-size:14px;padding:12px 16px}.daily-route-note{width:100%;margin:0;color:#4b5563;font-size:13px}
