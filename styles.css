@@ -121,3 +121,6 @@
 
 /* B108 - panel dinamico de analisis */
 .chart-mini-summary{display:flex;flex-wrap:wrap;gap:14px;padding:6px 4px 10px;font-size:12px;color:#64748b}.chart-mini-summary strong{color:#111827}.stats-subtitle{margin-top:14px}.chart-footnote{font-size:11px}
+
+/* B110 - confirmacion de borrado */
+.danger{background:#dc2626!important;color:#fff!important;border:0;border-radius:10px;padding:10px 13px;font-weight:900;min-height:42px}.danger:hover{background:#b91c1c!important}.delete-confirm{position:fixed;inset:0;z-index:20000;background:#0009;display:grid;place-items:center;padding:18px}.delete-confirm-card{width:min(430px,100%);background:#fff;border-radius:20px;padding:22px;box-shadow:0 24px 80px #0007;text-align:center;border:3px solid #fecaca}.delete-confirm-icon{width:52px;height:52px;margin:0 auto 10px;border-radius:50%;display:grid;place-items:center;background:#fee2e2;color:#b91c1c;font-size:28px;font-weight:1000}.delete-confirm-card h2{margin:4px 0 8px}.delete-confirm-card p{color:#4b5563;line-height:1.45;margin:0}.delete-confirm-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:18px}.category-admin-actions .danger{min-height:40px}@media(max-width:600px){.delete-confirm-card{padding:20px 16px}.delete-confirm-actions{grid-template-columns:1fr}.delete-confirm-actions .danger{order:0}}
