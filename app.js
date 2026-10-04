@@ -347,6 +347,7 @@ function isoWeekInfo(dateStr){const d=new Date(String(dateStr||'')+'T12:00:00');
 function cashFilteredSales(){const rf=$('statRouteFilter')?.value||'',df=$('statDayFilter')?.value||'';return getSales().filter(s=>(!rf||saleRouteWeek(s)===rf)&&(!df||saleRouteDay(s)===df))}
 function statsPeriodRows(){return cashFilteredSales().filter(s=>periodMatch(saleDate(s),statPeriod))}
 function renderCash(){const today=getSales().filter(s=>saleDate(s)===localDate());const sales=today.reduce((a,s)=>a+saleTotal(s),0),cost=today.reduce((a,s)=>a+saleCost(s),0);$('cashSales').textContent=money(sales);$('cashCost').textContent=money(cost);$('cashProfit').textContent=money(sales-cost);renderStats();renderGeneralTotal()}
+function periodLabel(){return({day:'Hoy',week:'Esta semana',month:'Este mes',year:'Este año'})[statPeriod]||'Período seleccionado'}
 function renderStats(){
   const rows=statsPeriodRows(),total=rows.reduce((a,s)=>a+saleTotal(s),0),cost=rows.reduce((a,s)=>a+saleCost(s),0),profit=total-cost,tickets=rows.length,avg=tickets?total/tickets:0;
   let previous=0;
@@ -355,50 +356,34 @@ function renderStats(){
   else if(statPeriod==='month'){const d=new Date(localDate()+'T12:00:00');d.setMonth(d.getMonth()-1);const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');previous=cashFilteredSales().filter(s=>saleDate(s).slice(0,7)===key).reduce((a,s)=>a+saleTotal(s),0)}
   else if(statPeriod==='year'){const key=String(Number(localDate().slice(0,4))-1);previous=cashFilteredSales().filter(s=>saleDate(s).slice(0,4)===key).reduce((a,s)=>a+saleTotal(s),0)}
   const growth=previous?((total-previous)/previous*100):null;
-  $('statsOutput').innerHTML='<div class="stats-kpis"><div><span>Ventas</span><strong>'+money(total)+'</strong></div><div><span>Invertido</span><strong>'+money(cost)+'</strong></div><div><span>Ganancia</span><strong>'+money(profit)+'</strong></div><div><span>Comprobantes</span><strong>'+tickets+'</strong></div><div><span>Ticket promedio</span><strong>'+money(avg)+'</strong></div><div><span>Variación</span><strong>'+ (growth===null?'—':(growth>=0?'+':'')+growth.toFixed(1)+'%')+'</strong><small>vs. período anterior</small></div></div>';
+  $('statsOutput').innerHTML='<div class="stats-kpis"><div><span>Vendido</span><strong>'+money(total)+'</strong><small>'+periodLabel()+'</small></div><div><span>Invertido</span><strong>'+money(cost)+'</strong></div><div><span>Ganancia</span><strong>'+money(profit)+'</strong></div><div><span>Comprobantes</span><strong>'+tickets+'</strong></div><div><span>Ticket promedio</span><strong>'+money(avg)+'</strong></div><div><span>Variación</span><strong>'+ (growth===null?'—':(growth>=0?'+':'')+growth.toFixed(1)+'%')+'</strong><small>vs. período anterior</small></div></div>';
+
   const out={};
-  if(statType==='client')rows.forEach(s=>{const k=s.cliente||'Sin cliente';if(!out[k])out[k]={qty:0,total:0,cost:0};out[k].qty++;out[k].total+=saleTotal(s);out[k].cost+=saleCost(s)});
-  else if(statType==='route')rows.forEach(s=>{const k=saleRouteWeek(s);if(!out[k])out[k]={qty:0,total:0,cost:0};out[k].qty++;out[k].total+=saleTotal(s);out[k].cost+=saleCost(s)});
-  else if(statType==='product')rows.forEach(s=>(s.items||[]).forEach(i=>{const k=i.desc||'Producto';if(!out[k])out[k]={qty:0,total:0,cost:0};out[k].qty+=Number(i.qty||0);out[k].total+=Number(i.qty||0)*Number(i.price||0);out[k].cost+=Number(i.qty||0)*Number(i.purchasePrice||0)}));
-  else rows.forEach(s=>{const k=saleRouteDay(s);if(!out[k])out[k]={qty:0,total:0,cost:0};out[k].qty++;out[k].total+=saleTotal(s);out[k].cost+=saleCost(s)});
-  const arr=Object.entries(out).map(([k,v])=>({...v,name:k,profit:v.total-v.cost})).sort((a,b)=>b.total-a.total);
-  const heading=statType==='day'?'Ventas por día de ruta':statType==='route'?'Ventas por ruta (A/B)':statType==='client'?'Ventas por cliente':'Productos más vendidos';
-  $('statsOutput').innerHTML+='<div class="stats-subtitle">'+heading+'</div>'+(arr.length?arr.map(v=>'<div class="stat-line"><div><strong>'+esc(v.name)+'</strong><small>'+v.qty+(statType==='product'?' unidades':' comprobantes')+' · Ganancia '+money(v.profit)+'</small></div><strong>'+money(v.total)+'</strong></div>').join(''):'<p class="muted">No hay datos para esta selección.</p>');
-  renderStatsChart();
-  renderTrendChart();
+  const keyFor=s=>statType==='client'?(s.cliente||'Sin cliente'):statType==='route'?saleRouteWeek(s):statType==='product'?null:saleRouteDay(s);
+  if(statType==='product')rows.forEach(s=>(s.items||[]).forEach(i=>{const k=i.desc||'Producto';if(!out[k])out[k]={qty:0,total:0,cost:0,tickets:0};out[k].qty+=Number(i.qty||0);out[k].total+=Number(i.qty||0)*Number(i.price||0);out[k].cost+=Number(i.qty||0)*Number(i.purchasePrice||0)}));
+  else rows.forEach(s=>{const k=keyFor(s);if(!out[k])out[k]={qty:0,total:0,cost:0,tickets:0};out[k].qty+=1;out[k].tickets+=1;out[k].total+=saleTotal(s);out[k].cost+=saleCost(s)});
+  const arr=Object.entries(out).map(([k,v])=>({...v,name:k,profit:v.total-v.cost,margin:v.total?(v.total-v.cost)/v.total*100:0})).sort((a,b)=>b.total-a.total);
+  const heading=statType==='day'?'Comparación por día de reparto':statType==='route'?'Comparación Ruta A vs Ruta B':statType==='client'?'Ranking de clientes':'Ranking de productos';
+  $('statsOutput').innerHTML+='<div class="stats-subtitle">'+heading+'</div>'+(arr.length?arr.slice(0,20).map((v,i)=>'<div class="stat-line"><div><strong>'+(i+1)+'. '+esc(v.name)+'</strong><small>'+ (statType==='product'?v.qty+' unidades':' '+v.tickets+' comprobantes')+' · Ganancia '+money(v.profit)+' · Margen '+v.margin.toFixed(1)+'%</small></div><strong>'+money(v.total)+'</strong></div>').join(''):'<p class="muted">No hay datos para esta selección.</p>');
+  renderStatsChart(); renderTrendChart();
 }
 function chartData(){
-  const rows=cashFilteredSales(),mode=$('chartMode')?.value||'annual',out={};
-  const add=(k,s)=>out[k]=(out[k]||0)+saleTotal(s);
-  if(mode==='annual')rows.forEach(s=>add(saleDate(s).slice(0,4)||'Sin año',s));
-  else if(mode==='route')rows.forEach(s=>add(saleRouteWeek(s),s));
+  const rows=cashFilteredSales(),mode=$('chartMode')?.value||'weekly',out={};
+  const add=(k,s)=>{if(!k)return;out[k]=(out[k]||0)+saleTotal(s)};
+  if(mode==='route')rows.forEach(s=>add(saleRouteWeek(s),s));
   else if(mode==='day')rows.forEach(s=>add(saleRouteDay(s),s));
+  else if(mode==='client')rows.forEach(s=>add(s.cliente||'Sin cliente',s));
+  else if(mode==='product')rows.forEach(s=>(s.items||[]).forEach(i=>{const k=i.desc||'Producto';out[k]=(out[k]||0)+Number(i.qty||0)*Number(i.price||0)}));
   else if(mode==='weekByYear'){const info=isoWeekInfo($('statsCompareDate')?.value||localDate());rows.forEach(s=>{const x=isoWeekInfo(saleDate(s));if(x&&info&&x.week===info.week)add(String(x.year),s)})}
+  else if(mode==='annual')rows.forEach(s=>add(saleDate(s).slice(0,4)||'Sin año',s));
   else{const keys=[];const now=new Date(localDate()+'T12:00:00');for(let i=11;i>=0;i--){const d=new Date(now);d.setDate(now.getDate()-i*7);const inf=isoWeekInfo(d);keys.push(inf.year+'-S'+String(inf.week).padStart(2,'0'))}rows.forEach(s=>{const x=isoWeekInfo(saleDate(s));if(x){const k=x.year+'-S'+String(x.week).padStart(2,'0');if(keys.includes(k))add(k,s)}});return keys.map(k=>({label:k,value:out[k]||0}))}
-  return Object.entries(out).sort((a,b)=>String(a[0]).localeCompare(String(b[0]),'es',{numeric:true})).map(([label,value])=>({label,value}));
+  return Object.entries(out).sort((a,b)=>b[1]-a[1]).map(([label,value])=>({label,value}));
 }
 function renderStatsChart(){
   const el=$('statsChart');if(!el)return;const data=chartData();if(!data.length){el.innerHTML='<p class="muted">No hay ventas suficientes para graficar.</p>';return}
-  const max=Math.max(...data.map(x=>x.value),1),w=760,h=250,pad=42,bw=Math.max(18,Math.min(58,(w-pad*2)/data.length-10));
-  const bars=data.map((x,i)=>{const x0=pad+i*((w-pad*2)/data.length)+(((w-pad*2)/data.length)-bw)/2,y=205-(x.value/max)*155,hh=205-y;return '<rect x="'+x0.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+hh.toFixed(1)+'" rx="5" class="chart-bar"></rect><text x="'+(x0+bw/2).toFixed(1)+'" y="224" text-anchor="middle" class="chart-label">'+esc(String(x.label).slice(0,12))+'</text><text x="'+(x0+bw/2).toFixed(1)+'" y="'+Math.max(15,y-6).toFixed(1)+'" text-anchor="middle" class="chart-value">'+esc(money(x.value))+'</text>'}).join('');
-  el.innerHTML='<div class="chart-title">Ventas por '+(($('chartMode')?.selectedOptions[0]?.textContent)||'período')+'</div><svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Gráfico de ventas">'+bars+'<line x1="'+pad+'" y1="205" x2="'+(w-pad)+'" y2="205" class="chart-axis"></line></svg>';
-}
-function renderTrendChart(){
-  const el=$('statsTrendChart');if(!el)return;
-  const rows=cashFilteredSales(),today=new Date(localDate()+'T12:00:00'),data=[];
-  for(let i=29;i>=0;i--){
-    const d=new Date(today);d.setDate(today.getDate()-i);
-    const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-    const total=rows.filter(s=>saleDate(s)===key).reduce((sum,s)=>sum+saleTotal(s),0);
-    data.push({key,label:key.slice(8,10)+'/'+key.slice(5,7),value:total});
-  }
-  const w=760,h=260,left=48,right=18,top=24,bottom=42,plotW=w-left-right,plotH=h-top-bottom,max=Math.max(...data.map(x=>x.value),1);
-  const pts=data.map((d,i)=>({ ...d,x:left+i*plotW/(data.length-1),y:top+plotH-(d.value/max)*plotH }));
-  const poly=pts.map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' ');
-  const grid=[0,.25,.5,.75,1].map(f=>{const y=top+plotH-plotH*f;return '<line x1="'+left+'" y1="'+y.toFixed(1)+'" x2="'+(w-right)+'" y2="'+y.toFixed(1)+'" class="chart-grid"/><text x="'+(left-8)+'" y="'+(y+4).toFixed(1)+'" text-anchor="end" class="chart-label">'+esc(money(max*f))+'</text>'}).join('');
-  const dots=pts.map((p,i)=>'<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="'+(i%5===0||i===pts.length-1?4:2.5)+'" class="trend-point"><title>'+p.key+' · Ventas: '+money(p.value)+'</title></circle>'+((i%5===0||i===pts.length-1)?'<text x="'+p.x.toFixed(1)+'" y="'+(h-16)+'" text-anchor="middle" class="chart-label">'+p.label+'</text>':'')).join('');
-  const total=data.reduce((sum,d)=>sum+d.value,0),days=data.filter(d=>d.value>0).length;
-  el.innerHTML='<div class="trend-summary"><strong>Últimos 30 días: '+money(total)+'</strong><span>'+days+' días con ventas registradas</span></div><svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Evolución diaria de ventas durante los últimos 30 días">'+grid+'<polyline points="'+poly+'" class="trend-line"/>'+dots+'</svg><p class="muted chart-footnote">Los días sin ventas se muestran en cero. El gráfico respeta los filtros de ruta y día, pero siempre cubre los últimos 30 días.</p>';
+  const max=Math.max(...data.map(x=>x.value),1),sum=data.reduce((a,x)=>a+x.value,0),w=820,h=300,pad=48,bw=Math.max(16,Math.min(62,(w-pad*2)/data.length-12));
+  const bars=data.map((x,i)=>{const slot=(w-pad*2)/data.length,x0=pad+i*slot+(slot-bw)/2,y=235-(x.value/max)*175,hh=235-y,pct=sum?x.value/sum*100:0;return '<g><rect x="'+x0.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+hh.toFixed(1)+'" rx="6" class="chart-bar"><title>'+esc(String(x.label))+' · Ventas '+money(x.value)+' · '+pct.toFixed(1)+'% del total</title></rect><text x="'+(x0+bw/2).toFixed(1)+'" y="'+Math.max(16,y-22).toFixed(1)+'" text-anchor="middle" class="chart-value">'+esc(money(x.value))+'</text><text x="'+(x0+bw/2).toFixed(1)+'" y="'+Math.max(28,y-7).toFixed(1)+'" text-anchor="middle" class="chart-value">'+pct.toFixed(1)+'%</text><text x="'+(x0+bw/2).toFixed(1)+'" y="258" text-anchor="middle" class="chart-label">'+esc(String(x.label).slice(0,14))+'</text></g>'}).join('');
+  el.innerHTML='<div class="chart-title">'+esc(($('chartMode')?.selectedOptions[0]?.textContent)||'Comparación')+'</div><div class="chart-mini-summary"><span>Total: <strong>'+money(sum)+'</strong></span><span>Máximo: <strong>'+esc(String(data.slice().sort((a,b)=>b.value-a.value)[0].label))+'</strong></span></div><svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Gráfico comparativo de ventas">'+bars+'<line x1="'+pad+'" y1="235" x2="'+(w-pad)+'" y2="235" class="chart-axis"></line></svg><p class="muted chart-footnote">Cada barra muestra monto y participación del total. Toca una barra para ver el detalle.</p>';
 }
 function renderGeneralTotal(){const rows=cashFilteredSales().filter(s=>periodMatch(saleDate(s),totalPeriod)),t=rows.reduce((a,s)=>a+saleTotal(s),0);$('generalTotal').textContent=money(t);$('generalTotalMeta').textContent=rows.length+' comprobantes · filtros de ruta/día aplicados.'}function resetProductForm(){editingProductId=null;editingProductVariant='';currentPromos=[];$('productFormTitle').textContent='Ingreso de producto nuevo';$('productStockLabel').textContent='Stock inicial';$('productStockHelp').textContent='Cantidad disponible al ingresar el producto.';$('productName').value='';$('productBuy').value='';$('productSell').value='';$('productStock').value='';$('productStatus').textContent='';$('cancelProduct').classList.add('hidden');if($('deleteProduct'))$('deleteProduct').classList.add('hidden');renderPromoRows()}
 function renderProductForm(){renderCategoriesOptions();$('productStockLabel').textContent=editingProductId?'Agregar unidades al stock':'Stock inicial';$('productStockHelp').textContent=editingProductId?'Stock actual: '+(getRawProducts().find(x=>String(x.id)===String(editingProductId))?.stock??0)+'. Las unidades ingresadas se sumarán automáticamente.':'Cantidad disponible al ingresar el producto.';}
