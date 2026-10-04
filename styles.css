@@ -118,3 +118,6 @@
 .trend-summary strong{font-size:1.05rem}
 .trend-summary span,.chart-footnote{font-size:.82rem;color:var(--muted,#667085)}
 .chart-footnote{margin:8px 0 0}
+
+/* B108 - panel dinamico de analisis */
+.chart-mini-summary{display:flex;flex-wrap:wrap;gap:14px;padding:6px 4px 10px;font-size:12px;color:#64748b}.chart-mini-summary strong{color:#111827}.stats-subtitle{margin-top:14px}.chart-footnote{font-size:11px}
