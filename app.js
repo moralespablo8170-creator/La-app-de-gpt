@@ -385,6 +385,35 @@ function renderStatsChart(){
   const bars=data.map((x,i)=>{const slot=(w-pad*2)/data.length,x0=pad+i*slot+(slot-bw)/2,y=235-(x.value/max)*175,hh=235-y,pct=sum?x.value/sum*100:0;return '<g><rect x="'+x0.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+hh.toFixed(1)+'" rx="6" class="chart-bar"><title>'+esc(String(x.label))+' · Ventas '+money(x.value)+' · '+pct.toFixed(1)+'% del total</title></rect><text x="'+(x0+bw/2).toFixed(1)+'" y="'+Math.max(16,y-22).toFixed(1)+'" text-anchor="middle" class="chart-value">'+esc(money(x.value))+'</text><text x="'+(x0+bw/2).toFixed(1)+'" y="'+Math.max(28,y-7).toFixed(1)+'" text-anchor="middle" class="chart-value">'+pct.toFixed(1)+'%</text><text x="'+(x0+bw/2).toFixed(1)+'" y="258" text-anchor="middle" class="chart-label">'+esc(String(x.label).slice(0,14))+'</text></g>'}).join('');
   el.innerHTML='<div class="chart-title">'+esc(($('chartMode')?.selectedOptions[0]?.textContent)||'Comparación')+'</div><div class="chart-mini-summary"><span>Total: <strong>'+money(sum)+'</strong></span><span>Máximo: <strong>'+esc(String(data.slice().sort((a,b)=>b.value-a.value)[0].label))+'</strong></span></div><svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Gráfico comparativo de ventas">'+bars+'<line x1="'+pad+'" y1="235" x2="'+(w-pad)+'" y2="235" class="chart-axis"></line></svg><p class="muted chart-footnote">Cada barra muestra monto y participación del total. Toca una barra para ver el detalle.</p>';
 }
+function renderTrendChart(){
+  const el=$('statsTrendChart');
+  if(!el)return;
+  const rows=cashFilteredSales();
+  const now=new Date(localDate()+'T12:00:00');
+  let start=new Date(now), end=new Date(now);
+  if(statPeriod==='week'){start.setDate(now.getDate()-((now.getDay()+6)%7));}
+  else if(statPeriod==='month'){start=new Date(now.getFullYear(),now.getMonth(),1,12);}
+  else if(statPeriod==='year'){start=new Date(now.getFullYear(),0,1,12);}
+  const points=[];
+  for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){
+    const key=d.toISOString().slice(0,10);
+    const total=rows.filter(s=>saleDate(s)===key).reduce((a,s)=>a+saleTotal(s),0);
+    points.push({date:key,total});
+  }
+  if(!points.length){el.innerHTML='<p class="muted">No hay datos suficientes para mostrar la tendencia.</p>';return}
+  const w=820,h=300,padL=48,padR=24,padT=34,padB=48;
+  const max=Math.max(...points.map(p=>p.total),1);
+  const x=i=>points.length===1?(w-padL-padR)/2+padL:padL+i*(w-padL-padR)/(points.length-1);
+  const y=v=>padT+(h-padT-padB)-(v/max)*(h-padT-padB);
+  const path=points.map((p,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(p.total).toFixed(1)).join(' ');
+  const dots=points.map((p,i)=>{
+    const show=points.length<=14||i===0||i===points.length-1||i%Math.ceil(points.length/8)===0;
+    const label=p.date.slice(8,10)+'/'+p.date.slice(5,7);
+    return '<g><circle cx="'+x(i).toFixed(1)+'" cy="'+y(p.total).toFixed(1)+'" r="4" class="trend-dot"><title>'+label+' · Ventas '+money(p.total)+'</title></circle>'+(show?'<text x="'+x(i).toFixed(1)+'" y="'+(h-18)+'" text-anchor="middle" class="chart-label">'+label+'</text>':'')+'</g>'
+  }).join('');
+  const total=points.reduce((a,p)=>a+p.total,0),peak=points.reduce((a,b)=>a.total>b.total?a:b);
+  el.innerHTML='<div class="chart-title">Evolución diaria · '+esc(periodLabel())+'</div><div class="chart-mini-summary"><span>Total: <strong>'+money(total)+'</strong></span><span>Mejor día: <strong>'+esc(peak.date.slice(8,10)+'/'+peak.date.slice(5,7))+' · '+money(peak.total)+'</strong></span></div><svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Evolución diaria de ventas"><line x1="'+padL+'" y1="'+(h-padB)+'" x2="'+(w-padR)+'" y2="'+(h-padB)+'" class="chart-axis"></line><path d="'+path+'" fill="none" class="trend-line"></path>'+dots+'</svg><p class="muted chart-footnote">La línea muestra las ventas de cada día del período seleccionado. Toca un punto para ver el monto exacto.</p>';
+}
 function renderGeneralTotal(){const rows=cashFilteredSales().filter(s=>periodMatch(saleDate(s),totalPeriod)),t=rows.reduce((a,s)=>a+saleTotal(s),0);$('generalTotal').textContent=money(t);$('generalTotalMeta').textContent=rows.length+' comprobantes · filtros de ruta/día aplicados.'}function resetProductForm(){editingProductId=null;editingProductVariant='';currentPromos=[];$('productFormTitle').textContent='Ingreso de producto nuevo';$('productStockLabel').textContent='Stock inicial';$('productStockHelp').textContent='Cantidad disponible al ingresar el producto.';$('productName').value='';$('productBuy').value='';$('productSell').value='';$('productStock').value='';$('productStatus').textContent='';$('cancelProduct').classList.add('hidden');if($('deleteProduct'))$('deleteProduct').classList.add('hidden');renderPromoRows()}
 function renderProductForm(){renderCategoriesOptions();$('productStockLabel').textContent=editingProductId?'Agregar unidades al stock':'Stock inicial';$('productStockHelp').textContent=editingProductId?'Stock actual: '+(getRawProducts().find(x=>String(x.id)===String(editingProductId))?.stock??0)+'. Las unidades ingresadas se sumarán automáticamente.':'Cantidad disponible al ingresar el producto.';}
 function renderCategoriesOptions(){const cats=getCategories();$('productCategory').innerHTML=cats.map(c=>'<option value="'+esc(c)+'">'+esc(c)+'</option>').join('')}
