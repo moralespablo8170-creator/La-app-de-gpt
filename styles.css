@@ -159,3 +159,29 @@
 #productsView .search-label input:focus{border-color:#7c3aed;background:#fff}
 
 .daily-routes{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.daily-routes button.active{background:#2563eb;color:#fff;border-color:#2563eb}.route-tools #otherRoute{font-size:14px;padding:12px 16px}.daily-route-note{width:100%;margin:0;color:#4b5563;font-size:13px}
+
+/* B113 — Inicio basado en el panel visual elegido. */
+@media screen{
+ :root,body{background:#051a2e}
+ body{background:radial-gradient(ellipse at top,#153b58 0,#071f35 48%,#041321 100%);min-height:100vh}
+ .app{max-width:820px;padding-top:22px}
+ .brand-header{background:transparent;min-height:0;padding:0 8px 8px;display:flex;flex-direction:column;border-radius:0;margin-bottom:4px;overflow:visible}
+ .zipper-wordmark{display:flex;align-items:center;justify-content:center;gap:12px;color:#fff}
+ .zipper-flame{width:45px;height:62px;flex:none}
+ .brand-distributor{display:block;font-size:23px;font-weight:800;line-height:1.1;letter-spacing:-.8px}
+ .brand-zipper{display:block;font-size:51px;font-style:italic;font-weight:900;line-height:.97;letter-spacing:-2px}.brand-zipper>span{color:#ffc629}
+ .brand-tagline{font-size:12px;color:#fff;font-weight:500;text-align:center;margin:12px 0 4px}.brand-tagline b{color:#ffd23f;padding:0 3px}
+ .home-overview{margin-bottom:18px}.home-product-banner{height:auto;aspect-ratio:285/124;max-width:640px;width:100%;margin:0 auto 8px;background-image:url('./assets/zipper-panel.webp');background-size:539% auto;background-repeat:no-repeat;background-position:1.44% 17.24%;border-radius:16px}
+ .home-shortcuts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+ .home-shortcut{display:flex;align-items:center;gap:13px;text-align:left;border:1px solid #ffffffb3;border-radius:16px;padding:10px;min-height:82px;box-shadow:0 5px 16px #0003;color:#003485}
+ .shortcut-clients{background:linear-gradient(110deg,#fff,#e7f3ff)}.shortcut-products{background:linear-gradient(110deg,#fff,#d5f4e6);color:#00553c}.shortcut-cash{background:linear-gradient(110deg,#fff,#ece4ff);color:#302778}.shortcut-analysis{background:linear-gradient(110deg,#fff,#c8f3fb);color:#00627f}
+ .shortcut-icon{width:56px;height:56px;border-radius:14px;display:grid;place-items:center;flex:none;color:#fff;background:linear-gradient(140deg,#24a5ff,#0055ef);box-shadow:inset 0 1px 0 #ffffff80,0 4px 10px #005af52b}
+ .shortcut-products .shortcut-icon{background:linear-gradient(140deg,#65ee37,#00a92e)}.shortcut-cash .shortcut-icon{background:linear-gradient(140deg,#bc68ff,#7029e8)}.shortcut-analysis .shortcut-icon{background:linear-gradient(140deg,#14d7e8,#009fcd)}
+ .shortcut-icon svg{width:33px;height:33px}.home-shortcut strong{display:block;font-size:18px;line-height:1.2}.home-shortcut small{display:block;font-size:12px;margin-top:5px;font-weight:500;line-height:1.3}.shortcut-chevron{font-size:26px;margin-left:auto;opacity:.5}
+ .tabs{max-width:800px;margin:auto;background:linear-gradient(180deg,#0b2945,#04192c);border:1px solid #285579;box-shadow:0 8px 30px #0007;height:72px;padding:7px 4px;bottom:8px}
+ .tabs .tab{background:transparent;color:#b7cde2;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;font-size:10px;font-weight:600;min-width:0}.tabs .tab svg{width:22px;height:22px}.tabs .tab.active{background:#083754;color:#32d9ff}
+ #homeView .primary{background:#0067f5}#homeView .card{border:1px solid #d9e7f2;border-radius:18px}#homeView .kicker{color:#0067c9}
+ #homeView:has(#cartSection:not(.hidden)) .home-overview{display:none}
+ button:focus-visible{outline:3px solid #38bdf8;outline-offset:3px}
+ @media(max-width:600px){.app{padding-top:18px}.home-shortcuts{grid-template-columns:1fr;gap:8px}.home-shortcut{min-height:70px;padding:8px 11px;border-radius:14px}.shortcut-icon{width:51px;height:51px;border-radius:12px}.home-shortcut strong{font-size:17px}.brand-distributor{font-size:22px}.brand-zipper{font-size:48px}.brand-tagline{font-size:11px}}
+}
