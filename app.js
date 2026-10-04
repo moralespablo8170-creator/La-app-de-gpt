@@ -247,7 +247,7 @@ function validateClientInput(id,announce=true){
     return true
   }
   if(id==='clientPhone'){
-    const digits=String($(id).value||'').replace(/\\D/g,'');
+    const digits=String($(id).value||'').replace(/\D/g,'');
     const body=digits.replace(/^569/,'');
     $(id).value=formatPhone(digits);
     if(body.length>0&&body.length<8){
