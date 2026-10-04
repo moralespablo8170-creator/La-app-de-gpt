@@ -114,7 +114,143 @@ function migrateVariantInventory(){
 }
 
 function repairUltraVariants(){const ps=getRawProducts();const rows=ps.filter(p=>p.variantKey==='bigtime-ultra'&&p.flavor);if(!rows.length)return false;const defs=[{color:'negro',flavor:'Menta fuerte'},{color:'azul',flavor:'Aqua azul'},{color:'rojo',flavor:'Sandía'},{color:'verde',flavor:'Menta'}];const generic=ps.filter(p=>!(p.variantKey==='bigtime-ultra'&&p.flavor));const base=rows[0];const sums={negro:0,azul:0,rojo:0,verde:0};rows.forEach(p=>{const f=norm(p.flavor),col=norm(p.color),name=norm(p.name);let key='';if(f.includes('menta fuerte')||col==='negro'||name.includes('menta fuerte')||name.includes(' negro'))key='negro';else if(f.includes('aqua azul')||col==='azul'||name.includes('aqua azul')||name.includes(' azul'))key='azul';else if(f.includes('sandia')||col==='rojo'||name.includes('sandia')||name.includes(' rojo'))key='rojo';else if(f==='menta'||col==='verde'||name.includes('menta')||name.includes(' verde'))key='verde';if(key)sums[key]+=Number(p.stock||0)});const out=defs.map(def=>({...base,id:uid(),name:'Big Time Ultra · '+def.flavor,color:def.color,flavor:def.flavor,variantKey:'bigtime-ultra',category:base.category||'Tabaquería',stock:sums[def.color]||0,pricePurchase:Number(base.pricePurchase??base.purchasePrice)||0,price:Number(base.price??base.priceSale)||0,promotions:[{minQty:3,price:11200,label:'Oferta desde 3 unidades: $11.200'}]}));writeArray('zipperProductos',[...generic,...out]);return true}
-function loadSeed(){return fetch('./data/zipper-seed.json',{cache:'no-store'}).then(r=>r.json()).then(s=>{if(!s||!Array.isArray(s.clients)||!Array.isArray(s.products))return;const ver=String(s.version||'1');if(localStorage.getItem('zipperSeedVersion')===ver)return;const cs=getClients(),ps=getRawProducts();s.clients.forEach(x=>{const name=String(x.name||'').trim();if(name&&!cs.some(c=>norm(c.name)===norm(name)&&norm(c.address)===norm(x.address))){cs.push({...x,id:uid(),route:x.route||'',routeWeek:x.routeWeek||'A',routeDay:x.routeDay||'',active:x.active!==false})}});s.products.forEach(x=>{const name=String(x.name||'').trim();if(name&&!ps.some(p=>norm(p.name)===norm(name)&&Number(p.price)===Number(x.price))){ps.push({...x,id:uid(),name,stock:Number(x.stock)||0,promotions:Array.isArray(x.promotions)?x.promotions:defaultPromos(name)})}});writeArray('zipperClientes',cs);writeArray('zipperProductos',ps);writeArray('zipperCategorias',[...(s.categories||[]),...getCategories()]);localStorage.setItem('zipperSeedVersion',ver);renderHome();renderInventory();renderClients()}).catch(()=>{})}
+function applyInventoryUpdate(){
+  const VERSION='inventory-format-1';
+  if(localStorage.getItem('zipperInventoryUpdateVersion')===VERSION)return false;
+  const ps=getRawProducts();
+  const setNameStock=(test,name,stock)=>{
+    const p=ps.find(test);
+    if(!p)return false;
+    p.name=name;p.stock=Math.max(0,Number(stock)||0);p.active=true;return true
+  };
+  const byName=s=>p=>norm(p.name)===norm(s);
+  const byContains=s=>p=>norm(p.name).includes(norm(s));
+
+  // Uniform spelling/format while preserving the requested product names.
+  setNameStock(byContains('pañuelo elite'),'Pañuelo Elite',11);
+  setNameStock(byContains('vaso 10oz'),'Vaso chico 10 oz',21);
+  setNameStock(byContains('vaso rojo'),'Vaso rojo 16 oz',0);
+  setNameStock(byContains('vaso 160z'),'Vaso grande 16 oz',25);
+  setNameStock(byContains('huincha'),'Wincha de embalaje',14);
+  setNameStock(byContains('ron.clasic'),'Ronson clásico',52);
+  setNameStock(byContains('ron. diseño'),'Ronson diseño',28);
+  setNameStock(p=>norm(p.name).includes('ron.trans'), 'Ronson transparente',66);
+  setNameStock(byName('CHISPER'),'Chispero',12);
+  setNameStock(byContains('clipper'),'Clipper',2);
+  setNameStock(byContains('filtro verso mentol'),'Filtro Verso Mentol',38);
+  setNameStock(byContains('filtro verso grueso'),'Filtro Verso Azul',71);
+  setNameStock(byContains('filtro verso clasico'),'Filtro Verso Rojo',31);
+  setNameStock(byContains('filtro verso organico'),'Filtro Verso Café Orgánico',33);
+  setNameStock(byContains('enrolador'),'Enrolador',22);
+  setNameStock(byName('moledor'),'Moledor',48);
+  setNameStock(byContains('pipas con moledor'),'Pipas con moledor',57);
+  setNameStock(byName('pipas'),'Pipas con malla',0);
+  setNameStock(byContains('ocb c/ boquilla'),'OCB con boquilla',2);
+  setNameStock(byContains('amster con boquilla'),'Amsterdam papelillo con boquilla',5);
+  setNameStock(byContains('boquilla  ocb'),'Boquilla OCB',3);
+  setNameStock(byContains('boquilla amsterdam'),'Boquilla Amsterdam',7);
+  setNameStock(byContains('amsterda'),'Papelillo Amsterdam',3);
+  setNameStock(byContains('ocb organico'),'OCB Orgánico',2);
+  setNameStock(byContains('ocb        gris'),'OCB Gris Expert',2);
+  setNameStock(byContains('ocb negro'),'OCB Negro',14);
+  setNameStock(byContains('cono rosa'),'Papelillo cono rosa',2);
+  setNameStock(byContains('blunt de rosa'),'Blun pétalos de rosa',8);
+  setNameStock(byName('blunt'),'Blunt',569);
+  setNameStock(byName('raw c/ boqui'),'RAW',106);
+  const rawBox=ps.find(byContains('raw c/    boquilla'));
+  if(rawBox)rawBox.active=false;
+  const kitBox=ps.find(byContains('kit-kat'));
+  if(kitBox)kitBox.active=false;
+  setNameStock(byContains('kit - kat'),'Kit Kat unidad',240);
+  setNameStock(byContains('bolsa botillera'),'Bolsa botillera',9);
+  setNameStock(byContains('bolsa de basura    80x100'),'Bolsa de basura 80x110',9);
+  setNameStock(byContains('bolsa de basura    90x120'),'Bolsa de basura 90x120',14);
+  setNameStock(byContains('pila aa'),'Pila Eveready doble A',6);
+  setNameStock(byContains('pila aaa'),'Pila Eveready triple A',17);
+  setNameStock(byContains('pila d'),'Pila Eveready D',5);
+
+  // Caramelos / Arcor / Nestlé.
+  setNameStock(byContains('bazooka'),'Bazooka',18);
+  setNameStock(byContains('bon o bon'),'Bonobon',61);
+  setNameStock(byName('nikolo'),'Nikolo',4);
+  setNameStock(byName('chubi'),'Chubi',20);
+  setNameStock(byName('tifany'),'Tiffany',11);
+  setNameStock(byContains('rocklet  naranjo'),'Rocklet naranja',7);
+  setNameStock(byContains('rocklet  negro'),'Rocklet negro',9);
+  setNameStock(byName('amberry'),'Gomitas Amberry',5);
+  setNameStock(byName('ambrosit'),'Gomitas Ambrosito',0);
+  setNameStock(byName('flippy'),'Gomitas Flippy',0);
+  setNameStock(byContains('frutillas con crema'),'Gomitas Ambrosoli frutillas con crema',6);
+  setNameStock(byName('loop'),'Gomitas Loop',4);
+  setNameStock(byName('turron'),'Turrón',10);
+  setNameStock(byContains('menta chocolate'),'Caramelo menta chocolate',13);
+  setNameStock(byContains('tofee surtido'),'Tofi/Tofee surtido 400g',13);
+  setNameStock(byContains('chupete    bowlings'),'Coyac bowling',8);
+  setNameStock(byName('mentitas'),'Mentitas Ambrosoli',8);
+  setNameStock(byName('full'),'Full de Ambrosoli',1);
+  const free=ps.filter(p=>norm(p.name).includes('freegells'));
+  [['amarillo',7],['rojo',2],['azul',10]].forEach((x,i)=>{if(free[i]){free[i].name='Freegels '+x[0];free[i].stock=x[1];free[i].active=true}});
+  const alka2=ps.filter(p=>norm(p.name).includes('alka 2'));
+  ['rosado','azul','verde'].forEach((color,i)=>{if(alka2[i]){alka2[i].name='Alka 2 · '+color;alka2[i].flavor=color;alka2[i].color=color;alka2[i].variantKey='alka2';alka2[i].stock=[27,20,13][i];alka2[i].active=true}});
+  const lang=ps.filter(p=>norm(p.name).includes('languetaz'));
+  [['verde',3],['naranja',1]].forEach((x,i)=>{if(lang[i]){lang[i].name='Languetazo · '+x[0];lang[i].color=x[0];lang[i].variantKey='languetazo';lang[i].stock=x[1];lang[i].active=true}});
+  setNameStock(byContains('conquista rollo'),'Conquista palmerita',64);
+  setNameStock(byName('cracker'),'Cracker',86);
+  setNameStock(byContains('galleta vino'),'Galleta de vino',78);
+  setNameStock(byContains('triton chocolate'),'Tritón chocolate',178);
+  setNameStock(byContains('triton vainilla'),'Tritón vainilla',195);
+  setNameStock(byContains('super 8'),'Super 8',9);
+  setNameStock(byContains('trencito'),'Trencito 80g',43);
+
+  // Bristol: 15 variants, with the exact stocks dictated by the user.
+  const br=ps.filter(p=>p.variantKey==='tabaco-bristol' || norm(p.name).includes('tabaco bristol'));
+  const brStocks={uva:24,caramelo:39,menta:21,coco:10,virginia:5,arandano:9,cherry:18,berry:10,mango:32,vainilla:35,original:57,'mango maracuya':15,chicle:3,chocolate:36,'cafe turco':10};
+  const brRows=br.length?br:[];
+  Object.entries(brStocks).forEach(([key,stock])=>{
+    const p=brRows.find(x=>norm(x.flavor||x.name).includes(key));
+    if(p){p.name='Tabaco Bristol 45 gr · '+({'arandano':'Arándano','mango maracuya':'Mango maracuyá','cafe turco':'Café turco'}[key]||key.replace(/(^| )\\w/g,m=>m.toUpperCase()));p.stock=stock;p.variantKey='tabaco-bristol';p.flavor=p.name.split(' · ')[1];p.active=true}
+  });
+
+  // Big Time and Big Time Ultra variants.
+  const bt=ps.filter(p=>p.variantKey==='bigtime');
+  const btStocks={menta:132,'menta fuerte':195,'sandia':130,'aqua azul':82,refrescante:78,'bubble gum':44};
+  bt.forEach(p=>{const f=norm(p.flavor||p.name);const k=Object.keys(btStocks).find(x=>f.includes(x));if(k){const label={'menta':'Menta','menta fuerte':'Menta fuerte','sandia':'Rojo','aqua azul':'Azul','refrescante':'Celeste','bubble gum':'Rosado'}[k];p.name='Big Time '+label;p.stock=btStocks[k];p.active=true}});
+  const bu=ps.filter(p=>p.variantKey==='bigtime-ultra');
+  const buStocks={'menta fuerte':25,'aqua azul':9,sandia:7,menta:13};
+  bu.forEach(p=>{const f=norm(p.flavor||p.name);const k=Object.keys(buStocks).find(x=>f.includes(x));if(k){const label={'menta fuerte':'Negro','aqua azul':'Azul',sandia:'Rojo',menta:'Verde'}[k];p.name='Big Time Ultra '+label;p.stock=buStocks[k];p.active=true}});
+
+  // Alka, Alka Ice and Enora keep their requested product words; only spelling/case is normalized.
+  setNameStock(byName('alka'),'Alka',4);
+  setNameStock(byName('alka ice'),'Alka Ice',34);
+  setNameStock(byName('en hora'),'Enora',2);
+  setNameStock(byName('eno'),'Eno azul',4);
+
+  // Medicines.
+  const med={
+    ibuprofeno:18,loperamida:4,famotidina:2,clorfenamina:4,ketoprofeno:6,ketorolaco:6,colmax:5,
+    paracetamol:16,domperidona:4,'pastilla carbon':14,naproxeno:13,loratadina:4,migranol:9,
+    amoxicilina:2,diclofenaco:11,desloratadina:6,omeprasol:1,cefalmin:10,preservativos:155,
+    'parche curitas':1
+  };
+  Object.entries(med).forEach(([needle,stock])=>{
+    const p=ps.find(x=>norm(x.name).includes(needle));
+    if(p){p.stock=stock;p.active=true}
+  });
+  // Tapsin variants.
+  setNameStock(byContains('tapsin dia'),'Tabsin limonada día',118);
+  setNameStock(byContains('tapsin noche'),'Tabsin limonada noche',33);
+  setNameStock(byContains('tapsin calnte dia'),'Tabsin rojo pastilla día',4);
+  setNameStock(byContains('tapsin calnte noche'),'Tabsin morado pastilla noche',53);
+  // Explicitly requested Alka naming and remaining variant stocks.
+  const alka=ps.filter(p=>p.variantKey==='alka2');
+  if(alka.length>=3)[27,20,13].forEach((v,i)=>alka[i].stock=v);
+
+  writeArray('zipperProductos',ps);
+  localStorage.setItem('zipperInventoryUpdateVersion',VERSION);
+  return true
+}
+
+function loadSeed(){return fetch('./data/zipper-seed.json',{cache:'no-store'}).then(r=>r.json()).then(s=>{if(!s||!Array.isArray(s.clients)||!Array.isArray(s.products))return;const ver=String(s.version||'1');if(localStorage.getItem('zipperSeedVersion')===ver){applyInventoryUpdate();renderInventory();return}const cs=getClients(),ps=getRawProducts();s.clients.forEach(x=>{const name=String(x.name||'').trim();if(name&&!cs.some(c=>norm(c.name)===norm(name)&&norm(c.address)===norm(x.address))){cs.push({...x,id:uid(),route:x.route||'',routeWeek:x.routeWeek||'A',routeDay:x.routeDay||'',active:x.active!==false})}});s.products.forEach(x=>{const name=String(x.name||'').trim();if(name&&!ps.some(p=>norm(p.name)===norm(name)&&Number(p.price)===Number(x.price))){ps.push({...x,id:uid(),name,stock:Number(x.stock)||0,promotions:Array.isArray(x.promotions)?x.promotions:defaultPromos(name)})}});writeArray('zipperClientes',cs);writeArray('zipperProductos',ps);writeArray('zipperCategorias',[...(s.categories||[]),...getCategories()]);localStorage.setItem('zipperSeedVersion',ver);applyInventoryUpdate();renderHome();renderInventory();renderClients()}).catch(()=>{})}
 
 function latestSalesForClient(id){return getSales().filter(s=>String(s.clienteId)===String(id)).sort((a,b)=>String(b.fecha||'').localeCompare(String(a.fecha||''))||Number(b.folio||0)-Number(a.folio||0))}function renderVisitedSales(id){const rows=latestSalesForClient(id);$('visitedSales').innerHTML=rows.length?'<div class="kicker">VENTAS REGISTRADAS DE ESTE CLIENTE</div>'+rows.map(s=>'<article class="history-row"><div><strong>#'+esc(s.folio)+' · '+esc(s.fecha)+'</strong><span>'+(s.items||[]).map(i=>esc(i.qty)+' × '+esc(i.desc)).join(' · ')+'</span></div><div class="actions-small"><strong>'+money(saleTotal(s))+'</strong><button class="primary edit-visited-sale" data-id="'+esc(s.clienteId)+'" type="button">Modificar venta</button><button class="secondary reprint-visited" data-id="'+esc(s.id)+'" type="button">Reimprimir</button></div></article>').join(''):'<p class="muted">Este cliente aún no tiene ventas registradas.</p>';document.querySelectorAll('.edit-visited-sale').forEach(b=>b.onclick=()=>openClientSaleForEdit(b.dataset.id));document.querySelectorAll('.reprint-visited').forEach(b=>b.onclick=()=>{const sale=getSales().find(x=>String(x.id)===String(b.dataset.id));if(sale){renderPrint(sale);window.print()}})}function renderHome(){const all=getClients().filter(c=>c.active!==false);const session=routeSession();const setup=$('routeSetup'),activeBox=$('activeRouteBox');if(setup)setup.classList.toggle('hidden',!!session);if($('exceptionSearch'))$('exceptionSearch').classList.toggle('hidden',!exceptionSearch);if(activeBox)activeBox.classList.toggle('hidden',!session||!!selectedClientId);if(session){$('activeRouteLabel').textContent='Semana '+session.week+' · '+session.day;const visited=visitedIds().map(String);let routeClients=all.filter(c=>String(c.routeWeek||'A')===String(session.week)&&norm(c.routeDay)===norm(session.day));if(!exceptionSearch){const hn=norm($('homeName').value),ha=norm($('homeAddress').value);routeClients=routeClients.filter(c=>(!hn||norm(c.name).includes(hn))&&(!ha||norm(c.address).includes(ha)))}if(exceptionSearch){const w=$('otherWeek').value,d=$('otherDay').value,n=norm($('otherName').value),ad=norm($('otherAddress').value);routeClients=all.filter(c=>(!w||String(c.routeWeek)===String(w))&&(!d||norm(c.routeDay)===norm(d))&&(!n||norm(c.name).includes(n))&&(!ad||norm(c.address).includes(ad)));$('otherResults').innerHTML=routeClients.length?routeClients.map(c=>'<article class="route-client"><div><strong>'+esc(c.name)+'</strong><span>'+esc(c.address||'Sin dirección')+'</span><span>Semana '+esc(c.routeWeek||'—')+' · '+esc(c.routeDay||'Sin día')+'</span></div><button class="primary select-client" data-id="'+esc(c.id)+'" type="button">Carrito</button></article>').join(''):'<p class="muted">No hay clientes con esa búsqueda.</p>';}else{const pending=routeClients.filter(c=>!visited.includes(String(c.id)));const rows=showVisited?routeClients.filter(c=>visited.includes(String(c.id))).sort((a,b)=>visited.indexOf(String(a.id))-visited.indexOf(String(b.id))):pending;$('routeClients').innerHTML=rows.length?rows.map(c=>'<article class="route-client '+(showVisited?'visited-row':'')+'"><div><strong>'+esc(c.name)+'</strong><span>'+esc(c.address||'Sin dirección')+'</span><span>Semana '+esc(c.routeWeek||'—')+' · '+esc(c.routeDay||'Sin día')+'</span></div><div class="actions-small">'+(showVisited?(()=>{const sale=latestSalesForClient(c.id)[0];return '<span class="sale-status-badge">'+(sale?'VENTA · '+money(saleTotal(sale)):'VISITADO · SIN VENTA')+'</span><button class="primary edit-visited-sale" data-id="'+esc(c.id)+'" type="button">Agregar / modificar venta</button><button class="secondary reprint-last" data-id="'+esc(c.id)+'" type="button">Reimprimir último</button><button class="ghost view-client-sales" data-id="'+esc(c.id)+'" type="button">Ventas anteriores</button>'})():'<button class="primary select-client" data-id="'+esc(c.id)+'" type="button">Carrito</button><button class="secondary mark-visited" data-id="'+esc(c.id)+'" type="button">Visitado</button>')+'</div></article>').join(''):'<p class="muted">'+(showVisited?'Aún no hay clientes visitados.':'No quedan clientes pendientes para esta ruta.')+'</p>';}}else{$('routeClients').innerHTML='';}if(showVisited){$('visitedSales').classList.remove('hidden');$('visitedBack').classList.remove('hidden');document.querySelectorAll('.edit-visited-sale').forEach(b=>b.onclick=()=>openClientSaleForEdit(b.dataset.id));document.querySelectorAll('.reprint-last').forEach(b=>b.onclick=()=>{const s=latestSalesForClient(b.dataset.id)[0];if(s){renderPrint(s);window.print()}});document.querySelectorAll('.view-client-sales').forEach(b=>b.onclick=()=>{renderVisitedSales(b.dataset.id);$('visitedSales').scrollIntoView({behavior:'smooth',block:'start'})})}else{$('visitedSales').classList.add('hidden');$('visitedBack').classList.add('hidden')}document.querySelectorAll('.select-client').forEach(b=>b.onclick=()=>openClientCart(b.dataset.id));document.querySelectorAll('.mark-visited').forEach(b=>b.onclick=()=>markClientVisited(b.dataset.id));if($('visitedButton'))$('visitedButton').textContent='Visitados ('+visitedIds().length+')';if(selectedClientId)renderCart()}
 function openClientSaleForEdit(id){const c=clientById(id);if(!c)return;const sale=latestSalesForClient(id)[0];if(!sale){openClientCart(id);return}selectedClientId=c.id;editingSaleId=sale.id;cart=[];(sale.items||[]).forEach(i=>{const p=productById(i.productId)||productById(i.baseProductId);if(p){const existing=cart.find(x=>String(x.productId)===String(p.id));if(existing)existing.qty+=Number(i.qty||0);else cart.push({productId:p.id,qty:Number(i.qty||0)})}});draftProductId='';draftQty='';showCartTray=true;$('cartClientName').textContent=c.name;$('cartClientMeta').textContent=(c.address||'Sin dirección')+' · EDITANDO VENTA #'+sale.folio;$('cartSection').classList.remove('hidden');$('cartSearchName').value='';$('cartCategory').value='';$('saleStatus').textContent='Venta existente abierta. Puedes agregar o quitar productos y guardar para reemplazarla.';renderHome();renderCart();setTimeout(()=>$('cartSection').scrollIntoView({behavior:'smooth',block:'start'}),50)}
@@ -318,5 +454,6 @@ document.querySelectorAll('#historyType button').forEach(b=>b.onclick=()=>{histo
 bind();
 migrateVariantInventory();
 repairUltraVariants();
+applyInventoryUpdate();
 resetProductForm();resetClientForm();renderHome();renderCash();renderInventory();renderClients();renderHistory();
 loadSeed();
