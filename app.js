@@ -49,7 +49,7 @@ function showView(name){
       return
     }
   }
-  currentView=name;const map={home:'homeView',cash:'cashView',products:'productsView',clients:'clientsView',history:'historyView'};Object.entries(map).forEach(([k,id])=>$(id).classList.toggle('hidden',k!==name));const labels={home:'Inicio',cash:'Caja diaria',products:'Productos',clients:'Clientes',history:'Historial'};$('pageTitle').textContent=labels[name];document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.id===name+'Tab'));window.scrollTo(0,0);if(name==='home')renderHome();if(name==='cash')renderCash();if(name==='products'){renderProductForm();renderInventory();renderCategories()}if(name==='clients'){renderClientForm();renderClients()}if(name==='history')renderHistory()}
+  currentView=name;const map={home:'homeView',cash:'cashView',products:'productsView',clients:'clientsView',history:'historyView'};Object.entries(map).forEach(([k,id])=>$(id).classList.toggle('hidden',k!==name));const labels={home:'Inicio',cash:'Caja diaria',products:'Productos',clients:'Clientes',history:'Historial'};$('pageTitle').textContent=labels[name];document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.id===name+'Tab'));window.scrollTo(0,0);if(name==='home')renderHome();if(name==='cash')renderCash();if(name==='products'){renderProductForm();renderInventory();renderCategories()}if(name==='clients'){renderClients()}if(name==='history')renderHistory()}
 function bindNav(){
   [['homeTab','home'],['cashTab','cash'],['productsTab','products'],['clientsTab','clients'],['historyTab','history']]
   .forEach(([id,v])=>{
@@ -327,7 +327,7 @@ function saveSale(){openSaveOptions()}
 function printSale(){openSaveOptions()}
 function saleRouteWeek(s){const c=s&&s.clienteId?clientById(s.clienteId):null;const v=s?.routeWeek||c?.routeWeek||'';return String(v)==='1'?'A':String(v)==='2'?'B':String(v).toUpperCase()||'Sin ruta'}
 function saleRouteDay(s){const c=s&&s.clienteId?clientById(s.clienteId):null;return String(s?.routeDay||c?.routeDay||'Sin día')}
-function isoWeekInfo(dateStr){const d=new Date(String(dateStr||'')+'T12:00:00');if(Number.isNaN(d.getTime()))return null;const day=(d.getDay()+6)%7;d.setDate(d.getDate()-day+3);const year=d.getFullYear(),first=new Date(year,0,4,12),week=1+Math.round(((d-first)/86400000-3+((first.getDay()+6)%7))/7);return{year,week}}
+function isoWeekInfo(dateStr){const d=dateStr instanceof Date?new Date(dateStr):new Date(String(dateStr||'')+'T12:00:00');if(Number.isNaN(d.getTime()))return null;const day=(d.getDay()+6)%7;d.setDate(d.getDate()-day+3);const year=d.getFullYear(),first=new Date(year,0,4,12),week=1+Math.round(((d-first)/86400000-3+((first.getDay()+6)%7))/7);return{year,week}}
 function cashFilteredSales(){const rf=$('statRouteFilter')?.value||'',df=$('statDayFilter')?.value||'';return getSales().filter(s=>(!rf||saleRouteWeek(s)===rf)&&(!df||saleRouteDay(s)===df))}
 function statsPeriodRows(){return cashFilteredSales().filter(s=>periodMatch(saleDate(s),statPeriod))}
 function renderCash(){const today=getSales().filter(s=>saleDate(s)===localDate());const sales=today.reduce((a,s)=>a+saleTotal(s),0),cost=today.reduce((a,s)=>a+saleCost(s),0);$('cashSales').textContent=money(sales);$('cashCost').textContent=money(cost);$('cashProfit').textContent=money(sales-cost);renderStats();renderGeneralTotal()}
