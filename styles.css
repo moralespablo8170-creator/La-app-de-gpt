@@ -124,3 +124,25 @@
 
 /* B110 - confirmacion de borrado */
 .danger{background:#dc2626!important;color:#fff!important;border:0;border-radius:10px;padding:10px 13px;font-weight:900;min-height:42px}.danger:hover{background:#b91c1c!important}.delete-confirm{position:fixed;inset:0;z-index:20000;background:#0009;display:grid;place-items:center;padding:18px}.delete-confirm-card{width:min(430px,100%);background:#fff;border-radius:20px;padding:22px;box-shadow:0 24px 80px #0007;text-align:center;border:3px solid #fecaca}.delete-confirm-icon{width:52px;height:52px;margin:0 auto 10px;border-radius:50%;display:grid;place-items:center;background:#fee2e2;color:#b91c1c;font-size:28px;font-weight:1000}.delete-confirm-card h2{margin:4px 0 8px}.delete-confirm-card p{color:#4b5563;line-height:1.45;margin:0}.delete-confirm-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:18px}.category-admin-actions .danger{min-height:40px}@media(max-width:600px){.delete-confirm-card{padding:20px 16px}.delete-confirm-actions{grid-template-columns:1fr}.delete-confirm-actions .danger{order:0}}
+
+/* B111 - botones de borrado grandes y visibles */
+#deleteProduct.danger,
+#deleteClient.danger{
+  display:block;
+  width:100%;
+  min-height:54px;
+  padding:14px 18px;
+  margin-top:10px;
+  font-size:16px;
+  font-weight:900;
+  border-radius:12px;
+  background:#dc2626!important;
+  color:#fff!important;
+  border:2px solid #b91c1c!important;
+  box-shadow:0 3px 8px #0002;
+  text-align:center;
+}
+#deleteProduct.danger:hover,
+#deleteClient.danger:hover{background:#b91c1c!important}
+#deleteProduct.danger.hidden,
+#deleteClient.danger.hidden{display:none!important}
