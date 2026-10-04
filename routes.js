@@ -1,23 +1,15 @@
 (()=>{const ROUTE_ASSIGNMENTS=[["michel","los baqueanos # 9558","Martes",1],["Cristóbal","Av. Oriental # 7402","Martes",2],["benjamin","marcelo fitte # 634","Martes",3],["luis la 30","12 de octubre  5106","Martes",4],["cristian la 31","salvador gutierrez 4999","Martes",5],["carlos arancibia","lorenzo eiting # 6099","Martes",6],["angel (botilleria)","cmdt.  chacon 6406","Martes",7],["nicole","huelen # 1556","Martes",8],["esteban","huelen # 1573","Martes",9],["juan / cecilia","huelen # 1760","Martes",10],["eduardo","gutierrez # 7274","Martes",12],["cristian/gloria","fleming 7380","Martes",13],["angy","salvador gutierrez # 7614","Martes",14],["ceicila pavez","la capilla # 7954","Martes",15],["a la vuelta cecilia","","Martes",16],["guillermo/mili","la estrella # 1756","Martes",17],["carlos","la estrella 1711","Martes",18],["leo / jair","mapocho sur # 8330","Martes",19],["arturo","mapocho norte # 7929","Martes",20],["katherine","san daniel 9431","Martes",21],["antonio","cerro la campana # 1020","Martes",22],["angelica","cerro la campana # 1075","Martes",23],["gabriela","san daniel # 9129","Martes",24],["oscar","santa victoria # 1306","Martes",25],["claudio","sta. Victoria 979","Martes",26],["1 vez al mes","el estribo","Martes",27],["tamara ( sandy)","el estribo # 8629","Martes",28],["lalo","el estribo # 8575","Martes",29],["mayo","iloca # 1044","Martes",30],["claudia saez","juncal # 1066","Martes",31],["Patricia","Dagoberto Godoy # 1041","Martes",32],["barbara vecina","queb de aroma # 1832","Martes",33],["ignacio","las rejas norte # 65","Miercoles",1],["luis mellado (el huaso )","isla decepcion 50","Miercoles",2],["ricardo","isla decepcion 50 A","Miercoles",3],["alejandra","obispo rodriguez # 5975","Miercoles",4],["mra. teresa (camila)","san german # 868","Miercoles",5],["ruben","san pablo 5834","Miercoles",6],["jessica / german","coronel alfonso ugarte # 6433","Miercoles",7],["miriam","quiosco consultorio","Miercoles",8],["yesmi (tiare cristal)","cignus # 8621","Miercoles",10],["paula","mar de drake # 380","Miercoles",11],["claudio arrau","cludio arrau # 7656","Miercoles",12],["cristian   (los primos)","san pablo # 6600 lc 9","Miercoles",13],["javier/macarena ( malo pal agua)","san pablo 6709 local 1","Miercoles",14],["boti joaquin","gaspar toro 1348","Miercoles",15],["gerson (la 32)hosto","hostos # 1408","Miercoles",16],["carolina","augusto matte # 2292","Miercoles",17],["ricardo","llaima # 5628","Jueves",1],["viviana","casa blanca # 3869","Jueves",2],["marcela","quiosco frente  # 5000","Jueves",3],["jorge","las torres # 5501","Jueves",4],["esteban","los ceresos # 5938","Jueves",5],["leo","las americas # 4904","Jueves",6],["betzabe rubio","psj. Comercio # 6140","Jueves",7],["marco","san luis de macul # 4355 local 4","Jueves",8],["poke /josmir","av el libano # 5182","Jueves",9],["luisa ana ( enzo)","libano # 5192","Jueves",10],["silvia trincao","froilan roa # 5015","Jueves",12],["gonzalo","froilan roa & las codornices","Jueves",13],["marcela / estrella","bernardo leyton # 3051 local 3","Jueves",14],["7 liras 2","jose joaquin prieto # 5383","Jueves",15],["matias","lazo # 1851","Jueves",16],["luis becerra","los queltehues # 3568","Jueves",17],["alfredo","luis aris # 3498","Jueves",18],["maury / sole","san marcos # 4714","Jueves",19],["rober/zaira","ignacio carrera pinto # 5003","Jueves",20],["rosa María Lizana","amada labarca huberston # 4947","Jueves",21],["juan carlos (salfate)","psj fernando massiff d la fuente # 4790","Jueves",22],["Paola Hernández","peatones 14 # 4606 villa jardines","Jueves",23],["paulina / emili","ramon cruz # 1417","Jueves",24],["alexis torres","av. Cardenal caro # 1646","Viernes",999]];const DAYS=['Lunes','Martes','Miercoles','Jueves','Viernes','Sabado'];const WEEKS=['A','B'];const norm=v=>String(v??'').trim().toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'');const key=(n,a)=>norm(n)+'|'+norm(a);const routeClients=()=>readArray('zipperClientes').filter(c=>c&&typeof c==='object'&&c.id!=null&&typeof c.name==='string'&&c.name.trim());const saveRC=cs=>writeStorage('zipperClientes',JSON.stringify(cs));function normalizeRouteAssignments(assignments){
-  const counters={};
-  const used={};
+  const seen={};
+  const shifts={};
   return assignments.map(a=>{
-    const day=a[2];
-    const k=day;
-    if(!counters[k]) counters[k]=0;
-    if(!used[k]) used[k]=new Set();
-    let requested=Number(a[3]);
-    if(!Number.isFinite(requested)||requested<1) requested=null;
-    let order;
-    if(requested!==null && !used[k].has(requested) && requested===counters[k]+1){
-      order=requested;
-    }else{
-      order=counters[k]+1;
-      while(used[k].has(order)) order++;
-    }
-    used[k].add(order);
-    counters[k]=order;
-    return [a[0],a[1],day,order];
+    const day=a[2], k=day;
+    if(!seen[k]) seen[k]=new Set();
+    if(!shifts[k]) shifts[k]=0;
+    const requested=Number(a[3]);
+    if(!Number.isFinite(requested)||requested<1) return a;
+    if(seen[k].has(requested)) shifts[k]++;
+    seen[k].add(requested);
+    return [a[0],a[1],day,requested+shifts[k]];
   });
 }
 function apply(){
