@@ -155,8 +155,8 @@ function applyInventoryUpdate(){
   setNameStock(byContains('ocb negro'),'OCB Negro',14);
   setNameStock(byContains('cono rosa'),'Papelillo cono rosa',2);
   setNameStock(byContains('blunt de rosa'),'Blun pétalos de rosa',8);
-  setNameStock(byName('blunt'),'Blunt',569);
-  setNameStock(byName('raw c/ boqui'),'RAW',106);
+  setNameStock(byContains('blunt                '),'Blunt',569);
+  setNameStock(byContains('raw c/ boqui'),'RAW',106);
   const rawBox=ps.find(byContains('raw c/    boquilla'));
   if(rawBox)rawBox.active=false;
   const kitBox=ps.find(byContains('kit-kat'));
@@ -223,7 +223,8 @@ function applyInventoryUpdate(){
   setNameStock(byName('alka'),'Alka',4);
   setNameStock(byName('alka ice'),'Alka Ice',34);
   setNameStock(byName('en hora'),'Enora',2);
-  setNameStock(byName('eno'),'Eno azul',4);
+  const eno=ps.find(byName('eno'));
+  if(eno){eno.name='Eno azul';eno.stock=4;eno.active=true;const ev={...eno,id:uid(),name:'Eno verde',stock:1};ps.push(ev)}
 
   // Medicines.
   const med={
