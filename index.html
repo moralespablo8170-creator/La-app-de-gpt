@@ -9,7 +9,7 @@
 <style>
 .sale-status-badge{display:inline-flex;align-items:center;justify-content:center;padding:7px 12px;border-radius:8px;background:#111;color:#fff;font-weight:900;font-size:13px;letter-spacing:.3px;border:2px solid #111;box-shadow:0 2px 5px rgba(0,0,0,.18)}
 </style>
-</head>
+<style>.visited-review{margin:12px 0}.review-card{padding:16px;border:1px solid #d1d5db;border-radius:14px;background:#fff}.review-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}.review-item{display:flex;justify-content:space-between;gap:12px;padding:11px 12px;border:1px solid #e5e7eb;border-radius:10px;background:#f9fafb}.review-item span{font-weight:700}.review-item strong{white-space:nowrap}.close-review{flex:0 0 auto}</style></head>
 <body>
 <main class="app">
 <header class="topbar brand-header"><img class="brand-logo" src="./logo-zipper.svg" alt="Distribuidora Zipper"><h1 id="pageTitle" class="sr-only">Inicio</h1></header>
@@ -25,7 +25,7 @@
 <section id="activeRouteBox" class="card hidden"><div class="route-header"><div><div class="kicker">RUTA ACTIVA</div><h2 id="activeRouteLabel">Semana A · Lunes</h2></div><div class="route-tools"><button id="visitedButton" class="secondary" type="button">Visitados (0)</button><button id="otherRoute" class="ghost" type="button">Buscar otro cliente de otra ruta</button></div></div><div id="visitedBack" class="visited-back hidden"><button class="secondary" type="button">← Volver a pendientes</button><span>Clientes visitados de la ruta</span></div>
 <div class="grid two route-search"><label>Buscar cliente por nombre<input id="homeName" placeholder="Escribe el nombre"></label><label>Buscar por dirección<input id="homeAddress" placeholder="Dirección"></label></div><div id="exceptionSearch" class="exception-search hidden"><div class="kicker">BÚSQUEDA EXTRAORDINARIA</div><div class="grid two"><label>Semana<select id="otherWeek"><option value="">Todas</option><option value="A">Semana A</option><option value="B">Semana B</option></select></label><label>Día<select id="otherDay"><option value="">Todos</option><option>Lunes</option><option>Martes</option><option>Miércoles</option><option>Jueves</option><option>Viernes</option></select></label><label>Nombre<input id="otherName" placeholder="Nombre"></label><label>Dirección<input id="otherAddress" placeholder="Dirección"></label></div><div id="otherResults" class="client-route-list"></div></div>
 <div id="routeClients" class="client-route-list"></div><div id="visitedSales" class="visited-sales hidden"></div></section>
-<section id="cartSection" class="card hidden"><div class="section-title"><div><div class="kicker">CARRITO</div><h2 id="cartClientName">Cliente</h2><p id="cartClientMeta" class="muted-inline"></p></div><button id="closeCart" class="secondary" type="button">Cambiar</button></div>
+<section id="visitedReview" class="visited-review hidden"></section><section id="cartSection" class="card hidden"><div class="section-title"><div><div class="kicker">CARRITO</div><h2 id="cartClientName">Cliente</h2><p id="cartClientMeta" class="muted-inline"></p></div><button id="closeCart" class="secondary" type="button">Cambiar</button></div>
 <div class="cart-search-box"><label>Buscar producto por nombre<input id="cartSearchName" autocomplete="off" placeholder="Escribe 2 letras o más..."></label><div id="productDraft" class="product-draft"></div><div id="productSuggestions" class="product-suggestions"></div><label>Categoría<select id="cartCategory"><option value="">Todas las categorías</option></select></label></div>
 <section class="chosen-products"><button id="toggleCartTray" class="secondary tray-toggle" type="button">Ver bandeja (0)</button><div id="chosenProducts" class="chosen-list hidden"></div></section><div id="cartItems" class="cart-items"></div>
 <div class="cart-footer"><div class="cart-total"><span>Subtotal / total</span><strong id="cartTotal">$0</strong></div><div class="cart-actions"><button id="saveSale" class="primary wide" type="button">Guardar venta</button></div><p id="saleStatus" class="status"></p></div>
@@ -58,5 +58,5 @@
 <section id="historyView" class="view hidden"><section class="card"><div class="section-title"><div><div class="kicker">HISTORIAL</div><h2>Registro</h2></div></div><div class="segmented" id="historyType"><button class="active" data-history="sales" type="button">Ventas</button><button data-history="clients" type="button">Clientes</button><button data-history="products" type="button">Productos</button></div><div class="grid two"><label>Desde<input id="historyFrom" type="date"></label><label>Hasta<input id="historyTo" type="date"></label></div><div id="historyOutput" class="history-list"></div></section></section>
 <section id="printArea" class="print-area hidden"></section>
 </main>
-<script src="app.js?v=102.0"></script>
+<script src="app.js?v=104.0"></script>
 </body></html>
