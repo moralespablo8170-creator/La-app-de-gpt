@@ -4,6 +4,7 @@ const norm=v=>String(v??'').trim().toLowerCase().normalize('NFD').replace(/[\u03
 const DAYS=['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
 const DEFAULT_CATEGORIES=['Tabaquería','Caramelos','Arcor','Nestlé','Remedios','Otros'];
 let currentView='home',selectedClientId='',cart=[],editingSaleId='',editingProductId=null,editingProductVariant='',editingClientId=null,currentPromos=[],statType='day',statPeriod='day',totalPeriod='week',clientFilter='all',historyType='sales',showVisited=false,exceptionSearch=false,draftProductId='',draftQty='',showCartTray=false;
+let lastClientAlertId='',lastClientAlertAt=0;
 
 function readArray(k){try{const v=JSON.parse(localStorage.getItem(k)||'[]');return Array.isArray(v)?v:[]}catch(e){return[]}}
 function writeArray(k,a){try{localStorage.setItem(k,JSON.stringify(a));return true}catch(e){alert('No se pudo guardar en este dispositivo.');return false}}
@@ -240,7 +241,7 @@ function validateClientInput(id,announce=true){
     const value=String($(id).value||'').trim();
     $(id).value=formatRut(value);
     if(value&&!validateRut(value)){
-      if(announce)alert('RUT mal ingresado. Revisa el número y su dígito verificador antes de continuar.');
+      if(announce){const now=Date.now();if(lastClientAlertId!==id||now-lastClientAlertAt>900){lastClientAlertId=id;lastClientAlertAt=now;alert('RUT mal ingresado. Revisa el número y su dígito verificador antes de continuar.')}}
       $(id).focus();
       return false
     }
@@ -251,12 +252,12 @@ function validateClientInput(id,announce=true){
     const body=digits.replace(/^569/,'');
     $(id).value=formatPhone(digits);
     if(body.length>0&&body.length<8){
-      if(announce)alert('Teléfono incompleto. Debes ingresar los 8 números después de 569 antes de continuar.');
+      if(announce){const now=Date.now();if(lastClientAlertId!==id||now-lastClientAlertAt>900){lastClientAlertId=id;lastClientAlertAt=now;alert('Teléfono incompleto. Debes ingresar los 8 números después de 569 antes de continuar.')}}
       $(id).focus();
       return false
     }
     if(body.length>8){
-      if(announce)alert('Teléfono mal ingresado. Debe tener 8 números después de 569.');
+      if(announce){const now=Date.now();if(lastClientAlertId!==id||now-lastClientAlertAt>900){lastClientAlertId=id;lastClientAlertAt=now;alert('Teléfono mal ingresado. Debe tener 8 números después de 569.')}}
       $(id).focus();
       return false
     }
