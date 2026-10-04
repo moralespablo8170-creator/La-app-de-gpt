@@ -1,1 +1,1705 @@
-{"version":3,"source":"Distribuidora_Zipper_consolidado_semana_1.xlsx","categories":["Tabaquería","Caramelos","Arcor","Nestlé","Remedios","Otros"],"clients":[{"id":"seed-client-1","name":"michel","rut":"16.644.755-0","phone":"569 64884199","address":"los baqueanos # 9558","active":true,"razonSocial":"","comuna":"peñalolen"},{"id":"seed-client-2","name":"Cristóbal","rut":"GUIA","phone":"569 2874 2647","address":"Av. Oriental # 7402","active":true,"razonSocial":"MAKETITO","comuna":"Peñalolén"},{"id":"seed-client-3","name":"benjamin","rut":"7.984.056-4","phone":"569 8162 8117","address":"marcelo fitte # 634","active":true,"razonSocial":"glup","comuna":""},{"id":"seed-client-4","name":"luis la 30","rut":"77.206.262-1","phone":"","address":"12 de octubre  5106","active":true,"razonSocial":"comercial cuevas m&m s.p.a.","comuna":""},{"id":"seed-client-5","name":"cristian la 31","rut":"76.704.865-3","phone":"","address":"salvador gutierrez 4999","active":true,"razonSocial":"hermanos cuevas spa","comuna":""},{"id":"seed-client-6","name":"carlos arancibia","rut":"GUIA","phone":"","address":"lorenzo eiting # 6099","active":true,"razonSocial":"","comuna":""},{"id":"seed-client-7","name":"angel (botilleria)","rut":"77.130.103-7","phone":"569 37672631","address":"cmdt.  chacon 6406","active":true,"razonSocial":"botilleria el pino spa","comuna":""},{"id":"seed-client-8","name":"nicole","rut":"18.848.137-K","phone":"569 8949 5914","address":"huelen # 1556","active":true,"razonSocial":"","comuna":""},{"id":"seed-client-9","name":"esteban","rut":"78.246.467-1","phone":"569 6731 9468","address":"huelen # 1573","active":true,"razonSocial":"ruben dario garcia vilchez","comuna":""},{"id":"seed-client-10","name":"juan / cecilia","rut":"19.644.017-8","phone":"","address":"huelen # 1760","active":true,"razonSocial":"botilleria JRC","comuna":""},{"id":"seed-client-11","name":"eduardo","rut":"78.256.275-4","phone":"569 6842 5232","address":"gutierrez # 7274","active":true,"razonSocial":"botilleria","comuna":""},{"id":"seed-client-12","name":"cristian/gloria","rut":"5.910.696-1","phone":"","address":"fleming 7380","active":true,"razonSocial":"rosa caniumil millanao","comuna":""},{"id":"seed-client-13","name":"angy","rut":"5.423.548-8","phone":"","address":"salvador gutierrez # 7614","active":true,"razonSocial":"victor manuel muñoz rojas","comuna":""},{"id":"seed-client-14","name":"ceicila pavez","rut":"11.975.930-7","phone":"","address":"la capilla # 7954","active":true,"razonSocial":"cecilia felisa pavez valdes","comuna":""},{"id":"seed-client-15","name":"a la vuelta cecilia","rut":"","phone":"","address":"","active":true,"razonSocial":"","comuna":""},{"id":"seed-client-16","name":"guillermo/mili","rut":"18.095.300-0","phone":"","address":"la estrella # 1756","active":true,"razonSocial":"jennifer cecilia fuentes correa","comuna":""},{"id":"seed-client-17","name":"carlos","rut":"9.340.820-9","phone":"","address":"la estrella 1711","active":true,"razonSocial":"maria ada arriagada figueroa","comuna":""},{"id":"seed-client-18","name":"leo / jair","rut":"17.766.838-9","phone":"569 33725992","address":"mapocho sur # 8330","active":true,"razonSocial":"geraldine fernanda farias pena","comuna":""},{"id":"seed-client-19","name":"arturo","rut":"9.389.440-5","phone":"","address":"mapocho norte # 7929","active":true,"razonSocial":"jessica aida guajardo alvarez","comuna":""},{"id":"seed-client-20","name":"katherine","rut":"13.815.413-0","phone":"","address":"san daniel 9431","active":true,"razonSocial":"katherine elena mendez barros","comuna":""},{"id":"seed-client-21","name":"antonio","rut":"77.497.596-9","phone":"","address":"cerro la campana # 1020","active":true,"razonSocial":"luxor spa.","comuna":""},{"id":"seed-client-22","name":"angelica","rut":"77.875.205-0","phone":"569 4787 3023","address":"cerro la campana # 1075","active":true,"razonSocial":"palma y gonzalez spa","comuna":"pudahuel"},{"id":"seed-client-23","name":"gabriela","rut":"13.239.758-9","phone":"569 81568052","address":"san daniel # 9129","active":true,"razonSocial":"gabriela alejandra galindo aguirre","comuna":"pudahuel norte"},{"id":"seed-client-24","name":"oscar","rut":"16.418.705-5","phone":"569 96392692","address":"santa victoria # 1306","active":true,"razonSocial":"donde armando","comuna":"pudahuel norte"},{"id":"seed-client-25","name":"claudio","rut":"","phone":"","address":"sta. Victoria 979","active":true,"razonSocial":"","comuna":""},{"id":"seed-client-26","name":"1 vez al mes","rut":"","phone":"","address":"el estribo","active":true,"razonSocial":"botilleria","comuna":""},{"id":"seed-client-27","name":"tamara ( sandy)","rut":"77.900.039-7","phone":"569 7150 0444","address":"el estribo # 8629","active":true,"razonSocial":"botilleria","comuna":""},{"id":"seed-client-28","name":"lalo","rut":"3.853.138-7","phone":"569 5363 3375","address":"el estribo # 8575","active":true,"razonSocial":"","comuna":"pudahuel"},{"id":"seed-client-29","name":"mayo","rut":"7.890.632-4","phone":"569 8880 8543","address":"iloca # 1044","active":true,"razonSocial":"jorge arebalo","comuna":""},{"id":"seed-client-30","name":"claudia saez","rut":"11.971.780-9","phone":"569 9569 9540","address":"juncal # 1066","active":true,"razonSocial":"claudia saez","comuna":""},{"id":"seed-client-31","name":"Patricia","rut":"11.523.711-K","phone":"569  84293105","address":"Dagoberto Godoy # 1041","active":true,"razonSocial":"donde las nones","comuna":"Pudahuel norte"},{"id":"seed-client-32","name":"barbara vecina","rut":"78.097.548-2","phone":"569 8832 0687","address":"queb de aroma # 1832","active":true,"razonSocial":"almacen","comuna":""},{"id":"seed-client-33","name":"ignacio","rut":"76.899.051-4","phone":"569 54371658","address":"las rejas norte # 65","active":true,"razonSocial":"7 liras spa.","comuna":"quinta normal"},{"id":"seed-client-34","name":"luis mellado (el huaso )","rut":"12.332.786-1","phone":"","address":"isla decepcion 50","active":true,"razonSocial":"luis enrique mellado rivera","comuna":""},{"id":"seed-client-35","name":"ricardo","rut":"8.532.862-K","phone":"569 86619652","address":"isla decepcion 50 A","active":true,"razonSocial":"pamela del rosario araya saez","comuna":""},{"id":"seed-client-36","name":"alejandra","rut":"77.366.303-3","phone":"569 7653 1156","address":"obispo rodriguez # 5975","active":true,"razonSocial":"juan pablo castillo jerez luis alejandro","comuna":""},{"id":"seed-client-37","name":"mra. teresa (camila)","rut":"","phone":"","address":"san german # 868","active":true,"razonSocial":"","comuna":""},{"id":"seed-client-38","name":"ruben","rut":"76.604.657-6","phone":"","address":"san pablo 5834","active":true,"razonSocial":"botilleria mi compadre s.p.a.","comuna":""},{"id":"seed-client-39","name":"jessica / german","rut":"22.642.694-9","phone":"","address":"coronel alfonso ugarte # 6433","active":true,"razonSocial":"german vilcañaupa canchuricra","comuna":""},{"id":"seed-client-40","name":"miriam","rut":"12.812.768-2","phone":"","address":"quiosco consultorio","active":true,"razonSocial":"","comuna":""},{"id":"seed-client-41","name":"yesmi (tiare cristal)","rut":"76.711.868-6","phone":"mandar factura","address":"cignus # 8621","active":true,"razonSocial":"botilleria cesar alejandro vega marquez e.i.r.l.","comuna":"pudahuel"},{"id":"seed-client-42","name":"paula","rut":"14.255.671-5","phone":"","address":"mar de drake # 380","active":true,"razonSocial":"paula andrea gutierrez espinoza","comuna":"pudahuel"},{"id":"seed-client-43","name":"claudio arrau","rut":"78.437.508-0","phone":"569 3130 9297","address":"cludio arrau # 7656","active":true,"razonSocial":"almacen","comuna":""},{"id":"seed-client-44","name":"cristian   (los primos)","rut":"11.398.098-2","phone":"569 45088700","address":"san pablo # 6600 lc 9","active":true,"razonSocial":"manuel antonio soto pavez","comuna":"lo prado"},{"id":"seed-client-45","name":"javier/macarena ( malo pal agua)","rut":"15.887.899-2","phone":"","address":"san pablo 6709 local 1","active":true,"razonSocial":"macarena andrea undas salinas","comuna":""},{"id":"seed-client-46","name":"boti joaquin","rut":"11.837.497-5","phone":"","address":"gaspar toro 1348","active":true,"razonSocial":"boti. San rafael apolinario rainer","comuna":""},{"id":"seed-client-47","name":"gerson (la 32)hosto","rut":"77.960.608-2","phone":"569 8774 0129","address":"hostos # 1408","active":true,"razonSocial":"sociedad comercial cfc s.p.a.","comuna":""},{"id":"seed-client-48","name":"carolina","rut":"6.217.836-1","phone":"569 97944319","address":"augusto matte # 2292","active":true,"razonSocial":"ana gabriela riveros moreno","comuna":"ñuñoa"},{"id":"seed-client-49","name":"ricardo","rut":"7.685.483-1","phone":"","address":"llaima # 5628","active":true,"razonSocial":"clunes wittwer ema miriam","comuna":"macul"},{"id":"seed-client-50","name":"viviana","rut":"77.711.019-5","phone":"","address":"casa blanca # 3869","active":true,"razonSocial":"minimarket antonella","comuna":""},{"id":"seed-client-51","name":"marcela","rut":"6.961.779-4","phone":"569 87601572","address":"quiosco frente  # 5000","active":true,"razonSocial":"maria isabel alvarado retamal","comuna":"peñalolen"},{"id":"seed-client-52","name":"jorge","rut":"77.972.832-3","phone":"569 9978 5451","address":"las torres # 5501","active":true,"razonSocial":"minimarket","comuna":"independencia"},{"id":"seed-client-53","name":"esteban","rut":"7. 693.655-2","phone":"","address":"los ceresos # 5938","active":true,"razonSocial":"","comuna":"macul"},{"id":"seed-client-54","name":"leo","rut":"9.482.478-8","phone":"569 62775088","address":"las americas # 4904","active":true,"razonSocial":"serguio marin minimarket","comuna":"peñalolen"},{"id":"seed-client-55","name":"betzabe rubio","rut":"GUIA","phone":"","address":"psj. Comercio # 6140","active":true,"razonSocial":"betzabe rubio fuentes","comuna":"peñalolen"},{"id":"seed-client-56","name":"marco","rut":"77.525.637-0","phone":"569 87586432","address":"san luis de macul # 4355 local 4","active":true,"razonSocial":"araos serrudo spa.","comuna":""},{"id":"seed-client-57","name":"poke /josmir","rut":"76.569.187-7","phone":"569 72262731","address":"av el libano # 5182","active":true,"razonSocial":"com. Empire spa.","comuna":"macul"},{"id":"seed-client-58","name":"luisa ana ( enzo)","rut":"77.885.002-8","phone":"569 72100214","address":"libano # 5192","active":true,"razonSocial":"enzo","comuna":"macul"},{"id":"seed-client-59","name":"silvia trincao","rut":"77.981.697-4","phone":"","address":"froilan roa # 5015","active":true,"razonSocial":"","comuna":"macul"},{"id":"seed-client-60","name":"gonzalo","rut":"GUIA","phone":"569 8664 8420","address":"froilan roa & las codornices","active":true,"razonSocial":"","comuna":"macul"},{"id":"seed-client-61","name":"marcela / estrella","rut":"12.220.777-3","phone":"","address":"bernardo leyton # 3051 local 3","active":true,"razonSocial":"","comuna":"macul"},{"id":"seed-client-62","name":"7 liras 2","rut":"78.104.826-7","phone":"","address":"jose joaquin prieto # 5383","active":true,"razonSocial":"ignacio","comuna":""},{"id":"seed-client-63","name":"matias","rut":"77.888.485-2","phone":"","address":"lazo # 1851","active":true,"razonSocial":"botilleria","comuna":""},{"id":"seed-client-64","name":"luis becerra","rut":"77.609.755-1","phone":"569 3275 5713","address":"los queltehues # 3568","active":true,"razonSocial":"dist. Y com. Becerra ramos","comuna":"macul"},{"id":"seed-client-65","name":"alfredo","rut":"8.917.097-4","phone":"569 3207 6306","address":"luis aris # 3498","active":true,"razonSocial":"","comuna":""},{"id":"seed-client-66","name":"maury / sole","rut":"77.981.189-1","phone":"569 9839 3052","address":"san marcos # 4714","active":true,"razonSocial":"illumi spa","comuna":"macul"},{"id":"seed-client-67","name":"rober/zaira","rut":"21.373.746-5","phone":"","address":"ignacio carrera pinto # 5003","active":true,"razonSocial":"zaira zarela yovera robles","comuna":"macul"},{"id":"seed-client-68","name":"rosa María Lizana","rut":"9966493-2","phone":"569 6729 2327","address":"amada labarca huberston # 4947","active":true,"razonSocial":"botelleria los primos","comuna":"macul"},{"id":"seed-client-69","name":"juan carlos (salfate)","rut":"9.966.382-0","phone":"569 6612 4941","address":"psj fernando massiff d la fuente # 4790","active":true,"razonSocial":"luis felipe salfate retamal","comuna":"macul"},{"id":"seed-client-70","name":"Paola Hernández","rut":"GUÍA","phone":"569 9391 7122","address":"peatones 14 # 4606 villa jardines","active":true,"razonSocial":"mini Market","comuna":"Ñuñoa"},{"id":"seed-client-71","name":"paulina / emili","rut":"77.211.044-8","phone":"","address":"ramon cruz # 1417","active":true,"razonSocial":"","comuna":"macul"},{"id":"seed-client-72","name":"alexis torres","rut":"77.331.916-2","phone":"569 5955 6438","address":"av. Cardenal caro # 1646","active":true,"razonSocial":"botilleria","comuna":""}],"products":[{"id":"seed-product-1","name":"ron.trans                 20 und          $ 3.600 x1        180 und","category":"Tabaquería","pricePurchase":2900,"price":3600,"active":true},{"id":"seed-product-2","name":"ron.trans                 20 und          $ 3.300       x 10           165 und","category":"Tabaquería","pricePurchase":2900,"price":3300,"active":true},{"id":"seed-product-3","name":"ron.Clasic  20 und        $ 3.800    190 und","category":"Tabaquería","pricePurchase":3040,"price":3800,"active":true},{"id":"seed-product-4","name":"ron. Diseño       20 und           $ 5.400     270 und","category":"Tabaquería","pricePurchase":3840,"price":5400,"active":true},{"id":"seed-product-5","name":"CHISPER              $ 1.800 UND","category":"Tabaquería","pricePurchase":1390,"price":1800,"active":true},{"id":"seed-product-6","name":"clipper         24 und            $ 16.800  $700 und","category":"Tabaquería","pricePurchase":13500,"price":16800,"active":true},{"id":"seed-product-7","name":"vaso 10oz           plastico 50 und      $ 2.000       $ 40 und","category":"Tabaquería","pricePurchase":800,"price":2000,"active":true},{"id":"seed-product-8","name":"vaso rojo         16 0z     25 und        $ 2500        $ 100","category":"Tabaquería","pricePurchase":1690,"price":2500,"active":true},{"id":"seed-product-9","name":"vaso 160z      plastico 25 und      $ 1.750       $ 70 und","category":"Tabaquería","pricePurchase":795,"price":1750,"active":true},{"id":"seed-product-10","name":"pañuelo    elite          18 und           $ 3.100   $172 und","category":"Tabaquería","pricePurchase":1854,"price":3100,"active":true},{"id":"seed-product-11","name":"ocb negro        25 und            $ 13.000     520 und","category":"Tabaquería","pricePurchase":11400,"price":13000,"active":true},{"id":"seed-product-12","name":"ocb        gris       25 und      $ 14.000        560 und","category":"Tabaquería","pricePurchase":11500,"price":14000,"active":true},{"id":"seed-product-13","name":"ocb organico     25 und     $ 14.000       560 und","category":"Tabaquería","pricePurchase":11500,"price":14000,"active":true},{"id":"seed-product-14","name":"amsterda   25 und      $ 5.000      $ 250 und","category":"Tabaquería","pricePurchase":2200,"price":5000,"active":true},{"id":"seed-product-15","name":"cono rosa           40 und       $ 5.000        $ 125 und","category":"Tabaquería","pricePurchase":3000,"price":5000,"active":true},{"id":"seed-product-16","name":"raw c/ boqui  $1.000    und","category":"Tabaquería","pricePurchase":700,"price":1000,"active":true},{"id":"seed-product-17","name":"raw c/    boquilla         ( caja)           24 und        $ 24.000      1.000 und","category":"Tabaquería","pricePurchase":16000,"price":24000,"active":true},{"id":"seed-product-18","name":"ocb c/ boquilla       24 und          $ 29.500         1.229 und","category":"Tabaquería","pricePurchase":23000,"price":25500,"active":true},{"id":"seed-product-19","name":"amster con boquilla    25 und     $ 15.000    $ 600","category":"Tabaquería","pricePurchase":7000,"price":15000,"active":true},{"id":"seed-product-20","name":"blunt                $ 600 und               $ 15.000 caja","category":"Tabaquería","pricePurchase":380,"price":600,"active":true},{"id":"seed-product-21","name":"blunt de rosa          $ 700 und        $ 10.500 caja","category":"Tabaquería","pricePurchase":333,"price":700,"active":true},{"id":"seed-product-22","name":"boquilla  ocb         25 und        $ 7.000     280 und","category":"Tabaquería","pricePurchase":5500,"price":7000,"active":true},{"id":"seed-product-23","name":"boquilla amsterdam               50 und       $ 8.500    170 und","category":"Tabaquería","pricePurchase":4500,"price":8500,"active":true},{"id":"seed-product-24","name":"enrolador              $ 1.500    und","category":"Tabaquería","pricePurchase":850,"price":1500,"active":true},{"id":"seed-product-25","name":"moledor           $ 1.500    und","category":"Tabaquería","pricePurchase":850,"price":1500,"active":true},{"id":"seed-product-26","name":"pipas            $ 1.500       und","category":"Tabaquería","pricePurchase":1000,"price":1500,"active":true},{"id":"seed-product-27","name":"pipas con moledor  $ 1.800    und","category":"Tabaquería","pricePurchase":1000,"price":1800,"active":true},{"id":"seed-product-28","name":"tabaco bristol         45 grm         $ 4.800      und","category":"Tabaquería","pricePurchase":4250,"price":4800,"active":true},{"id":"seed-product-29","name":"filtro verso  grueso    $ 1.000    und","category":"Tabaquería","pricePurchase":700,"price":1000,"active":true},{"id":"seed-product-30","name":"filtro verso   clasico   $ 1.000    und","category":"Tabaquería","pricePurchase":700,"price":1000,"active":true},{"id":"seed-product-31","name":"filtro verso   mentol   $ 1.000    und","category":"Tabaquería","pricePurchase":700,"price":1000,"active":true},{"id":"seed-product-32","name":"filtro verso     organico     $ 1.000    und","category":"Tabaquería","pricePurchase":700,"price":1000,"active":true},{"id":"seed-product-33","name":"bigtime ultra                  12 und        $ 11.700   975 und","category":"Tabaquería","pricePurchase":9411,"price":11700,"active":true},{"id":"seed-product-34","name":"bigtime ultra                  12 und        $ 11.700   975 und","category":"Tabaquería","pricePurchase":9411,"price":11700,"active":true},{"id":"seed-product-35","name":"bigtime ultra                  12 und        $ 11.700   975 und","category":"Tabaquería","pricePurchase":9411,"price":11700,"active":true},{"id":"seed-product-36","name":"bigtime ultra                  12 und        $ 11.700   975 und","category":"Tabaquería","pricePurchase":9411,"price":11700,"active":true},{"id":"seed-product-37","name":"bigtime ultra     12 und  promo desde 3 diplay                   $ 11.200          933 und","category":"Tabaquería","pricePurchase":9411,"price":11200,"active":true},{"id":"seed-product-38","name":"bigtime  20 und        $ 5.800   290 und","category":"Tabaquería","pricePurchase":4616,"price":5800,"active":true},{"id":"seed-product-39","name":"bigtime  20 und        $ 5.800   290 und","category":"Tabaquería","pricePurchase":4616,"price":5800,"active":true},{"id":"seed-product-40","name":"bigtime  20 und        $ 5.800   290 und","category":"Tabaquería","pricePurchase":4616,"price":5800,"active":true},{"id":"seed-product-41","name":"bigtime  20 und        $ 5.800   290 und","category":"Tabaquería","pricePurchase":4616,"price":5800,"active":true},{"id":"seed-product-42","name":"bigtime  20 und        $ 5.800   290 und","category":"Tabaquería","pricePurchase":4616,"price":5800,"active":true},{"id":"seed-product-43","name":"bigtime  20 und        $ 5.800   290 und","category":"Tabaquería","pricePurchase":4616,"price":5800,"active":true},{"id":"seed-product-44","name":"bazooka           25 und              $ 4.500     180 und","category":"Caramelos","pricePurchase":3552,"price":4500,"active":true},{"id":"seed-product-45","name":"BON O BON AMARILL  30 und        $ 6.500   216 und","category":"Caramelos","pricePurchase":5224,"price":6500,"active":true},{"id":"seed-product-46","name":"nikolo           20 und           $ 6.400  320 und","category":"Caramelos","pricePurchase":5106,"price":6400,"active":true},{"id":"seed-product-47","name":"chubi      24 und        $ 5.200  217 und","category":"Caramelos","pricePurchase":4158,"price":5200,"active":true},{"id":"seed-product-48","name":"tifany    20 und       $4.300  215 und","category":"Caramelos","pricePurchase":3465,"price":4300,"active":true},{"id":"seed-product-49","name":"rocklet  naranjo  18 und  $ 6.500    361 und","category":"Caramelos","pricePurchase":4774,"price":6500,"active":true},{"id":"seed-product-50","name":"rocklet  negro  18 und    $ 6.500  361 und","category":"Caramelos","pricePurchase":4774,"price":6500,"active":true},{"id":"seed-product-51","name":"amberry    20 und     $ 4300    215 und","category":"Caramelos","pricePurchase":3200,"price":4300,"active":true},{"id":"seed-product-52","name":"ambrosit        20 und     $ 4300    215 und","category":"Caramelos","pricePurchase":3200,"price":4300,"active":true},{"id":"seed-product-53","name":"flippy    20 und     $ 4300    215 und","category":"Caramelos","pricePurchase":3200,"price":4300,"active":true},{"id":"seed-product-54","name":"frutillas con crema    $ 4300         215 und","category":"Caramelos","pricePurchase":3200,"price":4300,"active":true},{"id":"seed-product-55","name":"loop              20 und     $ 4300    215 und","category":"Caramelos","pricePurchase":3200,"price":4300,"active":true},{"id":"seed-product-56","name":"turron    28 und     $ 9.500   339 und","category":"Caramelos","pricePurchase":7158,"price":9500,"active":true},{"id":"seed-product-57","name":"languetaz  verde             24 und                $ 3.000            125 und","category":"Caramelos","pricePurchase":2325,"price":3000,"active":true},{"id":"seed-product-58","name":"languetaz naranja        24 und             $ 3.000          125 und","category":"Caramelos","pricePurchase":2325,"price":3000,"active":true},{"id":"seed-product-59","name":"menta chocolate     100 und      $ 3.400      32 und","category":"Caramelos","pricePurchase":2766,"price":3400,"active":true},{"id":"seed-product-60","name":"tofee surtido          400 grm                 $ 2.700","category":"Caramelos","pricePurchase":1676,"price":2700,"active":true},{"id":"seed-product-61","name":"chupete rojo           24 und       $2.000      83 und","category":"Caramelos","pricePurchase":1645,"price":2000,"active":true},{"id":"seed-product-62","name":"chupete surtido    24 und       $2.000      83 und","category":"Caramelos","pricePurchase":1645,"price":2000,"active":true},{"id":"seed-product-63","name":"chupete    bowlings    24 und      $ 2000      83 und","category":"Caramelos","pricePurchase":1440,"price":2000,"active":true},{"id":"seed-product-64","name":"mentitas               24 und             $ 5.250       204 und","category":"Caramelos","pricePurchase":3840,"price":5250,"active":true},{"id":"seed-product-65","name":"full   24und        $ 5.250    204 und","category":"Caramelos","pricePurchase":3840,"price":5250,"active":true},{"id":"seed-product-66","name":"freegells       12 und      $ 2.100    175 und","category":"Caramelos","pricePurchase":1569,"price":2100,"active":true},{"id":"seed-product-67","name":"freegells       12 und      $ 2.100    175 und","category":"Caramelos","pricePurchase":1569,"price":2100,"active":true},{"id":"seed-product-68","name":"freegells       12 und      $ 2.100    175 und","category":"Caramelos","pricePurchase":1569,"price":2100,"active":true},{"id":"seed-product-69","name":"alka        100 und      $2.400","category":"Caramelos","pricePurchase":1841,"price":2400,"active":true},{"id":"seed-product-70","name":"alka  ice      390gr      $2.800","category":"Caramelos","pricePurchase":2194,"price":2800,"active":true},{"id":"seed-product-71","name":"alka 2       12 und      $ 4.100        12 und","category":"Caramelos","pricePurchase":3160,"price":4100,"active":true},{"id":"seed-product-72","name":"alka 2       12 und      $ 4.100        12 und","category":"Caramelos","pricePurchase":3160,"price":4100,"active":true},{"id":"seed-product-73","name":"alka 2       12 und      $ 4.100        12 und","category":"Caramelos","pricePurchase":3160,"price":4100,"active":true},{"id":"seed-product-74","name":"conquista rollo            $ 600        und","category":"Nestlé","pricePurchase":482,"price":600,"active":true},{"id":"seed-product-75","name":"cracker          $ 650          und","category":"Nestlé","pricePurchase":525,"price":650,"active":true},{"id":"seed-product-76","name":"galleta vino           $ 750    und","category":"Nestlé","pricePurchase":606,"price":750,"active":true},{"id":"seed-product-77","name":"triton chocolate      $ 750       und","category":"Nestlé","pricePurchase":600,"price":750,"active":true},{"id":"seed-product-78","name":"triton vainilla     $ 750          und","category":"Nestlé","pricePurchase":600,"price":750,"active":true},{"id":"seed-product-79","name":"kuky clasica      $ 1.000            und","category":"Nestlé","pricePurchase":848,"price":1000,"active":true},{"id":"seed-product-80","name":"super 8    24 und        $ 6.600     275 und","category":"Nestlé","pricePurchase":5325,"price":6600,"active":true},{"id":"seed-product-81","name":"kit-kat            24 und         $ 16.500      687 und","category":"Nestlé","pricePurchase":13787,"price":16500,"active":true},{"id":"seed-product-82","name":"kit - kat     und            $ 700","category":"Nestlé","pricePurchase":574,"price":700,"active":true},{"id":"seed-product-83","name":"sahne-nuss     90 grm      $ 2.100     und","category":"Nestlé","pricePurchase":1742,"price":2100,"active":true},{"id":"seed-product-84","name":"trencito     80 grm        $ 1.600       und","category":"Nestlé","pricePurchase":1280,"price":1600,"active":true},{"id":"seed-product-85","name":"bolsa botillera          $ 3.300   100 und","category":"Otros","pricePurchase":2750,"price":3300,"active":true},{"id":"seed-product-86","name":"bolsa de basura    80x100       10 und             $1.500      150 und","category":"Otros","pricePurchase":1190,"price":1500,"active":true},{"id":"seed-product-87","name":"bolsa de basura    90x120       10 und         $ 3.500      350 und","category":"Otros","pricePurchase":2100,"price":3500,"active":true},{"id":"seed-product-88","name":"huincha    $ 800","category":"Otros","pricePurchase":390,"price":800,"active":true},{"id":"seed-product-89","name":"pila AA        60und             $ 5.000       208 und","category":"Otros","pricePurchase":3590,"price":5000,"active":true},{"id":"seed-product-90","name":"pila AAA   24 und              $ 5.000        208 und","category":"Otros","pricePurchase":3590,"price":5000,"active":true},{"id":"seed-product-91","name":"pila D    12 und            $ 8.000       666 und","category":"Otros","pricePurchase":6390,"price":8000,"active":true},{"id":"seed-product-92","name":"acido mefenamico","category":"Remedios","pricePurchase":510,"price":1000,"active":true},{"id":"seed-product-93","name":"amoxicilina","category":"Remedios","pricePurchase":1890,"price":2500,"active":true},{"id":"seed-product-94","name":"cefalmin","category":"Remedios","pricePurchase":990,"price":1600,"active":true},{"id":"seed-product-95","name":"clorfenamina","category":"Remedios","pricePurchase":320,"price":600,"active":true},{"id":"seed-product-96","name":"colmax","category":"Remedios","pricePurchase":1350,"price":1800,"active":true},{"id":"seed-product-97","name":"diclofenaco sodico","category":"Remedios","pricePurchase":820,"price":1800,"active":true},{"id":"seed-product-98","name":"domperidona 10mg","category":"Remedios","pricePurchase":550,"price":1200,"active":true},{"id":"seed-product-99","name":"famotidina","category":"Remedios","pricePurchase":390,"price":950,"active":true},{"id":"seed-product-100","name":"ibuprofeno 600mg","category":"Remedios","pricePurchase":690,"price":1600,"active":true},{"id":"seed-product-101","name":"ketoprofeno 200mg","category":"Remedios","pricePurchase":990,"price":1600,"active":true},{"id":"seed-product-102","name":"ketorolaco 10mg","category":"Remedios","pricePurchase":620,"price":1200,"active":true},{"id":"seed-product-103","name":"loratadina 10 mg","category":"Remedios","pricePurchase":590,"price":1200,"active":true},{"id":"seed-product-104","name":"loperamida","category":"Remedios","pricePurchase":420,"price":800,"active":true},{"id":"seed-product-105","name":"desloratadina 5 mg","category":"Remedios","pricePurchase":1490,"price":2500,"active":true},{"id":"seed-product-106","name":"migranol","category":"Remedios","pricePurchase":1290,"price":1800,"active":true},{"id":"seed-product-107","name":"naproxeno","category":"Remedios","pricePurchase":1250,"price":1800,"active":true},{"id":"seed-product-108","name":"en hora","category":"Remedios","pricePurchase":2100,"price":5000,"active":true},{"id":"seed-product-109","name":"tes de embarzo","category":"Remedios","pricePurchase":420,"price":1000,"active":true},{"id":"seed-product-110","name":"omeprasol","category":"Remedios","pricePurchase":890,"price":1500,"active":true},{"id":"seed-product-111","name":"paracetamol adulto","category":"Remedios","pricePurchase":420,"price":700,"active":true},{"id":"seed-product-112","name":"parche curitas","category":"Remedios","pricePurchase":1390,"price":1850,"active":true},{"id":"seed-product-113","name":"pastilla carbon","category":"Remedios","pricePurchase":559,"price":1000,"active":true},{"id":"seed-product-114","name":"preservativos","category":"Remedios","pricePurchase":550,"price":1100,"active":true},{"id":"seed-product-115","name":"eno","category":"Remedios","pricePurchase":4690,"price":6000,"active":true},{"id":"seed-product-116","name":"tapsin calnte dia","category":"Remedios","pricePurchase":413,"price":550,"active":true},{"id":"seed-product-117","name":"tapsin calnte noche","category":"Remedios","pricePurchase":413,"price":550,"active":true},{"id":"seed-product-118","name":"tapsin calnte x caja","category":"Remedios","pricePurchase":24800,"price":27500,"active":true},{"id":"seed-product-119","name":"tapsin  dia","category":"Remedios","pricePurchase":225,"price":400,"active":true},{"id":"seed-product-120","name":"tapsin noche","category":"Remedios","pricePurchase":245,"price":400,"active":true}]}
+{
+  "version": "4",
+  "source": "Distribuidora_Zipper_consolidado_semana_1.xlsx",
+  "categories": [
+    "Tabaquería",
+    "Caramelos",
+    "Arcor",
+    "Nestlé",
+    "Remedios",
+    "Otros"
+  ],
+  "clients": [
+    {
+      "id": "seed-client-1",
+      "name": "michel",
+      "rut": "16.644.755-0",
+      "phone": "569 64884199",
+      "address": "los baqueanos # 9558",
+      "active": true,
+      "razonSocial": "",
+      "comuna": "peñalolen"
+    },
+    {
+      "id": "seed-client-2",
+      "name": "Cristóbal",
+      "rut": "GUIA",
+      "phone": "569 2874 2647",
+      "address": "Av. Oriental # 7402",
+      "active": true,
+      "razonSocial": "MAKETITO",
+      "comuna": "Peñalolén"
+    },
+    {
+      "id": "seed-client-3",
+      "name": "benjamin",
+      "rut": "7.984.056-4",
+      "phone": "569 8162 8117",
+      "address": "marcelo fitte # 634",
+      "active": true,
+      "razonSocial": "glup",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-4",
+      "name": "luis la 30",
+      "rut": "77.206.262-1",
+      "phone": "",
+      "address": "12 de octubre  5106",
+      "active": true,
+      "razonSocial": "comercial cuevas m&m s.p.a.",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-5",
+      "name": "cristian la 31",
+      "rut": "76.704.865-3",
+      "phone": "",
+      "address": "salvador gutierrez 4999",
+      "active": true,
+      "razonSocial": "hermanos cuevas spa",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-6",
+      "name": "carlos arancibia",
+      "rut": "GUIA",
+      "phone": "",
+      "address": "lorenzo eiting # 6099",
+      "active": true,
+      "razonSocial": "",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-7",
+      "name": "angel (botilleria)",
+      "rut": "77.130.103-7",
+      "phone": "569 37672631",
+      "address": "cmdt.  chacon 6406",
+      "active": true,
+      "razonSocial": "botilleria el pino spa",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-8",
+      "name": "nicole",
+      "rut": "18.848.137-K",
+      "phone": "569 8949 5914",
+      "address": "huelen # 1556",
+      "active": true,
+      "razonSocial": "",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-9",
+      "name": "esteban",
+      "rut": "78.246.467-1",
+      "phone": "569 6731 9468",
+      "address": "huelen # 1573",
+      "active": true,
+      "razonSocial": "ruben dario garcia vilchez",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-10",
+      "name": "juan / cecilia",
+      "rut": "19.644.017-8",
+      "phone": "",
+      "address": "huelen # 1760",
+      "active": true,
+      "razonSocial": "botilleria JRC",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-11",
+      "name": "eduardo",
+      "rut": "78.256.275-4",
+      "phone": "569 6842 5232",
+      "address": "gutierrez # 7274",
+      "active": true,
+      "razonSocial": "botilleria",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-12",
+      "name": "cristian/gloria",
+      "rut": "5.910.696-1",
+      "phone": "",
+      "address": "fleming 7380",
+      "active": true,
+      "razonSocial": "rosa caniumil millanao",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-13",
+      "name": "angy",
+      "rut": "5.423.548-8",
+      "phone": "",
+      "address": "salvador gutierrez # 7614",
+      "active": true,
+      "razonSocial": "victor manuel muñoz rojas",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-14",
+      "name": "ceicila pavez",
+      "rut": "11.975.930-7",
+      "phone": "",
+      "address": "la capilla # 7954",
+      "active": true,
+      "razonSocial": "cecilia felisa pavez valdes",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-15",
+      "name": "a la vuelta cecilia",
+      "rut": "",
+      "phone": "",
+      "address": "",
+      "active": true,
+      "razonSocial": "",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-16",
+      "name": "guillermo/mili",
+      "rut": "18.095.300-0",
+      "phone": "",
+      "address": "la estrella # 1756",
+      "active": true,
+      "razonSocial": "jennifer cecilia fuentes correa",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-17",
+      "name": "carlos",
+      "rut": "9.340.820-9",
+      "phone": "",
+      "address": "la estrella 1711",
+      "active": true,
+      "razonSocial": "maria ada arriagada figueroa",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-18",
+      "name": "leo / jair",
+      "rut": "17.766.838-9",
+      "phone": "569 33725992",
+      "address": "mapocho sur # 8330",
+      "active": true,
+      "razonSocial": "geraldine fernanda farias pena",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-19",
+      "name": "arturo",
+      "rut": "9.389.440-5",
+      "phone": "",
+      "address": "mapocho norte # 7929",
+      "active": true,
+      "razonSocial": "jessica aida guajardo alvarez",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-20",
+      "name": "katherine",
+      "rut": "13.815.413-0",
+      "phone": "",
+      "address": "san daniel 9431",
+      "active": true,
+      "razonSocial": "katherine elena mendez barros",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-21",
+      "name": "antonio",
+      "rut": "77.497.596-9",
+      "phone": "",
+      "address": "cerro la campana # 1020",
+      "active": true,
+      "razonSocial": "luxor spa.",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-22",
+      "name": "angelica",
+      "rut": "77.875.205-0",
+      "phone": "569 4787 3023",
+      "address": "cerro la campana # 1075",
+      "active": true,
+      "razonSocial": "palma y gonzalez spa",
+      "comuna": "pudahuel"
+    },
+    {
+      "id": "seed-client-23",
+      "name": "gabriela",
+      "rut": "13.239.758-9",
+      "phone": "569 81568052",
+      "address": "san daniel # 9129",
+      "active": true,
+      "razonSocial": "gabriela alejandra galindo aguirre",
+      "comuna": "pudahuel norte"
+    },
+    {
+      "id": "seed-client-24",
+      "name": "oscar",
+      "rut": "16.418.705-5",
+      "phone": "569 96392692",
+      "address": "santa victoria # 1306",
+      "active": true,
+      "razonSocial": "donde armando",
+      "comuna": "pudahuel norte"
+    },
+    {
+      "id": "seed-client-25",
+      "name": "claudio",
+      "rut": "",
+      "phone": "",
+      "address": "sta. Victoria 979",
+      "active": true,
+      "razonSocial": "",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-26",
+      "name": "1 vez al mes",
+      "rut": "",
+      "phone": "",
+      "address": "el estribo",
+      "active": true,
+      "razonSocial": "botilleria",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-27",
+      "name": "tamara ( sandy)",
+      "rut": "77.900.039-7",
+      "phone": "569 7150 0444",
+      "address": "el estribo # 8629",
+      "active": true,
+      "razonSocial": "botilleria",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-28",
+      "name": "lalo",
+      "rut": "3.853.138-7",
+      "phone": "569 5363 3375",
+      "address": "el estribo # 8575",
+      "active": true,
+      "razonSocial": "",
+      "comuna": "pudahuel"
+    },
+    {
+      "id": "seed-client-29",
+      "name": "mayo",
+      "rut": "7.890.632-4",
+      "phone": "569 8880 8543",
+      "address": "iloca # 1044",
+      "active": true,
+      "razonSocial": "jorge arebalo",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-30",
+      "name": "claudia saez",
+      "rut": "11.971.780-9",
+      "phone": "569 9569 9540",
+      "address": "juncal # 1066",
+      "active": true,
+      "razonSocial": "claudia saez",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-31",
+      "name": "Patricia",
+      "rut": "11.523.711-K",
+      "phone": "569  84293105",
+      "address": "Dagoberto Godoy # 1041",
+      "active": true,
+      "razonSocial": "donde las nones",
+      "comuna": "Pudahuel norte"
+    },
+    {
+      "id": "seed-client-32",
+      "name": "barbara vecina",
+      "rut": "78.097.548-2",
+      "phone": "569 8832 0687",
+      "address": "queb de aroma # 1832",
+      "active": true,
+      "razonSocial": "almacen",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-33",
+      "name": "ignacio",
+      "rut": "76.899.051-4",
+      "phone": "569 54371658",
+      "address": "las rejas norte # 65",
+      "active": true,
+      "razonSocial": "7 liras spa.",
+      "comuna": "quinta normal"
+    },
+    {
+      "id": "seed-client-34",
+      "name": "luis mellado (el huaso )",
+      "rut": "12.332.786-1",
+      "phone": "",
+      "address": "isla decepcion 50",
+      "active": true,
+      "razonSocial": "luis enrique mellado rivera",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-35",
+      "name": "ricardo",
+      "rut": "8.532.862-K",
+      "phone": "569 86619652",
+      "address": "isla decepcion 50 A",
+      "active": true,
+      "razonSocial": "pamela del rosario araya saez",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-36",
+      "name": "alejandra",
+      "rut": "77.366.303-3",
+      "phone": "569 7653 1156",
+      "address": "obispo rodriguez # 5975",
+      "active": true,
+      "razonSocial": "juan pablo castillo jerez luis alejandro",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-37",
+      "name": "mra. teresa (camila)",
+      "rut": "",
+      "phone": "",
+      "address": "san german # 868",
+      "active": true,
+      "razonSocial": "",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-38",
+      "name": "ruben",
+      "rut": "76.604.657-6",
+      "phone": "",
+      "address": "san pablo 5834",
+      "active": true,
+      "razonSocial": "botilleria mi compadre s.p.a.",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-39",
+      "name": "jessica / german",
+      "rut": "22.642.694-9",
+      "phone": "",
+      "address": "coronel alfonso ugarte # 6433",
+      "active": true,
+      "razonSocial": "german vilcañaupa canchuricra",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-40",
+      "name": "miriam",
+      "rut": "12.812.768-2",
+      "phone": "",
+      "address": "quiosco consultorio",
+      "active": true,
+      "razonSocial": "",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-41",
+      "name": "yesmi (tiare cristal)",
+      "rut": "76.711.868-6",
+      "phone": "mandar factura",
+      "address": "cignus # 8621",
+      "active": true,
+      "razonSocial": "botilleria cesar alejandro vega marquez e.i.r.l.",
+      "comuna": "pudahuel"
+    },
+    {
+      "id": "seed-client-42",
+      "name": "paula",
+      "rut": "14.255.671-5",
+      "phone": "",
+      "address": "mar de drake # 380",
+      "active": true,
+      "razonSocial": "paula andrea gutierrez espinoza",
+      "comuna": "pudahuel"
+    },
+    {
+      "id": "seed-client-43",
+      "name": "claudio arrau",
+      "rut": "78.437.508-0",
+      "phone": "569 3130 9297",
+      "address": "cludio arrau # 7656",
+      "active": true,
+      "razonSocial": "almacen",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-44",
+      "name": "cristian   (los primos)",
+      "rut": "11.398.098-2",
+      "phone": "569 45088700",
+      "address": "san pablo # 6600 lc 9",
+      "active": true,
+      "razonSocial": "manuel antonio soto pavez",
+      "comuna": "lo prado"
+    },
+    {
+      "id": "seed-client-45",
+      "name": "javier/macarena ( malo pal agua)",
+      "rut": "15.887.899-2",
+      "phone": "",
+      "address": "san pablo 6709 local 1",
+      "active": true,
+      "razonSocial": "macarena andrea undas salinas",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-46",
+      "name": "boti joaquin",
+      "rut": "11.837.497-5",
+      "phone": "",
+      "address": "gaspar toro 1348",
+      "active": true,
+      "razonSocial": "boti. San rafael apolinario rainer",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-47",
+      "name": "gerson (la 32)hosto",
+      "rut": "77.960.608-2",
+      "phone": "569 8774 0129",
+      "address": "hostos # 1408",
+      "active": true,
+      "razonSocial": "sociedad comercial cfc s.p.a.",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-48",
+      "name": "carolina",
+      "rut": "6.217.836-1",
+      "phone": "569 97944319",
+      "address": "augusto matte # 2292",
+      "active": true,
+      "razonSocial": "ana gabriela riveros moreno",
+      "comuna": "ñuñoa"
+    },
+    {
+      "id": "seed-client-49",
+      "name": "ricardo",
+      "rut": "7.685.483-1",
+      "phone": "",
+      "address": "llaima # 5628",
+      "active": true,
+      "razonSocial": "clunes wittwer ema miriam",
+      "comuna": "macul"
+    },
+    {
+      "id": "seed-client-50",
+      "name": "viviana",
+      "rut": "77.711.019-5",
+      "phone": "",
+      "address": "casa blanca # 3869",
+      "active": true,
+      "razonSocial": "minimarket antonella",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-51",
+      "name": "marcela",
+      "rut": "6.961.779-4",
+      "phone": "569 87601572",
+      "address": "quiosco frente  # 5000",
+      "active": true,
+      "razonSocial": "maria isabel alvarado retamal",
+      "comuna": "peñalolen"
+    },
+    {
+      "id": "seed-client-52",
+      "name": "jorge",
+      "rut": "77.972.832-3",
+      "phone": "569 9978 5451",
+      "address": "las torres # 5501",
+      "active": true,
+      "razonSocial": "minimarket",
+      "comuna": "independencia"
+    },
+    {
+      "id": "seed-client-53",
+      "name": "esteban",
+      "rut": "7. 693.655-2",
+      "phone": "",
+      "address": "los ceresos # 5938",
+      "active": true,
+      "razonSocial": "",
+      "comuna": "macul"
+    },
+    {
+      "id": "seed-client-54",
+      "name": "leo",
+      "rut": "9.482.478-8",
+      "phone": "569 62775088",
+      "address": "las americas # 4904",
+      "active": true,
+      "razonSocial": "serguio marin minimarket",
+      "comuna": "peñalolen"
+    },
+    {
+      "id": "seed-client-55",
+      "name": "betzabe rubio",
+      "rut": "GUIA",
+      "phone": "",
+      "address": "psj. Comercio # 6140",
+      "active": true,
+      "razonSocial": "betzabe rubio fuentes",
+      "comuna": "peñalolen"
+    },
+    {
+      "id": "seed-client-56",
+      "name": "marco",
+      "rut": "77.525.637-0",
+      "phone": "569 87586432",
+      "address": "san luis de macul # 4355 local 4",
+      "active": true,
+      "razonSocial": "araos serrudo spa.",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-57",
+      "name": "poke /josmir",
+      "rut": "76.569.187-7",
+      "phone": "569 72262731",
+      "address": "av el libano # 5182",
+      "active": true,
+      "razonSocial": "com. Empire spa.",
+      "comuna": "macul"
+    },
+    {
+      "id": "seed-client-58",
+      "name": "luisa ana ( enzo)",
+      "rut": "77.885.002-8",
+      "phone": "569 72100214",
+      "address": "libano # 5192",
+      "active": true,
+      "razonSocial": "enzo",
+      "comuna": "macul"
+    },
+    {
+      "id": "seed-client-59",
+      "name": "silvia trincao",
+      "rut": "77.981.697-4",
+      "phone": "",
+      "address": "froilan roa # 5015",
+      "active": true,
+      "razonSocial": "",
+      "comuna": "macul"
+    },
+    {
+      "id": "seed-client-60",
+      "name": "gonzalo",
+      "rut": "GUIA",
+      "phone": "569 8664 8420",
+      "address": "froilan roa & las codornices",
+      "active": true,
+      "razonSocial": "",
+      "comuna": "macul"
+    },
+    {
+      "id": "seed-client-61",
+      "name": "marcela / estrella",
+      "rut": "12.220.777-3",
+      "phone": "",
+      "address": "bernardo leyton # 3051 local 3",
+      "active": true,
+      "razonSocial": "",
+      "comuna": "macul"
+    },
+    {
+      "id": "seed-client-62",
+      "name": "7 liras 2",
+      "rut": "78.104.826-7",
+      "phone": "",
+      "address": "jose joaquin prieto # 5383",
+      "active": true,
+      "razonSocial": "ignacio",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-63",
+      "name": "matias",
+      "rut": "77.888.485-2",
+      "phone": "",
+      "address": "lazo # 1851",
+      "active": true,
+      "razonSocial": "botilleria",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-64",
+      "name": "luis becerra",
+      "rut": "77.609.755-1",
+      "phone": "569 3275 5713",
+      "address": "los queltehues # 3568",
+      "active": true,
+      "razonSocial": "dist. Y com. Becerra ramos",
+      "comuna": "macul"
+    },
+    {
+      "id": "seed-client-65",
+      "name": "alfredo",
+      "rut": "8.917.097-4",
+      "phone": "569 3207 6306",
+      "address": "luis aris # 3498",
+      "active": true,
+      "razonSocial": "",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-66",
+      "name": "maury / sole",
+      "rut": "77.981.189-1",
+      "phone": "569 9839 3052",
+      "address": "san marcos # 4714",
+      "active": true,
+      "razonSocial": "illumi spa",
+      "comuna": "macul"
+    },
+    {
+      "id": "seed-client-67",
+      "name": "rober/zaira",
+      "rut": "21.373.746-5",
+      "phone": "",
+      "address": "ignacio carrera pinto # 5003",
+      "active": true,
+      "razonSocial": "zaira zarela yovera robles",
+      "comuna": "macul"
+    },
+    {
+      "id": "seed-client-68",
+      "name": "rosa María Lizana",
+      "rut": "9966493-2",
+      "phone": "569 6729 2327",
+      "address": "amada labarca huberston # 4947",
+      "active": true,
+      "razonSocial": "botelleria los primos",
+      "comuna": "macul"
+    },
+    {
+      "id": "seed-client-69",
+      "name": "juan carlos (salfate)",
+      "rut": "9.966.382-0",
+      "phone": "569 6612 4941",
+      "address": "psj fernando massiff d la fuente # 4790",
+      "active": true,
+      "razonSocial": "luis felipe salfate retamal",
+      "comuna": "macul"
+    },
+    {
+      "id": "seed-client-70",
+      "name": "Paola Hernández",
+      "rut": "GUÍA",
+      "phone": "569 9391 7122",
+      "address": "peatones 14 # 4606 villa jardines",
+      "active": true,
+      "razonSocial": "mini Market",
+      "comuna": "Ñuñoa"
+    },
+    {
+      "id": "seed-client-71",
+      "name": "paulina / emili",
+      "rut": "77.211.044-8",
+      "phone": "",
+      "address": "ramon cruz # 1417",
+      "active": true,
+      "razonSocial": "",
+      "comuna": "macul"
+    },
+    {
+      "id": "seed-client-72",
+      "name": "alexis torres",
+      "rut": "77.331.916-2",
+      "phone": "569 5955 6438",
+      "address": "av. Cardenal caro # 1646",
+      "active": true,
+      "razonSocial": "botilleria",
+      "comuna": ""
+    }
+  ],
+  "products": [
+    {
+      "id": "seed-product-1",
+      "name": "ron.trans                 20 und          $ 3.600 x1        180 und",
+      "category": "Tabaquería",
+      "pricePurchase": 2900,
+      "price": 3600,
+      "active": true
+    },
+    {
+      "id": "seed-product-2",
+      "name": "ron.trans                 20 und          $ 3.300       x 10           165 und",
+      "category": "Tabaquería",
+      "pricePurchase": 2900,
+      "price": 3300,
+      "active": true
+    },
+    {
+      "id": "seed-product-3",
+      "name": "ron.Clasic  20 und        $ 3.800    190 und",
+      "category": "Tabaquería",
+      "pricePurchase": 3040,
+      "price": 3800,
+      "active": true
+    },
+    {
+      "id": "seed-product-4",
+      "name": "ron. Diseño       20 und           $ 5.400     270 und",
+      "category": "Tabaquería",
+      "pricePurchase": 3840,
+      "price": 5400,
+      "active": true
+    },
+    {
+      "id": "seed-product-5",
+      "name": "CHISPER              $ 1.800 UND",
+      "category": "Tabaquería",
+      "pricePurchase": 1390,
+      "price": 1800,
+      "active": true
+    },
+    {
+      "id": "seed-product-6",
+      "name": "clipper         24 und            $ 16.800  $700 und",
+      "category": "Tabaquería",
+      "pricePurchase": 13500,
+      "price": 16800,
+      "active": true
+    },
+    {
+      "id": "seed-product-7",
+      "name": "vaso 10oz           plastico 50 und      $ 2.000       $ 40 und",
+      "category": "Tabaquería",
+      "pricePurchase": 800,
+      "price": 2000,
+      "active": true
+    },
+    {
+      "id": "seed-product-8",
+      "name": "vaso rojo         16 0z     25 und        $ 2500        $ 100",
+      "category": "Tabaquería",
+      "pricePurchase": 1690,
+      "price": 2500,
+      "active": true
+    },
+    {
+      "id": "seed-product-9",
+      "name": "vaso 160z      plastico 25 und      $ 1.750       $ 70 und",
+      "category": "Tabaquería",
+      "pricePurchase": 795,
+      "price": 1750,
+      "active": true
+    },
+    {
+      "id": "seed-product-10",
+      "name": "pañuelo    elite          18 und           $ 3.100   $172 und",
+      "category": "Tabaquería",
+      "pricePurchase": 1854,
+      "price": 3100,
+      "active": true
+    },
+    {
+      "id": "seed-product-11",
+      "name": "ocb negro        25 und            $ 13.000     520 und",
+      "category": "Tabaquería",
+      "pricePurchase": 11400,
+      "price": 13000,
+      "active": true
+    },
+    {
+      "id": "seed-product-12",
+      "name": "ocb        gris       25 und      $ 14.000        560 und",
+      "category": "Tabaquería",
+      "pricePurchase": 11500,
+      "price": 14000,
+      "active": true
+    },
+    {
+      "id": "seed-product-13",
+      "name": "ocb organico     25 und     $ 14.000       560 und",
+      "category": "Tabaquería",
+      "pricePurchase": 11500,
+      "price": 14000,
+      "active": true
+    },
+    {
+      "id": "seed-product-14",
+      "name": "amsterda   25 und      $ 5.000      $ 250 und",
+      "category": "Tabaquería",
+      "pricePurchase": 2200,
+      "price": 5000,
+      "active": true
+    },
+    {
+      "id": "seed-product-15",
+      "name": "cono rosa           40 und       $ 5.000        $ 125 und",
+      "category": "Tabaquería",
+      "pricePurchase": 3000,
+      "price": 5000,
+      "active": true
+    },
+    {
+      "id": "seed-product-16",
+      "name": "raw c/ boqui  $1.000    und",
+      "category": "Tabaquería",
+      "pricePurchase": 700,
+      "price": 1000,
+      "active": true
+    },
+    {
+      "id": "seed-product-17",
+      "name": "raw c/    boquilla         ( caja)           24 und        $ 24.000      1.000 und",
+      "category": "Tabaquería",
+      "pricePurchase": 16000,
+      "price": 24000,
+      "active": true
+    },
+    {
+      "id": "seed-product-18",
+      "name": "ocb c/ boquilla       24 und          $ 29.500         1.229 und",
+      "category": "Tabaquería",
+      "pricePurchase": 23000,
+      "price": 25500,
+      "active": true
+    },
+    {
+      "id": "seed-product-19",
+      "name": "amster con boquilla    25 und     $ 15.000    $ 600",
+      "category": "Tabaquería",
+      "pricePurchase": 7000,
+      "price": 15000,
+      "active": true
+    },
+    {
+      "id": "seed-product-20",
+      "name": "blunt                $ 600 und               $ 15.000 caja",
+      "category": "Tabaquería",
+      "pricePurchase": 380,
+      "price": 600,
+      "active": true
+    },
+    {
+      "id": "seed-product-21",
+      "name": "blunt de rosa          $ 700 und        $ 10.500 caja",
+      "category": "Tabaquería",
+      "pricePurchase": 333,
+      "price": 700,
+      "active": true
+    },
+    {
+      "id": "seed-product-22",
+      "name": "boquilla  ocb         25 und        $ 7.000     280 und",
+      "category": "Tabaquería",
+      "pricePurchase": 5500,
+      "price": 7000,
+      "active": true
+    },
+    {
+      "id": "seed-product-23",
+      "name": "boquilla amsterdam               50 und       $ 8.500    170 und",
+      "category": "Tabaquería",
+      "pricePurchase": 4500,
+      "price": 8500,
+      "active": true
+    },
+    {
+      "id": "seed-product-24",
+      "name": "enrolador              $ 1.500    und",
+      "category": "Tabaquería",
+      "pricePurchase": 850,
+      "price": 1500,
+      "active": true
+    },
+    {
+      "id": "seed-product-25",
+      "name": "moledor           $ 1.500    und",
+      "category": "Tabaquería",
+      "pricePurchase": 850,
+      "price": 1500,
+      "active": true
+    },
+    {
+      "id": "seed-product-26",
+      "name": "pipas            $ 1.500       und",
+      "category": "Tabaquería",
+      "pricePurchase": 1000,
+      "price": 1500,
+      "active": true
+    },
+    {
+      "id": "seed-product-27",
+      "name": "pipas con moledor  $ 1.800    und",
+      "category": "Tabaquería",
+      "pricePurchase": 1000,
+      "price": 1800,
+      "active": true
+    },
+    {
+      "id": "seed-product-28",
+      "name": "tabaco bristol         45 grm         $ 4.800      und",
+      "category": "Tabaquería",
+      "pricePurchase": 4250,
+      "price": 4800,
+      "active": true
+    },
+    {
+      "id": "seed-product-29",
+      "name": "filtro verso  grueso    $ 1.000    und",
+      "category": "Tabaquería",
+      "pricePurchase": 700,
+      "price": 1000,
+      "active": true
+    },
+    {
+      "id": "seed-product-30",
+      "name": "filtro verso   clasico   $ 1.000    und",
+      "category": "Tabaquería",
+      "pricePurchase": 700,
+      "price": 1000,
+      "active": true
+    },
+    {
+      "id": "seed-product-31",
+      "name": "filtro verso   mentol   $ 1.000    und",
+      "category": "Tabaquería",
+      "pricePurchase": 700,
+      "price": 1000,
+      "active": true
+    },
+    {
+      "id": "seed-product-32",
+      "name": "filtro verso     organico     $ 1.000    und",
+      "category": "Tabaquería",
+      "pricePurchase": 700,
+      "price": 1000,
+      "active": true
+    },
+    {
+      "id": "seed-product-33",
+      "name": "bigtime ultra                  12 und        $ 11.700   975 und",
+      "category": "Tabaquería",
+      "pricePurchase": 9411,
+      "price": 11700,
+      "active": true
+    },
+    {
+      "id": "seed-product-34",
+      "name": "bigtime ultra                  12 und        $ 11.700   975 und",
+      "category": "Tabaquería",
+      "pricePurchase": 9411,
+      "price": 11700,
+      "active": true
+    },
+    {
+      "id": "seed-product-35",
+      "name": "bigtime ultra                  12 und        $ 11.700   975 und",
+      "category": "Tabaquería",
+      "pricePurchase": 9411,
+      "price": 11700,
+      "active": true
+    },
+    {
+      "id": "seed-product-36",
+      "name": "bigtime ultra                  12 und        $ 11.700   975 und",
+      "category": "Tabaquería",
+      "pricePurchase": 9411,
+      "price": 11700,
+      "active": true
+    },
+    {
+      "id": "seed-product-37",
+      "name": "bigtime ultra     12 und  promo desde 3 diplay                   $ 11.200          933 und",
+      "category": "Tabaquería",
+      "pricePurchase": 9411,
+      "price": 11200,
+      "active": true
+    },
+    {
+      "id": "seed-product-38",
+      "name": "bigtime  20 und        $ 5.800   290 und",
+      "category": "Tabaquería",
+      "pricePurchase": 4616,
+      "price": 5800,
+      "active": true
+    },
+    {
+      "id": "seed-product-39",
+      "name": "bigtime  20 und        $ 5.800   290 und",
+      "category": "Tabaquería",
+      "pricePurchase": 4616,
+      "price": 5800,
+      "active": true
+    },
+    {
+      "id": "seed-product-40",
+      "name": "bigtime  20 und        $ 5.800   290 und",
+      "category": "Tabaquería",
+      "pricePurchase": 4616,
+      "price": 5800,
+      "active": true
+    },
+    {
+      "id": "seed-product-41",
+      "name": "bigtime  20 und        $ 5.800   290 und",
+      "category": "Tabaquería",
+      "pricePurchase": 4616,
+      "price": 5800,
+      "active": true
+    },
+    {
+      "id": "seed-product-42",
+      "name": "bigtime  20 und        $ 5.800   290 und",
+      "category": "Tabaquería",
+      "pricePurchase": 4616,
+      "price": 5800,
+      "active": true
+    },
+    {
+      "id": "seed-product-43",
+      "name": "bigtime  20 und        $ 5.800   290 und",
+      "category": "Tabaquería",
+      "pricePurchase": 4616,
+      "price": 5800,
+      "active": true
+    },
+    {
+      "id": "seed-product-44",
+      "name": "bazooka           25 und              $ 4.500     180 und",
+      "category": "Caramelos",
+      "pricePurchase": 3552,
+      "price": 4500,
+      "active": true
+    },
+    {
+      "id": "seed-product-45",
+      "name": "BON O BON AMARILL  30 und        $ 6.500   216 und",
+      "category": "Caramelos",
+      "pricePurchase": 5224,
+      "price": 6500,
+      "active": true
+    },
+    {
+      "id": "seed-product-46",
+      "name": "nikolo           20 und           $ 6.400  320 und",
+      "category": "Caramelos",
+      "pricePurchase": 5106,
+      "price": 6400,
+      "active": true
+    },
+    {
+      "id": "seed-product-47",
+      "name": "chubi      24 und        $ 5.200  217 und",
+      "category": "Caramelos",
+      "pricePurchase": 4158,
+      "price": 5200,
+      "active": true
+    },
+    {
+      "id": "seed-product-48",
+      "name": "tifany    20 und       $4.300  215 und",
+      "category": "Caramelos",
+      "pricePurchase": 3465,
+      "price": 4300,
+      "active": true
+    },
+    {
+      "id": "seed-product-49",
+      "name": "rocklet  naranjo  18 und  $ 6.500    361 und",
+      "category": "Caramelos",
+      "pricePurchase": 4774,
+      "price": 6500,
+      "active": true
+    },
+    {
+      "id": "seed-product-50",
+      "name": "rocklet  negro  18 und    $ 6.500  361 und",
+      "category": "Caramelos",
+      "pricePurchase": 4774,
+      "price": 6500,
+      "active": true
+    },
+    {
+      "id": "seed-product-51",
+      "name": "amberry    20 und     $ 4300    215 und",
+      "category": "Caramelos",
+      "pricePurchase": 3200,
+      "price": 4300,
+      "active": true
+    },
+    {
+      "id": "seed-product-52",
+      "name": "ambrosit        20 und     $ 4300    215 und",
+      "category": "Caramelos",
+      "pricePurchase": 3200,
+      "price": 4300,
+      "active": true
+    },
+    {
+      "id": "seed-product-53",
+      "name": "flippy    20 und     $ 4300    215 und",
+      "category": "Caramelos",
+      "pricePurchase": 3200,
+      "price": 4300,
+      "active": true
+    },
+    {
+      "id": "seed-product-54",
+      "name": "frutillas con crema    $ 4300         215 und",
+      "category": "Caramelos",
+      "pricePurchase": 3200,
+      "price": 4300,
+      "active": true
+    },
+    {
+      "id": "seed-product-55",
+      "name": "loop              20 und     $ 4300    215 und",
+      "category": "Caramelos",
+      "pricePurchase": 3200,
+      "price": 4300,
+      "active": true
+    },
+    {
+      "id": "seed-product-56",
+      "name": "turron    28 und     $ 9.500   339 und",
+      "category": "Caramelos",
+      "pricePurchase": 7158,
+      "price": 9500,
+      "active": true
+    },
+    {
+      "id": "seed-product-57",
+      "name": "languetaz  verde             24 und                $ 3.000            125 und",
+      "category": "Caramelos",
+      "pricePurchase": 2325,
+      "price": 3000,
+      "active": true
+    },
+    {
+      "id": "seed-product-58",
+      "name": "languetaz naranja        24 und             $ 3.000          125 und",
+      "category": "Caramelos",
+      "pricePurchase": 2325,
+      "price": 3000,
+      "active": true
+    },
+    {
+      "id": "seed-product-59",
+      "name": "menta chocolate     100 und      $ 3.400      32 und",
+      "category": "Caramelos",
+      "pricePurchase": 2766,
+      "price": 3400,
+      "active": true
+    },
+    {
+      "id": "seed-product-60",
+      "name": "tofee surtido          400 grm                 $ 2.700",
+      "category": "Caramelos",
+      "pricePurchase": 1676,
+      "price": 2700,
+      "active": true
+    },
+    {
+      "id": "seed-product-61",
+      "name": "chupete rojo           24 und       $2.000      83 und",
+      "category": "Caramelos",
+      "pricePurchase": 1645,
+      "price": 2000,
+      "active": true
+    },
+    {
+      "id": "seed-product-62",
+      "name": "chupete surtido    24 und       $2.000      83 und",
+      "category": "Caramelos",
+      "pricePurchase": 1645,
+      "price": 2000,
+      "active": true
+    },
+    {
+      "id": "seed-product-63",
+      "name": "chupete    bowlings    24 und      $ 2000      83 und",
+      "category": "Caramelos",
+      "pricePurchase": 1440,
+      "price": 2000,
+      "active": true
+    },
+    {
+      "id": "seed-product-64",
+      "name": "mentitas               24 und             $ 5.250       204 und",
+      "category": "Caramelos",
+      "pricePurchase": 3840,
+      "price": 5250,
+      "active": true
+    },
+    {
+      "id": "seed-product-65",
+      "name": "full   24und        $ 5.250    204 und",
+      "category": "Caramelos",
+      "pricePurchase": 3840,
+      "price": 5250,
+      "active": true
+    },
+    {
+      "id": "seed-product-66",
+      "name": "freegells       12 und      $ 2.100    175 und",
+      "category": "Caramelos",
+      "pricePurchase": 1569,
+      "price": 2100,
+      "active": true
+    },
+    {
+      "id": "seed-product-67",
+      "name": "freegells       12 und      $ 2.100    175 und",
+      "category": "Caramelos",
+      "pricePurchase": 1569,
+      "price": 2100,
+      "active": true
+    },
+    {
+      "id": "seed-product-68",
+      "name": "freegells       12 und      $ 2.100    175 und",
+      "category": "Caramelos",
+      "pricePurchase": 1569,
+      "price": 2100,
+      "active": true
+    },
+    {
+      "id": "seed-product-69",
+      "name": "alka        100 und      $2.400",
+      "category": "Caramelos",
+      "pricePurchase": 1841,
+      "price": 2400,
+      "active": true
+    },
+    {
+      "id": "seed-product-70",
+      "name": "alka  ice      390gr      $2.800",
+      "category": "Caramelos",
+      "pricePurchase": 2194,
+      "price": 2800,
+      "active": true
+    },
+    {
+      "id": "seed-product-71",
+      "name": "alka 2       12 und      $ 4.100        12 und",
+      "category": "Caramelos",
+      "pricePurchase": 3160,
+      "price": 4100,
+      "active": true
+    },
+    {
+      "id": "seed-product-72",
+      "name": "alka 2       12 und      $ 4.100        12 und",
+      "category": "Caramelos",
+      "pricePurchase": 3160,
+      "price": 4100,
+      "active": true
+    },
+    {
+      "id": "seed-product-73",
+      "name": "alka 2       12 und      $ 4.100        12 und",
+      "category": "Caramelos",
+      "pricePurchase": 3160,
+      "price": 4100,
+      "active": true
+    },
+    {
+      "id": "seed-product-74",
+      "name": "conquista rollo            $ 600        und",
+      "category": "Nestlé",
+      "pricePurchase": 482,
+      "price": 600,
+      "active": true
+    },
+    {
+      "id": "seed-product-75",
+      "name": "cracker          $ 650          und",
+      "category": "Nestlé",
+      "pricePurchase": 525,
+      "price": 650,
+      "active": true
+    },
+    {
+      "id": "seed-product-76",
+      "name": "galleta vino           $ 750    und",
+      "category": "Nestlé",
+      "pricePurchase": 606,
+      "price": 750,
+      "active": true
+    },
+    {
+      "id": "seed-product-77",
+      "name": "triton chocolate      $ 750       und",
+      "category": "Nestlé",
+      "pricePurchase": 600,
+      "price": 750,
+      "active": true
+    },
+    {
+      "id": "seed-product-78",
+      "name": "triton vainilla     $ 750          und",
+      "category": "Nestlé",
+      "pricePurchase": 600,
+      "price": 750,
+      "active": true
+    },
+    {
+      "id": "seed-product-79",
+      "name": "kuky clasica      $ 1.000            und",
+      "category": "Nestlé",
+      "pricePurchase": 848,
+      "price": 1000,
+      "active": true
+    },
+    {
+      "id": "seed-product-80",
+      "name": "super 8    24 und        $ 6.600     275 und",
+      "category": "Nestlé",
+      "pricePurchase": 5325,
+      "price": 6600,
+      "active": true
+    },
+    {
+      "id": "seed-product-81",
+      "name": "kit-kat            24 und         $ 16.500      687 und",
+      "category": "Nestlé",
+      "pricePurchase": 13787,
+      "price": 16500,
+      "active": true
+    },
+    {
+      "id": "seed-product-82",
+      "name": "kit - kat     und            $ 700",
+      "category": "Nestlé",
+      "pricePurchase": 574,
+      "price": 700,
+      "active": true
+    },
+    {
+      "id": "seed-product-83",
+      "name": "sahne-nuss     90 grm      $ 2.100     und",
+      "category": "Nestlé",
+      "pricePurchase": 1742,
+      "price": 2100,
+      "active": true
+    },
+    {
+      "id": "seed-product-84",
+      "name": "trencito     80 grm        $ 1.600       und",
+      "category": "Nestlé",
+      "pricePurchase": 1280,
+      "price": 1600,
+      "active": true
+    },
+    {
+      "id": "seed-product-85",
+      "name": "bolsa botillera          $ 3.300   100 und",
+      "category": "Otros",
+      "pricePurchase": 2750,
+      "price": 3300,
+      "active": true
+    },
+    {
+      "id": "seed-product-86",
+      "name": "bolsa de basura    80x100       10 und             $1.500      150 und",
+      "category": "Otros",
+      "pricePurchase": 1190,
+      "price": 1500,
+      "active": true
+    },
+    {
+      "id": "seed-product-87",
+      "name": "bolsa de basura    90x120       10 und         $ 3.500      350 und",
+      "category": "Otros",
+      "pricePurchase": 2100,
+      "price": 3500,
+      "active": true
+    },
+    {
+      "id": "seed-product-88",
+      "name": "huincha    $ 800",
+      "category": "Otros",
+      "pricePurchase": 390,
+      "price": 800,
+      "active": true
+    },
+    {
+      "id": "seed-product-89",
+      "name": "pila AA        60und             $ 5.000       208 und",
+      "category": "Otros",
+      "pricePurchase": 3590,
+      "price": 5000,
+      "active": true
+    },
+    {
+      "id": "seed-product-90",
+      "name": "pila AAA   24 und              $ 5.000        208 und",
+      "category": "Otros",
+      "pricePurchase": 3590,
+      "price": 5000,
+      "active": true
+    },
+    {
+      "id": "seed-product-91",
+      "name": "pila D    12 und            $ 8.000       666 und",
+      "category": "Otros",
+      "pricePurchase": 6390,
+      "price": 8000,
+      "active": true
+    },
+    {
+      "id": "seed-product-92",
+      "name": "acido mefenamico",
+      "category": "Remedios",
+      "pricePurchase": 510,
+      "price": 1000,
+      "active": true
+    },
+    {
+      "id": "seed-product-93",
+      "name": "amoxicilina",
+      "category": "Remedios",
+      "pricePurchase": 1890,
+      "price": 2500,
+      "active": true
+    },
+    {
+      "id": "seed-product-94",
+      "name": "cefalmin",
+      "category": "Remedios",
+      "pricePurchase": 990,
+      "price": 1600,
+      "active": true
+    },
+    {
+      "id": "seed-product-95",
+      "name": "clorfenamina",
+      "category": "Remedios",
+      "pricePurchase": 320,
+      "price": 600,
+      "active": true
+    },
+    {
+      "id": "seed-product-96",
+      "name": "colmax",
+      "category": "Remedios",
+      "pricePurchase": 1350,
+      "price": 1800,
+      "active": true
+    },
+    {
+      "id": "seed-product-97",
+      "name": "diclofenaco sodico",
+      "category": "Remedios",
+      "pricePurchase": 820,
+      "price": 1800,
+      "active": true
+    },
+    {
+      "id": "seed-product-98",
+      "name": "domperidona 10mg",
+      "category": "Remedios",
+      "pricePurchase": 550,
+      "price": 1200,
+      "active": true
+    },
+    {
+      "id": "seed-product-99",
+      "name": "famotidina",
+      "category": "Remedios",
+      "pricePurchase": 390,
+      "price": 950,
+      "active": true
+    },
+    {
+      "id": "seed-product-100",
+      "name": "ibuprofeno 600mg",
+      "category": "Remedios",
+      "pricePurchase": 690,
+      "price": 1600,
+      "active": true
+    },
+    {
+      "id": "seed-product-101",
+      "name": "ketoprofeno 200mg",
+      "category": "Remedios",
+      "pricePurchase": 990,
+      "price": 1600,
+      "active": true
+    },
+    {
+      "id": "seed-product-102",
+      "name": "ketorolaco 10mg",
+      "category": "Remedios",
+      "pricePurchase": 620,
+      "price": 1200,
+      "active": true
+    },
+    {
+      "id": "seed-product-103",
+      "name": "loratadina 10 mg",
+      "category": "Remedios",
+      "pricePurchase": 590,
+      "price": 1200,
+      "active": true
+    },
+    {
+      "id": "seed-product-104",
+      "name": "loperamida",
+      "category": "Remedios",
+      "pricePurchase": 420,
+      "price": 800,
+      "active": true
+    },
+    {
+      "id": "seed-product-105",
+      "name": "desloratadina 5 mg",
+      "category": "Remedios",
+      "pricePurchase": 1490,
+      "price": 2500,
+      "active": true
+    },
+    {
+      "id": "seed-product-106",
+      "name": "migranol",
+      "category": "Remedios",
+      "pricePurchase": 1290,
+      "price": 1800,
+      "active": true
+    },
+    {
+      "id": "seed-product-107",
+      "name": "naproxeno",
+      "category": "Remedios",
+      "pricePurchase": 1250,
+      "price": 1800,
+      "active": true
+    },
+    {
+      "id": "seed-product-108",
+      "name": "en hora",
+      "category": "Remedios",
+      "pricePurchase": 2100,
+      "price": 5000,
+      "active": true
+    },
+    {
+      "id": "seed-product-109",
+      "name": "tes de embarzo",
+      "category": "Remedios",
+      "pricePurchase": 420,
+      "price": 1000,
+      "active": true
+    },
+    {
+      "id": "seed-product-110",
+      "name": "omeprasol",
+      "category": "Remedios",
+      "pricePurchase": 890,
+      "price": 1500,
+      "active": true
+    },
+    {
+      "id": "seed-product-111",
+      "name": "paracetamol adulto",
+      "category": "Remedios",
+      "pricePurchase": 420,
+      "price": 700,
+      "active": true
+    },
+    {
+      "id": "seed-product-112",
+      "name": "parche curitas",
+      "category": "Remedios",
+      "pricePurchase": 1390,
+      "price": 1850,
+      "active": true
+    },
+    {
+      "id": "seed-product-113",
+      "name": "pastilla carbon",
+      "category": "Remedios",
+      "pricePurchase": 559,
+      "price": 1000,
+      "active": true
+    },
+    {
+      "id": "seed-product-114",
+      "name": "preservativos",
+      "category": "Remedios",
+      "pricePurchase": 550,
+      "price": 1100,
+      "active": true
+    },
+    {
+      "id": "seed-product-115",
+      "name": "eno",
+      "category": "Remedios",
+      "pricePurchase": 4690,
+      "price": 6000,
+      "active": true
+    },
+    {
+      "id": "seed-product-116",
+      "name": "tapsin calnte dia",
+      "category": "Remedios",
+      "pricePurchase": 413,
+      "price": 550,
+      "active": true
+    },
+    {
+      "id": "seed-product-117",
+      "name": "tapsin calnte noche",
+      "category": "Remedios",
+      "pricePurchase": 413,
+      "price": 550,
+      "active": true
+    },
+    {
+      "id": "seed-product-118",
+      "name": "tapsin calnte x caja",
+      "category": "Remedios",
+      "pricePurchase": 24800,
+      "price": 27500,
+      "active": true
+    },
+    {
+      "id": "seed-product-119",
+      "name": "tapsin  dia",
+      "category": "Remedios",
+      "pricePurchase": 225,
+      "price": 400,
+      "active": true
+    },
+    {
+      "id": "seed-product-120",
+      "name": "tapsin noche",
+      "category": "Remedios",
+      "pricePurchase": 245,
+      "price": 400,
+      "active": true
+    },
+    {
+      "name": "Producto de prueba borrar",
+      "category": "Otros",
+      "pricePurchase": 100,
+      "price": 200,
+      "stock": 10,
+      "active": true,
+      "promotions": []
+    }
+  ]
+}
