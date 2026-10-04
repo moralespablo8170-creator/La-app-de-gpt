@@ -1,5 +1,5 @@
 {
-  "version": "4",
+  "version": "5",
   "source": "Distribuidora_Zipper_consolidado_semana_1.xlsx",
   "categories": [
     "Tabaquería",
@@ -728,6 +728,19 @@
       "address": "av. Cardenal caro # 1646",
       "active": true,
       "razonSocial": "botilleria",
+      "comuna": ""
+    },
+    {
+      "id": "seed-client-delete-test",
+      "name": "Cliente prueba BORRAR",
+      "rut": "",
+      "phone": "",
+      "address": "Cliente creado para probar el botón borrar",
+      "route": "",
+      "routeWeek": "A",
+      "routeDay": "",
+      "active": true,
+      "razonSocial": "",
       "comuna": ""
     }
   ],
@@ -1694,6 +1707,16 @@
     },
     {
       "name": "Producto de prueba borrar",
+      "category": "Otros",
+      "pricePurchase": 100,
+      "price": 200,
+      "stock": 10,
+      "active": true,
+      "promotions": []
+    },
+    {
+      "id": "seed-product-delete-test",
+      "name": "Producto prueba BORRAR",
       "category": "Otros",
       "pricePurchase": 100,
       "price": 200,
