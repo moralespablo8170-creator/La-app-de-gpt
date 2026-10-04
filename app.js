@@ -271,16 +271,11 @@ function bindImmediateValidation(id){
     if(!ok)setTimeout(()=>$(id).focus(),0)
   });
   $(id).addEventListener('keydown',e=>{
-    if(e.key==='Tab'||e.key==='Enter'){
+    if(e.key==='Enter'){
+      e.preventDefault();
       const ok=validateClientInput(id,true);
-      if(!ok){
-        e.preventDefault();
-        return
-      }
-      if(e.key==='Enter'){
-        e.preventDefault();
-        $(id).blur()
-      }
+      if(!ok)return;
+      $(id).blur()
     }
   })
 }
