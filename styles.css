@@ -87,3 +87,24 @@
 .suggestion{grid-template-columns:auto 1fr auto;min-height:58px}
 .chosen-product-info{display:flex;align-items:flex-start;gap:8px;min-width:0}
 .chosen-product-info>div{display:flex;flex-direction:column;gap:2px;min-width:0}
+
+/* B107 - Caja diaria: análisis y gráficos */
+.cash-filters{margin-bottom:12px}
+.stats-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:12px 0}
+.stats-kpis>div{padding:12px;border:1px solid #e5e7eb;border-radius:12px;background:#f8fafc;display:flex;flex-direction:column;gap:4px}
+.stats-kpis span{font-size:11px;color:#64748b;font-weight:700}
+.stats-kpis strong{font-size:18px}
+.stats-kpis small{font-size:10px;color:#64748b}
+.stats-subtitle{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;margin:16px 0 7px;color:#475569}
+.stats-chart{width:100%;overflow-x:auto;background:#f8fafc;border:1px solid #e5e7eb;border-radius:14px;padding:10px;min-height:270px}
+.stats-chart svg{display:block;width:100%;min-width:520px;height:auto}
+.chart-title{font-weight:900;font-size:13px;margin:2px 4px 8px}
+.chart-bar{fill:#2563eb}
+.chart-axis{stroke:#94a3b8;stroke-width:1}
+.chart-label{font-size:10px;fill:#475569}
+.chart-value{font-size:9px;fill:#0f172a;font-weight:800}
+@media(max-width:600px){
+ .stats-kpis{grid-template-columns:repeat(2,1fr)}
+ .stats-kpis strong{font-size:16px}
+ .stats-chart{min-height:250px}
+}
