@@ -228,8 +228,8 @@ function applyInventoryUpdate(){
   bu.forEach(p=>{const f=norm(p.flavor||p.name);const k=Object.keys(buStocks).find(x=>f.includes(x));if(k){const label={'menta fuerte':'Negro','aqua azul':'Azul',sandia:'Rojo',menta:'Verde'}[k];p.name='Big Time Ultra '+label;p.stock=buStocks[k];p.active=true}});
 
   // Alka, Alka Ice and Enora keep their requested product words; only spelling/case is normalized.
-  setNameStock(byName('alka'),'Alka',4);
-  setNameStock(byName('alka ice'),'Alka Ice',34);
+  setNameStock(byName('alka'),'Alka',34);
+  setNameStock(byName('alka ice'),'Alka Ice',4);
   setNameStock(byName('en hora'),'Enora',2);
   const eno=ps.find(byName('eno'));
   if(eno){eno.name='Eno azul';eno.stock=4;eno.active=true;const ev={...eno,id:uid(),name:'Eno verde',stock:1};ps.push(ev)}
