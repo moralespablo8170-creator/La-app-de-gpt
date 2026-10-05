@@ -1,5 +1,5 @@
 {
-  "version": "5",
+  "version": "5-dictated-v1",
   "source": "Distribuidora_Zipper_consolidado_semana_1.xlsx",
   "categories": [
     "Tabaquería",
@@ -747,739 +747,900 @@
   "products": [
     {
       "id": "seed-product-1",
-      "name": "ron.trans                 20 und          $ 3.600 x1        180 und",
+      "name": "Ronson transparente",
       "category": "Tabaquería",
       "pricePurchase": 2900,
       "price": 3600,
-      "active": true
-    },
-    {
-      "id": "seed-product-2",
-      "name": "ron.trans                 20 und          $ 3.300       x 10           165 und",
-      "category": "Tabaquería",
-      "pricePurchase": 2900,
-      "price": 3300,
-      "active": true
+      "active": true,
+      "stock": 66,
+      "baselineAliases": [
+        "Ronson transparente",
+        "ron.trans                 20 und          $ 3.600 x1        180 und"
+      ]
     },
     {
       "id": "seed-product-3",
-      "name": "ron.Clasic  20 und        $ 3.800    190 und",
+      "name": "Ronson clásico",
       "category": "Tabaquería",
       "pricePurchase": 3040,
       "price": 3800,
-      "active": true
+      "active": true,
+      "stock": 52,
+      "baselineAliases": [
+        "Ronson clásico",
+        "ron.Clasic  20 und        $ 3.800    190 und"
+      ]
     },
     {
       "id": "seed-product-4",
-      "name": "ron. Diseño       20 und           $ 5.400     270 und",
+      "name": "Ronson diseño",
       "category": "Tabaquería",
       "pricePurchase": 3840,
       "price": 5400,
-      "active": true
+      "active": true,
+      "stock": 28,
+      "baselineAliases": [
+        "Ronson diseño",
+        "ron. Diseño       20 und           $ 5.400     270 und"
+      ]
     },
     {
       "id": "seed-product-5",
-      "name": "CHISPER              $ 1.800 UND",
+      "name": "Chispero",
       "category": "Tabaquería",
       "pricePurchase": 1390,
       "price": 1800,
-      "active": true
+      "active": true,
+      "stock": 12,
+      "baselineAliases": [
+        "Chispero",
+        "CHISPER              $ 1.800 UND"
+      ]
     },
     {
       "id": "seed-product-6",
-      "name": "clipper         24 und            $ 16.800  $700 und",
+      "name": "Clipper",
       "category": "Tabaquería",
       "pricePurchase": 13500,
       "price": 16800,
-      "active": true
+      "active": true,
+      "stock": 2,
+      "baselineAliases": [
+        "Clipper",
+        "clipper         24 und            $ 16.800  $700 und"
+      ]
     },
     {
       "id": "seed-product-7",
-      "name": "vaso 10oz           plastico 50 und      $ 2.000       $ 40 und",
+      "name": "Vaso chico 10 oz",
       "category": "Tabaquería",
       "pricePurchase": 800,
       "price": 2000,
-      "active": true
+      "active": true,
+      "stock": 21,
+      "baselineAliases": [
+        "Vaso chico 10 oz",
+        "vaso 10oz           plastico 50 und      $ 2.000       $ 40 und"
+      ]
     },
     {
       "id": "seed-product-8",
-      "name": "vaso rojo         16 0z     25 und        $ 2500        $ 100",
+      "name": "Vaso rojo 16 oz",
       "category": "Tabaquería",
       "pricePurchase": 1690,
       "price": 2500,
-      "active": true
+      "active": true,
+      "stock": 0,
+      "baselineAliases": [
+        "Vaso rojo 16 oz",
+        "vaso rojo         16 0z     25 und        $ 2500        $ 100"
+      ]
     },
     {
       "id": "seed-product-9",
-      "name": "vaso 160z      plastico 25 und      $ 1.750       $ 70 und",
+      "name": "Vaso grande 16 oz",
       "category": "Tabaquería",
       "pricePurchase": 795,
       "price": 1750,
-      "active": true
+      "active": true,
+      "stock": 25,
+      "baselineAliases": [
+        "Vaso grande 16 oz",
+        "vaso 160z      plastico 25 und      $ 1.750       $ 70 und"
+      ]
     },
     {
       "id": "seed-product-10",
-      "name": "pañuelo    elite          18 und           $ 3.100   $172 und",
+      "name": "Pañuelo Elite",
       "category": "Tabaquería",
       "pricePurchase": 1854,
       "price": 3100,
-      "active": true
+      "active": true,
+      "stock": 11,
+      "baselineAliases": [
+        "Pañuelo Elite",
+        "pañuelo    elite          18 und           $ 3.100   $172 und"
+      ]
     },
     {
       "id": "seed-product-11",
-      "name": "ocb negro        25 und            $ 13.000     520 und",
+      "name": "OCB Negro",
       "category": "Tabaquería",
       "pricePurchase": 11400,
       "price": 13000,
-      "active": true
+      "active": true,
+      "stock": 14,
+      "baselineAliases": [
+        "OCB Negro",
+        "ocb negro        25 und            $ 13.000     520 und"
+      ]
     },
     {
       "id": "seed-product-12",
-      "name": "ocb        gris       25 und      $ 14.000        560 und",
+      "name": "OCB Gris Expert",
       "category": "Tabaquería",
       "pricePurchase": 11500,
       "price": 14000,
-      "active": true
+      "active": true,
+      "stock": 2,
+      "baselineAliases": [
+        "OCB Gris Expert",
+        "ocb        gris       25 und      $ 14.000        560 und"
+      ]
     },
     {
       "id": "seed-product-13",
-      "name": "ocb organico     25 und     $ 14.000       560 und",
+      "name": "OCB Orgánico",
       "category": "Tabaquería",
       "pricePurchase": 11500,
       "price": 14000,
-      "active": true
+      "active": true,
+      "stock": 2,
+      "baselineAliases": [
+        "OCB Orgánico",
+        "ocb organico     25 und     $ 14.000       560 und"
+      ]
     },
     {
       "id": "seed-product-14",
-      "name": "amsterda   25 und      $ 5.000      $ 250 und",
+      "name": "Papelillo Amsterdam",
       "category": "Tabaquería",
       "pricePurchase": 2200,
       "price": 5000,
-      "active": true
+      "active": true,
+      "stock": 3,
+      "baselineAliases": [
+        "Papelillo Amsterdam",
+        "amsterda   25 und      $ 5.000      $ 250 und"
+      ]
     },
     {
       "id": "seed-product-15",
-      "name": "cono rosa           40 und       $ 5.000        $ 125 und",
+      "name": "Papelillo cono rosa",
       "category": "Tabaquería",
       "pricePurchase": 3000,
       "price": 5000,
-      "active": true
+      "active": true,
+      "stock": 2,
+      "baselineAliases": [
+        "Papelillo cono rosa",
+        "cono rosa           40 und       $ 5.000        $ 125 und"
+      ]
     },
     {
       "id": "seed-product-16",
-      "name": "raw c/ boqui  $1.000    und",
+      "name": "RAW",
       "category": "Tabaquería",
       "pricePurchase": 700,
       "price": 1000,
-      "active": true
-    },
-    {
-      "id": "seed-product-17",
-      "name": "raw c/    boquilla         ( caja)           24 und        $ 24.000      1.000 und",
-      "category": "Tabaquería",
-      "pricePurchase": 16000,
-      "price": 24000,
-      "active": true
+      "active": true,
+      "stock": 106,
+      "baselineAliases": [
+        "RAW",
+        "raw c/ boqui  $1.000    und"
+      ]
     },
     {
       "id": "seed-product-18",
-      "name": "ocb c/ boquilla       24 und          $ 29.500         1.229 und",
+      "name": "OCB con boquilla",
       "category": "Tabaquería",
       "pricePurchase": 23000,
       "price": 25500,
-      "active": true
+      "active": true,
+      "stock": 2,
+      "baselineAliases": [
+        "OCB con boquilla",
+        "ocb c/ boquilla       24 und          $ 29.500         1.229 und"
+      ]
     },
     {
       "id": "seed-product-19",
-      "name": "amster con boquilla    25 und     $ 15.000    $ 600",
+      "name": "Amsterdam papelillo con boquilla",
       "category": "Tabaquería",
       "pricePurchase": 7000,
       "price": 15000,
-      "active": true
+      "active": true,
+      "stock": 5,
+      "baselineAliases": [
+        "Amsterdam papelillo con boquilla",
+        "amster con boquilla    25 und     $ 15.000    $ 600"
+      ]
     },
     {
       "id": "seed-product-20",
-      "name": "blunt                $ 600 und               $ 15.000 caja",
+      "name": "Blunt",
       "category": "Tabaquería",
       "pricePurchase": 380,
       "price": 600,
-      "active": true
+      "active": true,
+      "stock": 569,
+      "baselineAliases": [
+        "Blunt",
+        "blunt                $ 600 und               $ 15.000 caja"
+      ]
     },
     {
       "id": "seed-product-21",
-      "name": "blunt de rosa          $ 700 und        $ 10.500 caja",
+      "name": "Blun pétalos de rosa",
       "category": "Tabaquería",
       "pricePurchase": 333,
       "price": 700,
-      "active": true
+      "active": true,
+      "stock": 8,
+      "baselineAliases": [
+        "Blun pétalos de rosa",
+        "blunt de rosa          $ 700 und        $ 10.500 caja"
+      ]
     },
     {
       "id": "seed-product-22",
-      "name": "boquilla  ocb         25 und        $ 7.000     280 und",
+      "name": "Boquilla OCB",
       "category": "Tabaquería",
       "pricePurchase": 5500,
       "price": 7000,
-      "active": true
+      "active": true,
+      "stock": 3,
+      "baselineAliases": [
+        "Boquilla OCB",
+        "boquilla  ocb         25 und        $ 7.000     280 und"
+      ]
     },
     {
       "id": "seed-product-23",
-      "name": "boquilla amsterdam               50 und       $ 8.500    170 und",
+      "name": "Boquilla Amsterdam",
       "category": "Tabaquería",
       "pricePurchase": 4500,
       "price": 8500,
-      "active": true
+      "active": true,
+      "stock": 7,
+      "baselineAliases": [
+        "Boquilla Amsterdam",
+        "boquilla amsterdam               50 und       $ 8.500    170 und"
+      ]
     },
     {
       "id": "seed-product-24",
-      "name": "enrolador              $ 1.500    und",
+      "name": "Enrolador",
       "category": "Tabaquería",
       "pricePurchase": 850,
       "price": 1500,
-      "active": true
+      "active": true,
+      "stock": 22,
+      "baselineAliases": [
+        "Enrolador",
+        "enrolador              $ 1.500    und"
+      ]
     },
     {
       "id": "seed-product-25",
-      "name": "moledor           $ 1.500    und",
+      "name": "Moledor",
       "category": "Tabaquería",
       "pricePurchase": 850,
       "price": 1500,
-      "active": true
+      "active": true,
+      "stock": 48,
+      "baselineAliases": [
+        "Moledor",
+        "moledor           $ 1.500    und"
+      ]
     },
     {
       "id": "seed-product-26",
-      "name": "pipas            $ 1.500       und",
+      "name": "Pipas con malla",
       "category": "Tabaquería",
       "pricePurchase": 1000,
       "price": 1500,
-      "active": true
+      "active": true,
+      "stock": 0,
+      "baselineAliases": [
+        "Pipas con malla",
+        "pipas            $ 1.500       und"
+      ]
     },
     {
       "id": "seed-product-27",
-      "name": "pipas con moledor  $ 1.800    und",
+      "name": "Pipas con moledor",
       "category": "Tabaquería",
       "pricePurchase": 1000,
       "price": 1800,
-      "active": true
-    },
-    {
-      "id": "seed-product-28",
-      "name": "tabaco bristol         45 grm         $ 4.800      und",
-      "category": "Tabaquería",
-      "pricePurchase": 4250,
-      "price": 4800,
-      "active": true
+      "active": true,
+      "stock": 57,
+      "baselineAliases": [
+        "Pipas con moledor",
+        "pipas con moledor  $ 1.800    und"
+      ]
     },
     {
       "id": "seed-product-29",
-      "name": "filtro verso  grueso    $ 1.000    und",
+      "name": "Filtro Verso Azul",
       "category": "Tabaquería",
       "pricePurchase": 700,
       "price": 1000,
-      "active": true
+      "active": true,
+      "stock": 71,
+      "baselineAliases": [
+        "Filtro Verso Azul",
+        "filtro verso  grueso    $ 1.000    und"
+      ]
     },
     {
       "id": "seed-product-30",
-      "name": "filtro verso   clasico   $ 1.000    und",
+      "name": "Filtro Verso Rojo",
       "category": "Tabaquería",
       "pricePurchase": 700,
       "price": 1000,
-      "active": true
+      "active": true,
+      "stock": 31,
+      "baselineAliases": [
+        "Filtro Verso Rojo",
+        "filtro verso   clasico   $ 1.000    und"
+      ]
     },
     {
       "id": "seed-product-31",
-      "name": "filtro verso   mentol   $ 1.000    und",
+      "name": "Filtro Verso Mentol",
       "category": "Tabaquería",
       "pricePurchase": 700,
       "price": 1000,
-      "active": true
+      "active": true,
+      "stock": 38,
+      "baselineAliases": [
+        "Filtro Verso Mentol",
+        "filtro verso   mentol   $ 1.000    und"
+      ]
     },
     {
       "id": "seed-product-32",
-      "name": "filtro verso     organico     $ 1.000    und",
+      "name": "Filtro Verso Café Orgánico",
       "category": "Tabaquería",
       "pricePurchase": 700,
       "price": 1000,
-      "active": true
-    },
-    {
-      "id": "seed-product-33",
-      "name": "bigtime ultra                  12 und        $ 11.700   975 und",
-      "category": "Tabaquería",
-      "pricePurchase": 9411,
-      "price": 11700,
-      "active": true
-    },
-    {
-      "id": "seed-product-34",
-      "name": "bigtime ultra                  12 und        $ 11.700   975 und",
-      "category": "Tabaquería",
-      "pricePurchase": 9411,
-      "price": 11700,
-      "active": true
-    },
-    {
-      "id": "seed-product-35",
-      "name": "bigtime ultra                  12 und        $ 11.700   975 und",
-      "category": "Tabaquería",
-      "pricePurchase": 9411,
-      "price": 11700,
-      "active": true
-    },
-    {
-      "id": "seed-product-36",
-      "name": "bigtime ultra                  12 und        $ 11.700   975 und",
-      "category": "Tabaquería",
-      "pricePurchase": 9411,
-      "price": 11700,
-      "active": true
-    },
-    {
-      "id": "seed-product-37",
-      "name": "bigtime ultra     12 und  promo desde 3 diplay                   $ 11.200          933 und",
-      "category": "Tabaquería",
-      "pricePurchase": 9411,
-      "price": 11200,
-      "active": true
-    },
-    {
-      "id": "seed-product-38",
-      "name": "bigtime  20 und        $ 5.800   290 und",
-      "category": "Tabaquería",
-      "pricePurchase": 4616,
-      "price": 5800,
-      "active": true
-    },
-    {
-      "id": "seed-product-39",
-      "name": "bigtime  20 und        $ 5.800   290 und",
-      "category": "Tabaquería",
-      "pricePurchase": 4616,
-      "price": 5800,
-      "active": true
-    },
-    {
-      "id": "seed-product-40",
-      "name": "bigtime  20 und        $ 5.800   290 und",
-      "category": "Tabaquería",
-      "pricePurchase": 4616,
-      "price": 5800,
-      "active": true
-    },
-    {
-      "id": "seed-product-41",
-      "name": "bigtime  20 und        $ 5.800   290 und",
-      "category": "Tabaquería",
-      "pricePurchase": 4616,
-      "price": 5800,
-      "active": true
-    },
-    {
-      "id": "seed-product-42",
-      "name": "bigtime  20 und        $ 5.800   290 und",
-      "category": "Tabaquería",
-      "pricePurchase": 4616,
-      "price": 5800,
-      "active": true
-    },
-    {
-      "id": "seed-product-43",
-      "name": "bigtime  20 und        $ 5.800   290 und",
-      "category": "Tabaquería",
-      "pricePurchase": 4616,
-      "price": 5800,
-      "active": true
+      "active": true,
+      "stock": 33,
+      "baselineAliases": [
+        "Filtro Verso Café Orgánico",
+        "filtro verso     organico     $ 1.000    und"
+      ]
     },
     {
       "id": "seed-product-44",
-      "name": "bazooka           25 und              $ 4.500     180 und",
+      "name": "Bazooka",
       "category": "Caramelos",
       "pricePurchase": 3552,
       "price": 4500,
-      "active": true
+      "active": true,
+      "stock": 18,
+      "baselineAliases": [
+        "Bazooka",
+        "bazooka           25 und              $ 4.500     180 und"
+      ]
     },
     {
       "id": "seed-product-45",
-      "name": "BON O BON AMARILL  30 und        $ 6.500   216 und",
+      "name": "Bonobon",
       "category": "Caramelos",
       "pricePurchase": 5224,
       "price": 6500,
-      "active": true
+      "active": true,
+      "stock": 61,
+      "baselineAliases": [
+        "Bonobon",
+        "BON O BON AMARILL  30 und        $ 6.500   216 und"
+      ]
     },
     {
       "id": "seed-product-46",
-      "name": "nikolo           20 und           $ 6.400  320 und",
+      "name": "Nikolo",
       "category": "Caramelos",
       "pricePurchase": 5106,
       "price": 6400,
-      "active": true
+      "active": true,
+      "stock": 4,
+      "baselineAliases": [
+        "Nikolo",
+        "nikolo           20 und           $ 6.400  320 und"
+      ]
     },
     {
       "id": "seed-product-47",
-      "name": "chubi      24 und        $ 5.200  217 und",
+      "name": "Chubi",
       "category": "Caramelos",
       "pricePurchase": 4158,
       "price": 5200,
-      "active": true
+      "active": true,
+      "stock": 20,
+      "baselineAliases": [
+        "Chubi",
+        "chubi      24 und        $ 5.200  217 und"
+      ]
     },
     {
       "id": "seed-product-48",
-      "name": "tifany    20 und       $4.300  215 und",
+      "name": "Tiffany",
       "category": "Caramelos",
       "pricePurchase": 3465,
       "price": 4300,
-      "active": true
+      "active": true,
+      "stock": 11,
+      "baselineAliases": [
+        "Tiffany",
+        "tifany    20 und       $4.300  215 und"
+      ]
     },
     {
       "id": "seed-product-49",
-      "name": "rocklet  naranjo  18 und  $ 6.500    361 und",
+      "name": "Rocklet naranja",
       "category": "Caramelos",
       "pricePurchase": 4774,
       "price": 6500,
-      "active": true
+      "active": true,
+      "stock": 7,
+      "baselineAliases": [
+        "Rocklet naranja",
+        "rocklet  naranjo  18 und  $ 6.500    361 und"
+      ]
     },
     {
       "id": "seed-product-50",
-      "name": "rocklet  negro  18 und    $ 6.500  361 und",
+      "name": "Rocklet negro",
       "category": "Caramelos",
       "pricePurchase": 4774,
       "price": 6500,
-      "active": true
+      "active": true,
+      "stock": 9,
+      "baselineAliases": [
+        "Rocklet negro",
+        "rocklet  negro  18 und    $ 6.500  361 und"
+      ]
     },
     {
       "id": "seed-product-51",
-      "name": "amberry    20 und     $ 4300    215 und",
+      "name": "Gomitas Amberry",
       "category": "Caramelos",
       "pricePurchase": 3200,
       "price": 4300,
-      "active": true
+      "active": true,
+      "stock": 5,
+      "baselineAliases": [
+        "Gomitas Amberry",
+        "amberry    20 und     $ 4300    215 und"
+      ]
     },
     {
       "id": "seed-product-52",
-      "name": "ambrosit        20 und     $ 4300    215 und",
+      "name": "Gomitas Ambrosito",
       "category": "Caramelos",
       "pricePurchase": 3200,
       "price": 4300,
-      "active": true
+      "active": true,
+      "stock": 0,
+      "baselineAliases": [
+        "Gomitas Ambrosito",
+        "ambrosit        20 und     $ 4300    215 und"
+      ]
     },
     {
       "id": "seed-product-53",
-      "name": "flippy    20 und     $ 4300    215 und",
+      "name": "Gomitas Flippy",
       "category": "Caramelos",
       "pricePurchase": 3200,
       "price": 4300,
-      "active": true
+      "active": true,
+      "stock": 0,
+      "baselineAliases": [
+        "Gomitas Flippy",
+        "flippy    20 und     $ 4300    215 und"
+      ]
     },
     {
       "id": "seed-product-54",
-      "name": "frutillas con crema    $ 4300         215 und",
+      "name": "Gomitas Ambrosoli frutillas con crema",
       "category": "Caramelos",
       "pricePurchase": 3200,
       "price": 4300,
-      "active": true
+      "active": true,
+      "stock": 6,
+      "baselineAliases": [
+        "Gomitas Ambrosoli frutillas con crema",
+        "frutillas con crema    $ 4300         215 und"
+      ]
     },
     {
       "id": "seed-product-55",
-      "name": "loop              20 und     $ 4300    215 und",
+      "name": "Gomitas Loop",
       "category": "Caramelos",
       "pricePurchase": 3200,
       "price": 4300,
-      "active": true
+      "active": true,
+      "stock": 4,
+      "baselineAliases": [
+        "Gomitas Loop",
+        "loop              20 und     $ 4300    215 und"
+      ]
     },
     {
       "id": "seed-product-56",
-      "name": "turron    28 und     $ 9.500   339 und",
+      "name": "Turrón",
       "category": "Caramelos",
       "pricePurchase": 7158,
       "price": 9500,
-      "active": true
-    },
-    {
-      "id": "seed-product-57",
-      "name": "languetaz  verde             24 und                $ 3.000            125 und",
-      "category": "Caramelos",
-      "pricePurchase": 2325,
-      "price": 3000,
-      "active": true
-    },
-    {
-      "id": "seed-product-58",
-      "name": "languetaz naranja        24 und             $ 3.000          125 und",
-      "category": "Caramelos",
-      "pricePurchase": 2325,
-      "price": 3000,
-      "active": true
+      "active": true,
+      "stock": 10,
+      "baselineAliases": [
+        "Turrón",
+        "turron    28 und     $ 9.500   339 und"
+      ]
     },
     {
       "id": "seed-product-59",
-      "name": "menta chocolate     100 und      $ 3.400      32 und",
+      "name": "Caramelo menta chocolate",
       "category": "Caramelos",
       "pricePurchase": 2766,
       "price": 3400,
-      "active": true
+      "active": true,
+      "stock": 13,
+      "baselineAliases": [
+        "Caramelo menta chocolate",
+        "menta chocolate     100 und      $ 3.400      32 und"
+      ]
     },
     {
       "id": "seed-product-60",
-      "name": "tofee surtido          400 grm                 $ 2.700",
+      "name": "Tofi/Tofee surtido 400g",
       "category": "Caramelos",
       "pricePurchase": 1676,
       "price": 2700,
-      "active": true
+      "active": true,
+      "stock": 13,
+      "baselineAliases": [
+        "Tofi/Tofee surtido 400g",
+        "tofee surtido          400 grm                 $ 2.700"
+      ]
     },
     {
       "id": "seed-product-61",
-      "name": "chupete rojo           24 und       $2.000      83 und",
+      "name": "Coyac rojo",
       "category": "Caramelos",
       "pricePurchase": 1645,
       "price": 2000,
-      "active": true
+      "active": true,
+      "stock": 7,
+      "baselineAliases": [
+        "Coyac rojo",
+        "chupete rojo           24 und       $2.000      83 und"
+      ]
     },
     {
       "id": "seed-product-62",
-      "name": "chupete surtido    24 und       $2.000      83 und",
+      "name": "Coyac surtido",
       "category": "Caramelos",
       "pricePurchase": 1645,
       "price": 2000,
-      "active": true
+      "active": true,
+      "stock": 12,
+      "baselineAliases": [
+        "Coyac surtido",
+        "chupete surtido    24 und       $2.000      83 und"
+      ]
     },
     {
       "id": "seed-product-63",
-      "name": "chupete    bowlings    24 und      $ 2000      83 und",
+      "name": "Coyac bowling",
       "category": "Caramelos",
       "pricePurchase": 1440,
       "price": 2000,
-      "active": true
+      "active": true,
+      "stock": 8,
+      "baselineAliases": [
+        "Coyac bowling",
+        "chupete    bowlings    24 und      $ 2000      83 und"
+      ]
     },
     {
       "id": "seed-product-64",
-      "name": "mentitas               24 und             $ 5.250       204 und",
+      "name": "Mentitas Ambrosoli",
       "category": "Caramelos",
       "pricePurchase": 3840,
       "price": 5250,
-      "active": true
+      "active": true,
+      "stock": 8,
+      "baselineAliases": [
+        "Mentitas Ambrosoli",
+        "mentitas               24 und             $ 5.250       204 und"
+      ]
     },
     {
       "id": "seed-product-65",
-      "name": "full   24und        $ 5.250    204 und",
+      "name": "Full de Ambrosoli",
       "category": "Caramelos",
       "pricePurchase": 3840,
       "price": 5250,
-      "active": true
-    },
-    {
-      "id": "seed-product-66",
-      "name": "freegells       12 und      $ 2.100    175 und",
-      "category": "Caramelos",
-      "pricePurchase": 1569,
-      "price": 2100,
-      "active": true
-    },
-    {
-      "id": "seed-product-67",
-      "name": "freegells       12 und      $ 2.100    175 und",
-      "category": "Caramelos",
-      "pricePurchase": 1569,
-      "price": 2100,
-      "active": true
-    },
-    {
-      "id": "seed-product-68",
-      "name": "freegells       12 und      $ 2.100    175 und",
-      "category": "Caramelos",
-      "pricePurchase": 1569,
-      "price": 2100,
-      "active": true
+      "active": true,
+      "stock": 1,
+      "baselineAliases": [
+        "Full de Ambrosoli",
+        "full   24und        $ 5.250    204 und"
+      ]
     },
     {
       "id": "seed-product-69",
-      "name": "alka        100 und      $2.400",
+      "name": "Alka",
       "category": "Caramelos",
       "pricePurchase": 1841,
       "price": 2400,
-      "active": true
+      "active": true,
+      "stock": 34,
+      "baselineAliases": [
+        "Alka",
+        "alka        100 und      $2.400"
+      ]
     },
     {
       "id": "seed-product-70",
-      "name": "alka  ice      390gr      $2.800",
+      "name": "Alka Ice",
       "category": "Caramelos",
       "pricePurchase": 2194,
       "price": 2800,
-      "active": true
-    },
-    {
-      "id": "seed-product-71",
-      "name": "alka 2       12 und      $ 4.100        12 und",
-      "category": "Caramelos",
-      "pricePurchase": 3160,
-      "price": 4100,
-      "active": true
-    },
-    {
-      "id": "seed-product-72",
-      "name": "alka 2       12 und      $ 4.100        12 und",
-      "category": "Caramelos",
-      "pricePurchase": 3160,
-      "price": 4100,
-      "active": true
-    },
-    {
-      "id": "seed-product-73",
-      "name": "alka 2       12 und      $ 4.100        12 und",
-      "category": "Caramelos",
-      "pricePurchase": 3160,
-      "price": 4100,
-      "active": true
+      "active": true,
+      "stock": 4,
+      "baselineAliases": [
+        "Alka Ice",
+        "alka  ice      390gr      $2.800"
+      ]
     },
     {
       "id": "seed-product-74",
-      "name": "conquista rollo            $ 600        und",
+      "name": "Conquista palmerita",
       "category": "Nestlé",
       "pricePurchase": 482,
       "price": 600,
-      "active": true
+      "active": true,
+      "stock": 64,
+      "baselineAliases": [
+        "Conquista palmerita",
+        "conquista rollo            $ 600        und"
+      ]
     },
     {
       "id": "seed-product-75",
-      "name": "cracker          $ 650          und",
+      "name": "Cracker",
       "category": "Nestlé",
       "pricePurchase": 525,
       "price": 650,
-      "active": true
+      "active": true,
+      "stock": 86,
+      "baselineAliases": [
+        "Cracker",
+        "cracker          $ 650          und"
+      ]
     },
     {
       "id": "seed-product-76",
-      "name": "galleta vino           $ 750    und",
+      "name": "Galleta de vino",
       "category": "Nestlé",
       "pricePurchase": 606,
       "price": 750,
-      "active": true
+      "active": true,
+      "stock": 78,
+      "baselineAliases": [
+        "Galleta de vino",
+        "galleta vino           $ 750    und"
+      ]
     },
     {
       "id": "seed-product-77",
-      "name": "triton chocolate      $ 750       und",
+      "name": "Tritón chocolate",
       "category": "Nestlé",
       "pricePurchase": 600,
       "price": 750,
-      "active": true
+      "active": true,
+      "stock": 178,
+      "baselineAliases": [
+        "Tritón chocolate",
+        "triton chocolate      $ 750       und"
+      ]
     },
     {
       "id": "seed-product-78",
-      "name": "triton vainilla     $ 750          und",
+      "name": "Tritón vainilla",
       "category": "Nestlé",
       "pricePurchase": 600,
       "price": 750,
-      "active": true
+      "active": true,
+      "stock": 195,
+      "baselineAliases": [
+        "Tritón vainilla",
+        "triton vainilla     $ 750          und"
+      ]
     },
     {
       "id": "seed-product-79",
-      "name": "kuky clasica      $ 1.000            und",
+      "name": "Kuky clásica",
       "category": "Nestlé",
       "pricePurchase": 848,
       "price": 1000,
-      "active": true
+      "active": true,
+      "stock": 118,
+      "baselineAliases": [
+        "Kuky clásica",
+        "kuky clasica      $ 1.000            und"
+      ]
     },
     {
       "id": "seed-product-80",
-      "name": "super 8    24 und        $ 6.600     275 und",
+      "name": "Super 8",
       "category": "Nestlé",
       "pricePurchase": 5325,
       "price": 6600,
-      "active": true
-    },
-    {
-      "id": "seed-product-81",
-      "name": "kit-kat            24 und         $ 16.500      687 und",
-      "category": "Nestlé",
-      "pricePurchase": 13787,
-      "price": 16500,
-      "active": true
+      "active": true,
+      "stock": 9,
+      "baselineAliases": [
+        "Super 8",
+        "super 8    24 und        $ 6.600     275 und"
+      ]
     },
     {
       "id": "seed-product-82",
-      "name": "kit - kat     und            $ 700",
+      "name": "Kit Kat unidad",
       "category": "Nestlé",
       "pricePurchase": 574,
       "price": 700,
-      "active": true
+      "active": true,
+      "stock": 240,
+      "baselineAliases": [
+        "Kit Kat unidad",
+        "kit - kat     und            $ 700"
+      ]
     },
     {
       "id": "seed-product-83",
-      "name": "sahne-nuss     90 grm      $ 2.100     und",
+      "name": "Sahne-Nuss 90 g",
       "category": "Nestlé",
       "pricePurchase": 1742,
       "price": 2100,
-      "active": true
+      "active": true,
+      "stock": 29,
+      "baselineAliases": [
+        "Sahne-Nuss 90 g",
+        "sahne-nuss     90 grm      $ 2.100     und"
+      ]
     },
     {
       "id": "seed-product-84",
-      "name": "trencito     80 grm        $ 1.600       und",
+      "name": "Trencito 80g",
       "category": "Nestlé",
       "pricePurchase": 1280,
       "price": 1600,
-      "active": true
+      "active": true,
+      "stock": 43,
+      "baselineAliases": [
+        "Trencito 80g",
+        "trencito     80 grm        $ 1.600       und"
+      ]
     },
     {
       "id": "seed-product-85",
-      "name": "bolsa botillera          $ 3.300   100 und",
+      "name": "Bolsa botillera",
       "category": "Otros",
       "pricePurchase": 2750,
       "price": 3300,
-      "active": true
+      "active": true,
+      "stock": 9,
+      "baselineAliases": [
+        "Bolsa botillera",
+        "bolsa botillera          $ 3.300   100 und"
+      ]
     },
     {
       "id": "seed-product-86",
-      "name": "bolsa de basura    80x100       10 und             $1.500      150 und",
+      "name": "Bolsa de basura 80x110",
       "category": "Otros",
       "pricePurchase": 1190,
       "price": 1500,
-      "active": true
+      "active": true,
+      "stock": 9,
+      "baselineAliases": [
+        "Bolsa de basura 80x110",
+        "bolsa de basura    80x100       10 und             $1.500      150 und"
+      ]
     },
     {
       "id": "seed-product-87",
-      "name": "bolsa de basura    90x120       10 und         $ 3.500      350 und",
+      "name": "Bolsa de basura 90x120",
       "category": "Otros",
       "pricePurchase": 2100,
       "price": 3500,
-      "active": true
+      "active": true,
+      "stock": 14,
+      "baselineAliases": [
+        "Bolsa de basura 90x120",
+        "bolsa de basura    90x120       10 und         $ 3.500      350 und"
+      ]
     },
     {
       "id": "seed-product-88",
-      "name": "huincha    $ 800",
+      "name": "Wincha de embalaje",
       "category": "Otros",
       "pricePurchase": 390,
       "price": 800,
-      "active": true
+      "active": true,
+      "stock": 14,
+      "baselineAliases": [
+        "Wincha de embalaje",
+        "huincha    $ 800"
+      ]
     },
     {
       "id": "seed-product-89",
-      "name": "pila AA        60und             $ 5.000       208 und",
+      "name": "Pila Eveready doble A",
       "category": "Otros",
       "pricePurchase": 3590,
       "price": 5000,
-      "active": true
+      "active": true,
+      "stock": 6,
+      "baselineAliases": [
+        "Pila Eveready doble A",
+        "pila AA        60und             $ 5.000       208 und"
+      ]
     },
     {
       "id": "seed-product-90",
-      "name": "pila AAA   24 und              $ 5.000        208 und",
+      "name": "Pila Eveready triple A",
       "category": "Otros",
       "pricePurchase": 3590,
       "price": 5000,
-      "active": true
+      "active": true,
+      "stock": 17,
+      "baselineAliases": [
+        "Pila Eveready triple A",
+        "pila AAA   24 und              $ 5.000        208 und"
+      ]
     },
     {
       "id": "seed-product-91",
-      "name": "pila D    12 und            $ 8.000       666 und",
+      "name": "Pila Eveready D",
       "category": "Otros",
       "pricePurchase": 6390,
       "price": 8000,
-      "active": true
+      "active": true,
+      "stock": 5,
+      "baselineAliases": [
+        "Pila Eveready D",
+        "pila D    12 und            $ 8.000       666 und"
+      ]
     },
     {
       "id": "seed-product-92",
-      "name": "acido mefenamico",
+      "name": "Ácido mefenámico",
       "category": "Remedios",
       "pricePurchase": 510,
       "price": 1000,
-      "active": true
+      "active": true,
+      "stock": 0,
+      "baselineAliases": [
+        "Ácido mefenámico",
+        "acido mefenamico"
+      ]
     },
     {
       "id": "seed-product-93",
@@ -1487,7 +1648,12 @@
       "category": "Remedios",
       "pricePurchase": 1890,
       "price": 2500,
-      "active": true
+      "active": true,
+      "stock": 2,
+      "baselineAliases": [
+        "amoxicilina",
+        "amoxicilina"
+      ]
     },
     {
       "id": "seed-product-94",
@@ -1495,7 +1661,12 @@
       "category": "Remedios",
       "pricePurchase": 990,
       "price": 1600,
-      "active": true
+      "active": true,
+      "stock": 10,
+      "baselineAliases": [
+        "cefalmin",
+        "cefalmin"
+      ]
     },
     {
       "id": "seed-product-95",
@@ -1503,7 +1674,12 @@
       "category": "Remedios",
       "pricePurchase": 320,
       "price": 600,
-      "active": true
+      "active": true,
+      "stock": 4,
+      "baselineAliases": [
+        "clorfenamina",
+        "clorfenamina"
+      ]
     },
     {
       "id": "seed-product-96",
@@ -1511,7 +1687,12 @@
       "category": "Remedios",
       "pricePurchase": 1350,
       "price": 1800,
-      "active": true
+      "active": true,
+      "stock": 5,
+      "baselineAliases": [
+        "colmax",
+        "colmax"
+      ]
     },
     {
       "id": "seed-product-97",
@@ -1519,7 +1700,12 @@
       "category": "Remedios",
       "pricePurchase": 820,
       "price": 1800,
-      "active": true
+      "active": true,
+      "stock": 11,
+      "baselineAliases": [
+        "diclofenaco sodico",
+        "diclofenaco sodico"
+      ]
     },
     {
       "id": "seed-product-98",
@@ -1527,7 +1713,12 @@
       "category": "Remedios",
       "pricePurchase": 550,
       "price": 1200,
-      "active": true
+      "active": true,
+      "stock": 4,
+      "baselineAliases": [
+        "domperidona 10mg",
+        "domperidona 10mg"
+      ]
     },
     {
       "id": "seed-product-99",
@@ -1535,7 +1726,12 @@
       "category": "Remedios",
       "pricePurchase": 390,
       "price": 950,
-      "active": true
+      "active": true,
+      "stock": 2,
+      "baselineAliases": [
+        "famotidina",
+        "famotidina"
+      ]
     },
     {
       "id": "seed-product-100",
@@ -1543,7 +1739,12 @@
       "category": "Remedios",
       "pricePurchase": 690,
       "price": 1600,
-      "active": true
+      "active": true,
+      "stock": 18,
+      "baselineAliases": [
+        "ibuprofeno 600mg",
+        "ibuprofeno 600mg"
+      ]
     },
     {
       "id": "seed-product-101",
@@ -1551,7 +1752,12 @@
       "category": "Remedios",
       "pricePurchase": 990,
       "price": 1600,
-      "active": true
+      "active": true,
+      "stock": 6,
+      "baselineAliases": [
+        "ketoprofeno 200mg",
+        "ketoprofeno 200mg"
+      ]
     },
     {
       "id": "seed-product-102",
@@ -1559,7 +1765,12 @@
       "category": "Remedios",
       "pricePurchase": 620,
       "price": 1200,
-      "active": true
+      "active": true,
+      "stock": 6,
+      "baselineAliases": [
+        "ketorolaco 10mg",
+        "ketorolaco 10mg"
+      ]
     },
     {
       "id": "seed-product-103",
@@ -1567,7 +1778,12 @@
       "category": "Remedios",
       "pricePurchase": 590,
       "price": 1200,
-      "active": true
+      "active": true,
+      "stock": 4,
+      "baselineAliases": [
+        "loratadina 10 mg",
+        "loratadina 10 mg"
+      ]
     },
     {
       "id": "seed-product-104",
@@ -1575,7 +1791,12 @@
       "category": "Remedios",
       "pricePurchase": 420,
       "price": 800,
-      "active": true
+      "active": true,
+      "stock": 4,
+      "baselineAliases": [
+        "loperamida",
+        "loperamida"
+      ]
     },
     {
       "id": "seed-product-105",
@@ -1583,7 +1804,12 @@
       "category": "Remedios",
       "pricePurchase": 1490,
       "price": 2500,
-      "active": true
+      "active": true,
+      "stock": 6,
+      "baselineAliases": [
+        "desloratadina 5 mg",
+        "desloratadina 5 mg"
+      ]
     },
     {
       "id": "seed-product-106",
@@ -1591,7 +1817,12 @@
       "category": "Remedios",
       "pricePurchase": 1290,
       "price": 1800,
-      "active": true
+      "active": true,
+      "stock": 9,
+      "baselineAliases": [
+        "migranol",
+        "migranol"
+      ]
     },
     {
       "id": "seed-product-107",
@@ -1599,23 +1830,38 @@
       "category": "Remedios",
       "pricePurchase": 1250,
       "price": 1800,
-      "active": true
+      "active": true,
+      "stock": 13,
+      "baselineAliases": [
+        "naproxeno",
+        "naproxeno"
+      ]
     },
     {
       "id": "seed-product-108",
-      "name": "en hora",
+      "name": "Enora",
       "category": "Remedios",
       "pricePurchase": 2100,
       "price": 5000,
-      "active": true
+      "active": true,
+      "stock": 2,
+      "baselineAliases": [
+        "Enora",
+        "en hora"
+      ]
     },
     {
       "id": "seed-product-109",
-      "name": "tes de embarzo",
+      "name": "Test de embarazo",
       "category": "Remedios",
       "pricePurchase": 420,
       "price": 1000,
-      "active": true
+      "active": true,
+      "stock": 0,
+      "baselineAliases": [
+        "Test de embarazo",
+        "tes de embarzo"
+      ]
     },
     {
       "id": "seed-product-110",
@@ -1623,7 +1869,12 @@
       "category": "Remedios",
       "pricePurchase": 890,
       "price": 1500,
-      "active": true
+      "active": true,
+      "stock": 1,
+      "baselineAliases": [
+        "omeprasol",
+        "omeprasol"
+      ]
     },
     {
       "id": "seed-product-111",
@@ -1631,7 +1882,12 @@
       "category": "Remedios",
       "pricePurchase": 420,
       "price": 700,
-      "active": true
+      "active": true,
+      "stock": 16,
+      "baselineAliases": [
+        "paracetamol adulto",
+        "paracetamol adulto"
+      ]
     },
     {
       "id": "seed-product-112",
@@ -1639,7 +1895,12 @@
       "category": "Remedios",
       "pricePurchase": 1390,
       "price": 1850,
-      "active": true
+      "active": true,
+      "stock": 1,
+      "baselineAliases": [
+        "parche curitas",
+        "parche curitas"
+      ]
     },
     {
       "id": "seed-product-113",
@@ -1647,7 +1908,12 @@
       "category": "Remedios",
       "pricePurchase": 559,
       "price": 1000,
-      "active": true
+      "active": true,
+      "stock": 14,
+      "baselineAliases": [
+        "pastilla carbon",
+        "pastilla carbon"
+      ]
     },
     {
       "id": "seed-product-114",
@@ -1655,74 +1921,673 @@
       "category": "Remedios",
       "pricePurchase": 550,
       "price": 1100,
-      "active": true
+      "active": true,
+      "stock": 155,
+      "baselineAliases": [
+        "preservativos",
+        "preservativos"
+      ]
     },
     {
       "id": "seed-product-115",
-      "name": "eno",
+      "name": "Eno azul",
       "category": "Remedios",
       "pricePurchase": 4690,
       "price": 6000,
-      "active": true
+      "active": true,
+      "stock": 4,
+      "baselineAliases": [
+        "Eno azul",
+        "eno"
+      ]
+    },
+    {
+      "id": "seed-product-115-verde",
+      "name": "Eno verde",
+      "category": "Remedios",
+      "pricePurchase": 4690,
+      "price": 6000,
+      "active": true,
+      "stock": 1,
+      "baselineAliases": [
+        "Eno verde",
+        "eno"
+      ]
     },
     {
       "id": "seed-product-116",
-      "name": "tapsin calnte dia",
+      "name": "Tabsin rojo pastilla día",
       "category": "Remedios",
       "pricePurchase": 413,
       "price": 550,
-      "active": true
+      "active": true,
+      "stock": 4,
+      "baselineAliases": [
+        "Tabsin rojo pastilla día",
+        "tapsin calnte dia"
+      ]
     },
     {
       "id": "seed-product-117",
-      "name": "tapsin calnte noche",
+      "name": "Tabsin morado pastilla noche",
       "category": "Remedios",
       "pricePurchase": 413,
       "price": 550,
-      "active": true
-    },
-    {
-      "id": "seed-product-118",
-      "name": "tapsin calnte x caja",
-      "category": "Remedios",
-      "pricePurchase": 24800,
-      "price": 27500,
-      "active": true
+      "active": true,
+      "stock": 53,
+      "baselineAliases": [
+        "Tabsin morado pastilla noche",
+        "tapsin calnte noche"
+      ]
     },
     {
       "id": "seed-product-119",
-      "name": "tapsin  dia",
+      "name": "Tabsin limonada día",
       "category": "Remedios",
       "pricePurchase": 225,
       "price": 400,
-      "active": true
+      "active": true,
+      "stock": 118,
+      "baselineAliases": [
+        "Tabsin limonada día",
+        "tapsin  dia"
+      ]
     },
     {
       "id": "seed-product-120",
-      "name": "tapsin noche",
+      "name": "Tabsin limonada noche",
       "category": "Remedios",
       "pricePurchase": 245,
       "price": 400,
-      "active": true
+      "active": true,
+      "stock": 33,
+      "baselineAliases": [
+        "Tabsin limonada noche",
+        "tapsin noche"
+      ]
     },
     {
-      "name": "Producto de prueba borrar",
-      "category": "Otros",
-      "pricePurchase": 100,
-      "price": 200,
-      "stock": 10,
+      "id": "seed-product-38-baseline-0",
+      "name": "Big Time · Menta",
+      "category": "Tabaquería",
+      "pricePurchase": 4616,
+      "price": 5800,
       "active": true,
-      "promotions": []
+      "variantKey": "bigtime",
+      "flavor": "Menta",
+      "color": "verde",
+      "stock": 132,
+      "promotions": [],
+      "baselineAliases": [
+        "Big Time · Menta",
+        "bigtime  20 und        $ 5.800   290 und"
+      ]
     },
     {
-      "id": "seed-product-delete-test",
-      "name": "Producto prueba BORRAR",
-      "category": "Otros",
-      "pricePurchase": 100,
-      "price": 200,
-      "stock": 10,
+      "id": "seed-product-38-baseline-1",
+      "name": "Big Time · Menta fuerte",
+      "category": "Tabaquería",
+      "pricePurchase": 4616,
+      "price": 5800,
       "active": true,
-      "promotions": []
+      "variantKey": "bigtime",
+      "flavor": "Menta fuerte",
+      "color": "negro",
+      "stock": 195,
+      "promotions": [],
+      "baselineAliases": [
+        "Big Time · Menta fuerte",
+        "bigtime  20 und        $ 5.800   290 und"
+      ]
+    },
+    {
+      "id": "seed-product-38-baseline-2",
+      "name": "Big Time · Sandía",
+      "category": "Tabaquería",
+      "pricePurchase": 4616,
+      "price": 5800,
+      "active": true,
+      "variantKey": "bigtime",
+      "flavor": "Sandía",
+      "color": "rojo",
+      "stock": 130,
+      "promotions": [],
+      "baselineAliases": [
+        "Big Time · Sandía",
+        "bigtime  20 und        $ 5.800   290 und"
+      ]
+    },
+    {
+      "id": "seed-product-38-baseline-3",
+      "name": "Big Time · Aqua azul",
+      "category": "Tabaquería",
+      "pricePurchase": 4616,
+      "price": 5800,
+      "active": true,
+      "variantKey": "bigtime",
+      "flavor": "Aqua azul",
+      "color": "aqua",
+      "stock": 82,
+      "promotions": [],
+      "baselineAliases": [
+        "Big Time · Aqua azul",
+        "bigtime  20 und        $ 5.800   290 und"
+      ]
+    },
+    {
+      "id": "seed-product-38-baseline-4",
+      "name": "Big Time · Refrescante",
+      "category": "Tabaquería",
+      "pricePurchase": 4616,
+      "price": 5800,
+      "active": true,
+      "variantKey": "bigtime",
+      "flavor": "Refrescante",
+      "color": "celeste",
+      "stock": 78,
+      "promotions": [],
+      "baselineAliases": [
+        "Big Time · Refrescante",
+        "bigtime  20 und        $ 5.800   290 und"
+      ]
+    },
+    {
+      "id": "seed-product-38-baseline-5",
+      "name": "Big Time · Bubble Gum",
+      "category": "Tabaquería",
+      "pricePurchase": 4616,
+      "price": 5800,
+      "active": true,
+      "variantKey": "bigtime",
+      "flavor": "Bubble Gum",
+      "color": "rosado",
+      "stock": 44,
+      "promotions": [],
+      "baselineAliases": [
+        "Big Time · Bubble Gum",
+        "bigtime  20 und        $ 5.800   290 und"
+      ]
+    },
+    {
+      "id": "seed-product-33-baseline-0",
+      "name": "Big Time Ultra · Menta fuerte",
+      "category": "Tabaquería",
+      "pricePurchase": 9411,
+      "price": 11700,
+      "active": true,
+      "variantKey": "bigtime-ultra",
+      "flavor": "Menta fuerte",
+      "color": "negro",
+      "stock": 25,
+      "promotions": [
+        {
+          "minQty": 3,
+          "price": 11200,
+          "label": "Oferta desde 3 unidades: $11.200"
+        }
+      ],
+      "baselineAliases": [
+        "Big Time Ultra · Menta fuerte",
+        "bigtime ultra                  12 und        $ 11.700   975 und"
+      ]
+    },
+    {
+      "id": "seed-product-33-baseline-1",
+      "name": "Big Time Ultra · Aqua azul",
+      "category": "Tabaquería",
+      "pricePurchase": 9411,
+      "price": 11700,
+      "active": true,
+      "variantKey": "bigtime-ultra",
+      "flavor": "Aqua azul",
+      "color": "azul",
+      "stock": 9,
+      "promotions": [
+        {
+          "minQty": 3,
+          "price": 11200,
+          "label": "Oferta desde 3 unidades: $11.200"
+        }
+      ],
+      "baselineAliases": [
+        "Big Time Ultra · Aqua azul",
+        "bigtime ultra                  12 und        $ 11.700   975 und"
+      ]
+    },
+    {
+      "id": "seed-product-33-baseline-2",
+      "name": "Big Time Ultra · Sandía",
+      "category": "Tabaquería",
+      "pricePurchase": 9411,
+      "price": 11700,
+      "active": true,
+      "variantKey": "bigtime-ultra",
+      "flavor": "Sandía",
+      "color": "rojo",
+      "stock": 7,
+      "promotions": [
+        {
+          "minQty": 3,
+          "price": 11200,
+          "label": "Oferta desde 3 unidades: $11.200"
+        }
+      ],
+      "baselineAliases": [
+        "Big Time Ultra · Sandía",
+        "bigtime ultra                  12 und        $ 11.700   975 und"
+      ]
+    },
+    {
+      "id": "seed-product-33-baseline-3",
+      "name": "Big Time Ultra · Menta",
+      "category": "Tabaquería",
+      "pricePurchase": 9411,
+      "price": 11700,
+      "active": true,
+      "variantKey": "bigtime-ultra",
+      "flavor": "Menta",
+      "color": "verde",
+      "stock": 13,
+      "promotions": [
+        {
+          "minQty": 3,
+          "price": 11200,
+          "label": "Oferta desde 3 unidades: $11.200"
+        }
+      ],
+      "baselineAliases": [
+        "Big Time Ultra · Menta",
+        "bigtime ultra                  12 und        $ 11.700   975 und"
+      ]
+    },
+    {
+      "id": "seed-product-71-baseline-0",
+      "name": "Alka 2 · rosado",
+      "category": "Caramelos",
+      "pricePurchase": 3160,
+      "price": 4100,
+      "active": true,
+      "variantKey": "alka2",
+      "flavor": "rosado",
+      "color": "rosado",
+      "stock": 27,
+      "promotions": [],
+      "baselineAliases": [
+        "Alka 2 · rosado",
+        "alka 2       12 und      $ 4.100        12 und"
+      ]
+    },
+    {
+      "id": "seed-product-71-baseline-1",
+      "name": "Alka 2 · azul",
+      "category": "Caramelos",
+      "pricePurchase": 3160,
+      "price": 4100,
+      "active": true,
+      "variantKey": "alka2",
+      "flavor": "azul",
+      "color": "azul",
+      "stock": 20,
+      "promotions": [],
+      "baselineAliases": [
+        "Alka 2 · azul",
+        "alka 2       12 und      $ 4.100        12 und"
+      ]
+    },
+    {
+      "id": "seed-product-71-baseline-2",
+      "name": "Alka 2 · verde",
+      "category": "Caramelos",
+      "pricePurchase": 3160,
+      "price": 4100,
+      "active": true,
+      "variantKey": "alka2",
+      "flavor": "verde",
+      "color": "verde",
+      "stock": 13,
+      "promotions": [],
+      "baselineAliases": [
+        "Alka 2 · verde",
+        "alka 2       12 und      $ 4.100        12 und"
+      ]
+    },
+    {
+      "id": "seed-product-57-baseline-0",
+      "name": "Languetazo · verde",
+      "category": "Caramelos",
+      "pricePurchase": 2325,
+      "price": 3000,
+      "active": true,
+      "variantKey": "languetazo",
+      "flavor": "verde",
+      "color": "verde",
+      "stock": 3,
+      "promotions": [],
+      "baselineAliases": [
+        "Languetazo · verde",
+        "languetaz  verde             24 und                $ 3.000            125 und"
+      ]
+    },
+    {
+      "id": "seed-product-57-baseline-1",
+      "name": "Languetazo · naranja",
+      "category": "Caramelos",
+      "pricePurchase": 2325,
+      "price": 3000,
+      "active": true,
+      "variantKey": "languetazo",
+      "flavor": "naranja",
+      "color": "naranja",
+      "stock": 1,
+      "promotions": [],
+      "baselineAliases": [
+        "Languetazo · naranja",
+        "languetaz  verde             24 und                $ 3.000            125 und"
+      ]
+    },
+    {
+      "id": "seed-product-66-baseline-0",
+      "name": "Freegels · amarillo",
+      "category": "Caramelos",
+      "pricePurchase": 1569,
+      "price": 2100,
+      "active": true,
+      "flavor": "amarillo",
+      "color": "amarillo",
+      "stock": 7,
+      "promotions": [],
+      "baselineAliases": [
+        "Freegels · amarillo",
+        "freegells       12 und      $ 2.100    175 und"
+      ]
+    },
+    {
+      "id": "seed-product-66-baseline-1",
+      "name": "Freegels · rojo",
+      "category": "Caramelos",
+      "pricePurchase": 1569,
+      "price": 2100,
+      "active": true,
+      "flavor": "rojo",
+      "color": "rojo",
+      "stock": 2,
+      "promotions": [],
+      "baselineAliases": [
+        "Freegels · rojo",
+        "freegells       12 und      $ 2.100    175 und"
+      ]
+    },
+    {
+      "id": "seed-product-66-baseline-2",
+      "name": "Freegels · azul",
+      "category": "Caramelos",
+      "pricePurchase": 1569,
+      "price": 2100,
+      "active": true,
+      "flavor": "azul",
+      "color": "azul",
+      "stock": 10,
+      "promotions": [],
+      "baselineAliases": [
+        "Freegels · azul",
+        "freegells       12 und      $ 2.100    175 und"
+      ]
+    },
+    {
+      "id": "seed-product-28-baseline-0",
+      "name": "Tabaco Bristol 45 gr · Uva",
+      "category": "Tabaquería",
+      "pricePurchase": 4250,
+      "price": 4800,
+      "active": true,
+      "variantKey": "tabaco-bristol",
+      "flavor": "Uva",
+      "color": "",
+      "stock": 24,
+      "promotions": [],
+      "baselineAliases": [
+        "Tabaco Bristol 45 gr · Uva",
+        "tabaco bristol         45 grm         $ 4.800      und"
+      ]
+    },
+    {
+      "id": "seed-product-28-baseline-1",
+      "name": "Tabaco Bristol 45 gr · Caramelo",
+      "category": "Tabaquería",
+      "pricePurchase": 4250,
+      "price": 4800,
+      "active": true,
+      "variantKey": "tabaco-bristol",
+      "flavor": "Caramelo",
+      "color": "",
+      "stock": 39,
+      "promotions": [],
+      "baselineAliases": [
+        "Tabaco Bristol 45 gr · Caramelo",
+        "tabaco bristol         45 grm         $ 4.800      und"
+      ]
+    },
+    {
+      "id": "seed-product-28-baseline-2",
+      "name": "Tabaco Bristol 45 gr · Menta",
+      "category": "Tabaquería",
+      "pricePurchase": 4250,
+      "price": 4800,
+      "active": true,
+      "variantKey": "tabaco-bristol",
+      "flavor": "Menta",
+      "color": "",
+      "stock": 21,
+      "promotions": [],
+      "baselineAliases": [
+        "Tabaco Bristol 45 gr · Menta",
+        "tabaco bristol         45 grm         $ 4.800      und"
+      ]
+    },
+    {
+      "id": "seed-product-28-baseline-3",
+      "name": "Tabaco Bristol 45 gr · Coco",
+      "category": "Tabaquería",
+      "pricePurchase": 4250,
+      "price": 4800,
+      "active": true,
+      "variantKey": "tabaco-bristol",
+      "flavor": "Coco",
+      "color": "",
+      "stock": 10,
+      "promotions": [],
+      "baselineAliases": [
+        "Tabaco Bristol 45 gr · Coco",
+        "tabaco bristol         45 grm         $ 4.800      und"
+      ]
+    },
+    {
+      "id": "seed-product-28-baseline-4",
+      "name": "Tabaco Bristol 45 gr · Virginia",
+      "category": "Tabaquería",
+      "pricePurchase": 4250,
+      "price": 4800,
+      "active": true,
+      "variantKey": "tabaco-bristol",
+      "flavor": "Virginia",
+      "color": "",
+      "stock": 5,
+      "promotions": [],
+      "baselineAliases": [
+        "Tabaco Bristol 45 gr · Virginia",
+        "tabaco bristol         45 grm         $ 4.800      und"
+      ]
+    },
+    {
+      "id": "seed-product-28-baseline-5",
+      "name": "Tabaco Bristol 45 gr · Arándano",
+      "category": "Tabaquería",
+      "pricePurchase": 4250,
+      "price": 4800,
+      "active": true,
+      "variantKey": "tabaco-bristol",
+      "flavor": "Arándano",
+      "color": "",
+      "stock": 9,
+      "promotions": [],
+      "baselineAliases": [
+        "Tabaco Bristol 45 gr · Arándano",
+        "tabaco bristol         45 grm         $ 4.800      und"
+      ]
+    },
+    {
+      "id": "seed-product-28-baseline-6",
+      "name": "Tabaco Bristol 45 gr · Cherry",
+      "category": "Tabaquería",
+      "pricePurchase": 4250,
+      "price": 4800,
+      "active": true,
+      "variantKey": "tabaco-bristol",
+      "flavor": "Cherry",
+      "color": "",
+      "stock": 18,
+      "promotions": [],
+      "baselineAliases": [
+        "Tabaco Bristol 45 gr · Cherry",
+        "tabaco bristol         45 grm         $ 4.800      und"
+      ]
+    },
+    {
+      "id": "seed-product-28-baseline-7",
+      "name": "Tabaco Bristol 45 gr · Berry",
+      "category": "Tabaquería",
+      "pricePurchase": 4250,
+      "price": 4800,
+      "active": true,
+      "variantKey": "tabaco-bristol",
+      "flavor": "Berry",
+      "color": "",
+      "stock": 10,
+      "promotions": [],
+      "baselineAliases": [
+        "Tabaco Bristol 45 gr · Berry",
+        "tabaco bristol         45 grm         $ 4.800      und"
+      ]
+    },
+    {
+      "id": "seed-product-28-baseline-8",
+      "name": "Tabaco Bristol 45 gr · Mango",
+      "category": "Tabaquería",
+      "pricePurchase": 4250,
+      "price": 4800,
+      "active": true,
+      "variantKey": "tabaco-bristol",
+      "flavor": "Mango",
+      "color": "",
+      "stock": 32,
+      "promotions": [],
+      "baselineAliases": [
+        "Tabaco Bristol 45 gr · Mango",
+        "tabaco bristol         45 grm         $ 4.800      und"
+      ]
+    },
+    {
+      "id": "seed-product-28-baseline-9",
+      "name": "Tabaco Bristol 45 gr · Vainilla",
+      "category": "Tabaquería",
+      "pricePurchase": 4250,
+      "price": 4800,
+      "active": true,
+      "variantKey": "tabaco-bristol",
+      "flavor": "Vainilla",
+      "color": "",
+      "stock": 35,
+      "promotions": [],
+      "baselineAliases": [
+        "Tabaco Bristol 45 gr · Vainilla",
+        "tabaco bristol         45 grm         $ 4.800      und"
+      ]
+    },
+    {
+      "id": "seed-product-28-baseline-10",
+      "name": "Tabaco Bristol 45 gr · Original",
+      "category": "Tabaquería",
+      "pricePurchase": 4250,
+      "price": 4800,
+      "active": true,
+      "variantKey": "tabaco-bristol",
+      "flavor": "Original",
+      "color": "",
+      "stock": 57,
+      "promotions": [],
+      "baselineAliases": [
+        "Tabaco Bristol 45 gr · Original",
+        "tabaco bristol         45 grm         $ 4.800      und"
+      ]
+    },
+    {
+      "id": "seed-product-28-baseline-11",
+      "name": "Tabaco Bristol 45 gr · Mango maracuyá",
+      "category": "Tabaquería",
+      "pricePurchase": 4250,
+      "price": 4800,
+      "active": true,
+      "variantKey": "tabaco-bristol",
+      "flavor": "Mango maracuyá",
+      "color": "",
+      "stock": 15,
+      "promotions": [],
+      "baselineAliases": [
+        "Tabaco Bristol 45 gr · Mango maracuyá",
+        "tabaco bristol         45 grm         $ 4.800      und"
+      ]
+    },
+    {
+      "id": "seed-product-28-baseline-12",
+      "name": "Tabaco Bristol 45 gr · Chicle",
+      "category": "Tabaquería",
+      "pricePurchase": 4250,
+      "price": 4800,
+      "active": true,
+      "variantKey": "tabaco-bristol",
+      "flavor": "Chicle",
+      "color": "",
+      "stock": 3,
+      "promotions": [],
+      "baselineAliases": [
+        "Tabaco Bristol 45 gr · Chicle",
+        "tabaco bristol         45 grm         $ 4.800      und"
+      ]
+    },
+    {
+      "id": "seed-product-28-baseline-13",
+      "name": "Tabaco Bristol 45 gr · Chocolate",
+      "category": "Tabaquería",
+      "pricePurchase": 4250,
+      "price": 4800,
+      "active": true,
+      "variantKey": "tabaco-bristol",
+      "flavor": "Chocolate",
+      "color": "",
+      "stock": 36,
+      "promotions": [],
+      "baselineAliases": [
+        "Tabaco Bristol 45 gr · Chocolate",
+        "tabaco bristol         45 grm         $ 4.800      und"
+      ]
+    },
+    {
+      "id": "seed-product-28-baseline-14",
+      "name": "Tabaco Bristol 45 gr · Café turco",
+      "category": "Tabaquería",
+      "pricePurchase": 4250,
+      "price": 4800,
+      "active": true,
+      "variantKey": "tabaco-bristol",
+      "flavor": "Café turco",
+      "color": "",
+      "stock": 10,
+      "promotions": [],
+      "baselineAliases": [
+        "Tabaco Bristol 45 gr · Café turco",
+        "tabaco bristol         45 grm         $ 4.800      und"
+      ]
     }
-  ]
+  ],
+  "inventoryBaselineVersion": "dictated-inventory-20261004-v1"
 }
