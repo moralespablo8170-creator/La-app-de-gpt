@@ -1,32 +1,49 @@
-const CACHE_NAME='zipper-app-v20';
-const APP_SHELL=['./','./index.html','./styles.css','./app.js','./routes.js','./navigation.js','./manifest.json','./data/zipper-seed.json'];
-
-self.addEventListener('install',event=>{
-  event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(APP_SHELL)));
-  self.skipWaiting();
+const CACHE_NAME = 'zipper-app-pwa-20261005-1';
+const APP_SHELL = [
+  "./",
+  "./index.html",
+  "./styles.css?v=route-20261005",
+  "./app.js?v=mht-p29-80-20261005",
+  "./route-position-migration.js?v=1.2",
+  "./route-position-migration-b.js?v=1.0",
+  "./herramientas.js?v=1",
+  "./pwa.js?v=20261005",
+  "./manifest.json",
+  "./data/zipper-seed.json",
+  "./assets/zipper-compact.webp",
+  "./assets/zipper-panel.webp",
+  "./assets/icon-192.png",
+  "./assets/icon-512.png"
+];
+self.addEventListener('install', event => {
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));
 });
-
-self.addEventListener('activate',event=>{
-  event.waitUntil(
-    caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('zipper-app-')&&k!==CACHE_NAME).map(k=>caches.delete(k))))
-  );
-  self.clients.claim();
+self.addEventListener('activate', event => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter(key => key.startsWith('zipper-app-') && key !== CACHE_NAME).map(key => caches.delete(key)));
+    await self.clients.claim();
+  })());
 });
-
-self.addEventListener('fetch',event=>{
-  if(event.request.method!=='GET')return;
-  const requestUrl=new URL(event.request.url);
-  if(requestUrl.origin!==self.location.origin)return;
-
-  event.respondWith(
-    fetch(event.request).then(response=>{
-      if(response.ok){
-        const copy=response.clone();
-        caches.open(CACHE_NAME).then(cache=>cache.put(event.request,copy));
+self.addEventListener('fetch', event => {
+  const request = event.request;
+  const url = new URL(request.url);
+  if (request.method !== 'GET' || url.origin !== self.location.origin || !url.href.startsWith(self.registration.scope)) return;
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    try {
+      const response = await fetch(request);
+      if (response.ok) {
+        await cache.put(request, response.clone());
+        return response;
       }
-      return response;
-    }).catch(()=>
-      caches.match(event.request).then(cached=>cached||caches.match('./index.html'))
-    )
-  );
+      const cached = await cache.match(request);
+      return cached || response;
+    } catch (error) {
+      const cached = await cache.match(request);
+      if (cached) return cached;
+      if (request.mode === 'navigate') return (await cache.match('./index.html')) || Response.error();
+      return Response.error();
+    }
+  })());
 });
