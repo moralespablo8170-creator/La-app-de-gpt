@@ -399,21 +399,21 @@
     },
     {
       "id": "seed-product-61",
-      "name": "chupete rojo           24 und       $2.000      83 und",
+      "name": "Coyac rojo",
       "category": "Caramelos",
       "pricePurchase": 1645,
       "price": 2000,
       "active": true,
-      "baselinePending": true
+      "stock": 7
     },
     {
       "id": "seed-product-62",
-      "name": "chupete surtido    24 und       $2.000      83 und",
+      "name": "Coyac surtido",
       "category": "Caramelos",
       "pricePurchase": 1645,
       "price": 2000,
       "active": true,
-      "baselinePending": true
+      "stock": 12
     },
     {
       "id": "seed-product-63",
@@ -534,12 +534,12 @@
     },
     {
       "id": "seed-product-83",
-      "name": "sahne-nuss     90 grm      $ 2.100     und",
+      "name": "Sahne-Nuss 90 g",
       "category": "Nestlé",
       "pricePurchase": 1742,
       "price": 2100,
       "active": true,
-      "baselinePending": true
+      "stock": 29
     },
     {
       "id": "seed-product-84",
@@ -615,12 +615,12 @@
     },
     {
       "id": "seed-product-92",
-      "name": "acido mefenamico",
+      "name": "Ácido mefenámico",
       "category": "Remedios",
       "pricePurchase": 510,
       "price": 1000,
       "active": true,
-      "baselinePending": true
+      "stock": 0
     },
     {
       "id": "seed-product-93",
@@ -768,12 +768,12 @@
     },
     {
       "id": "seed-product-109",
-      "name": "tes de embarzo",
+      "name": "Test de embarazo",
       "category": "Remedios",
       "pricePurchase": 420,
       "price": 1000,
       "active": true,
-      "baselinePending": true
+      "stock": 0
     },
     {
       "id": "seed-product-110",
