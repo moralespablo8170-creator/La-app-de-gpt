@@ -185,3 +185,17 @@
  button:focus-visible{outline:3px solid #38bdf8;outline-offset:3px}
  @media(max-width:600px){.app{padding-top:18px}.home-shortcuts{grid-template-columns:1fr;gap:8px}.home-shortcut{min-height:70px;padding:8px 11px;border-radius:14px}.shortcut-icon{width:51px;height:51px;border-radius:12px}.home-shortcut strong{font-size:17px}.brand-distributor{font-size:22px}.brand-zipper{font-size:48px}.brand-tagline{font-size:11px}}
 }
+
+/* B114: plantilla compacta aprobada */
+@media screen{
+ .brand-header{padding:0;margin-bottom:12px;width:100%}.compact-brand{width:100%;aspect-ratio:670/205;background:url('./assets/zipper-compact.webp') no-repeat;background-size:152.8358% auto;background-position:50% 9.241%;border-radius:10px}
+ #homeView #activeRouteBox{background:transparent;border:0;padding:0;box-shadow:none}
+ .route-summary{background:#fff;border-radius:18px;padding:17px;margin-bottom:12px;border:1px solid #dce8f3}
+ .route-header{display:block}.route-header h2{font-size:22px;color:#506986;font-weight:500}.route-header .kicker{font-size:25px;letter-spacing:0;text-transform:none;color:#071d39!important}.route-tools{justify-content:flex-start;display:grid;grid-template-columns:1fr 1fr;margin-top:14px;gap:9px}
+ #homeView #visitedButton{background:#04b5d5;color:#fff;font-size:15px;padding:14px 10px;min-height:50px}#homeView #otherRoute{background:#dbf2ff;color:#082b4c;font-size:15px;padding:14px 10px;min-height:50px}
+ .daily-routes{border-top:1px solid #e2e8f0;padding-top:12px}.daily-route-note{font-size:12px}.daily-routes button{border-radius:25px;background:#edf1f7;color:#233451;padding:10px 16px}.daily-routes button.active{background:#c9efff;color:#073780;border-color:#9eddfa}
+ #homeView .route-search{background:#fff;border-radius:16px;padding:12px;gap:8px;margin-bottom:12px}.route-search label{font-size:12px;color:#617a94}.route-search input{background:#f2f6fa;border:1px solid #dce6f0}
+ #routeClients{display:grid;gap:10px;margin:0}#routeClients .route-client{background:#fff;border:1px solid #dce6f0;border-radius:16px;padding:14px;display:flex;flex-wrap:nowrap;align-items:center;gap:10px}#routeClients .route-client>div:first-child{flex:1;min-width:0}#routeClients .route-client strong{font-size:17px;color:#071d39}#routeClients .route-client span{color:#607d9f}#routeClients .route-client .actions-small{display:flex;gap:7px;flex-wrap:wrap;width:auto;justify-content:flex-end}#routeClients .select-client{background:#e0f3ff;color:#004c91}#routeClients .mark-visited{background:#052039;color:#fff}#routeClients .actions-small button{padding:11px 12px;font-size:13px;min-height:44px}
+ #routeClients>.muted{color:#dbeafe;padding:12px}.tabs .tab{background:transparent}.tabs .tab.active{background:transparent;color:#20d7f8;box-shadow:inset 0 -3px #20d7f8;border-radius:6px}
+ @media(max-width:420px){#routeClients .route-client{flex-wrap:wrap}#routeClients .route-client .actions-small{width:100%;justify-content:flex-start}#routeClients .route-client .actions-small button{flex:1}.route-summary{padding:14px}.app{padding-top:10px}}
+}
