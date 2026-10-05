@@ -310,8 +310,10 @@ function renderReviewForClient(id){const c=clientById(id);const sale=latestSales
 function openClientCart(id){const c=clientById(id);if(!c)return;editingSaleId='';selectedClientId=c.id;cart=[];draftProductId='';draftQty='';showCartTray=false;$('cartClientName').textContent=c.name;$('cartClientMeta').textContent=(c.address||'Sin dirección')+' · Semana '+(c.routeWeek||'—')+' · '+(c.routeDay||'Sin día');$('cartSection').classList.remove('hidden');$('cartSearchName').value='';$('cartCategory').value='';renderHome();renderCart();setTimeout(()=>$('cartSection').scrollIntoView({behavior:'smooth',block:'start'}),50)}
 function cartProductMatches(p){const q=norm($('cartSearchName').value),cat=$('cartCategory').value;return(!cat||p.category===cat)&&(!q||searchMatches(p.name,q)||searchMatches(p.color||'',q))}
 function cartStockBadge(p,remaining){const n=Math.max(0,Number(remaining??p?.stock)||0);if(n===0)return '<b class="stock-badge stock-zero">0 · SIN STOCK</b>';if(n<=5)return '<b class="stock-badge stock-low">'+n+' · STOCK BAJO</b>';return '<b class="stock-badge stock-ok">'+n+' · STOCK OK</b>'}
+function renderCartRoute(){const box=$('cartActiveRoute');if(!box)return;const c=clientById(selectedClientId);if(!c){box.classList.add('hidden');return}const sale=editingSaleId?getSales().find(s=>String(s.id)===String(editingSaleId)):null;const route=viewedRoute();const week=sale?.routeWeek||route?.week||c.routeWeek||'';const day=sale?.routeDay||route?.day||c.routeDay||'';box.classList.remove('hidden');$('cartActiveRouteLabel').textContent=(week?'Semana '+week:'Sin semana')+' · '+(day||'Sin día');}
 function renderCart(){
   if(!selectedClientId)return;
+  renderCartRoute();
   const selectedCat=$('cartCategory').value;
   const active=getProducts().filter(p=>p.active);
   const cats=[...new Set(active.map(p=>p.category))];
