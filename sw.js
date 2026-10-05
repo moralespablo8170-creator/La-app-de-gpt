@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zipper-app-pwa-20261005-2';
+const CACHE_NAME = 'zipper-app-pwa-20261005-3';
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -13,7 +13,7 @@ const APP_SHELL = [
   "./assets/zipper-compact.webp",
   "./assets/zipper-panel.webp",
   "./assets/icon-large-192.png",
-  "./assets/icon-large-512.png"
+  "./assets/icon-large-512-v2.png"
 ];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));
