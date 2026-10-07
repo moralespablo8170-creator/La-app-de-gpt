@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zipper-app-pwa-20261007-2';
+const CACHE_NAME = 'zipper-app-pwa-20261007-3';
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -6,7 +6,7 @@ const APP_SHELL = [
   "./app.js?v=zipper-20261007-6",
   "./route-position-migration.js?v=1.2",
   "./route-position-migration-b.js?v=1.0",
-  "./herramientas.js?v=1",
+  "./herramientas.js?v=2",
   "./pwa.js?v=zipper-20261007-1",
   "./manifest.json",
   "./data/zipper-seed.json",
