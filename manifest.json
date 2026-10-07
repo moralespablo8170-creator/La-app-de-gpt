@@ -1,9 +1,9 @@
 {
-  "id": "./",
+  "id": "./?zipper-pwa=20261007-icon-v2",
   "name": "Distribuidora zipper",
   "short_name": "Zipper",
   "description": "Clientes, inventario y ventas de Distribuidora zipper",
-  "start_url": "./",
+  "start_url": "./?zipper-pwa=20261007-icon-v2",
   "scope": "./",
   "display": "standalone",
   "background_color": "#050b10",
