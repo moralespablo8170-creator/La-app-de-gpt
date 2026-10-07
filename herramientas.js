@@ -16,8 +16,8 @@ function exportZipperBackup(){
   const name='Zipper-respaldo-'+localDate()+'.json';
   const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json;charset=utf-8'});
   const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;a.download=name;a.target='_blank';a.rel='noopener';document.body.appendChild(a);
-  a.dispatchEvent(new MouseEvent('click',{view:window,bubbles:true,cancelable:true}));
+  const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);
+  a.click();
   setTimeout(()=>{a.remove();URL.revokeObjectURL(url)},30000);
   status.textContent='Respaldo solicitado: '+name+'. Si Android pregunta, elige Descargar o Guardar.';
   alert('Respaldo preparado. Revisa Descargas: '+name);
@@ -41,5 +41,6 @@ function previewExampleReceipt(){
 }
 $('previewExampleReceipt').onclick=previewExampleReceipt;
 $('exportBackup').onclick=exportZipperBackup;
-$('chooseBackup').onclick=()=>{const input=$('backupFile');input.value='';input.click()};
+window.zipperBackupDirect=exportZipperBackup;
+window.zipperRestoreDirect=restoreZipperBackup;
 $('backupFile').onchange=e=>restoreZipperBackup(e.target);
