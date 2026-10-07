@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zipper-app-pwa-20261007-icon-v2';
+const CACHE_NAME = 'zipper-app-pwa-20261007-dz-v3';
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -8,13 +8,13 @@ const APP_SHELL = [
   "./route-position-migration-b.js?v=1.0",
   "./herramientas.js?v=3",
   "./pwa.js?v=zipper-20261007-1",
-  "./manifest.json?v=20261007-icon-v2",
+  "./manifest.json?v=20261007-dz-v3",
   "./data/zipper-seed.json",
   "./assets/zipper-compact.webp",
   "./assets/zipper-panel.webp",
-  "./assets/icon-circle-192.png?v=20261007-icon-v2",
-  "./assets/icon-circle-512.png?v=20261007-icon-v2",
-  "./assets/icon-circle-maskable-512.png?v=20261007-icon-v2"
+  "./assets/icon-large-192.png?v=20261007-dz-v3",
+  "./assets/icon-large-512.png?v=20261007-dz-v3",
+  "./assets/icon-large-512-v2.png?v=20261007-dz-v3"
 ];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));
