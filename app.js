@@ -380,7 +380,21 @@ function isoWeekInfo(dateStr){const d=dateStr instanceof Date?new Date(dateStr):
 function cashFilteredSales(){const rf=$('statRouteFilter')?.value||'',df=$('statDayFilter')?.value||'';return getSales().filter(s=>(!rf||saleRouteWeek(s)===rf)&&(!df||saleRouteDay(s)===df))}
 function statsPeriodRows(){return cashFilteredSales().filter(s=>periodMatch(saleDate(s),statPeriod))}
 function cashSelectedDate(){return $('cashDate')?.value||localDate()}
-function renderCash(){const selected=cashSelectedDate();const rows=getSales().filter(s=>saleDate(s)===selected);const sales=rows.reduce((a,s)=>a+saleTotal(s),0),cost=rows.reduce((a,s)=>a+saleCost(s),0);$('cashSales').textContent=money(sales);$('cashCost').textContent=money(cost);$('cashProfit').textContent=money(sales-cost);if($('cashDayTitle'))$('cashDayTitle').textContent=selected===localDate()?'Resumen de hoy':'Caja del '+selected;renderStats();renderGeneralTotal()}
+function paymentMethodOf(s){return s?.paymentMethod||'cash'}
+function renderCash(){
+ const selected=cashSelectedDate(),rows=getSales().filter(s=>saleDate(s)===selected);
+ const sales=rows.reduce((a,s)=>a+saleTotal(s),0),cost=rows.reduce((a,s)=>a+saleCost(s),0),profit=sales-cost;
+ const cashRows=rows.filter(s=>paymentMethodOf(s)==='cash'),transferRows=rows.filter(s=>paymentMethodOf(s)==='transfer'),pendingRows=rows.filter(s=>paymentMethodOf(s)==='pending'||s?.paymentStatus==='pending');
+ const sum=r=>r.reduce((a,s)=>a+saleTotal(s),0);
+ $('cashSales').textContent=money(sales);$('cashCost').textContent=money(cost);$('cashProfit').textContent=money(profit);
+ if($('cashDayTitle'))$('cashDayTitle').textContent=selected===localDate()?'Resumen de hoy':'Caja del '+selected;
+ if($('cashPaymentSummary'))$('cashPaymentSummary').innerHTML=
+  '<div><span>Efectivo en mano</span><strong>'+money(sum(cashRows))+'</strong><small>'+cashRows.length+' venta'+(cashRows.length===1?'':'s')+'</small></div>'+
+  '<div><span>Transferencias</span><strong>'+money(sum(transferRows))+'</strong><small>'+transferRows.length+' venta'+(transferRows.length===1?'':'s')+'</small></div>'+
+  '<div><span>Pendiente de pago</span><strong>'+money(sum(pendingRows))+'</strong><small>'+pendingRows.length+' venta'+(pendingRows.length===1?'':'s')+'</small></div>';
+ if($('cashPendingList'))$('cashPendingList').innerHTML=pendingRows.length?pendingRows.map(s=>'<article class="history-row"><div><strong>'+esc(s.cliente||'Cliente')+'</strong><span>Venta #'+esc(s.folio||'—')+' · '+esc(saleDate(s))+'</span></div><strong>'+money(saleTotal(s))+'</strong></article>').join(''):'<p class="muted">No hay clientes pendientes de pago en esta fecha.</p>';
+ renderStats();renderGeneralTotal()
+}
 function periodLabel(){return({day:'Hoy',week:'Esta semana',month:'Este mes',year:'Este año'})[statPeriod]||'Período seleccionado'}
 function renderStats(){
   const rows=statsPeriodRows(),total=rows.reduce((a,s)=>a+saleTotal(s),0),cost=rows.reduce((a,s)=>a+saleCost(s),0),profit=total-cost,tickets=rows.length,avg=tickets?total/tickets:0;
