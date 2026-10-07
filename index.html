@@ -79,5 +79,12 @@
 <script src="route-position-migration.js?v=1.2"></script>
 <script src="route-position-migration-b.js?v=1.0"></script>
 <script src="herramientas.js?v=2"></script>
-<script src="./pwa.js?v=20261007-1"></script>
+<script>
+if('serviceWorker' in navigator){
+ navigator.serviceWorker.getRegistrations().then(async regs=>{
+  for(const reg of regs){try{await reg.update()}catch(e){}}
+ });
+}
+</script>
+<script src="./pwa.js?v=20261007-2"></script>
 </body></html>
