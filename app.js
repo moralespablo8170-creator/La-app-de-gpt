@@ -379,20 +379,28 @@ function saleRouteDay(s){const c=s&&s.clienteId?clientById(s.clienteId):null;ret
 function isoWeekInfo(dateStr){const d=dateStr instanceof Date?new Date(dateStr):new Date(String(dateStr||'')+'T12:00:00');if(Number.isNaN(d.getTime()))return null;const day=(d.getDay()+6)%7;d.setDate(d.getDate()-day+3);const year=d.getFullYear(),first=new Date(year,0,4,12),week=1+Math.round(((d-first)/86400000-3+((first.getDay()+6)%7))/7);return{year,week}}
 function cashFilteredSales(){const rf=$('statRouteFilter')?.value||'',df=$('statDayFilter')?.value||'';return getSales().filter(s=>(!rf||saleRouteWeek(s)===rf)&&(!df||saleRouteDay(s)===df))}
 function statsPeriodRows(){return cashFilteredSales().filter(s=>periodMatch(saleDate(s),statPeriod))}
+function getPayments(){return readArray('zipperPagos')}
+function clientDebt(id){const credit=getSales().filter(s=>String(s.clienteId)===String(id)&&(paymentMethodOf(s)==='pending'||s.paymentStatus==='pending')).reduce((a,s)=>a+saleTotal(s),0);const paid=getPayments().filter(p=>String(p.clienteId)===String(id)).reduce((a,p)=>a+Number(p.amount||0),0);return Math.max(0,credit-paid)}
+function debtClients(){const ids=[...new Set(getSales().filter(s=>paymentMethodOf(s)==='pending'||s.paymentStatus==='pending').map(s=>String(s.clienteId)))];return ids.map(id=>{const c=clientById(id);return{id,name:c?.name||getSales().find(s=>String(s.clienteId)===id)?.cliente||'Cliente',debt:clientDebt(id)}}).filter(x=>x.debt>0).sort((a,b)=>b.debt-a.debt)}
+function addDebtPayment(clientId){const debt=clientDebt(clientId);if(debt<=0)return;const raw=prompt('Monto del abono (saldo actual '+money(debt)+')','');if(raw===null)return;const amount=Math.floor(Number(String(raw).replace(/[^0-9]/g,''))||0);if(amount<=0){alert('Ingresa un monto válido.');return}if(amount>debt){alert('El abono no puede superar el saldo pendiente de '+money(debt)+'.');return}const method=prompt('Forma de pago: escribe efectivo o transferencia','efectivo');if(method===null)return;const m=norm(method);const paymentMethod=m.startsWith('trans')?'transfer':m.startsWith('efec')?'cash':'';if(!paymentMethod){alert('Usa efectivo o transferencia.');return}const c=clientById(clientId);const rows=getPayments();rows.push({id:uid(),clienteId:clientId,cliente:c?.name||'Cliente',date:localDate(),amount,paymentMethod});if(writeArray('zipperPagos',rows)){renderCash();renderHistory()}}
 function cashSelectedDate(){return $('cashDate')?.value||localDate()}
 function paymentMethodOf(s){return s?.paymentMethod||'cash'}
 function renderCash(){
- const selected=cashSelectedDate(),rows=getSales().filter(s=>saleDate(s)===selected);
+ const selected=cashSelectedDate(),rows=getSales().filter(s=>saleDate(s)===selected),payments=getPayments().filter(p=>String(p.date||'').slice(0,10)===selected);
  const sales=rows.reduce((a,s)=>a+saleTotal(s),0),cost=rows.reduce((a,s)=>a+saleCost(s),0),profit=sales-cost;
- const cashRows=rows.filter(s=>paymentMethodOf(s)==='cash'),transferRows=rows.filter(s=>paymentMethodOf(s)==='transfer'),pendingRows=rows.filter(s=>paymentMethodOf(s)==='pending'||s?.paymentStatus==='pending');
- const sum=r=>r.reduce((a,s)=>a+saleTotal(s),0);
+ const paidSales=rows.filter(s=>paymentMethodOf(s)!=='pending'&&s.paymentStatus!=='pending');
+ const cashSales=paidSales.filter(s=>paymentMethodOf(s)==='cash').reduce((a,s)=>a+saleTotal(s),0),transferSales=paidSales.filter(s=>paymentMethodOf(s)==='transfer').reduce((a,s)=>a+saleTotal(s),0);
+ const cashAbonos=payments.filter(p=>p.paymentMethod==='cash').reduce((a,p)=>a+Number(p.amount||0),0),transferAbonos=payments.filter(p=>p.paymentMethod==='transfer').reduce((a,p)=>a+Number(p.amount||0),0);
  $('cashSales').textContent=money(sales);$('cashCost').textContent=money(cost);$('cashProfit').textContent=money(profit);
  if($('cashDayTitle'))$('cashDayTitle').textContent=selected===localDate()?'Resumen de hoy':'Caja del '+selected;
  if($('cashPaymentSummary'))$('cashPaymentSummary').innerHTML=
-  '<div><span>Efectivo en mano</span><strong>'+money(sum(cashRows))+'</strong><small>'+cashRows.length+' venta'+(cashRows.length===1?'':'s')+'</small></div>'+
-  '<div><span>Transferencias</span><strong>'+money(sum(transferRows))+'</strong><small>'+transferRows.length+' venta'+(transferRows.length===1?'':'s')+'</small></div>'+
-  '<div><span>Pendiente de pago</span><strong>'+money(sum(pendingRows))+'</strong><small>'+pendingRows.length+' venta'+(pendingRows.length===1?'':'s')+'</small></div>';
- if($('cashPendingList'))$('cashPendingList').innerHTML=pendingRows.length?pendingRows.map(s=>'<article class="history-row"><div><strong>'+esc(s.cliente||'Cliente')+'</strong><span>Venta #'+esc(s.folio||'—')+' · '+esc(saleDate(s))+'</span></div><strong>'+money(saleTotal(s))+'</strong></article>').join(''):'<p class="muted">No hay clientes pendientes de pago en esta fecha.</p>';
+  '<div><span>Efectivo recibido</span><strong>'+money(cashSales+cashAbonos)+'</strong><small>Ventas '+money(cashSales)+' · Abonos '+money(cashAbonos)+'</small></div>'+
+  '<div><span>Transferencias recibidas</span><strong>'+money(transferSales+transferAbonos)+'</strong><small>Ventas '+money(transferSales)+' · Abonos '+money(transferAbonos)+'</small></div>'+
+  '<div><span>Dinero recibido</span><strong>'+money(cashSales+transferSales+cashAbonos+transferAbonos)+'</strong><small>Incluye cobros de deudas anteriores</small></div>';
+ const debts=debtClients();
+ if($('cashPendingList'))$('cashPendingList').innerHTML=debts.length?debts.map(x=>'<article class="history-row"><div><strong>'+esc(x.name)+'</strong><span>Saldo pendiente actual</span></div><div class="actions-small"><strong>'+money(x.debt)+'</strong><button class="primary debt-payment" data-id="'+esc(x.id)+'" type="button">Registrar abono</button></div></article>').join(''):'<p class="muted">No hay clientes con saldo pendiente.</p>';
+ document.querySelectorAll('.debt-payment').forEach(b=>b.onclick=()=>addDebtPayment(b.dataset.id));
+ if($('cashPaymentsToday'))$('cashPaymentsToday').innerHTML=payments.length?payments.slice().reverse().map(p=>'<article class="history-row"><div><strong>'+esc(p.cliente||'Cliente')+'</strong><span>'+esc(p.paymentMethod==='transfer'?'Transferencia':'Efectivo')+' · '+esc(p.date)+'</span></div><strong>Abono '+money(p.amount)+'</strong></article>').join(''):'<p class="muted">No hay abonos registrados en esta fecha.</p>';
  renderStats();renderGeneralTotal()
 }
 function periodLabel(){return({day:'Hoy',week:'Esta semana',month:'Este mes',year:'Este año'})[statPeriod]||'Período seleccionado'}
