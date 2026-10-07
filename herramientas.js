@@ -6,8 +6,30 @@ function validateZipperBackup(file){
  for(const key of ['zipperProductos','zipperClientes','zipperComprobantes']){const rows=JSON.parse(file.data[key]||'null');if(!Array.isArray(rows))throw Error('Falta '+key+' en el respaldo.');const ids=new Set();for(const row of rows){if(!row||row.id==null||ids.has(String(row.id)))throw Error('Registro inválido o duplicado en '+key);ids.add(String(row.id));if(key==='zipperProductos'&&(!String(row.name||'').trim()||!Number.isInteger(Number(row.stock))||Number(row.stock)<0))throw Error('Stock o nombre inválido.');if(key==='zipperComprobantes'&&(!Array.isArray(row.items)||row.items.some(i=>!Number.isInteger(Number(i.qty))||Number(i.qty)<=0||!Number.isFinite(Number(i.price))||Number(i.price)<0)))throw Error('Detalle de venta inválido.')}}
  return file
 }
-function exportZipperBackup(){
- try{const data={};zipperDataKeys(localStorage).forEach(k=>data[k]=localStorage.getItem(k));for(const k of ['zipperProductos','zipperClientes','zipperComprobantes'])if(!data[k])data[k]='[]';const file={app:'Distribuidora zipper',schemaVersion:1,createdAt:new Date().toISOString(),data};validateZipperBackup(file);const url=URL.createObjectURL(new Blob([JSON.stringify(file,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='Zipper-respaldo-'+localDate()+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);$('backupStatus').textContent='Respaldo generado. Comprueba que el archivo se guardó en Descargas y conserva una copia fuera del teléfono.'}catch(e){$('backupStatus').textContent='No se pudo generar el respaldo: '+e.message}
+async function exportZipperBackup(){
+ try{
+  const data={};zipperDataKeys(localStorage).forEach(k=>data[k]=localStorage.getItem(k));
+  for(const k of ['zipperProductos','zipperClientes','zipperComprobantes'])if(!data[k])data[k]='[]';
+  const backup={app:'Distribuidora zipper',schemaVersion:1,createdAt:new Date().toISOString(),data};validateZipperBackup(backup);
+  const name='Zipper-respaldo-'+localDate()+'.json',blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
+  if(typeof window.showSaveFilePicker==='function'){
+   const handle=await window.showSaveFilePicker({suggestedName:name,types:[{description:'Respaldo Zipper',accept:{'application/json':['.json']}}]});
+   const writable=await handle.createWritable();await writable.write(blob);await writable.close();
+   $('backupStatus').textContent='Respaldo guardado correctamente: '+name;alert('Respaldo guardado correctamente.');return;
+  }
+  const shareFile=new File([blob],name,{type:'application/json'});
+  if(navigator.share&&navigator.canShare&&navigator.canShare({files:[shareFile]})){
+   $('backupStatus').textContent='Elige Archivos o Guardar para conservar el respaldo.';
+   await navigator.share({files:[shareFile],title:'Respaldo Distribuidora Zipper'});
+   $('backupStatus').textContent='Respaldo enviado al destino elegido: '+name;return;
+  }
+  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.style.display='none';document.body.appendChild(a);a.click();
+  setTimeout(()=>{a.remove();URL.revokeObjectURL(url)},10000);
+  $('backupStatus').textContent='Descarga iniciada: '+name+'. Revisa Descargas.';
+ }catch(e){
+  if(e&&e.name==='AbortError'){$('backupStatus').textContent='Guardado cancelado. No se modificó ningún dato.';return}
+  $('backupStatus').textContent='No se pudo guardar el respaldo: '+(e&&e.message?e.message:e);alert('No se pudo guardar el respaldo.');
+ }
 }
 async function restoreZipperBackup(input){
  const selected=input.files?.[0];if(!selected)return;
@@ -24,5 +46,5 @@ function previewExampleReceipt(){
 }
 $('previewExampleReceipt').onclick=previewExampleReceipt;
 $('exportBackup').onclick=exportZipperBackup;
-$('chooseBackup').onclick=()=>$('backupFile').click();
+$('chooseBackup').onclick=()=>{const input=$('backupFile');input.value='';input.click()};
 $('backupFile').onchange=e=>restoreZipperBackup(e.target);
