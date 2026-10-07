@@ -389,13 +389,13 @@ function cashRangeDates(){const d=new Date(cashSelectedDate()+'T12:00:00'),a=new
 function cashRangeLabel(){const r=cashRangeDates(),f=x=>new Date(x+'T12:00:00').toLocaleDateString('es-CL',{day:'numeric',month:'long',year:'numeric'});if(cashRange==='day')return cashSelectedDate()===localDate()?'Resumen de hoy':'Caja · '+f(r.start);if(cashRange==='week')return 'Caja semanal · '+f(r.start)+' al '+f(r.end);if(cashRange==='fortnight')return 'Caja quincenal · '+f(r.start)+' al '+f(r.end);return 'Caja mensual · '+new Date(r.start+'T12:00:00').toLocaleDateString('es-CL',{month:'long',year:'numeric'})}
 function paymentMethodOf(s){return s?.paymentMethod||'cash'}
 function renderCash(){
- const selected=cashSelectedDate(),rows=getSales().filter(s=>saleDate(s)===selected),payments=getPayments().filter(p=>String(p.date||'').slice(0,10)===selected);
+ const selected=cashSelectedDate(),range=cashRangeDates(),inRange=x=>x>=range.start&&x<=range.end,rows=getSales().filter(s=>inRange(saleDate(s))),payments=getPayments().filter(p=>inRange(String(p.date||'').slice(0,10)));
  const sales=rows.reduce((a,s)=>a+saleTotal(s),0),cost=rows.reduce((a,s)=>a+saleCost(s),0),profit=sales-cost;
  const paidSales=rows.filter(s=>paymentMethodOf(s)!=='pending'&&s.paymentStatus!=='pending');
  const cashSales=paidSales.filter(s=>paymentMethodOf(s)==='cash').reduce((a,s)=>a+saleTotal(s),0),transferSales=paidSales.filter(s=>paymentMethodOf(s)==='transfer').reduce((a,s)=>a+saleTotal(s),0);
  const cashAbonos=payments.filter(p=>p.paymentMethod==='cash').reduce((a,p)=>a+Number(p.amount||0),0),transferAbonos=payments.filter(p=>p.paymentMethod==='transfer').reduce((a,p)=>a+Number(p.amount||0),0);
  $('cashSales').textContent=money(sales);$('cashCost').textContent=money(cost);$('cashProfit').textContent=money(profit);
- if($('cashDayTitle'))$('cashDayTitle').textContent=selected===localDate()?'Resumen de hoy':'Caja del '+selected;
+ if($('cashDayTitle'))$('cashDayTitle').textContent=cashRangeLabel();
  if($('cashPaymentSummary'))$('cashPaymentSummary').innerHTML=
   '<div><span>Efectivo recibido</span><strong>'+money(cashSales+cashAbonos)+'</strong><small>Ventas '+money(cashSales)+' · Abonos '+money(cashAbonos)+'</small></div>'+
   '<div><span>Transferencias recibidas</span><strong>'+money(transferSales+transferAbonos)+'</strong><small>Ventas '+money(transferSales)+' · Abonos '+money(transferAbonos)+'</small></div>'+
