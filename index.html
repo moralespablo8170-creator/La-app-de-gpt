@@ -156,7 +156,6 @@ window.zipperBackupDirect=function(){
 if('serviceWorker' in navigator){
  navigator.serviceWorker.getRegistrations().then(async regs=>{
   for(const reg of regs){try{await reg.update()}catch(e){}}
-  if(!sessionStorage.getItem('zipper-sw-refresh-v7')){sessionStorage.setItem('zipper-sw-refresh-v6','1');setTimeout(()=>location.reload(),1200)}
  });
 }
 </script>
