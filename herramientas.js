@@ -28,13 +28,38 @@ function exportZipperBackup(){
 }
 async function restoreZipperBackup(input){
  const selected=input.files?.[0];if(!selected)return;
- try{if(selected.size>20*1024*1024)throw Error('El archivo supera los 20 MB.');const file=validateZipperBackup(JSON.parse(await selected.text()));const counts=['zipperProductos','zipperClientes','zipperComprobantes'].map(k=>JSON.parse(file.data[k]).length);
- confirmDelete('Restaurar respaldo','Este archivo contiene '+counts[0]+' productos, '+counts[1]+' clientes y '+counts[2]+' ventas. Reemplazará los datos actuales de este navegador. ¿Restaurar?',()=>{
-  const keys=[...new Set([...zipperDataKeys(localStorage),...Object.keys(file.data)])],before={};keys.forEach(k=>before[k]=localStorage.getItem(k));
-  try{localStorage.setItem('zipperRespaldoAntesRestauracion',JSON.stringify({createdAt:new Date().toISOString(),data:before}));for(const k of keys){if(k in file.data)localStorage.setItem(k,file.data[k]);else if(!['zipperDictatedInventoryVersion','zipperInventoryUpdateVersion','zipperSeedVersion'].includes(k))localStorage.removeItem(k)}$('backupStatus').textContent='Respaldo restaurado. Recargando la aplicación…';window.location.reload()}
-  catch(e){try{keys.forEach(k=>before[k]===null?localStorage.removeItem(k):localStorage.setItem(k,before[k]))}catch(rollback){$('backupStatus').textContent='Error al guardar y revertir. Conserva el archivo de respaldo y solicita revisión.';return}$('backupStatus').textContent='No se pudo restaurar; se conservaron los datos anteriores: '+e.message}
- })
- }catch(e){$('backupStatus').textContent='No se restauró ningún dato: '+e.message}finally{input.value=''}
+ try{
+  if(selected.size>20*1024*1024)throw Error('El archivo supera los 20 MB.');
+  const file=validateZipperBackup(JSON.parse(await selected.text()));
+  const sales=JSON.parse(file.data.zipperComprobantes||'[]');
+  const clients=JSON.parse(file.data.zipperClientes||'[]');
+  const products=JSON.parse(file.data.zipperProductos||'[]');
+  confirmDelete('Restaurar respaldo','Este archivo contiene '+products.length+' productos, '+clients.length+' clientes y '+sales.length+' ventas. Reemplazará los datos actuales de este navegador. ¿Restaurar?',()=>{
+   try{
+    const before={};zipperDataKeys(localStorage).forEach(k=>before[k]=localStorage.getItem(k));
+    localStorage.setItem('zipperRespaldoAntesRestauracion',JSON.stringify({createdAt:new Date().toISOString(),data:before}));
+    /* Restauración exacta: primero quitamos los datos Zipper actuales y después escribimos TODO el respaldo. */
+    zipperDataKeys(localStorage).forEach(k=>localStorage.removeItem(k));
+    Object.entries(file.data).forEach(([k,v])=>localStorage.setItem(k,v));
+    /* Verificación obligatoria antes de recargar. */
+    const restoredSales=JSON.parse(localStorage.getItem('zipperComprobantes')||'[]');
+    const restoredClients=JSON.parse(localStorage.getItem('zipperClientes')||'[]');
+    const restoredProducts=JSON.parse(localStorage.getItem('zipperProductos')||'[]');
+    if(restoredSales.length!==sales.length||restoredClients.length!==clients.length||restoredProducts.length!==products.length)throw Error('La verificación de los datos restaurados falló.');
+    /* Evita que la carga inicial trate el respaldo restaurado como una instalación nueva y reemplace datos. */
+    const seedVersion=file.data.zipperSeedVersion;if(seedVersion!=null)localStorage.setItem('zipperSeedVersion',seedVersion);
+    $('backupStatus').textContent='RESTAURACIÓN CORRECTA: '+restoredSales.length+' ventas, '+restoredClients.length+' clientes y '+restoredProducts.length+' productos. Recargando…';
+    alert('RESPALDO RESTAURADO CORRECTAMENTE. Se recuperaron '+restoredSales.length+' ventas.');
+    setTimeout(()=>window.location.reload(),500);
+   }catch(e){
+    $('backupStatus').textContent='ERROR AL RESTAURAR: '+(e&&e.message?e.message:e);
+    alert($('backupStatus').textContent);
+   }
+  });
+ }catch(e){
+  $('backupStatus').textContent='No se restauró ningún dato: '+e.message;
+  alert($('backupStatus').textContent);
+ }finally{input.value=''}
 }
 function previewExampleReceipt(){
  renderPrint({folio:'EJEMPLO',fecha:localDate(),cliente:'Cliente de ejemplo · NO ES UNA VENTA',items:[{desc:'Amsterdam papelillo con boquilla',qty:2,price:600},{desc:'Pañuelo Elite',qty:1,price:3100},{desc:'Nombre largo de producto para revisar el ancho del ticket',qty:3,price:1200}]});openReceiptPreview()
