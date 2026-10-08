@@ -64,8 +64,9 @@ async function restoreZipperBackup(input){
 function previewExampleReceipt(){
  renderPrint({folio:'EJEMPLO',fecha:localDate(),cliente:'Cliente de ejemplo · NO ES UNA VENTA',items:[{desc:'Amsterdam papelillo con boquilla',qty:2,price:600},{desc:'Pañuelo Elite',qty:1,price:3100},{desc:'Nombre largo de producto para revisar el ancho del ticket',qty:3,price:1200}]});openReceiptPreview()
 }
-$('previewExampleReceipt').onclick=previewExampleReceipt;
-$('exportBackup').onclick=exportZipperBackup;
+const previewBtn=$('previewExampleReceipt');if(previewBtn)previewBtn.onclick=previewExampleReceipt;
+const exportBtn=$('exportBackup');if(exportBtn)exportBtn.onclick=exportZipperBackup;
 window.zipperBackupDirect=exportZipperBackup;
 window.zipperRestoreDirect=restoreZipperBackup;
-$('backupFile').onchange=e=>restoreZipperBackup(e.target);
+/* El selector se enlaza aquí y también desde index como respaldo; ninguno debe impedir el arranque. */
+const backupInput=$('backupFile');if(backupInput)backupInput.onchange=e=>restoreZipperBackup(e.target);
