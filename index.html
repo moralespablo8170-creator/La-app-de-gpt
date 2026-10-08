@@ -85,8 +85,8 @@ window.zipperBackupDirect=function(){
   var d=new Date(),date=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   var name='Zipper-respaldo-'+date+'.json',blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
   var url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();
-  var st=document.getElementById('backupStatus');if(st)st.textContent='Respaldo preparado: '+name;
-  alert('RESPALDO ZIPPER PREPARADO: '+name);
+  var st=document.getElementById('backupStatus');if(st)st.textContent='Respaldo generado: '+name+'. Revisa tu carpeta Descargas para confirmar que quedó guardado correctamente.';
+  alert('Respaldo generado: '+name+'\nRevisa tu carpeta Descargas para confirmar que quedó guardado correctamente.');
   setTimeout(function(){URL.revokeObjectURL(url)},30000);
  }catch(e){alert('ERROR AL CREAR RESPALDO: '+(e&&e.message?e.message:e))}
 };
