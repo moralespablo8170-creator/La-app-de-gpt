@@ -97,24 +97,59 @@ window.zipperBackupDirect=function(){
 <script src="herramientas.js?v=8"></script>
 <script>
 (function(){
- var btn=document.getElementById('restoreBackupButton'),inp=document.getElementById('backupFile');
- if(btn&&inp){
-  btn.onclick=function(){
-   inp.value='';
-   inp.click();
-  };
-  inp.onchange=function(){
-   if(!inp.files||!inp.files.length){
-    var s=document.getElementById('backupStatus');if(s)s.textContent='No se seleccionó ningún archivo.';
-    return;
-   }
-   if(typeof window.zipperRestoreDirect!=='function'){
-    alert('ERROR: el restaurador no se cargó. Actualiza la aplicación y vuelve a intentar.');
-    return;
-   }
-   window.zipperRestoreDirect(inp);
-  };
+ var btn=document.getElementById('restoreBackupButton');
+ var inp=document.getElementById('backupFile');
+ var status=document.getElementById('backupStatus');
+ function say(msg){if(status)status.textContent=msg;}
+ function fail(msg){say('ERROR: '+msg);alert('ERROR AL RESTAURAR: '+msg);}
+ function restoreObject(file){
+  if(!file||file.app!=='Distribuidora zipper'||!file.data||typeof file.data!=='object')throw new Error('El archivo seleccionado no corresponde a un respaldo de Distribuidora zipper.');
+  var required=['zipperProductos','zipperClientes','zipperComprobantes'], parsed={};
+  required.forEach(function(k){
+   if(typeof file.data[k]!=='string')throw new Error('El respaldo no contiene '+k+'.');
+   parsed[k]=JSON.parse(file.data[k]);
+   if(!Array.isArray(parsed[k]))throw new Error(k+' no tiene un formato válido.');
+  });
+  if(!confirm('Se restaurarán '+parsed.zipperComprobantes.length+' ventas, '+parsed.zipperClientes.length+' clientes y '+parsed.zipperProductos.length+' productos. ¿Continuar?')){say('Restauración cancelada.');return;}
+  var before={};
+  Object.keys(localStorage).filter(function(k){return k.indexOf('zipper')===0}).forEach(function(k){before[k]=localStorage.getItem(k);});
+  localStorage.setItem('zipperRespaldoAntesRestauracion',JSON.stringify({createdAt:new Date().toISOString(),data:before}));
+  Object.keys(localStorage).filter(function(k){return k.indexOf('zipper')===0&&k.indexOf('zipperRespaldo')!==0}).forEach(function(k){localStorage.removeItem(k);});
+  Object.keys(file.data).forEach(function(k){if(k.indexOf('zipper')===0&&k.indexOf('zipperRespaldo')!==0&&typeof file.data[k]==='string')localStorage.setItem(k,file.data[k]);});
+  var s=JSON.parse(localStorage.getItem('zipperComprobantes')||'[]');
+  var cl=JSON.parse(localStorage.getItem('zipperClientes')||'[]');
+  var pr=JSON.parse(localStorage.getItem('zipperProductos')||'[]');
+  if(s.length!==parsed.zipperComprobantes.length||cl.length!==parsed.zipperClientes.length||pr.length!==parsed.zipperProductos.length)throw new Error('El teléfono no confirmó todos los datos escritos.');
+  sessionStorage.setItem('zipperRestoreResult',JSON.stringify({sales:s.length,clients:cl.length,products:pr.length}));
+  say('RESTAURACIÓN CORRECTA: '+s.length+' ventas recuperadas.');
+  alert('RESPALDO RESTAURADO CORRECTAMENTE. Ventas recuperadas: '+s.length+'.');
+  location.reload();
  }
+ function readSelected(){
+  if(!inp.files||!inp.files[0]){say('No se seleccionó ningún archivo.');return;}
+  var selected=inp.files[0];
+  say('Leyendo '+selected.name+'…');
+  if(selected.size>20*1024*1024){fail('El archivo supera los 20 MB.');return;}
+  var reader=new FileReader();
+  reader.onerror=function(){fail('Android no pudo leer el archivo seleccionado.');};
+  reader.onload=function(){
+   try{restoreObject(JSON.parse(String(reader.result||'')));}
+   catch(e){fail(e&&e.message?e.message:String(e));}
+   finally{inp.value='';}
+  };
+  reader.readAsText(selected);
+ }
+ if(btn&&inp){
+  btn.onclick=function(){say('Selecciona ahora tu archivo de respaldo…');inp.value='';inp.click();};
+  inp.onchange=readSelected;
+ }
+ try{
+  var result=sessionStorage.getItem('zipperRestoreResult');
+  if(result){
+   var r=JSON.parse(result);sessionStorage.removeItem('zipperRestoreResult');
+   say('ÚLTIMA RESTAURACIÓN CORRECTA: '+r.sales+' ventas, '+r.clients+' clientes y '+r.products+' productos.');
+  }
+ }catch(e){}
 })();
 </script>
 <script>
