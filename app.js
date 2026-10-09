@@ -390,6 +390,8 @@ function cashRangeDates(){const d=new Date(cashSelectedDate()+'T12:00:00'),a=new
 function cashRangeLabel(){const r=cashRangeDates(),f=x=>new Date(x+'T12:00:00').toLocaleDateString('es-CL',{day:'numeric',month:'long',year:'numeric'});if(cashRange==='day')return cashSelectedDate()===localDate()?'Resumen de hoy':'Caja · '+f(r.start);if(cashRange==='week')return 'Caja semanal · '+f(r.start)+' al '+f(r.end);if(cashRange==='fortnight')return 'Caja quincenal · '+f(r.start)+' al '+f(r.end);return 'Caja mensual · '+new Date(r.start+'T12:00:00').toLocaleDateString('es-CL',{month:'long',year:'numeric'})}
 function paymentMethodOf(s){return s?.paymentMethod||'cash'}
 function renderCash(){
+ // Las estadísticas se actualizan independientemente de los cobros y deudas.
+ try{renderStats();renderGeneralTotal()}catch(e){console.error('Estadísticas Zipper:',e);if($('statsOutput')&&!$('statsOutput').innerHTML.trim())$('statsOutput').textContent='No se pudieron calcular las estadísticas. Revisa los datos de ventas.'}
  const selected=cashSelectedDate(),range=cashRangeDates(),inRange=x=>x>=range.start&&x<=range.end,rows=getSales().filter(s=>inRange(saleDate(s))),payments=getPayments().filter(p=>inRange(String(p.date||'').slice(0,10)));
  const sales=rows.reduce((a,s)=>a+saleTotal(s),0),cost=rows.reduce((a,s)=>a+saleCost(s),0),profit=sales-cost;
  const paidSales=rows.filter(s=>paymentMethodOf(s)!=='pending'&&s.paymentStatus!=='pending');
@@ -405,7 +407,6 @@ function renderCash(){
  if($('cashPendingList'))$('cashPendingList').innerHTML=debts.length?debts.map(x=>'<article class="history-row"><div><strong>'+esc(x.name)+'</strong><span>Saldo pendiente actual</span></div><div class="actions-small"><strong>'+money(x.debt)+'</strong><button class="primary debt-payment" data-id="'+esc(x.id)+'" type="button">Registrar abono</button></div></article>').join(''):'<p class="muted">No hay clientes con saldo pendiente.</p>';
  document.querySelectorAll('.debt-payment').forEach(b=>b.onclick=()=>addDebtPayment(b.dataset.id));
  if($('cashPaymentsToday'))$('cashPaymentsToday').innerHTML=payments.length?payments.slice().reverse().map(p=>'<article class="history-row"><div><strong>'+esc(p.cliente||'Cliente')+'</strong><span>'+esc(p.paymentMethod==='transfer'?'Transferencia':'Efectivo')+' · '+esc(p.date)+'</span></div><strong>Abono '+money(p.amount)+'</strong></article>').join(''):'<p class="muted">No hay abonos registrados en esta fecha.</p>';
- renderStats();renderGeneralTotal()
 }
 function periodLabel(){return({day:'Hoy',week:'Esta semana',month:'Este mes',year:'Este año'})[statPeriod]||'Período seleccionado'}
 function renderStats(){
@@ -425,7 +426,8 @@ function renderStats(){
   const arr=Object.entries(out).map(([k,v])=>({...v,name:k,profit:v.total-v.cost,margin:v.total?(v.total-v.cost)/v.total*100:0})).sort((a,b)=>b.total-a.total);
   const heading=statType==='day'?'Comparación por día de reparto':statType==='route'?'Comparación Ruta A vs Ruta B':statType==='client'?'Ranking de clientes':'Ranking de productos';
   $('statsOutput').innerHTML+='<div class="stats-subtitle">'+heading+'</div>'+(arr.length?arr.slice(0,20).map((v,i)=>'<div class="stat-line"><div><strong>'+(i+1)+'. '+esc(v.name)+'</strong><small>'+ (statType==='product'?v.qty+' unidades':' '+v.tickets+' comprobantes')+' · Ganancia '+money(v.profit)+' · Margen '+v.margin.toFixed(1)+'%</small></div><strong>'+money(v.total)+'</strong></div>').join(''):'<p class="muted">No hay datos para esta selección.</p>');
-  renderStatsChart(); renderTrendChart();
+  try{renderStatsChart()}catch(e){console.error('Gráfico comparativo:',e);if($('statsChart'))$('statsChart').textContent='No se pudo mostrar el gráfico comparativo.'}
+  try{renderTrendChart()}catch(e){console.error('Gráfico de tendencia:',e);if($('statsTrendChart'))$('statsTrendChart').textContent='No se pudo mostrar el gráfico de tendencia.'}
 }
 function chartData(){
   const rows=cashFilteredSales(),mode=$('chartMode')?.value||'weekly',out={};
