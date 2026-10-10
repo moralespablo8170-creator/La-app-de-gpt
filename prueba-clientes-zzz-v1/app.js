@@ -277,7 +277,28 @@ function loadSeed(){return fetch('./data/zipper-seed.json',{cache:'no-store'}).t
   });
  });
  if(changed)writeArray('zipperClientes',cs2);
- renderHome();renderInventory();renderClients();renderCash();renderHistory()
+ return fetch('./data/zzz-rutas.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('No se cargaron las rutas ZZZ');return r.json()}).then(routes=>{
+  if(!Array.isArray(routes)||routes.length!==154)throw Error('Las rutas ZZZ no contienen 154 registros');
+  const clients=getClients(),key=v=>norm(String(v||'')).replace(/[^a-z0-9]/g,'');
+  const address=v=>key(v).replace(/^(av|avenida|calle|psj|pasaje)/,'');
+  let added=0,linked=0,uncertain=0;
+  routes.forEach(src=>{
+   if(!src.name||!['A','B'].includes(src.week))return;
+   const a=address(src.address),n=key(src.name);
+   let matches=clients.filter(c=>a&&address(c.address)===a);
+   if(matches.length!==1)matches=clients.filter(c=>n&&key(c.name)===n&&a&&address(c.address)===a);
+   if(matches.length!==1&&a.length>=7)matches=clients.filter(c=>n&&key(c.name)===n&&address(c.address)&& (address(c.address).startsWith(a)||a.startsWith(address(c.address))));
+   // A shared RUT never merges different premises.
+   let c=matches.length===1?matches[0]:null;
+   if(!c){c={id:uid(),name:src.name,address:src.address||'',rut:'',phone:'',razonSocial:'',comuna:'',observations:'',sendInvoice:false,active:true,routeWeek:src.week,routeDay:src.day,routePosition:Number(src.position)};clients.push(c);added++;if(matches.length>1)uncertain++}else linked++;
+   ['rut','phone','razonSocial','comuna','observations'].forEach(k=>{const v=String(src[k]||'').trim();if(!String(c[k]||'').trim()&&v&&!(k==='rut'&&!/^[0-9.]+-[0-9Kk]$/.test(v))&&!(k==='phone'&&!/^\\+?[0-9 ()-]{8,}$/.test(v)))c[k]=v});
+   if(/enviar factura|mandar factura/i.test(String(src.observations||'')))c.sendInvoice=true;
+   setClientRoute(c,src.week,src.day,src.position);
+  });
+  if(!writeArray('zipperClientes',clients))throw Error('No se guardaron los clientes de prueba');
+  localStorage.setItem('zipperZZZPreviewSummary',JSON.stringify({added,linked,uncertain,visits:routes.length}));
+  renderHome();renderInventory();renderClients();renderCash();renderHistory();
+ }).catch(e=>{alert('Error en la carga de rutas de prueba: '+e.message)})
  }).catch(e=>{alert('No se pudo incorporar la base del inventario: '+e.message)})}
 
 
