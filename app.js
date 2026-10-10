@@ -388,6 +388,19 @@ let cashRange='day'
 function cashSelectedDate(){return $('cashDate')?.value||localDate()}
 function cashRangeDates(){const d=new Date(cashSelectedDate()+'T12:00:00'),a=new Date(d),b=new Date(d);if(cashRange==='week'){const n=(d.getDay()+6)%7;a.setDate(d.getDate()-n);b.setDate(a.getDate()+6)}else if(cashRange==='fortnight'){a.setDate(d.getDate()<=15?1:16);b.setMonth(d.getMonth()+1,0);if(d.getDate()<=15)b.setDate(15)}else if(cashRange==='month'){a.setDate(1);b.setMonth(d.getMonth()+1,0)}const f=x=>x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');return{start:f(a),end:f(b)}}
 function cashRangeLabel(){const r=cashRangeDates(),f=x=>new Date(x+'T12:00:00').toLocaleDateString('es-CL',{day:'numeric',month:'long',year:'numeric'});if(cashRange==='day')return cashSelectedDate()===localDate()?'Resumen de hoy':'Caja · '+f(r.start);if(cashRange==='week')return 'Caja semanal · '+f(r.start)+' al '+f(r.end);if(cashRange==='fortnight')return 'Caja quincenal · '+f(r.start)+' al '+f(r.end);return 'Caja mensual · '+new Date(r.start+'T12:00:00').toLocaleDateString('es-CL',{month:'long',year:'numeric'})}
+function getCashExpenses(){return readArray('zipperGastosCaja')}
+function addCashExpense(){
+ const input=$('cashExpenseAmount'),reason=$('cashExpenseReason');
+ const amount=Number(input?.value),description=String(reason?.value||'').trim();
+ if(!Number.isSafeInteger(amount)||amount<=0){alert('Ingresa un monto válido en pesos.');return}
+ if(!description){alert('Indica el motivo del gasto.');return}
+ const rows=getCashExpenses();rows.push({id:uid(),date:localDate(),amount,reason:description});
+ if(writeArray('zipperGastosCaja',rows)){input.value='';reason.value='';renderCash()}
+}
+function deleteCashExpense(id){
+ if(!confirm('¿Estás seguro que deseas borrar este gasto?'))return;
+ const rows=getCashExpenses();if(writeArray('zipperGastosCaja',rows.filter(x=>String(x.id)!==String(id))))renderCash();
+}
 function paymentMethodOf(s){return s?.paymentMethod||'cash'}
 function renderCash(){
  // Las estadísticas se actualizan independientemente de los cobros y deudas.
@@ -396,19 +409,25 @@ function renderCash(){
  const sales=rows.reduce((a,s)=>a+saleTotal(s),0),cost=rows.reduce((a,s)=>a+saleCost(s),0),profit=sales-cost;
  const paidSales=rows.filter(s=>paymentMethodOf(s)!=='pending'&&s.paymentStatus!=='pending');
  const cashSales=paidSales.filter(s=>paymentMethodOf(s)==='cash').reduce((a,s)=>a+saleTotal(s),0),transferSales=paidSales.filter(s=>paymentMethodOf(s)==='transfer').reduce((a,s)=>a+saleTotal(s),0);
+ const expenses=getCashExpenses().filter(x=>inRange(String(x.date||'').slice(0,10)));
+ const expensesTotal=expenses.reduce((a,x)=>a+Number(x.amount||0),0);
  const cashAbonos=payments.filter(p=>p.paymentMethod==='cash').reduce((a,p)=>a+Number(p.amount||0),0),transferAbonos=payments.filter(p=>p.paymentMethod==='transfer').reduce((a,p)=>a+Number(p.amount||0),0);
  $('cashSales').textContent=money(sales);$('cashCost').textContent=money(cost);$('cashProfit').textContent=money(profit);
  if($('cashDayTitle'))$('cashDayTitle').textContent=cashRangeLabel();
  const creditSales=rows.filter(s=>paymentMethodOf(s)==='pending'||s.paymentStatus==='pending').reduce((a,s)=>a+saleTotal(s),0);
  const cashReceived=cashSales+cashAbonos,transferReceived=transferSales+transferAbonos;
  if($('cashPaymentSummary'))$('cashPaymentSummary').innerHTML=
-  '<div style="grid-column:1/-1;padding:14px;border:2px solid #16a34a;border-radius:12px;background:rgba(22,163,74,.08)"><span style="font-weight:700">EFECTIVO ESPERADO EN MANO</span><strong style="display:block;font-size:clamp(26px,6vw,38px);color:#15803d;margin:8px 0">'+money(cashReceived)+'</strong><small>Dinero recibido en efectivo durante el período. No incluye efectivo inicial ni retiros que no estén registrados.</small></div>'+
+  '<div style="grid-column:1/-1;padding:14px;border:2px solid #16a34a;border-radius:12px;background:rgba(22,163,74,.08)"><span style="font-weight:700">EFECTIVO ESPERADO EN MANO</span><strong style="display:block;font-size:clamp(26px,6vw,38px);color:#15803d;margin:8px 0">'+money(cashReceived-expensesTotal)+'</strong><small>Efectivo recibido menos gastos registrados. Caja inicial: $0.</small></div>'+
+  '<div><span>Gastos pagados de la caja</span><strong>− '+money(expensesTotal)+'</strong><small>Comida, benzina, emergencias y otros</small></div>'+ 
   '<div><span>Ventas pagadas en efectivo</span><strong>'+money(cashSales)+'</strong><small>Dinero de ventas de esta fecha</small></div>'+
   '<div><span>Abonos recibidos en efectivo</span><strong>+ '+money(cashAbonos)+'</strong><small>Pagos parciales y cobros de deudas</small></div>'+
   '<div><span>Total transferido al banco</span><strong>'+money(transferReceived)+'</strong><small>Ventas '+money(transferSales)+' + abonos '+money(transferAbonos)+'; no es efectivo en mano</small></div>'+
   '<div><span>Ventas a crédito del período</span><strong>'+money(creditSales)+'</strong><small>Importe original vendido como pendiente o con abono parcial; los abonos se muestran aparte</small></div>'+
   '<div><span>Total recibido (todos los medios)</span><strong>'+money(cashReceived+transferReceived)+'</strong><small>Efectivo + transferencias, incluidos abonos. No confundir con efectivo físico.</small></div>'+
-  '<div style="grid-column:1/-1"><small><strong>Cómo cuadrar:</strong> efectivo de ventas '+money(cashSales)+' + abonos en efectivo '+money(cashAbonos)+' = <strong>'+money(cashReceived)+'</strong>. Si llevabas sencillo inicial o retiraste dinero, debes ajustarlo por separado.</small></div>';
+  '<div style="grid-column:1/-1"><small><strong>Cómo cuadrar:</strong> efectivo de ventas '+money(cashSales)+' + abonos en efectivo '+money(cashAbonos)+' − gastos '+money(expensesTotal)+' = <strong>'+money(cashReceived-expensesTotal)+'</strong>. Caja inicial $0. Registra todas las salidas de efectivo.</small></div>';
+ if($('cashExpenseTotal'))$('cashExpenseTotal').textContent=money(expensesTotal);
+ if($('cashExpenseList'))$('cashExpenseList').innerHTML=expenses.length?expenses.slice().reverse().map(x=>'<article class="history-row"><div><strong>'+esc(x.reason||'Gasto')+'</strong><span>'+esc(x.date||'')+'</span></div><div class="actions-small"><strong>− '+money(x.amount)+'</strong><button class="secondary delete-cash-expense" data-id="'+esc(x.id)+'" type="button" style="background:#b91c1c;color:white;min-height:42px">Borrar</button></div></article>').join(''):'<p class="muted">No hay gastos registrados en este período.</p>';
+ document.querySelectorAll('.delete-cash-expense').forEach(b=>b.onclick=()=>deleteCashExpense(b.dataset.id));
  const debts=debtClients();
  if($('cashPendingList'))$('cashPendingList').innerHTML=debts.length?debts.map(x=>'<article class="history-row"><div><strong>'+esc(x.name)+'</strong><span>Saldo pendiente actual</span></div><div class="actions-small"><strong>'+money(x.debt)+'</strong><button class="primary debt-payment" data-id="'+esc(x.id)+'" type="button">Registrar abono</button></div></article>').join(''):'<p class="muted">No hay clientes con saldo pendiente.</p>';
  document.querySelectorAll('.debt-payment').forEach(b=>b.onclick=()=>addDebtPayment(b.dataset.id));
@@ -623,6 +642,7 @@ $('addPromo').onclick=()=>{currentPromos.push({minQty:1,price:0});renderPromoRow
 $('newClient').onclick=()=>{resetClientForm();$('clientEditor').scrollIntoView({behavior:'smooth',block:'start'});$('clientName').focus()};$('saveClient').onclick=saveClient;$('cancelClient').onclick=resetClientForm;$('deleteClient').onclick=()=>{if(editingClientId)deleteClient(editingClientId)};$('clientSearchName').oninput=renderClients;$('clientSearchAddress').oninput=renderClients;$('productSearch').oninput=renderInventory;$('clientWeek').onchange=()=>{if(!editingClientId)return;const r=clientRoute(clientById(editingClientId),$('clientWeek').value);$('clientDay').value=r?.day||'';$('clientPosition').value=r&&r.position<999999?r.position:'';};$('filterWeek').onchange=renderClients;$('filterDay').onchange=renderClients;bindImmediateValidation('clientRut');bindImmediateValidation('clientPhone');$('clientRut').oninput=e=>{e.target.value=e.target.value.toUpperCase().replace(/[^0-9K]/g,'').slice(0,9)};$('clientPhone').oninput=e=>{e.target.value=formatPhone(e.target.value)};
 document.querySelectorAll('#historyType button').forEach(b=>b.onclick=()=>{historyType=b.dataset.history;document.querySelectorAll('#historyType button').forEach(x=>x.classList.toggle('active',x===b));renderHistory()});$('historyFrom').onchange=renderHistory;$('historyTo').onchange=renderHistory}
 bind();
+if($('cashExpenseSave'))$('cashExpenseSave').onclick=addCashExpense;
 migrateVariantInventory();
 repairUltraVariants();
 applyInventoryUpdate();
