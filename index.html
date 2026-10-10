@@ -91,7 +91,7 @@ window.zipperBackupDirect=function(){
  }catch(e){alert('ERROR AL CREAR RESPALDO: '+(e&&e.message?e.message:e))}
 };
 </script>
-<script src="app.js?v=zipper-20261010-abonos-v14"></script>
+<script src="app.js?v=zipper-20261010-abonos-v15"></script>
 <script src="route-position-migration.js?v=1.2"></script>
 <script src="route-position-migration-b.js?v=1.0"></script>
 <script src="herramientas.js?v=8"></script>
@@ -160,5 +160,5 @@ if('serviceWorker' in navigator){
 }
 </script>
 <script src="./pwa.js?v=20261007-2"></script>
-<div id="debtPaymentDialog" class="zipper-modal hidden" role="dialog" aria-modal="true" aria-labelledby="debtPaymentTitle"><div class="zipper-modal-panel"><h2 id="debtPaymentTitle">Registrar abono</h2><p id="debtPaymentClient" class="muted"></p><label>Monto del abono ($)<input id="debtPaymentAmount" type="number" min="1" step="1" inputmode="numeric" placeholder="Monto en pesos"></label><label style="margin-top:12px">Forma de pago<select id="debtPaymentMethod"><option value="cash">Efectivo</option><option value="transfer">Transferencia</option></select></label><p id="debtPaymentError" class="status" aria-live="polite"></p><div class="actions"><button id="debtPaymentCancel" class="secondary" type="button">Cancelar</button><button id="debtPaymentConfirm" class="primary" type="button">Guardar abono</button></div></div></div>
+<div id="debtPaymentDialog" class="zipper-modal hidden" role="dialog" aria-modal="true" aria-labelledby="debtPaymentTitle"><div class="zipper-modal-panel"><h2 id="debtPaymentTitle">Registrar abono</h2><p id="debtPaymentClient" class="muted"></p><label>Monto del abono ($)<input id="debtPaymentAmount" type="number" min="1" step="1" inputmode="numeric" placeholder="Monto en pesos"></label><label style="margin-top:12px">Forma de pago<select id="debtPaymentMethod"><option value="cash">Efectivo</option><option value="transfer">Transferencia</option></select></label><p id="debtPaymentError" class="status" aria-live="polite"></p><div class="actions"><button id="debtPaymentCancel" class="secondary" type="button" onclick="event.stopPropagation();closeDebtPayment()">Cancelar</button><button id="debtPaymentConfirm" class="primary" type="button" onclick="event.stopPropagation();confirmDebtPayment()">Guardar abono</button></div></div></div>
 <div id="invoiceDetailDialog" class="zipper-modal hidden" role="dialog" aria-modal="true"><div class="zipper-modal-panel invoice-modal-panel"><div id="invoiceDetailBody"></div><div class="actions"><button class="secondary" type="button" onclick="closeInvoiceDetail()">Cerrar</button><button id="invoiceDetailSave" class="primary" type="button">Guardar indicación</button></div></div></div></body></html>
