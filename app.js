@@ -383,7 +383,32 @@ function statsPeriodRows(){return cashFilteredSales().filter(s=>periodMatch(sale
 function getPayments(){return readArray('zipperPagos')}
 function clientDebt(id){const credit=getSales().filter(s=>String(s.clienteId)===String(id)&&(paymentMethodOf(s)==='pending'||s.paymentStatus==='pending')).reduce((a,s)=>a+saleTotal(s),0);const paid=getPayments().filter(p=>String(p.clienteId)===String(id)).reduce((a,p)=>a+Number(p.amount||0),0);return Math.max(0,credit-paid)}
 function debtClients(){const ids=[...new Set(getSales().filter(s=>paymentMethodOf(s)==='pending'||s.paymentStatus==='pending').map(s=>String(s.clienteId)))];return ids.map(id=>{const c=clientById(id);return{id,name:c?.name||getSales().find(s=>String(s.clienteId)===id)?.cliente||'Cliente',debt:clientDebt(id)}}).filter(x=>x.debt>0).sort((a,b)=>b.debt-a.debt)}
-function addDebtPayment(clientId){const debt=clientDebt(clientId);if(debt<=0)return;const raw=prompt('Monto del abono (saldo actual '+money(debt)+')','');if(raw===null)return;const amount=Math.floor(Number(String(raw).replace(/[^0-9]/g,''))||0);if(amount<=0){alert('Ingresa un monto válido.');return}if(amount>debt){alert('El abono no puede superar el saldo pendiente de '+money(debt)+'.');return}const method=prompt('Forma de pago: escribe efectivo o transferencia','efectivo');if(method===null)return;const m=norm(method);const paymentMethod=m.startsWith('trans')?'transfer':m.startsWith('efec')?'cash':'';if(!paymentMethod){alert('Usa efectivo o transferencia.');return}const c=clientById(clientId);const rows=getPayments();rows.push({id:uid(),clienteId:clientId,cliente:c?.name||'Cliente',date:localDate(),amount,paymentMethod});if(writeArray('zipperPagos',rows)){renderCash();renderHistory()}}
+let pendingDebtPayment=null;
+function addDebtPayment(clientId){
+ const debt=clientDebt(clientId);if(debt<=0)return;
+ const c=clientById(clientId),dialog=$('debtPaymentDialog');
+ if(!dialog){alert('No se pudo abrir el formulario de abono.');return}
+ pendingDebtPayment={clientId,debt};
+ $('debtPaymentClient').textContent=(c?.name||'Cliente')+' · Saldo '+money(debt);
+ $('debtPaymentAmount').value='';
+ $('debtPaymentMethod').value='cash';
+ $('debtPaymentError').textContent='';
+ dialog.classList.remove('hidden');
+ $('debtPaymentAmount').focus();
+}
+function closeDebtPayment(){pendingDebtPayment=null;$('debtPaymentDialog')?.classList.add('hidden')}
+function confirmDebtPayment(){
+ if(!pendingDebtPayment)return;
+ const {clientId}=pendingDebtPayment,debt=clientDebt(clientId),amount=Number($('debtPaymentAmount').value),paymentMethod=$('debtPaymentMethod').value;
+ const error=$('debtPaymentError');
+ if(!Number.isSafeInteger(amount)||amount<=0){error.textContent='Ingresa un monto válido.';return}
+ if(amount>debt){error.textContent='El abono supera el saldo pendiente de '+money(debt)+'.';return}
+ if(!['cash','transfer'].includes(paymentMethod)){error.textContent='Selecciona efectivo o transferencia.';return}
+ const c=clientById(clientId),rows=getPayments();
+ rows.push({id:uid(),clienteId:clientId,cliente:c?.name||'Cliente',date:localDate(),amount,paymentMethod});
+ if(writeArray('zipperPagos',rows)){closeDebtPayment();renderCash();renderHistory()}
+}
+
 let cashRange='day'
 function cashSelectedDate(){return $('cashDate')?.value||localDate()}
 function cashRangeDates(){const d=new Date(cashSelectedDate()+'T12:00:00'),a=new Date(d),b=new Date(d);if(cashRange==='week'){const n=(d.getDay()+6)%7;a.setDate(d.getDate()-n);b.setDate(a.getDate()+6)}else if(cashRange==='fortnight'){a.setDate(d.getDate()<=15?1:16);b.setMonth(d.getMonth()+1,0);if(d.getDate()<=15)b.setDate(15)}else if(cashRange==='month'){a.setDate(1);b.setMonth(d.getMonth()+1,0)}const f=x=>x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');return{start:f(a),end:f(b)}}
@@ -645,6 +670,9 @@ $('newClient').onclick=()=>{resetClientForm();$('clientEditor').scrollIntoView({
 document.querySelectorAll('#historyType button').forEach(b=>b.onclick=()=>{historyType=b.dataset.history;document.querySelectorAll('#historyType button').forEach(x=>x.classList.toggle('active',x===b));renderHistory()});$('historyFrom').onchange=renderHistory;$('historyTo').onchange=renderHistory}
 bind();
 if($('cashExpenseSave'))$('cashExpenseSave').onclick=addCashExpense;
+if($('debtPaymentConfirm'))$('debtPaymentConfirm').onclick=confirmDebtPayment;
+if($('debtPaymentCancel'))$('debtPaymentCancel').onclick=closeDebtPayment;
+if($('debtPaymentDialog'))$('debtPaymentDialog').addEventListener('keydown',e=>{if(e.key==='Escape')closeDebtPayment()});
 migrateVariantInventory();
 repairUltraVariants();
 applyInventoryUpdate();
