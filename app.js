@@ -412,7 +412,7 @@ function renderCash(){
  const expenses=getCashExpenses().filter(x=>inRange(String(x.date||'').slice(0,10)));
  const expensesTotal=expenses.reduce((a,x)=>a+Number(x.amount||0),0);
  const cashAbonos=payments.filter(p=>p.paymentMethod==='cash').reduce((a,p)=>a+Number(p.amount||0),0),transferAbonos=payments.filter(p=>p.paymentMethod==='transfer').reduce((a,p)=>a+Number(p.amount||0),0);
- $('cashSales').textContent=money(sales);$('cashCost').textContent=money(cost);$('cashExpensesTop').textContent=money(expensesTotal);$('cashProfit').textContent=money(profit-expensesTotal);
+ $('cashSales').textContent=money(sales);$('cashCost').textContent=money(cost);$('cashExpensesTop').textContent=money(expensesTotal);$('cashProfit').textContent=money(profit-expensesTotal);if($('cashProfitBreakdown'))$('cashProfitBreakdown').textContent='Ganancia antes de gastos '+money(profit)+' − gastos '+money(expensesTotal)+' = '+money(profit-expensesTotal);
  if($('cashDayTitle'))$('cashDayTitle').textContent=cashRangeLabel();
  const creditSales=rows.filter(s=>paymentMethodOf(s)==='pending'||s.paymentStatus==='pending').reduce((a,s)=>a+saleTotal(s),0);
  const cashReceived=cashSales+cashAbonos,transferReceived=transferSales+transferAbonos;
