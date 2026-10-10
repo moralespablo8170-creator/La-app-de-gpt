@@ -396,7 +396,7 @@ function addDebtPayment(clientId){
  dialog.classList.remove('hidden');
  $('debtPaymentAmount').focus();
 }
-function closeDebtPayment(){pendingDebtPayment=null;$('debtPaymentDialog')?.classList.add('hidden')}
+function closeDebtPayment(){pendingDebtPayment=null;$('debtPaymentDialog')?.classList.add('hidden');$('cashPendingList')?.scrollIntoView({behavior:'smooth',block:'start'})}
 function confirmDebtPayment(){
  if(!pendingDebtPayment)return;
  const {clientId}=pendingDebtPayment,debt=clientDebt(clientId),amount=Number($('debtPaymentAmount').value),paymentMethod=$('debtPaymentMethod').value;
@@ -406,7 +406,7 @@ function confirmDebtPayment(){
  if(!['cash','transfer'].includes(paymentMethod)){error.textContent='Selecciona efectivo o transferencia.';return}
  const c=clientById(clientId),rows=getPayments();
  rows.push({id:uid(),clienteId:clientId,cliente:c?.name||'Cliente',date:localDate(),amount,paymentMethod});
- if(writeArray('zipperPagos',rows)){closeDebtPayment();renderCash();renderHistory()}
+ if(writeArray('zipperPagos',rows)){closeDebtPayment();renderCash();renderHistory();const target=$('cashPaymentsToday');if(target){let notice=$('cashPaymentSuccessNotice');if(!notice){notice=document.createElement('p');notice.id='cashPaymentSuccessNotice';notice.setAttribute('role','status');notice.style.cssText='padding:12px;border:2px solid #16a34a;border-radius:10px;background:#f0fdf4;color:#166534;font-weight:700';target.parentNode.insertBefore(notice,target)}notice.textContent='Abono de '+(c?.name||'cliente')+' por '+money(amount)+' guardado correctamente. Saldo actualizado: '+money(Math.max(0,debt-amount))+'.';notice.scrollIntoView({behavior:'smooth',block:'center'})}}
 }
 
 let cashRange='day'
@@ -681,9 +681,8 @@ $('newClient').onclick=()=>{resetClientForm();$('clientEditor').scrollIntoView({
 document.querySelectorAll('#historyType button').forEach(b=>b.onclick=()=>{historyType=b.dataset.history;document.querySelectorAll('#historyType button').forEach(x=>x.classList.toggle('active',x===b));renderHistory()});$('historyFrom').onchange=renderHistory;$('historyTo').onchange=renderHistory}
 bind();
 if($('cashExpenseSave'))$('cashExpenseSave').onclick=addCashExpense;
-if($('debtPaymentConfirm'))$('debtPaymentConfirm').onclick=confirmDebtPayment;
-if($('debtPaymentCancel'))$('debtPaymentCancel').onclick=closeDebtPayment;
-if($('debtPaymentDialog'))$('debtPaymentDialog').addEventListener('keydown',e=>{if(e.key==='Escape')closeDebtPayment()});
+document.addEventListener('click',e=>{const button=e.target.closest('#debtPaymentConfirm,#debtPaymentCancel');if(!button)return;e.preventDefault();if(button.id==='debtPaymentConfirm')confirmDebtPayment();else closeDebtPayment()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('debtPaymentDialog')?.classList.contains('hidden'))closeDebtPayment()});
 migrateVariantInventory();
 repairUltraVariants();
 applyInventoryUpdate();
