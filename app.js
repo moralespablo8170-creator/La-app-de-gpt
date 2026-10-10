@@ -45,13 +45,7 @@ function effectivePrice(p,qty){let price=Number(p.price)||0,applied=null;const g
 function productLabel(p){return p.name}
 function normalizeClientFields(){if(!$('clientRut')||!$('clientPhone'))return;$('clientRut').value=formatRut($('clientRut').value);$('clientPhone').value=formatPhone($('clientPhone').value)}
 function showView(name){
-  if(name!=='clients'&&$('clientsView')&&!$('clientsView').classList.contains('hidden')){
-    normalizeClientFields();
-    if(!validateClientField(true)){
-      $('clientValidation').scrollIntoView({behavior:'smooth',block:'center'});
-      return
-    }
-  }
+  // Changing sections must not be blocked by an unfinished client form.
   currentView=name;const map={home:'homeView',cash:'cashView',products:'productsView',clients:'clientsView',history:'historyView'};Object.entries(map).forEach(([k,id])=>$(id).classList.toggle('hidden',k!==name));const labels={home:'Inicio',cash:'Caja diaria',products:'Productos',clients:'Clientes',history:'Historial'};$('pageTitle').textContent=labels[name];document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.id===name+'Tab'));window.scrollTo(0,0);if(name==='home')renderHome();if(name==='cash')renderCash();if(name==='products'){renderProductForm();renderInventory();renderCategories()}if(name==='clients'){renderClients()}if(name==='history')renderHistory()}
 function bindNav(){
   [['homeTab','home'],['cashTab','cash'],['productsTab','products'],['clientsTab','clients'],['historyTab','history']]
