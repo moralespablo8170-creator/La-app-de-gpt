@@ -240,3 +240,12 @@
 .card > .section-title .section-icon {display:inline-flex;align-items:center;justify-content:center;flex:none;width:38px;height:38px;background:#fff;border:1px solid #b4cffb;border-radius:10px;font-size:23px;line-height:1}
 .card > .section-title h2,.card > .section-title h3 {font-size:clamp(14px,3.6vw,17px);font-weight:700;color:#334155;line-height:1.3;margin:2px 0}
 .card > .section-title {background:#dceaff;border-left:6px solid #1d4ed8}
+
+.invoice-send-flag{display:block;background:#fee2e2;color:#991b1b;border:2px solid #dc2626;border-radius:8px;padding:6px 9px;font-size:13px;font-weight:950;margin-top:7px}
+.invoice-done-flag{display:block;color:#166534;font-weight:800;margin-top:6px}
+.invoice-modal-panel{max-width:760px;max-height:90vh;overflow-y:auto}
+.invoice-modal-panel p{margin:8px 0}
+.invoice-table-scroll{overflow-x:auto;margin:14px 0}
+.invoice-table{width:100%;border-collapse:collapse;font-size:13px}
+.invoice-table th,.invoice-table td{border-bottom:1px solid #d1d5db;padding:8px 5px;text-align:left}
+.invoice-table th{background:#dbeafe;color:#1e3a8a}
