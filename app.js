@@ -435,7 +435,9 @@ function renderCash(){
 }
 function periodLabel(){return({day:'Hoy',week:'Esta semana',month:'Este mes',year:'Este año'})[statPeriod]||'Período seleccionado'}
 function renderStats(){
-  const rows=statsPeriodRows(),total=rows.reduce((a,s)=>a+saleTotal(s),0),cost=rows.reduce((a,s)=>a+saleCost(s),0),profit=total-cost,tickets=rows.length,avg=tickets?total/tickets:0;
+  const rows=statsPeriodRows(),total=rows.reduce((a,s)=>a+saleTotal(s),0),cost=rows.reduce((a,s)=>a+saleCost(s),0),grossProfit=total-cost,tickets=rows.length,avg=tickets?total/tickets:0;
+  const periodExpenses=getCashExpenses().filter(x=>periodMatch(String(x.date||'').slice(0,10),statPeriod)).reduce((a,x)=>a+Number(x.amount||0),0);
+  const profit=grossProfit-periodExpenses;
   let previous=0;
   if(statPeriod==='day'){const d=new Date(localDate()+'T12:00:00');d.setDate(d.getDate()-1);const key=d.toISOString().slice(0,10);previous=cashFilteredSales().filter(s=>saleDate(s)===key).reduce((a,s)=>a+saleTotal(s),0)}
   else if(statPeriod==='week'){const end=new Date(localDate()+'T12:00:00');end.setDate(end.getDate()-((end.getDay()+6)%7)-1);const start=new Date(end);start.setDate(start.getDate()-6);previous=cashFilteredSales().filter(s=>{const d=new Date(saleDate(s)+'T12:00:00');return d>=start&&d<=end}).reduce((a,s)=>a+saleTotal(s),0)}
@@ -450,7 +452,7 @@ function renderStats(){
   else rows.forEach(s=>{const k=keyFor(s);if(!out[k])out[k]={qty:0,total:0,cost:0,tickets:0};out[k].qty+=1;out[k].tickets+=1;out[k].total+=saleTotal(s);out[k].cost+=saleCost(s)});
   const arr=Object.entries(out).map(([k,v])=>({...v,name:k,profit:v.total-v.cost,margin:v.total?(v.total-v.cost)/v.total*100:0})).sort((a,b)=>b.total-a.total);
   const heading=statType==='day'?'Comparación por día de reparto':statType==='route'?'Comparación Ruta A vs Ruta B':statType==='client'?'Ranking de clientes':'Ranking de productos';
-  $('statsOutput').innerHTML+='<div class="stats-subtitle">'+heading+'</div>'+(arr.length?arr.slice(0,20).map((v,i)=>'<div class="stat-line"><div><strong>'+(i+1)+'. '+esc(v.name)+'</strong><small>'+ (statType==='product'?v.qty+' unidades':' '+v.tickets+' comprobantes')+' · Ganancia '+money(v.profit)+' · Margen '+v.margin.toFixed(1)+'%</small></div><strong>'+money(v.total)+'</strong></div>').join(''):'<p class="muted">No hay datos para esta selección.</p>');
+  $('statsOutput').innerHTML+='<div class="stats-subtitle">'+heading+'</div>'+(arr.length?arr.slice(0,20).map((v,i)=>'<div class="stat-line"><div><strong>'+(i+1)+'. '+esc(v.name)+'</strong><small>'+ (statType==='product'?v.qty+' unidades':' '+v.tickets+' comprobantes')+' · Ganancia bruta '+money(v.profit)+' · Margen '+v.margin.toFixed(1)+'%</small></div><strong>'+money(v.total)+'</strong></div>').join(''):'<p class="muted">No hay datos para esta selección.</p>');
   try{renderStatsChart()}catch(e){console.error('Gráfico comparativo:',e);if($('statsChart'))$('statsChart').textContent='No se pudo mostrar el gráfico comparativo.'}
   try{renderTrendChart()}catch(e){console.error('Gráfico de tendencia:',e);if($('statsTrendChart'))$('statsTrendChart').textContent='No se pudo mostrar el gráfico de tendencia.'}
 }
