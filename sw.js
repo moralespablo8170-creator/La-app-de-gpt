@@ -1,9 +1,9 @@
-const CACHE_NAME = 'zipper-app-pwa-20261010-clientes-v12';
+const CACHE_NAME = 'zipper-app-pwa-20261010-punto-seguro-v13';
 const APP_SHELL = [
   "./",
   "./index.html",
   "./styles.css?v=zipper-20261010-clientes-v12",
-  "./app.js?v=zipper-20261010-clientes-v12",
+  "./app.js?v=zipper-20261010-punto-seguro-v13",
   "./route-position-migration.js?v=1.2",
   "./route-position-migration-b.js?v=1.0",
   "./herramientas.js?v=8",
