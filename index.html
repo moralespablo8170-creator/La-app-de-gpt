@@ -714,15 +714,17 @@ function bindImmediateValidation(id){
   })
 }
 function saveClient(){
- normalizeClientFields();if(!validateClientField(true))return;
+ const fail=msg=>{const el=$('clientValidation');el.textContent=msg;el.className='validation error';el.scrollIntoView({behavior:'smooth',block:'center'});alert(msg)};
+ normalizeClientFields();if(!validateClientField(true)){fail($('clientValidation').textContent||'Corrige los datos del cliente.');return;}
  const name=$('clientName').value.trim(),address=$('clientAddress').value.trim();
- if(!name||!address){$('clientValidation').textContent='Nombre y dirección son obligatorios.';return}
+ if(!name||!address){fail('Nombre y dirección son obligatorios.');return}
  const rut=$('clientRut').value.trim().toUpperCase(),cs=getClients(),id=editingClientId||uid();
  let current=cs.find(c=>String(c.id)===String(id));
  const data={name,rut,razonSocial:$('clientBusinessName').value.trim(),comuna:$('clientComuna').value.trim(),sendInvoice:$('clientSendInvoice').checked,phone:($('clientPhone').value.replace(/\D/g,'')==='569'?'':$('clientPhone').value.replace(/\D/g,'')),address,route:'',active:true};
  const selected=['A','B'].filter(w=>$('clientRoute'+w).checked);
- if(!selected.length){$('clientValidation').textContent='Selecciona al menos una semana de visita.';return}
- for(const w of selected){if(!$('clientDay'+w).value){$('clientValidation').textContent='Selecciona el día de la semana '+w+'.';return}}
+ if(!selected.length){fail('Selecciona al menos una semana de visita.');return}
+ for(const w of selected){if(!$('clientDay'+w).value){fail('Selecciona el día de la semana '+w+'.');return}}
+ const previousRoutes={A:current?clientRoute(current,'A'):null,B:current?clientRoute(current,'B'):null};
  if(current)Object.assign(current,data);else{current={id,...data};cs.push(current)}
  for(const week of ['A','B']){
   if(!$('clientRoute'+week).checked){
@@ -732,7 +734,7 @@ function saveClient(){
   }
   const day=$('clientDay'+week).value,raw=String($('clientPosition'+week).value||'').trim();
   const wanted=raw?Math.max(1,parseInt(raw,10)||1):null;
-  const oldRoute=clientRoute(current,week);
+  const oldRoute=previousRoutes[week];
   const group=cs.filter(c=>String(c.id)!==String(id)&&clientRoute(c,week)&&norm(clientRoute(c,week).day)===norm(day));
   const insertAt=wanted||((oldRoute&&norm(oldRoute.day)===norm(day)&&oldRoute.position<999999)?oldRoute.position:group.reduce((m,c)=>Math.max(m,clientRoute(c,week).position===999999?0:clientRoute(c,week).position),0)+1);
   if(!oldRoute||norm(oldRoute.day)!==norm(day)||oldRoute.position!==insertAt){
@@ -740,7 +742,7 @@ function saveClient(){
   }
   setClientRoute(current,week,day,insertAt);
  }
- if(writeArray('zipperClientes',cs)){const savedName=name,wasEditing=!!editingClientId;resetClientForm();$('clientSearchName').value='';$('clientSearchAddress').value='';$('filterWeek').value='';$('filterDay').value='';renderClients();renderHome();showView('clients');window.scrollTo({top:0,behavior:'smooth'});$('clientValidation').textContent=(wasEditing?'Cliente actualizado correctamente: ':'Cliente guardado correctamente: ')+savedName;$('clientValidation').className='validation ok';setTimeout(()=>$('clientSearchName').focus(),100)}
+ if(writeArray('zipperClientes',cs)){const savedName=name,wasEditing=!!editingClientId;resetClientForm();$('clientSearchName').value='';$('clientSearchAddress').value='';$('filterWeek').value='';$('filterDay').value='';renderClients();renderHome();showView('clients');$('clientSearchName').scrollIntoView({behavior:'smooth',block:'start'});$('clientValidation').textContent=(wasEditing?'Cliente actualizado correctamente: ':'Cliente guardado correctamente: ')+savedName;$('clientValidation').className='validation ok';setTimeout(()=>{$('clientSearchName').focus({preventScroll:true});$('clientSearchName').scrollIntoView({behavior:'smooth',block:'start'})},200)}
 }
 function deleteClient(id){const c=clientById(id);if(!c)return;confirmDelete('Borrar cliente','¿Estás seguro que quieres borrar el cliente "'+c.name+'"? Esta acción no se puede deshacer.',()=>{const cs=getClients().filter(x=>String(x.id)!==String(id));if(writeArray('zipperClientes',cs)){resetClientForm();renderClients();renderHome();$('clientValidation').textContent='Cliente borrado correctamente.';$('clientValidation').className='validation ok'}})}
 function editClient(id){const c=clientById(id);if(!c)return;editingClientId=c.id;$('clientFormTitle').textContent='Editar cliente';$('clientName').value=c.name;$('clientRut').value=c.rut;$('clientPhone').value=formatPhone(c.phone);$('clientAddress').value=c.address;$('clientBusinessName').value=c.razonSocial||'';$('clientComuna').value=c.comuna||'';$('clientSendInvoice').checked=!!c.sendInvoice;for(const w of ['A','B']){const r=clientRoute(c,w);$('clientRoute'+w).checked=!!r;$('clientDay'+w).value=r?.day||'';$('clientPosition'+w).value=r&&r.position<999999?r.position:'';}$('cancelClient').classList.remove('hidden');if($('deleteClient'))$('deleteClient').classList.remove('hidden');validateClientField(false);$('clientEditor').scrollIntoView({behavior:'smooth',block:'start'})}
