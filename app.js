@@ -399,10 +399,16 @@ function renderCash(){
  const cashAbonos=payments.filter(p=>p.paymentMethod==='cash').reduce((a,p)=>a+Number(p.amount||0),0),transferAbonos=payments.filter(p=>p.paymentMethod==='transfer').reduce((a,p)=>a+Number(p.amount||0),0);
  $('cashSales').textContent=money(sales);$('cashCost').textContent=money(cost);$('cashProfit').textContent=money(profit);
  if($('cashDayTitle'))$('cashDayTitle').textContent=cashRangeLabel();
+ const creditSales=rows.filter(s=>paymentMethodOf(s)==='pending'||s.paymentStatus==='pending').reduce((a,s)=>a+saleTotal(s),0);
+ const cashReceived=cashSales+cashAbonos,transferReceived=transferSales+transferAbonos;
  if($('cashPaymentSummary'))$('cashPaymentSummary').innerHTML=
-  '<div><span>Efectivo recibido</span><strong>'+money(cashSales+cashAbonos)+'</strong><small>Ventas '+money(cashSales)+' · Abonos '+money(cashAbonos)+'</small></div>'+
-  '<div><span>Transferencias recibidas</span><strong>'+money(transferSales+transferAbonos)+'</strong><small>Ventas '+money(transferSales)+' · Abonos '+money(transferAbonos)+'</small></div>'+
-  '<div><span>Dinero recibido</span><strong>'+money(cashSales+transferSales+cashAbonos+transferAbonos)+'</strong><small>Incluye cobros de deudas anteriores</small></div>';
+  '<div style="grid-column:1/-1;padding:14px;border:2px solid #16a34a;border-radius:12px;background:rgba(22,163,74,.08)"><span style="font-weight:700">EFECTIVO ESPERADO EN MANO</span><strong style="display:block;font-size:clamp(26px,6vw,38px);color:#15803d;margin:8px 0">'+money(cashReceived)+'</strong><small>Dinero recibido en efectivo durante el período. No incluye efectivo inicial ni retiros que no estén registrados.</small></div>'+
+  '<div><span>Ventas pagadas en efectivo</span><strong>'+money(cashSales)+'</strong><small>Dinero de ventas de esta fecha</small></div>'+
+  '<div><span>Abonos recibidos en efectivo</span><strong>+ '+money(cashAbonos)+'</strong><small>Pagos parciales y cobros de deudas</small></div>'+
+  '<div><span>Total transferido al banco</span><strong>'+money(transferReceived)+'</strong><small>Ventas '+money(transferSales)+' + abonos '+money(transferAbonos)+'; no es efectivo en mano</small></div>'+
+  '<div><span>Ventas a crédito del período</span><strong>'+money(creditSales)+'</strong><small>Importe original vendido como pendiente o con abono parcial; los abonos se muestran aparte</small></div>'+
+  '<div><span>Total recibido (todos los medios)</span><strong>'+money(cashReceived+transferReceived)+'</strong><small>Efectivo + transferencias, incluidos abonos. No confundir con efectivo físico.</small></div>'+
+  '<div style="grid-column:1/-1"><small><strong>Cómo cuadrar:</strong> efectivo de ventas '+money(cashSales)+' + abonos en efectivo '+money(cashAbonos)+' = <strong>'+money(cashReceived)+'</strong>. Si llevabas sencillo inicial o retiraste dinero, debes ajustarlo por separado.</small></div>';
  const debts=debtClients();
  if($('cashPendingList'))$('cashPendingList').innerHTML=debts.length?debts.map(x=>'<article class="history-row"><div><strong>'+esc(x.name)+'</strong><span>Saldo pendiente actual</span></div><div class="actions-small"><strong>'+money(x.debt)+'</strong><button class="primary debt-payment" data-id="'+esc(x.id)+'" type="button">Registrar abono</button></div></article>').join(''):'<p class="muted">No hay clientes con saldo pendiente.</p>';
  document.querySelectorAll('.debt-payment').forEach(b=>b.onclick=()=>addDebtPayment(b.dataset.id));
