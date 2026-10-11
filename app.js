@@ -683,15 +683,6 @@ async function saveReceiptPdf(){
  if(!preparedReceipt){alert('Primero selecciona un comprobante.');return}
  const button=$('receiptSavePdf');if(button){button.disabled=true;button.textContent='Preparando PDF...'}
  try{
-  if(!window.jspdf?.jsPDF){
-   await new Promise((resolve,reject)=>{
-    const script=document.createElement('script');
-    script.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js';
-    script.onload=resolve;script.onerror=()=>reject(new Error('No se pudo cargar el generador PDF. Comprueba tu conexión a internet.'));
-    document.head.appendChild(script);
-   });
-  }
-  const {jsPDF}=window.jspdf;
   const sale=preparedReceipt, width=80, margin=5, usable=70, rows=[];
   const wrap=(value,size=9)=>{const text=String(value??'');const limit=size===11?27:35;const words=text.split(/\s+/);let line='';for(const word of words){if((line+' '+word).trim().length>limit){if(line)rows.push({text:line,size});line=word;while(line.length>limit){rows.push({text:line.slice(0,limit),size});line=line.slice(limit)}}else line=(line+' '+word).trim()}if(line)rows.push({text:line,size})};
   rows.push({text:'DISTRIBUIDORA ZIPPER',size:11,bold:true});
@@ -701,10 +692,34 @@ async function saveReceiptPdf(){
   (sale.items||[]).forEach(item=>{wrap(item.desc+(item.promotion?' · OFERTA':''));wrap(item.qty+' x '+money(item.price)+' = '+money(Math.round(Number(item.qty)*Number(item.price))),9)});
   rows.push({separator:true});rows.push({text:'TOTAL: '+money(saleTotal(sale)),size:11,bold:true});
   const height=Math.max(65,12+rows.reduce((sum,r)=>sum+(r.separator?2: r.size===11?6:4.7),0)+8);
-  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:[width,height],compress:true});
-  let y=8;
-  for(const row of rows){if(row.separator){doc.setLineWidth(.2);doc.line(margin,y,75,y);y+=2;continue}doc.setFont('helvetica',row.bold?'bold':'normal');doc.setFontSize(row.size);doc.text(row.text,margin,y,{maxWidth:usable});y+=row.size===11?6:4.7}
-  doc.save('Zipper-ticket-'+String(sale.folio||'venta').replace(/[^a-zA-Z0-9_-]/g,'')+'.pdf');
+  // Generador PDF local: sin CDN, sin conexión y sin dependencias externas.
+  const pt=72/25.4, pageW=width*pt, pageH=height*pt;
+  const clean=t=>String(t??'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^\x20-\x7e]/g,'-').replace(/([\\()])/g,'\\$1');
+  let y=8, commands=[];
+  for(const row of rows){
+   if(row.separator){const yy=(pageH-y*pt).toFixed(2);commands.push('0.4 w '+(margin*pt).toFixed(2)+' '+yy+' m '+(75*pt).toFixed(2)+' '+yy+' l S');y+=2;continue}
+   const font=row.bold?'F2':'F1', yy=(pageH-y*pt).toFixed(2);
+   commands.push('BT /'+font+' '+row.size+' Tf 1 0 0 1 '+(margin*pt).toFixed(2)+' '+yy+' Tm ('+clean(row.text)+') Tj ET');
+   y+=row.size===11?6:4.7;
+  }
+  const stream=commands.join('\\n')+'\\n';
+  const objects=[
+   '<< /Type /Catalog /Pages 2 0 R >>',
+   '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+   '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+pageW.toFixed(2)+' '+pageH.toFixed(2)+'] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>',
+   '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+   '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>',
+   '<< /Length '+stream.length+' >>\\nstream\\n'+stream+'endstream'
+  ];
+  let pdf='%PDF-1.4\\n', offsets=[0];
+  for(let i=0;i<objects.length;i++){offsets.push(pdf.length);pdf+=(i+1)+' 0 obj\\n'+objects[i]+'\\nendobj\\n'}
+  const xref=pdf.length;pdf+='xref\\n0 '+(objects.length+1)+'\\n0000000000 65535 f \\n';
+  for(let i=1;i<offsets.length;i++)pdf+=String(offsets[i]).padStart(10,'0')+' 00000 n \\n';
+  pdf+='trailer\\n<< /Size '+(objects.length+1)+' /Root 1 0 R >>\\nstartxref\\n'+xref+'\\n%%EOF';
+  const bytes=new Uint8Array(pdf.length);for(let i=0;i<pdf.length;i++)bytes[i]=pdf.charCodeAt(i)&255;
+  const url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));
+  const link=document.createElement('a');link.href=url;link.download='Zipper-ticket-'+String(sale.folio||'venta').replace(/[^a-zA-Z0-9_-]/g,'')+'.pdf';
+  document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
  }catch(error){alert('No se pudo generar el PDF: '+(error?.message||error))}
  finally{if(button){button.disabled=false;button.textContent='Guardar PDF para Fun Print'}}
 }
