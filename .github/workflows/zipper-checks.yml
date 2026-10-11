@@ -14,3 +14,4 @@ jobs:
       - run: node tests/check-static.mjs
       - run: node tests/check-migration-runtime.mjs
       - run: node tests/check-backup-runtime.mjs
+      - run: node tests/check-sales-arithmetic.mjs
