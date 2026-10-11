@@ -110,6 +110,12 @@ window.zipperBackupDirect=function(){
    parsed[k]=JSON.parse(file.data[k]);
    if(!Array.isArray(parsed[k]))throw new Error(k+' no tiene un formato válido.');
   });
+  // Los espacios de prueba antiguos nunca deben sobreescribir la base principal.
+  // Se conservan en el respaldo, pero se ignoran al restaurar para evitar
+  // reintroducir fichas obsoletas de ensayos anteriores.
+  var restoreKeys=Object.keys(file.data).filter(function(k){
+   return k.indexOf('zipper')===0&&k.indexOf('::')===-1&&k.indexOf('zipperRespaldo')!==0&&typeof file.data[k]==='string';
+  });
   // Validar identidades antes de tocar el almacenamiento actual.
   var ids=new Set();
   parsed.zipperClientes.forEach(function(c,i){
@@ -124,14 +130,12 @@ window.zipperBackupDirect=function(){
   localStorage.setItem('zipperRespaldoAntesRestauracion',JSON.stringify({createdAt:new Date().toISOString(),data:before}));
   try{
    Object.keys(localStorage).filter(function(k){return k.indexOf('zipper')===0&&k.indexOf('zipperRespaldo')!==0}).forEach(function(k){localStorage.removeItem(k);});
-   Object.keys(file.data).forEach(function(k){if(k.indexOf('zipper')===0&&k.indexOf('zipperRespaldo')!==0&&typeof file.data[k]==='string')localStorage.setItem(k,file.data[k]);});
+   restoreKeys.forEach(function(k){localStorage.setItem(k,file.data[k]);});
    var s=JSON.parse(localStorage.getItem('zipperComprobantes')||'[]');
    var cl=JSON.parse(localStorage.getItem('zipperClientes')||'[]');
    var pr=JSON.parse(localStorage.getItem('zipperProductos')||'[]');
    if(s.length!==parsed.zipperComprobantes.length||cl.length!==parsed.zipperClientes.length||pr.length!==parsed.zipperProductos.length)throw new Error('El teléfono no confirmó todos los datos escritos.');
-   Object.keys(file.data).forEach(function(k){
-    if(k.indexOf('zipper')===0&&k.indexOf('zipperRespaldo')!==0&&typeof file.data[k]==='string'&&localStorage.getItem(k)!==file.data[k])throw new Error('No se confirmó la escritura de '+k+'.');
-   });
+   restoreKeys.forEach(function(k){if(localStorage.getItem(k)!==file.data[k])throw new Error('No se confirmó la escritura de '+k+'.');});
   }catch(err){
    try{
     Object.keys(localStorage).filter(function(k){return k.indexOf('zipper')===0&&k.indexOf('zipperRespaldo')!==0}).forEach(function(k){localStorage.removeItem(k);});
