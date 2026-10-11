@@ -47,6 +47,10 @@ async function restoreZipperBackup(input){
     const restoredClients=JSON.parse(localStorage.getItem('zipperClientes')||'[]');
     const restoredProducts=JSON.parse(localStorage.getItem('zipperProductos')||'[]');
     if(restoredSales.length!==sales.length||restoredClients.length!==clients.length||restoredProducts.length!==products.length)throw Error('La verificación de los datos restaurados falló.');
+    // Comprobar todos los valores, no solo cantidades: evita aceptar registros truncados o modificados.
+    const expectedKeys=Object.keys(file.data).sort();
+    const actualKeys=zipperDataKeys(localStorage).sort();
+    if(expectedKeys.length!==actualKeys.length||expectedKeys.some((k,i)=>k!==actualKeys[i]||localStorage.getItem(k)!==file.data[k]))throw Error('La verificación exacta del respaldo restaurado falló.');
     /* Evita que la carga inicial trate el respaldo restaurado como una instalación nueva y reemplace datos. */
     const seedVersion=file.data.zipperSeedVersion;if(seedVersion!=null)localStorage.setItem('zipperSeedVersion',seedVersion);
     $('backupStatus').textContent='RESTAURACIÓN CORRECTA: '+restoredSales.length+' ventas, '+restoredClients.length+' clientes y '+restoredProducts.length+' productos. Recargando…';
