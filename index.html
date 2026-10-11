@@ -122,7 +122,7 @@ window.zipperBackupDirect=function(){
   uniqueIds(parsed.zipperProductos,'Productos');
   uniqueIds(parsed.zipperComprobantes,'Comprobantes');
   parsed.zipperComprobantes.forEach(function(x){
-   if(x.clientId&&!clientIds.has(x.clientId))throw new Error('Comprobante con cliente inexistente: '+x.id);
+   if((x.clienteId||x.clientId)&&!clientIds.has(x.clienteId||x.clientId))throw new Error('Comprobante con cliente inexistente: '+x.id);
   });
   Object.keys(data).forEach(function(k){
    if(k.indexOf('zipper')!==0||typeof data[k]!=='string')throw new Error('Clave o contenido no permitido: '+k);
@@ -130,7 +130,7 @@ window.zipperBackupDirect=function(){
    if(/(?:abono|pago|visitad)/i.test(k)){
     var v;try{v=JSON.parse(data[k])}catch(e){throw new Error('Datos inválidos en '+k)}
     if(Array.isArray(v))v.forEach(function(x){
-     if(x&&typeof x==='object'&&x.clientId&&!clientIds.has(x.clientId))throw new Error('Referencia de cliente inexistente en '+k);
+     if(x&&typeof x==='object'&&(x.clienteId||x.clientId)&&!clientIds.has(x.clienteId||x.clientId))throw new Error('Referencia de cliente inexistente en '+k);
     });
    }
   });
