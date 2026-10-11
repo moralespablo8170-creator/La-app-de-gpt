@@ -693,7 +693,7 @@ async function saveReceiptPdf(){
   }
   const {jsPDF}=window.jspdf;
   const sale=preparedReceipt, width=80, margin=5, usable=70, rows=[];
-  const wrap=(value,size=9)=>{const text=String(value??'');const limit=size===11?27:35;const words=text.split(/\\s+/);let line='';for(const word of words){if((line+' '+word).trim().length>limit){if(line)rows.push({text:line,size});line=word;while(line.length>limit){rows.push({text:line.slice(0,limit),size});line=line.slice(limit)}}else line=(line+' '+word).trim()}if(line)rows.push({text:line,size})};
+  const wrap=(value,size=9)=>{const text=String(value??'');const limit=size===11?27:35;const words=text.split(/\s+/);let line='';for(const word of words){if((line+' '+word).trim().length>limit){if(line)rows.push({text:line,size});line=word;while(line.length>limit){rows.push({text:line.slice(0,limit),size});line=line.slice(limit)}}else line=(line+' '+word).trim()}if(line)rows.push({text:line,size})};
   rows.push({text:'DISTRIBUIDORA ZIPPER',size:11,bold:true});
   wrap('Comprobante #'+sale.folio+' · '+sale.fecha);
   wrap(sale.cliente,9);
