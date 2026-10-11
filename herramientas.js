@@ -63,7 +63,7 @@ async function restoreZipperBackup(input){
     alert('RESPALDO RESTAURADO CORRECTAMENTE. Se recuperaron '+restoredSales.length+' ventas.');
     setTimeout(()=>window.location.reload(),500);
    }catch(e){
-    if(restoreStarted){try{zipperDataKeys(localStorage).forEach(k=>localStorage.removeItem(k));Object.entries(before).forEach(([k,v])=>localStorage.setItem(k,v));}catch(rollbackError){alert('ATENCIÓN: no se pudo recuperar automáticamente todo el estado anterior. Conserva el respaldo y no hagas nuevas ventas hasta revisarlo.')}}
+    if(restoreStarted){try{zipperDataKeys(localStorage).forEach(k=>localStorage.removeItem(k));Object.entries(before).forEach(([k,v])=>localStorage.setItem(k,v));if(Object.entries(before).some(([k,v])=>localStorage.getItem(k)!==v))throw Error('Recuperación incompleta');}catch(rollbackError){alert('ATENCIÓN: no se pudo recuperar automáticamente todo el estado anterior. Conserva el respaldo y no hagas nuevas ventas hasta revisarlo.')}}
     $('backupStatus').textContent='ERROR AL RESTAURAR: '+(e&&e.message?e.message:e);
     alert($('backupStatus').textContent);
    }
