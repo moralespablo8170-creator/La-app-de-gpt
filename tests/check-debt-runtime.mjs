@@ -1,0 +1,16 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+const src=fs.readFileSync(new URL('../app.js',import.meta.url),'utf8');
+const take=(a,b)=>{const i=src.indexOf('function '+a+'('),j=src.indexOf('function '+b+'(',i+1);assert(i>=0&&j>i,a+' missing');return src.slice(i,j)};
+const arithmetic=take('saleTotal','saleCost')+take('saleCost','saleProfit')+take('saleProfit','saleDate');
+const method=take('paymentMethodOf','renderCash');
+const debt=take('clientDebt','debtClients');
+const sales=[{id:'s1',clienteId:'c1',paymentMethod:'pending',items:[{qty:2,price:500}]},{id:'s2',clienteId:'c1',paymentMethod:'cash',items:[{qty:1,price:300}]},{id:'s3',clienteId:'c2',paymentMethod:'pending',items:[{qty:1,price:900}]}];
+const payments=[{clienteId:'c1',amount:250},{clienteId:'c2',amount:100}];
+const clientDebt=new Function('getSales','getPayments',arithmetic+method+debt+';return clientDebt')(()=>sales,()=>payments);
+assert.equal(clientDebt('c1'),750);
+assert.equal(clientDebt('c2'),800);
+assert.equal(clientDebt('missing'),0);
+payments.push({clienteId:'c1',amount:750});
+assert.equal(clientDebt('c1'),0);
+console.log('Four debt and partial-payment scenarios passed.');
