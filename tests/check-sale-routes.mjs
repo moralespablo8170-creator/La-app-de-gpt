@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+const src=fs.readFileSync(new URL('../app.js',import.meta.url),'utf8');
+const fragment=src.match(/const activeRoute=viewedRoute\(\);const assignedActiveWeek=.*?const clientDay=.*?;/)?.[0];
+assert(fragment,'sale route attribution block missing');
+const choose=new Function('viewedRoute','clientRoute','c',fragment+'return {week:clientWeek,day:clientDay}');
+const c={routeWeek:'A',routeDay:'Lunes',routeAssignments:{A:{day:'Lunes',position:1},B:{day:'Jueves',position:4}}};
+const route=(client,week)=>client.routeAssignments[week]||null;
+assert.deepEqual(choose(()=>({week:'B',day:'Jueves'}),route,c),{week:'B',day:'Jueves'});
+assert.deepEqual(choose(()=>({week:'A',day:'Lunes'}),route,c),{week:'A',day:'Lunes'});
+assert.deepEqual(choose(()=>({week:'B',day:'Martes'}),route,c),{week:'A',day:'Lunes'});
+console.log('Three active route attribution scenarios passed.');
