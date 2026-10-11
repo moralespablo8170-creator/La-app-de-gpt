@@ -686,10 +686,10 @@ async function saveReceiptPdf(){
   const sale=preparedReceipt, width=80, margin=4, usable=72, rows=[];
   const wrap=(value,size=13,bold=false)=>{const text=String(value??'');const limit=size===15?21:25;const words=text.split(/\s+/);let line='';for(const word of words){if((line+' '+word).trim().length>limit){if(line)rows.push({text:line,size,bold});line=word;while(line.length>limit){rows.push({text:line.slice(0,limit),size,bold});line=line.slice(limit)}}else line=(line+' '+word).trim()}if(line)rows.push({text:line,size,bold})};
   rows.push({text:'DISTRIBUIDORA ZIPPER',size:15,bold:true});
-  wrap('Comprobante #'+sale.folio+' · '+sale.fecha);
+  wrap('Comprobante #'+sale.folio+' - '+sale.fecha,13,true);
   wrap(sale.cliente,13,true);
   rows.push({spacer:true});
-  (sale.items||[]).forEach(item=>{wrap(item.desc+(item.promotion?' · OFERTA':''),13,true);wrap(item.qty+' x '+money(item.price)+' = '+money(Math.round(Number(item.qty)*Number(item.price))) ,13)});
+  (sale.items||[]).forEach(item=>{wrap(item.desc+(item.promotion?' · OFERTA':''),13,true);wrap(item.qty+' x '+money(item.price)+' = '+money(Math.round(Number(item.qty)*Number(item.price))),13,true)});
   rows.push({spacer:true});rows.push({text:'TOTAL: '+money(saleTotal(sale)),size:14,bold:true});
   const height=Math.max(35,9+rows.reduce((sum,r)=>sum+(r.spacer?2: r.size===15?7.4:6.6),0)+8);
   // Generador PDF local: sin CDN, sin conexión y sin dependencias externas.
@@ -699,7 +699,7 @@ async function saveReceiptPdf(){
   for(const row of rows){
    if(row.spacer){y+=2;continue}
    const font=row.bold?'F2':'F1', yy=(pageH-y*pt).toFixed(2);
-   commands.push('BT /'+font+' '+row.size+' Tf 1 0 0 1 '+(margin*pt).toFixed(2)+' '+yy+' Tm ('+clean(row.text)+') Tj ET');
+   commands.push('BT /'+font+' '+row.size+' Tf 2 Tr 0.22 w 1 0 0 1 '+(margin*pt).toFixed(2)+' '+yy+' Tm ('+clean(row.text)+') Tj ET');
    y+=row.size===15?7.4:6.6;
   }
   const stream=commands.join('\n')+'\n';
