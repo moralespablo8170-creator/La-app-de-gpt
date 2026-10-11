@@ -287,7 +287,7 @@ function loadSeed(){return fetch('./data/zipper-seed.json',{cache:'no-store'}).t
    const a=address(src.address),n=key(src.name);
    const sourceKey=src.week+'|'+src.day+'|'+src.position;
    let matches=clients.filter(c=>c.zzzSourceKeys&&c.zzzSourceKeys.includes(sourceKey));
-   if(matches.length!==1)matches=clients.filter(c=>a&&address(c.address)===a);
+   if(matches.length!==1)matches=clients.filter(c=>n&&key(c.name)===n&&a&&address(c.address)===a);
    if(matches.length!==1)matches=clients.filter(c=>n&&key(c.name)===n&&a&&address(c.address)===a);
    if(matches.length!==1&&a.length>=7)matches=clients.filter(c=>n&&key(c.name)===n&&address(c.address)&& (address(c.address).startsWith(a)||a.startsWith(address(c.address))));
    // Recuperar una ficha provisional creada por migraciones anteriores, sin
