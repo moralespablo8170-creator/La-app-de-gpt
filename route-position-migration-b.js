@@ -12,7 +12,7 @@ const usedByDay={},lastByDay={};rows.forEach(r=>{const day=r[0],requested=Number
 // arbitrariamente el primer homónimo: Cecy y otros pueden ser locales distintos.
 const sameDay=clients.filter(x=>key(x.name)===key(name)&&x.routeAssignments?.B&&normLocal(x.routeAssignments.B.day)===normLocal(day));
 let c=sameDay.find(x=>Number(x.routeAssignments.B.position)===pos);
-if(!c&&sameDay.length===1)c=sameDay[0];
+// No reasignar una ficha existente a otra posición solo por coincidir el nombre.
 if(!c&&sameDay.length>1)return; // Ambiguo: conservar todas las fichas.
 if(!c){
  const unassigned=clients.filter(x=>key(x.name)===key(name)&&!x.routeAssignments?.B);
