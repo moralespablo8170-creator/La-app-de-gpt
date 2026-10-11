@@ -310,6 +310,13 @@ function loadSeed(){return fetch('./data/zipper-seed.json',{cache:'no-store'}).t
    }
    // A shared RUT never merges different premises.
    let c=matches.length===1?matches[0]:null;
+   // No unir fichas si ambas tienen RUT diferentes, aun cuando coincidan
+   // dirección o referencia de importación.
+   if(c){
+    const currentRut=String(c.rut||'').replace(/[^0-9k]/gi,'').toLowerCase();
+    const incomingRut=String(src.rut||'').replace(/[^0-9k]/gi,'').toLowerCase();
+    if(currentRut&&incomingRut&&currentRut!==incomingRut)c=null;
+   }
    if(!c){c={id:uid(),name:src.name,address:src.address||'',rut:'',phone:'',razonSocial:'',comuna:'',observations:'',sendInvoice:false,active:true,routeWeek:src.week,routeDay:src.day,routePosition:Number(src.position)};clients.push(c);added++;if(matches.length>1)uncertain++}else linked++;
    ['rut','phone','razonSocial','comuna','observations'].forEach(k=>{const v=String(src[k]||'').trim();if(!String(c[k]||'').trim()&&v&&!(k==='rut'&&!/^[0-9.]+-[0-9Kk]$/.test(v))&&!(k==='phone'&&!/^\\+?[0-9 ()-]{8,}$/.test(v)))c[k]=v});
    if(/enviar factura|mandar factura/i.test(String(src.observations||'')))c.sendInvoice=true;
