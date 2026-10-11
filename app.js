@@ -759,7 +759,7 @@ async function saveReceiptPdf(){
  }catch(error){alert('No se pudo generar el PDF: '+(error?.message||error))}
  finally{if(button){button.disabled=false;button.textContent='Guardar PDF para Fun Print'}}
 }
-async async function sendReceiptToSystem(){
+async function sendReceiptToSystem(){
  if(!preparedReceipt){alert('Primero selecciona un comprobante.');return}
  if(typeof File!=='undefined'&&navigator.share){
   try{
