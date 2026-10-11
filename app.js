@@ -696,7 +696,7 @@ function annulSale(saleId){
   if(!writeArray('zipperComprobantes',currentSales.filter(x=>String(x.id)!==String(sale.id)))){
    writeArray('zipperProductos',previousProducts);return;
   }
-  if(!recordSaleCorrection('anulada',sale,null)){writeArray('zipperComprobantes',currentSales);writeArray('zipperProductos',previousProducts);alert('No se pudo registrar la anulación. Se intentó restaurar la venta y el stock. Verifica el respaldo.');return}
+  if(!recordSaleCorrection('anulada',sale,null)){const restoredSales=writeArray('zipperComprobantes',currentSales),restoredStock=writeArray('zipperProductos',previousProducts);alert(restoredSales&&restoredStock?'No se anuló la venta: falló el registro de correcciones. Se recuperaron venta e inventario.':'ERROR GRAVE: no se pudo completar la recuperación de la anulación. Revisa el respaldo antes de seguir vendiendo.');return}
   // El cliente permanece visitado sin venta; la visita ya ocurrió.
   renderInventory();renderHistory();renderHome();
   $('visitedSales').innerHTML='';
