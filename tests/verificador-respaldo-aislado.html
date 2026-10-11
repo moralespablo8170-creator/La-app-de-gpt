@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Verificador aislado de respaldo · Distribuidora zipper</title>
+<style>body{font:16px system-ui;max-width:780px;margin:30px auto;padding:16px;line-height:1.5}pre{white-space:pre-wrap;background:#f1f5f9;padding:16px;border-radius:10px}input{max-width:100%}</style></head>
+<body><h1>Verificador aislado de respaldo</h1>
+<p>Esta herramienta <strong>no restaura ni modifica</strong> la aplicación: solo lee un archivo JSON elegido por el usuario.</p>
+<input type="file" id="file" accept=".json,application/json"><pre id="result">Seleccione un respaldo de ensayo para verificarlo.</pre>
+<script>
+const $=id=>document.getElementById(id);
+const normal=s=>String(s||'').trim().toLocaleLowerCase('es');
+function verify(doc){
+ const errors=[],warnings=[];
+ if(!doc||doc.app!=='Distribuidora zipper'||!doc.data||typeof doc.data!=='object')throw Error('No es un respaldo válido de Distribuidora zipper.');
+ const d=doc.data,parse=k=>{if(typeof d[k]!=='string')throw Error('Falta '+k);const v=JSON.parse(d[k]);if(!Array.isArray(v))throw Error(k+' no es una lista');return v;};
+ const clients=parse('zipperClientes'),sales=parse('zipperComprobantes'),products=parse('zipperProductos');
+ const ids=new Set(),routePos=new Map(),routeIdentity=new Map(),weekCounts={A:0,B:0};
+ clients.forEach((c,i)=>{
+  if(!c||!String(c.id||'').trim()){errors.push('Cliente sin ID en fila '+(i+1));return;}
+  if(ids.has(String(c.id)))errors.push('ID duplicado: '+c.id);ids.add(String(c.id));
+  Object.entries(c.routeAssignments||{}).forEach(([week,r])=>{
+   if(!r||!r.day)return;
+   if(week in weekCounts)weekCounts[week]++;
+   const pos=Number(r.position),slot=week+' / '+normal(r.day)+' / '+pos;
+   if(!Number.isInteger(pos)||pos<1)errors.push('Posición inválida: '+c.name+' '+slot);
+   if(routePos.has(slot))errors.push('Posición repetida: '+slot+' ('+routePos.get(slot)+' / '+c.name+')');
+   else routePos.set(slot,c.name);
+   const identity=normal(c.name)+' / '+slot;
+   if(routeIdentity.has(identity))warnings.push('Nombre y ruta duplicados: '+identity);
+   routeIdentity.set(identity,true);
+  });
+ });
+ for(const [k,v] of Object.entries(d)){
+  if(k==='zipperClientes'||typeof v!=='string')continue;
+  for(const c of clients){if(!c.id)continue;}
+ }
+ return {clients:clients.length,sales:sales.length,products:products.length,weekCounts,errors,warnings};
+}
+$('file').addEventListener('change',async e=>{
+ try{
+  const f=e.target.files?.[0];if(!f)return;
+  if(f.size>20*1024*1024)throw Error('Archivo mayor a 20 MB');
+  const report=verify(JSON.parse(await f.text()));
+  $('result').textContent='Clientes: '+report.clients+'\nComprobantes: '+report.sales+'\nProductos: '+report.products+'\nAsignaciones A: '+report.weekCounts.A+'\nAsignaciones B: '+report.weekCounts.B+'\n\nErrores: '+report.errors.length+'\n'+report.errors.join('\n')+'\n\nAvisos: '+report.warnings.length+'\n'+report.warnings.join('\n')+'\n\nEsta prueba NO verifica caja, historial ni restauración.';
+ }catch(err){$('result').textContent='ERROR: '+err.message;}
+});
+</script></body></html>
