@@ -17,6 +17,10 @@ let c=sameDay.find(x=>Number(x.routeAssignments.B.position)===pos);
 // No reasignar una ficha existente a otra posición solo por coincidir el nombre.
 if(!c&&sameDay.length>0)return; // Ya existe en este día: no crear otro registro ni cambiar su posición.
 if(!c){
+ // Evitar una ficha nueva si ya existe el mismo cliente en B con otro día.
+ // No reasignarlo automáticamente: requiere revisar dirección/RUT.
+ const alreadyInB=clients.some(x=>key(x.name)===key(name)&&x.routeAssignments?.B);
+ if(alreadyInB)return;
  const unassigned=clients.filter(x=>key(x.name)===key(name)&&!x.routeAssignments?.B);
  if(unassigned.length===1)c=unassigned[0];
  if(unassigned.length>1)return; // No mezclar homónimos sin RUT o dirección.
