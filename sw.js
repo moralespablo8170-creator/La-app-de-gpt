@@ -1,9 +1,9 @@
-const CACHE_NAME = 'zipper-app-pwa-20261011-compartir-v26';
+const CACHE_NAME = 'zipper-app-pwa-20261011-auditoria-prueba-v27';
 const APP_SHELL = [
   "./",
   "./index.html",
   "./styles.css?v=zipper-20261010-clientes-v12",
-  "./app.js?v=zipper-compartir-directo-v10",
+  "./app.js?v=zipper-auditoria-prueba-v11",
   "./route-position-migration.js?v=1.2",
   "./route-position-migration-b.js?v=1.0",
   "./herramientas.js?v=8",
