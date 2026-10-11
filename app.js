@@ -258,11 +258,11 @@ function installDictatedInventory(s){
  catch(e){targets.forEach(k=>{if(before[k]===null)localStorage.removeItem(k);else localStorage.setItem(k,before[k])});throw e}
  cart=[];selectedClientId='';editingSaleId='';return true
 }
-function loadSeed(){return fetch('./data/zipper-seed.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('No se pudo cargar el inventario');return r.json()}).then(s=>{
+function loadSeed(){const hadClientsBeforeSeed=getClients().length>0;return fetch('./data/zipper-seed.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('No se pudo cargar el inventario');return r.json()}).then(s=>{
  if(!s||!Array.isArray(s.clients)||!Array.isArray(s.products))throw Error('Base inválida');
  installDictatedInventory(s);
  const ver=String(s.version||'1');
- if(localStorage.getItem('zipperSeedVersion')!==ver||!getClients().length){const cs=getClients();s.clients.forEach(x=>{const name=String(x.name||'').trim();if(name&&!cs.some(c=>norm(c.name)===norm(name)&&norm(c.address)===norm(x.address)))cs.push({...x,id:uid(),route:x.route||'',routeWeek:x.routeWeek||'A',routeDay:x.routeDay||'',active:x.active!==false})});writeArray('zipperClientes',cs);writeArray('zipperCategorias',[...(s.categories||[]),...getCategories()]);localStorage.setItem('zipperSeedVersion',ver)}
+ if(!hadClientsBeforeSeed){const cs=getClients();s.clients.forEach(x=>{const name=String(x.name||'').trim();if(name&&!cs.some(c=>norm(c.name)===norm(name)&&norm(c.address)===norm(x.address)))cs.push({...x,id:uid(),route:x.route||'',routeWeek:x.routeWeek||'A',routeDay:x.routeDay||'',active:x.active!==false})});if(!writeArray('zipperClientes',cs))throw Error('No se pudo guardar la base inicial de clientes');writeArray('zipperCategorias',[...(s.categories||[]),...getCategories()]);}localStorage.setItem('zipperSeedVersion',ver)
  /* Completar solamente campos vacíos desde la base consolidada, sin modificar rutas ni identificadores. */
  const cs2=getClients(),clean=v=>norm(v).replace(/[^a-z0-9]/g,'');
  let changed=false;
@@ -278,7 +278,7 @@ function loadSeed(){return fetch('./data/zipper-seed.json',{cache:'no-store'}).t
  if(changed)writeArray('zipperClientes',cs2);
  return fetch('./data/zzz-rutas.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('No se cargaron las rutas ZZZ');return r.json()}).then(routes=>{
   if(!Array.isArray(routes)||routes.length!==154)throw Error('Las rutas ZZZ no contienen 154 registros');
-  if(localStorage.getItem('zipperZZZRoutesApplied')==='v2'){renderHome();renderInventory();renderClients();renderCash();renderHistory();return}
+  if(localStorage.getItem('zipperZZZRoutesApplied')==='v2'||hadClientsBeforeSeed){renderHome();renderInventory();renderClients();renderCash();renderHistory();return}
   const clients=getClients(),key=v=>norm(String(v||'')).replace(/[^a-z0-9]/g,'');
   const address=v=>key(v).replace(/^(av|avenida|calle|psj|pasaje)/,'');
   let added=0,linked=0,uncertain=0;
