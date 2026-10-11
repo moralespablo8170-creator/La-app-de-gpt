@@ -16,3 +16,4 @@ jobs:
       - run: node tests/check-backup-runtime.mjs
       - run: node tests/check-sales-arithmetic.mjs
       - run: node tests/check-sale-routes.mjs
+      - run: node tests/check-sale-inventory.mjs
