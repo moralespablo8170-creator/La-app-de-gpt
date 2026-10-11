@@ -17,15 +17,19 @@ function verify(doc){
  clients.forEach((c,i)=>{
   if(!c||!String(c.id||'').trim()){errors.push('Cliente sin ID en fila '+(i+1));return;}
   if(ids.has(String(c.id)))errors.push('ID duplicado: '+c.id);ids.add(String(c.id));
-  Object.entries(c.routeAssignments||{}).forEach(([week,r])=>{
+  const routes={...(c.routeAssignments||{})};
+  if(!routes.A&&c.routeWeek==='A'&&c.routeDay)routes.A={day:c.routeDay,position:c.routePosition};
+  if(!routes.B&&c.routeWeekB&&c.routeDayB)routes.B={day:c.routeDayB,position:c.routePositionB};
+  if(!routes.B&&c.routeWeek==='B'&&c.routeDay)routes.B={day:c.routeDay,position:c.routePosition};
+  Object.entries(routes).forEach(([week,r])=>{
    if(!r||!r.day)return;
    if(week in weekCounts)weekCounts[week]++;
    const pos=Number(r.position),slot=week+' / '+normal(r.day)+' / '+pos;
    if(!Number.isInteger(pos)||pos<1)errors.push('Posición inválida: '+c.name+' '+slot);
    if(routePos.has(slot))errors.push('Posición repetida: '+slot+' ('+routePos.get(slot)+' / '+c.name+')');
    else routePos.set(slot,c.name);
-   const identity=normal(c.name)+' / '+week+' / '+normal(r.day);
-   if(routeIdentity.has(identity))warnings.push('Nombre y ruta duplicados: '+identity);
+   const identity=normal(c.name)+' / '+normal(c.address)+' / '+week+' / '+normal(r.day);
+   if(routeIdentity.has(identity))warnings.push('Nombre, dirección y ruta duplicados: '+identity);
    routeIdentity.set(identity,true);
   });
  });
