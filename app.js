@@ -113,6 +113,8 @@ function applyInventoryUpdate(){
   if(localStorage.getItem('zipperInventoryUpdateVersion')===VERSION)return false;
   const ps=getRawProducts();
   if(!ps.length)return false;
+  // Una base con ventas ya registradas tiene stock real: no restablecer cantidades del catálogo histórico.
+  if(readArray('zipperComprobantes').length){localStorage.setItem('zipperInventoryUpdateVersion',VERSION);return false;}
   const setNameStock=(test,name,stock)=>{
     const p=ps.find(test);
     if(!p)return false;
