@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+const src=fs.readFileSync(new URL('../herramientas.js',import.meta.url),'utf8');
+const validate=new Function('$','window',src+';return validateZipperBackup;')(()=>null,{});
+const make=(clients=[],sales=[],products=[],payments=[])=>({app:'Distribuidora zipper',schemaVersion:1,data:{zipperClientes:JSON.stringify(clients),zipperComprobantes:JSON.stringify(sales),zipperProductos:JSON.stringify(products),zipperPagos:JSON.stringify(payments)}});
+assert.doesNotThrow(()=>validate(make()));
+assert.doesNotThrow(()=>validate(make([{id:'c1',name:'A'}],[{id:'s1',items:[{qty:1,price:100}]}],[{id:'p1',name:'Test',stock:2}],[{id:'a1',amount:100}])));
+assert.throws(()=>validate(make([{id:'c1'},{id:'c1'}])));
+assert.throws(()=>validate(make([],[],[{id:'p1',name:'Test',stock:-1}])));
+assert.throws(()=>validate(make([],[{id:'s1',items:[{qty:0,price:100}]}])));
+assert.throws(()=>validate(make([],[],[],[{id:'a1',amount:-5}])));
+console.log('Six backup validator runtime scenarios passed.');
