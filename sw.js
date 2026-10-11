@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zipper-app-pwa-20261011-auditoria-prueba-v27';
+const CACHE_NAME = 'zipper-app-pwa-20261011-auditoria-prueba-v28';
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -6,7 +6,7 @@ const APP_SHELL = [
   "./app.js?v=zipper-auditoria-prueba-v11",
   "./route-position-migration.js?v=1.2",
   "./route-position-migration-b.js?v=1.0",
-  "./herramientas.js?v=8",
+  "./herramientas.js?v=zipper-auditoria-prueba-v11b",
   "./pwa.js?v=20261007-2",
   "./manifest.json?v=20261008-logo-v4",
   "./data/zipper-seed.json",
