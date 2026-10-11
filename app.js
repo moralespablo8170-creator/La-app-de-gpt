@@ -688,16 +688,16 @@ async function saveReceiptPdf(){
   rows.push({text:'DISTRIBUIDORA ZIPPER',size:11,bold:true});
   wrap('Comprobante #'+sale.folio+' · '+sale.fecha);
   wrap(sale.cliente,9);
-  rows.push({separator:true});
+  rows.push({spacer:true});
   (sale.items||[]).forEach(item=>{wrap(item.desc+(item.promotion?' · OFERTA':''));wrap(item.qty+' x '+money(item.price)+' = '+money(Math.round(Number(item.qty)*Number(item.price))),9)});
-  rows.push({separator:true});rows.push({text:'TOTAL: '+money(saleTotal(sale)),size:11,bold:true});
-  const height=Math.max(65,12+rows.reduce((sum,r)=>sum+(r.separator?2: r.size===11?6:4.7),0)+8);
+  rows.push({spacer:true});rows.push({text:'TOTAL: '+money(saleTotal(sale)),size:11,bold:true});
+  const height=Math.max(65,12+rows.reduce((sum,r)=>sum+(r.spacer?4: r.size===11?6:4.7),0)+8);
   // Generador PDF local: sin CDN, sin conexión y sin dependencias externas.
   const pt=72/25.4, pageW=width*pt, pageH=height*pt;
   const clean=t=>String(t??'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^\x20-\x7e]/g,'-').replace(/([\\()])/g,'\\$1');
   let y=8, commands=[];
   for(const row of rows){
-   if(row.separator){const yy=(pageH-y*pt).toFixed(2);commands.push('0.4 w '+(margin*pt).toFixed(2)+' '+yy+' m '+(75*pt).toFixed(2)+' '+yy+' l S');y+=2;continue}
+   if(row.spacer){y+=4;continue}
    const font=row.bold?'F2':'F1', yy=(pageH-y*pt).toFixed(2);
    commands.push('BT /'+font+' '+row.size+' Tf 1 0 0 1 '+(margin*pt).toFixed(2)+' '+yy+' Tm ('+clean(row.text)+') Tj ET');
    y+=row.size===11?6:4.7;
