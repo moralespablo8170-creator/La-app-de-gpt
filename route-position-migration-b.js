@@ -19,7 +19,8 @@ if(!c&&sameDay.length>0)return; // Ya existe en este día: no crear otro registr
 if(!c){
  // Evitar una ficha nueva si ya existe el mismo cliente en B con otro día.
  // No reasignarlo automáticamente: requiere revisar dirección/RUT.
- const alreadyInB=clients.some(x=>key(x.name)===key(name)&&x.routeAssignments?.B);
+ const genericName=['nvo','nuevo','nva','nueva','sin nombre'].includes(key(name));
+ const alreadyInB=!genericName&&clients.some(x=>key(x.name)===key(name)&&x.routeAssignments?.B);
  if(alreadyInB)return;
  const unassigned=clients.filter(x=>key(x.name)===key(name)&&!x.routeAssignments?.B);
  if(unassigned.length===1)c=unassigned[0];
