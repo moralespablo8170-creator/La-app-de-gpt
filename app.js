@@ -693,7 +693,14 @@ function saveClient(){
   if(current)Object.assign(current,data);else{current={id,...data};cs.push(current)}
   const group=cs.filter(c=>String(c.id)!==String(id)&&norm(clientRoute(c,week)?.day)===norm(day)&&clientRoute(c,week));
   const insertAt=wanted||(oldRoute&&norm(oldRoute.day)===norm(day)&&oldRoute.position<999999?oldRoute.position:group.reduce((m,c)=>Math.max(m,clientRoute(c,week).position===999999?0:clientRoute(c,week).position),0)+1);
-  if(!oldRoute||norm(oldRoute.day)!==norm(day)||oldRoute.position!==insertAt){group.forEach(c=>{const r=clientRoute(c,week);if(r.position>=insertAt&&r.position<999999)setClientRoute(c,week,day,r.position+1)})}
+  if(!oldRoute||norm(oldRoute.day)!==norm(day)){
+    group.forEach(c=>{const r=clientRoute(c,week);if(r.position>=insertAt&&r.position<999999)setClientRoute(c,week,day,r.position+1)});
+  }else if(oldRoute.position!==insertAt){
+    group.forEach(c=>{const r=clientRoute(c,week);if(r.position>=999999)return;
+      if(insertAt<oldRoute.position&&r.position>=insertAt&&r.position<oldRoute.position)setClientRoute(c,week,day,r.position+1);
+      if(insertAt>oldRoute.position&&r.position>oldRoute.position&&r.position<=insertAt)setClientRoute(c,week,day,r.position-1);
+    });
+  }
   setClientRoute(current,week,day,insertAt);
   if(writeArray('zipperClientes',cs)){resetClientForm();$('clientSearchName').value='';$('clientSearchAddress').value='';renderClients();renderHome();window.scrollTo({top:0,behavior:'smooth'});setTimeout(()=>$('clientSearchName').focus(),250)}
 }
