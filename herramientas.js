@@ -44,10 +44,12 @@ async function restoreZipperBackup(input){
   const payments=JSON.parse(file.data.zipperPagos||'[]'),corrections=JSON.parse(file.data.zipperRegistroCorrecciones||'[]');
   const summary='Productos: '+products.length+' · Clientes: '+clients.length+' · Ventas: '+sales.length+' · Abonos: '+payments.length+' · Correcciones: '+corrections.length+'. ';
   confirmDelete('Restaurar respaldo',summary+'Reemplazará los datos actuales de este navegador. ¿Restaurar?',()=>{
+   const before={};let restoreStarted=false;
    try{
-    const before={};zipperDataKeys(localStorage).forEach(k=>before[k]=localStorage.getItem(k));
+    zipperDataKeys(localStorage).forEach(k=>before[k]=localStorage.getItem(k));
     localStorage.setItem('zipperRespaldoAntesRestauracion',JSON.stringify({createdAt:new Date().toISOString(),data:before}));
     /* Restauración exacta: primero quitamos los datos Zipper actuales y después escribimos TODO el respaldo. */
+    restoreStarted=true;
     zipperDataKeys(localStorage).forEach(k=>localStorage.removeItem(k));
     Object.entries(file.data).forEach(([k,v])=>localStorage.setItem(k,v));
     /* Verificación obligatoria antes de recargar. */
@@ -61,6 +63,7 @@ async function restoreZipperBackup(input){
     alert('RESPALDO RESTAURADO CORRECTAMENTE. Se recuperaron '+restoredSales.length+' ventas.');
     setTimeout(()=>window.location.reload(),500);
    }catch(e){
+    if(restoreStarted){try{zipperDataKeys(localStorage).forEach(k=>localStorage.removeItem(k));Object.entries(before).forEach(([k,v])=>localStorage.setItem(k,v));}catch(rollbackError){alert('ATENCIÓN: no se pudo recuperar automáticamente todo el estado anterior. Conserva el respaldo y no hagas nuevas ventas hasta revisarlo.')}}
     $('backupStatus').textContent='ERROR AL RESTAURAR: '+(e&&e.message?e.message:e);
     alert($('backupStatus').textContent);
    }
