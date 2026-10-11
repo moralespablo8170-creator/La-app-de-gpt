@@ -4,6 +4,15 @@ function validateZipperBackup(file){
  if(!file||file.app!=='Distribuidora zipper'||file.schemaVersion!==1||!file.data||typeof file.data!=='object'||Array.isArray(file.data))throw Error('Este archivo no es un respaldo válido de Zipper.');
  for(const [key,value]of Object.entries(file.data)){if(!key.startsWith('zipper')||key.startsWith('zipperRespaldo')||typeof value!=='string')throw Error('El respaldo contiene datos no permitidos.')}
  for(const key of ['zipperProductos','zipperClientes','zipperComprobantes']){const rows=JSON.parse(file.data[key]||'null');if(!Array.isArray(rows))throw Error('Falta '+key+' en el respaldo.');const ids=new Set();for(const row of rows){if(!row||row.id==null||ids.has(String(row.id)))throw Error('Registro inválido o duplicado en '+key);ids.add(String(row.id));if(key==='zipperProductos'&&(!String(row.name||'').trim()||!Number.isInteger(Number(row.stock))||Number(row.stock)<0))throw Error('Stock o nombre inválido.');if(key==='zipperComprobantes'&&(!Array.isArray(row.items)||row.items.some(i=>!Number.isInteger(Number(i.qty))||Number(i.qty)<=0||!Number.isFinite(Number(i.price))||Number(i.price)<0)))throw Error('Detalle de venta inválido.')}}
+ if(file.data.zipperPagos!==undefined){
+  const payments=JSON.parse(file.data.zipperPagos);
+  if(!Array.isArray(payments))throw Error('Los abonos del respaldo no tienen un formato válido.');
+  const paymentIds=new Set();
+  for(const p of payments){
+   if(!p||p.id==null||paymentIds.has(String(p.id))||!Number.isFinite(Number(p.amount))||Number(p.amount)<=0)throw Error('El respaldo contiene un abono inválido o duplicado.');
+   paymentIds.add(String(p.id));
+  }
+ }
  return file
 }
 function exportZipperBackup(){
