@@ -694,7 +694,9 @@ function annulSale(saleId){
   (sale.items||[]).forEach(i=>{const p=products.find(x=>String(x.id)===String(saleItemStockId(i)));p.stock=Number(p.stock||0)+Number(i.qty||0)});
   if(!writeArray('zipperProductos',products))return;
   if(!writeArray('zipperComprobantes',currentSales.filter(x=>String(x.id)!==String(sale.id)))){
-   writeArray('zipperProductos',previousProducts);return;
+   const restoredStock=writeArray('zipperProductos',previousProducts);
+   const verified=restoredStock&&JSON.stringify(readArray('zipperProductos'))===JSON.stringify(previousProducts)&&JSON.stringify(getSales())===JSON.stringify(currentSales);
+   alert(verified?'No se anuló la venta: falló el guardado. El inventario anterior fue recuperado.':'ERROR GRAVE: falló el guardado de la anulación y no se pudo verificar la recuperación. Revisa el respaldo antes de seguir vendiendo.');return;
   }
   if(!recordSaleCorrection('anulada',sale,null)){const restoredSales=writeArray('zipperComprobantes',currentSales),restoredStock=writeArray('zipperProductos',previousProducts);alert(restoredSales&&restoredStock?'No se anuló la venta: falló el registro de correcciones. Se recuperaron venta e inventario.':'ERROR GRAVE: no se pudo completar la recuperación de la anulación. Revisa el respaldo antes de seguir vendiendo.');return}
   // El cliente permanece visitado sin venta; la visita ya ocurrió.
