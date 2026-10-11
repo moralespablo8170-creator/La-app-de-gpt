@@ -41,7 +41,9 @@ async function restoreZipperBackup(input){
   const sales=JSON.parse(file.data.zipperComprobantes||'[]');
   const clients=JSON.parse(file.data.zipperClientes||'[]');
   const products=JSON.parse(file.data.zipperProductos||'[]');
-  confirmDelete('Restaurar respaldo','Este archivo contiene '+products.length+' productos, '+clients.length+' clientes y '+sales.length+' ventas. Reemplazará los datos actuales de este navegador. ¿Restaurar?',()=>{
+  const payments=JSON.parse(file.data.zipperPagos||'[]'),corrections=JSON.parse(file.data.zipperRegistroCorrecciones||'[]');
+  const summary='Productos: '+products.length+' · Clientes: '+clients.length+' · Ventas: '+sales.length+' · Abonos: '+payments.length+' · Correcciones: '+corrections.length+'. ';
+  confirmDelete('Restaurar respaldo',summary+'Reemplazará los datos actuales de este navegador. ¿Restaurar?',()=>{
    try{
     const before={};zipperDataKeys(localStorage).forEach(k=>before[k]=localStorage.getItem(k));
     localStorage.setItem('zipperRespaldoAntesRestauracion',JSON.stringify({createdAt:new Date().toISOString(),data:before}));
