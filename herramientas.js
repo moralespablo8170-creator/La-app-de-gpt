@@ -35,8 +35,9 @@ async function restoreZipperBackup(input){
   const clients=JSON.parse(file.data.zipperClientes||'[]');
   const products=JSON.parse(file.data.zipperProductos||'[]');
   confirmDelete('Restaurar respaldo','Este archivo contiene '+products.length+' productos, '+clients.length+' clientes y '+sales.length+' ventas. Reemplazará los datos actuales de este navegador. ¿Restaurar?',()=>{
+   let before=null;
    try{
-    const before={};zipperDataKeys(localStorage).forEach(k=>before[k]=localStorage.getItem(k));
+    before={};zipperDataKeys(localStorage).forEach(k=>before[k]=localStorage.getItem(k));
     localStorage.setItem('zipperRespaldoAntesRestauracion',JSON.stringify({createdAt:new Date().toISOString(),data:before}));
     /* Restauración exacta: primero quitamos los datos Zipper actuales y después escribimos TODO el respaldo. */
     zipperDataKeys(localStorage).forEach(k=>localStorage.removeItem(k));
@@ -52,6 +53,7 @@ async function restoreZipperBackup(input){
     alert('RESPALDO RESTAURADO CORRECTAMENTE. Se recuperaron '+restoredSales.length+' ventas.');
     setTimeout(()=>window.location.reload(),500);
    }catch(e){
+    if(before){try{zipperDataKeys(localStorage).forEach(k=>localStorage.removeItem(k));Object.entries(before).forEach(([k,v])=>localStorage.setItem(k,v));}catch(recoveryError){alert('ATENCIÓN: no se pudo recuperar completamente el estado anterior. Conserva el respaldo y no sigas trabajando hasta revisarlo.');}}
     $('backupStatus').textContent='ERROR AL RESTAURAR: '+(e&&e.message?e.message:e);
     alert($('backupStatus').textContent);
    }
