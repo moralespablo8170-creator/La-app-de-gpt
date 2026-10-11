@@ -51,6 +51,14 @@ function verify(doc){
   else if(seenSales.has(id))errors.push('ID de comprobante duplicado: '+id);
   seenSales.add(id);
  });
+ const folios=new Set();
+ sales.forEach(sale=>{
+  const folio=Number(sale?.folio);
+  if(Number.isSafeInteger(folio)&&folio>0){
+   if(folios.has(folio))warnings.push('Folio de comprobante repetido: '+folio);
+   folios.add(folio);
+  }
+ });
  const visits=Object.keys(d).filter(k=>k.startsWith('zipperVisitados-')).map(k=>({key:k,ids:parse(k)}));
  visits.forEach(({key,ids})=>{
   const seen=new Set();
