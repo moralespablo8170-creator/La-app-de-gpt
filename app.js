@@ -702,6 +702,9 @@ function saveClient(){
     });
   }
   setClientRoute(current,week,day,insertAt);
+  if(oldRoute&&norm(oldRoute.day)!==norm(day)&&oldRoute.position<999999){
+    cs.filter(c=>String(c.id)!==String(id)).forEach(c=>{const r=clientRoute(c,week);if(r&&norm(r.day)===norm(oldRoute.day)&&r.position>oldRoute.position&&r.position<999999)setClientRoute(c,week,r.day,r.position-1)});
+  }
   if(writeArray('zipperClientes',cs)){resetClientForm();$('clientSearchName').value='';$('clientSearchAddress').value='';renderClients();renderHome();window.scrollTo({top:0,behavior:'smooth'});setTimeout(()=>$('clientSearchName').focus(),250)}
 }
 function deleteClient(id){const c=clientById(id);if(!c)return;confirmDelete('Borrar cliente','¿Estás seguro que quieres borrar el cliente "'+c.name+'"? Esta acción no se puede deshacer.',()=>{const cs=getClients().filter(x=>String(x.id)!==String(id));if(writeArray('zipperClientes',cs)){resetClientForm();$('clientSearchName').value='';$('clientSearchAddress').value='';renderClients();renderHome();window.scrollTo({top:0,behavior:'smooth'});setTimeout(()=>$('clientSearchName').focus(),250);$('clientValidation').textContent='Cliente borrado correctamente.';$('clientValidation').className='validation ok'}})}
