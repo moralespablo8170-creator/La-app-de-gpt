@@ -690,7 +690,10 @@ function annulSale(saleId){
  confirmDelete('Anular venta','¿Anular completamente la venta #'+sale.folio+' por '+money(saleTotal(sale))+'? Se devolverá el stock y se descontará de caja.',()=>{
   const previousProducts=readArray('zipperProductos');
   const currentSales=getSales();
-  if(!currentSales.some(x=>String(x.id)===String(sale.id))){alert('La venta ya no existe.');return}
+  const currentSale=currentSales.find(x=>String(x.id)===String(sale.id));
+  if(!currentSale){alert('La venta ya no existe.');return}
+  if(hasRelatedPayments(currentSale)){alert('No se puede anular: se registraron abonos antes de confirmar. Revisa la caja.');return}
+  if(JSON.stringify(currentSale)!==JSON.stringify(sale)){alert('La venta cambió antes de confirmar. Vuelve a revisar la venta antes de anularla.');return}
   (sale.items||[]).forEach(i=>{const p=products.find(x=>String(x.id)===String(saleItemStockId(i)));p.stock=Number(p.stock||0)+Number(i.qty||0)});
   if(!writeArray('zipperProductos',products))return;
   if(!writeArray('zipperComprobantes',currentSales.filter(x=>String(x.id)!==String(sale.id)))){
