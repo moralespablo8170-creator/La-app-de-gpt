@@ -290,6 +290,16 @@ function loadSeed(){return fetch('./data/zipper-seed.json',{cache:'no-store'}).t
    if(matches.length!==1)matches=clients.filter(c=>a&&address(c.address)===a);
    if(matches.length!==1)matches=clients.filter(c=>n&&key(c.name)===n&&a&&address(c.address)===a);
    if(matches.length!==1&&a.length>=7)matches=clients.filter(c=>n&&key(c.name)===n&&address(c.address)&& (address(c.address).startsWith(a)||a.startsWith(address(c.address))));
+   // Recuperar una ficha provisional creada por migraciones anteriores, sin
+   // mezclar locales con dirección/RUT diferente ni clientes de otra ruta.
+   if(matches.length!==1){
+    const placeholders=clients.filter(c=>{
+     if(key(c.name)!==n||address(c.address)||String(c.rut||'').trim())return false;
+     const ra=clientRoute(c,src.week);
+     return ra&&norm(ra.day)===norm(src.day)&&Number(ra.position)===Number(src.position);
+    });
+    if(placeholders.length===1)matches=placeholders;
+   }
    // A shared RUT never merges different premises.
    let c=matches.length===1?matches[0]:null;
    if(!c){c={id:uid(),name:src.name,address:src.address||'',rut:'',phone:'',razonSocial:'',comuna:'',observations:'',sendInvoice:false,active:true,routeWeek:src.week,routeDay:src.day,routePosition:Number(src.position)};clients.push(c);added++;if(matches.length>1)uncertain++}else linked++;
