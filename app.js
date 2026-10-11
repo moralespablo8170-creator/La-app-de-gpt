@@ -683,24 +683,24 @@ async function saveReceiptPdf(){
  if(!preparedReceipt){alert('Primero selecciona un comprobante.');return}
  const button=$('receiptSavePdf');if(button){button.disabled=true;button.textContent='Preparando PDF...'}
  try{
-  const sale=preparedReceipt, width=80, margin=5, usable=70, rows=[];
-  const wrap=(value,size=9)=>{const text=String(value??'');const limit=size===11?27:35;const words=text.split(/\s+/);let line='';for(const word of words){if((line+' '+word).trim().length>limit){if(line)rows.push({text:line,size});line=word;while(line.length>limit){rows.push({text:line.slice(0,limit),size});line=line.slice(limit)}}else line=(line+' '+word).trim()}if(line)rows.push({text:line,size})};
-  rows.push({text:'DISTRIBUIDORA ZIPPER',size:11,bold:true});
+  const sale=preparedReceipt, width=80, margin=4, usable=72, rows=[];
+  const wrap=(value,size=12)=>{const text=String(value??'');const limit=size===14?22:27;const words=text.split(/\s+/);let line='';for(const word of words){if((line+' '+word).trim().length>limit){if(line)rows.push({text:line,size});line=word;while(line.length>limit){rows.push({text:line.slice(0,limit),size});line=line.slice(limit)}}else line=(line+' '+word).trim()}if(line)rows.push({text:line,size})};
+  rows.push({text:'DISTRIBUIDORA ZIPPER',size:14,bold:true});
   wrap('Comprobante #'+sale.folio+' · '+sale.fecha);
-  wrap(sale.cliente,9);
+  wrap(sale.cliente,12);
   rows.push({spacer:true});
-  (sale.items||[]).forEach(item=>{wrap(item.desc+(item.promotion?' · OFERTA':''));wrap(item.qty+' x '+money(item.price)+' = '+money(Math.round(Number(item.qty)*Number(item.price))),9)});
-  rows.push({spacer:true});rows.push({text:'TOTAL: '+money(saleTotal(sale)),size:11,bold:true});
-  const height=Math.max(65,12+rows.reduce((sum,r)=>sum+(r.spacer?4: r.size===11?6:4.7),0)+8);
+  (sale.items||[]).forEach(item=>{wrap(item.desc+(item.promotion?' · OFERTA':''));wrap(item.qty+' x '+money(item.price)+' = '+money(Math.round(Number(item.qty)*Number(item.price))) ,12)});
+  rows.push({spacer:true});rows.push({text:'TOTAL: '+money(saleTotal(sale)),size:14,bold:true});
+  const height=Math.max(35,9+rows.reduce((sum,r)=>sum+(r.spacer?2: r.size===14?7.1:6.1),0)+8);
   // Generador PDF local: sin CDN, sin conexión y sin dependencias externas.
   const pt=72/25.4, pageW=width*pt, pageH=height*pt;
   const clean=t=>String(t??'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^\x20-\x7e]/g,'-').replace(/([\\()])/g,'\\$1');
-  let y=8, commands=[];
+  let y=5, commands=[];
   for(const row of rows){
-   if(row.spacer){y+=4;continue}
+   if(row.spacer){y+=2;continue}
    const font=row.bold?'F2':'F1', yy=(pageH-y*pt).toFixed(2);
    commands.push('BT /'+font+' '+row.size+' Tf 1 0 0 1 '+(margin*pt).toFixed(2)+' '+yy+' Tm ('+clean(row.text)+') Tj ET');
-   y+=row.size===11?6:4.7;
+   y+=row.size===14?7.1:6.1;
   }
   const stream=commands.join('\n')+'\n';
   const objects=[
