@@ -22,7 +22,7 @@ if(!c){
  const genericName=['nvo','nuevo','nva','nueva','sin nombre'].includes(key(name));
  const alreadyInB=!genericName&&clients.some(x=>key(x.name)===key(name)&&x.routeAssignments?.B);
  if(alreadyInB)return;
- const unassigned=clients.filter(x=>key(x.name)===key(name)&&!x.routeAssignments?.B);
+ const unassigned=genericName?[]:clients.filter(x=>key(x.name)===key(name)&&!x.routeAssignments?.B);
  if(unassigned.length===1)c=unassigned[0];
  if(unassigned.length>1)return; // No mezclar homónimos sin RUT o dirección.
 }
