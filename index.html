@@ -103,26 +103,58 @@ window.zipperBackupDirect=function(){
  function say(msg){if(status)status.textContent=msg;}
  function fail(msg){say('ERROR: '+msg);alert('ERROR AL RESTAURAR: '+msg);}
  function restoreObject(file){
-  if(!file||file.app!=='Distribuidora zipper'||!file.data||typeof file.data!=='object')throw new Error('El archivo seleccionado no corresponde a un respaldo de Distribuidora zipper.');
-  var required=['zipperProductos','zipperClientes','zipperComprobantes'], parsed={};
+  if(!file||file.app!=='Distribuidora zipper'||file.schemaVersion!==1||!file.data||typeof file.data!=='object'||Array.isArray(file.data))throw new Error('Formato o versión de respaldo no compatible.');
+  var required=['zipperProductos','zipperClientes','zipperComprobantes'],parsed={},data=file.data;
   required.forEach(function(k){
-   if(typeof file.data[k]!=='string')throw new Error('El respaldo no contiene '+k+'.');
-   parsed[k]=JSON.parse(file.data[k]);
-   if(!Array.isArray(parsed[k]))throw new Error(k+' no tiene un formato válido.');
+   if(typeof data[k]!=='string')throw new Error('Falta '+k+'.');
+   parsed[k]=JSON.parse(data[k]);
+   if(!Array.isArray(parsed[k]))throw new Error(k+' no es una lista válida.');
   });
-  if(!confirm('Se restaurarán '+parsed.zipperComprobantes.length+' ventas, '+parsed.zipperClientes.length+' clientes y '+parsed.zipperProductos.length+' productos. ¿Continuar?')){say('Restauración cancelada.');return;}
-  var before={};
-  Object.keys(localStorage).filter(function(k){return k.indexOf('zipper')===0}).forEach(function(k){before[k]=localStorage.getItem(k);});
-  localStorage.setItem('zipperRespaldoAntesRestauracion',JSON.stringify({createdAt:new Date().toISOString(),data:before}));
-  Object.keys(localStorage).filter(function(k){return k.indexOf('zipper')===0&&k.indexOf('zipperRespaldo')!==0}).forEach(function(k){localStorage.removeItem(k);});
-  Object.keys(file.data).forEach(function(k){if(k.indexOf('zipper')===0&&k.indexOf('zipperRespaldo')!==0&&typeof file.data[k]==='string')localStorage.setItem(k,file.data[k]);});
-  var s=JSON.parse(localStorage.getItem('zipperComprobantes')||'[]');
-  var cl=JSON.parse(localStorage.getItem('zipperClientes')||'[]');
-  var pr=JSON.parse(localStorage.getItem('zipperProductos')||'[]');
-  if(s.length!==parsed.zipperComprobantes.length||cl.length!==parsed.zipperClientes.length||pr.length!==parsed.zipperProductos.length)throw new Error('El teléfono no confirmó todos los datos escritos.');
-  sessionStorage.setItem('zipperRestoreResult',JSON.stringify({sales:s.length,clients:cl.length,products:pr.length}));
-  say('RESTAURACIÓN CORRECTA: '+s.length+' ventas recuperadas.');
-  alert('RESPALDO RESTAURADO CORRECTAMENTE. Ventas recuperadas: '+s.length+'.');
+  function uniqueIds(arr,label){
+   var ids=new Set();
+   arr.forEach(function(x,i){
+    if(!x||typeof x!=='object'||Array.isArray(x)||typeof x.id!=='string'||!x.id.trim())throw new Error(label+': registro '+(i+1)+' sin identificador.');
+    if(ids.has(x.id))throw new Error(label+': identificador repetido '+x.id);
+    ids.add(x.id);
+   });return ids;
+  }
+  var clientIds=uniqueIds(parsed.zipperClientes,'Clientes');
+  uniqueIds(parsed.zipperProductos,'Productos');
+  uniqueIds(parsed.zipperComprobantes,'Comprobantes');
+  parsed.zipperComprobantes.forEach(function(x){
+   if(x.clientId&&!clientIds.has(x.clientId))throw new Error('Comprobante con cliente inexistente: '+x.id);
+  });
+  Object.keys(data).forEach(function(k){
+   if(k.indexOf('zipper')!==0||typeof data[k]!=='string')throw new Error('Clave o contenido no permitido: '+k);
+   if(k==='zipperClientes'||k==='zipperProductos'||k==='zipperComprobantes')return;
+   if(/(?:abono|pago|visitad)/i.test(k)){
+    var v;try{v=JSON.parse(data[k])}catch(e){throw new Error('Datos inválidos en '+k)}
+    if(Array.isArray(v))v.forEach(function(x){
+     if(x&&typeof x==='object'&&x.clientId&&!clientIds.has(x.clientId))throw new Error('Referencia de cliente inexistente en '+k);
+    });
+   }
+  });
+  // Las bases auxiliares antiguas no deben reintroducir clientes al restaurar.
+  var stale=Object.keys(data).filter(function(k){return k.indexOf('::')>=0&&/zipperClientes$/i.test(k)});
+  if(stale.length)throw new Error('El respaldo contiene bases auxiliares de clientes sin reconciliar ('+stale.length+'). Requiere depuración antes de restaurar.');
+  if(!confirm('Se restaurarán '+parsed.zipperComprobantes.length+' ventas, '+parsed.zipperClientes.length+' clientes y '+parsed.zipperProductos.length+' productos. Se verificaron sus identificadores. ¿Continuar?')){say('Restauración cancelada.');return;}
+  var before={};Object.keys(localStorage).filter(function(k){return k.indexOf('zipper')===0}).forEach(function(k){before[k]=localStorage.getItem(k)});
+  var snapshot=JSON.stringify({createdAt:new Date().toISOString(),data:before});
+  var target={};Object.keys(data).forEach(function(k){if(k.indexOf('zipper')===0&&k.indexOf('zipperRespaldo')!==0&&typeof data[k]==='string')target[k]=data[k]});
+  var rollback=function(){
+   Object.keys(localStorage).filter(function(k){return k.indexOf('zipper')===0}).forEach(function(k){localStorage.removeItem(k)});
+   Object.keys(before).forEach(function(k){localStorage.setItem(k,before[k])});
+  };
+  try{
+   localStorage.setItem('zipperRespaldoAntesRestauracion',snapshot);
+   Object.keys(localStorage).filter(function(k){return k.indexOf('zipper')===0&&k.indexOf('zipperRespaldo')!==0}).forEach(function(k){localStorage.removeItem(k)});
+   Object.keys(target).forEach(function(k){localStorage.setItem(k,target[k])});
+   Object.keys(target).forEach(function(k){if(localStorage.getItem(k)!==target[k])throw new Error('Error de escritura en '+k)});
+   required.forEach(function(k){if(JSON.parse(localStorage.getItem(k)).length!==parsed[k].length)throw new Error('Conteo incorrecto en '+k)});
+  }catch(e){try{rollback()}catch(rollbackError){throw new Error('Restauración fallida y recuperación incompleta. Conserva el respaldo original. '+rollbackError.message)}throw new Error('Restauración cancelada; datos anteriores recuperados. '+e.message)}
+  sessionStorage.setItem('zipperRestoreResult',JSON.stringify({sales:parsed.zipperComprobantes.length,clients:parsed.zipperClientes.length,products:parsed.zipperProductos.length}));
+  say('RESTAURACIÓN CORRECTA: '+parsed.zipperComprobantes.length+' ventas recuperadas.');
+  alert('RESPALDO RESTAURADO CORRECTAMENTE.');
   location.reload();
  }
  function readSelected(){
