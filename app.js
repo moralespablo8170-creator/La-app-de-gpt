@@ -98,8 +98,8 @@ function migrateVariantInventory(){
     });
     changed=true;
   };
-  ensureGroup(n=>/^bigtime\b/.test(n)&&!n.includes('ultra')&&n!=='bigtime',btColors,'bigtime');
-  ensureGroup(n=>n.includes('bigtime ultra')&&!/promo|11200/.test(n),buColors,'bigtime-ultra');
+  ensureGroup(n=>/^big\s*time\b/.test(n)&&!n.includes('ultra')&&!/^big\s*time$/.test(n),btColors,'bigtime');
+  ensureGroup(n=>/big\s*time\s*ultra/.test(n)&&!/promo|11200/.test(n),buColors,'bigtime-ultra');
   ensureGroup(n=>n.includes('alka 2'),alColors,'alka2');
   ensureGroup(n=>n.includes('languetaz'),laColors,'languetazo');
 
