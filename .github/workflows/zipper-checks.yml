@@ -20,3 +20,4 @@ jobs:
       - run: node tests/check-debt-runtime.mjs
       - run: node tests/check-visits-runtime.mjs
       - run: node tests/check-client-deletion.mjs
+      - run: node tests/check-debt-payment.mjs
