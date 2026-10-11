@@ -286,7 +286,15 @@ function loadSeed(){return fetch('./data/zipper-seed.json',{cache:'no-store'}).t
    if(!src.name||!['A','B'].includes(src.week))return;
    const a=address(src.address),n=key(src.name);
    const sourceKey=src.week+'|'+src.day+'|'+src.position;
-   let matches=clients.filter(c=>c.zzzSourceKeys&&c.zzzSourceKeys.includes(sourceKey));
+   let matches=clients.filter(c=>{
+    if(!Array.isArray(c.zzzSourceKeys)||!c.zzzSourceKeys.includes(sourceKey))return false;
+    if(key(c.name)!==n)return false;
+    const assigned=clientRoute(c,src.week);
+    if(!assigned||norm(assigned.day)!==norm(src.day)||Number(assigned.position)!==Number(src.position))return false;
+    const oldRut=String(c.rut||'').replace(/[^0-9k]/gi,'').toLowerCase();
+    const newRut=String(src.rut||'').replace(/[^0-9k]/gi,'').toLowerCase();
+    return !(oldRut&&newRut&&oldRut!==newRut);
+   });
    if(matches.length!==1)matches=clients.filter(c=>n&&key(c.name)===n&&a&&address(c.address)===a);
    if(matches.length!==1)matches=clients.filter(c=>n&&key(c.name)===n&&a&&address(c.address)===a);
    if(matches.length!==1&&a.length>=7)matches=clients.filter(c=>n&&key(c.name)===n&&address(c.address)&& (address(c.address).startsWith(a)||a.startsWith(address(c.address))));
