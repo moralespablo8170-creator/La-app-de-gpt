@@ -17,3 +17,4 @@ jobs:
       - run: node tests/check-sales-arithmetic.mjs
       - run: node tests/check-sale-routes.mjs
       - run: node tests/check-sale-inventory.mjs
+      - run: node tests/check-debt-runtime.mjs
