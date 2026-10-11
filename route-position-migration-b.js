@@ -13,7 +13,7 @@ const usedByDay={},lastByDay={};rows.forEach(r=>{const day=r[0],requested=Number
 const sameDay=clients.filter(x=>key(x.name)===key(name)&&x.routeAssignments?.B&&normLocal(x.routeAssignments.B.day)===normLocal(day));
 let c=sameDay.find(x=>Number(x.routeAssignments.B.position)===pos);
 // No reasignar una ficha existente a otra posición solo por coincidir el nombre.
-if(!c&&sameDay.length>1)return; // Ambiguo: conservar todas las fichas.
+if(!c&&sameDay.length>0)return; // Ya existe en este día: no crear otro registro ni cambiar su posición.
 if(!c){
  const unassigned=clients.filter(x=>key(x.name)===key(name)&&!x.routeAssignments?.B);
  if(unassigned.length===1)c=unassigned[0];
