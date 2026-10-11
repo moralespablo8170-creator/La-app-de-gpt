@@ -1,0 +1,15 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+const src=fs.readFileSync(new URL('../app.js',import.meta.url),'utf8');
+const extract=(name,next)=>{const start=src.indexOf('function '+name+'('),end=src.indexOf('function '+next+'(',start+1);assert(start>=0&&end>start,name+' not found');return src.slice(start,end)};
+const functions=extract('saleTotal','saleCost')+extract('saleCost','saleProfit')+extract('saleProfit','saleDate');
+const {saleTotal,saleCost,saleProfit}=new Function(functions+';return {saleTotal,saleCost,saleProfit}')();
+const sale={items:[{qty:3,price:199.99,purchasePrice:100.05},{qty:2,price:349.50,purchasePrice:220.10}]};
+assert.equal(saleTotal(sale),1299);
+assert.equal(saleCost(sale),740);
+assert.equal(saleProfit(sale),559);
+assert.equal(saleTotal({items:[]}),0);
+assert.equal(saleCost({items:[]}),0);
+assert.equal(saleProfit({items:[]}),0);
+assert.equal(saleTotal({items:[{qty:2,price:500}]}),1000);
+console.log('Sales arithmetic runtime checks passed.');
