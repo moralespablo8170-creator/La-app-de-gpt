@@ -110,6 +110,14 @@ window.zipperBackupDirect=function(){
    parsed[k]=JSON.parse(file.data[k]);
    if(!Array.isArray(parsed[k]))throw new Error(k+' no tiene un formato válido.');
   });
+  // Validar identidades antes de tocar el almacenamiento actual.
+  var ids=new Set();
+  parsed.zipperClientes.forEach(function(c,i){
+   if(!c||c.id===undefined||c.id===null||!String(c.id).trim())throw new Error('Cliente sin identificador en la posición '+(i+1)+'.');
+   var id=String(c.id);
+   if(ids.has(id))throw new Error('El respaldo tiene un identificador de cliente repetido: '+id+'.');
+   ids.add(id);
+  });
   if(!confirm('Se restaurarán '+parsed.zipperComprobantes.length+' ventas, '+parsed.zipperClientes.length+' clientes y '+parsed.zipperProductos.length+' productos. ¿Continuar?')){say('Restauración cancelada.');return;}
   var before={};
   Object.keys(localStorage).filter(function(k){return k.indexOf('zipper')===0}).forEach(function(k){before[k]=localStorage.getItem(k);});
