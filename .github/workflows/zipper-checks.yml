@@ -1,0 +1,14 @@
+name: Zipper branch checks
+on:
+  push:
+    branches: [revision-duplicados-20261010]
+  workflow_dispatch:
+jobs:
+  static-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node tests/check-static.mjs
