@@ -44,6 +44,13 @@ function verify(doc){
    if(pid!=null&&!productIds.has(String(pid)))warnings.push('Venta '+(i+1)+' producto histórico no presente en inventario: '+pid+' (ítem '+(j+1)+')');
   });
  });
+ const seenSales=new Set();
+ sales.forEach((sale,i)=>{
+  const id=String(sale?.id??'');
+  if(!id)errors.push('Comprobante sin ID en fila '+(i+1));
+  else if(seenSales.has(id))errors.push('ID de comprobante duplicado: '+id);
+  seenSales.add(id);
+ });
  const visits=Object.keys(d).filter(k=>k.startsWith('zipperVisitados-')).map(k=>({key:k,ids:parse(k)}));
  visits.forEach(({key,ids})=>{
   const seen=new Set();
