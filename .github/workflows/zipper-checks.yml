@@ -13,3 +13,4 @@ jobs:
           node-version: '22'
       - run: node tests/check-static.mjs
       - run: node tests/check-migration-runtime.mjs
+      - run: node tests/check-backup-runtime.mjs
