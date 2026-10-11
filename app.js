@@ -752,7 +752,7 @@ function zipperReceiptPdf(sale){
  add('TOTAL: '+money(saleTotal(sale)),13,1);
  const height=Math.max(35*mm,lines.reduce((n,l)=>n+(l.size*1.35+l.space),0)+11*mm);
  let y=height-6*mm,stream='';
- for(const l of lines){if(l.str){const escaped=ascii(l.str).replace(/[\\()]/g,'\\function sendReceiptToSystem(){if(!preparedReceipt){alert('Primero selecciona un comprobante.');return}applyReceiptFormat();closeReceiptPreview();requestAnimationFrame(()=>window.print())}');stream+='BT /F1 '+l.size+' Tf 1 0 0 1 '+left.toFixed(2)+' '+y.toFixed(2)+' Tm ('+escaped+') Tj ET\n'}y-=l.size*1.35+l.space}
+ for(const l of lines){if(l.str){const escaped=ascii(l.str).replace(/[\\()]/g,c=>'\\'+c);stream+='BT /F1 '+l.size+' Tf 1 0 0 1 '+left.toFixed(2)+' '+y.toFixed(2)+' Tm ('+escaped+') Tj ET\n'}y-=l.size*1.35+l.space}
  const objects=[
  '<< /Type /Catalog /Pages 2 0 R >>',
  '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
