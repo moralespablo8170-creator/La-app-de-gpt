@@ -24,16 +24,29 @@ function verify(doc){
    if(!Number.isInteger(pos)||pos<1)errors.push('Posición inválida: '+c.name+' '+slot);
    if(routePos.has(slot))errors.push('Posición repetida: '+slot+' ('+routePos.get(slot)+' / '+c.name+')');
    else routePos.set(slot,c.name);
-   const identity=normal(c.name)+' / '+slot;
+   const identity=normal(c.name)+' / '+week+' / '+normal(r.day);
    if(routeIdentity.has(identity))warnings.push('Nombre y ruta duplicados: '+identity);
    routeIdentity.set(identity,true);
   });
  });
- for(const [k,v] of Object.entries(d)){
-  if(k==='zipperClientes'||typeof v!=='string')continue;
-  for(const c of clients){if(!c.id)continue;}
- }
- return {clients:clients.length,sales:sales.length,products:products.length,weekCounts,errors,warnings};
+ const clientIds=new Set(clients.map(c=>String(c?.id??'')));
+ const productIds=new Set(products.map(p=>String(p?.id??'')));
+ const saleIds=new Set(sales.map(s=>String(s?.id??'')));
+ sales.forEach((sale,i)=>{
+  const cid=sale?.clienteId??sale?.clientId;
+  if(cid!=null&&!clientIds.has(String(cid)))errors.push('Venta '+(i+1)+' referencia cliente inexistente: '+cid);
+  (sale?.items||[]).forEach((item,j)=>{
+   const pid=item?.baseProductId??item?.productId;
+   if(pid!=null&&!productIds.has(String(pid)))warnings.push('Venta '+(i+1)+' producto histórico no presente en inventario: '+pid+' (ítem '+(j+1)+')');
+  });
+ });
+ const payments=d.zipperPagos?parse('zipperPagos'):[];
+ payments.forEach((p,i)=>{
+  const cid=p?.clienteId??p?.clientId;
+  if(cid!=null&&!clientIds.has(String(cid)))errors.push('Abono '+(i+1)+' referencia cliente inexistente: '+cid);
+  if(p?.saleId!=null&&!saleIds.has(String(p.saleId)))errors.push('Abono '+(i+1)+' referencia venta inexistente: '+p.saleId);
+ });
+ return {clients:clients.length,sales:sales.length,products:products.length,payments:payments.length,weekCounts,errors,warnings};
 }
 $('file').addEventListener('change',async e=>{
  try{
