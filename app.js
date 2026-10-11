@@ -83,6 +83,9 @@ function migrateVariantInventory(){
     if(existing.length>=defs.length)return;
     const base=rows[0]||existing[0];
     if(!base)return;
+    // Con varios productos sin clasificar no adivinar a qué color corresponde cada stock.
+    // Conservarlos intactos para evitar duplicar cantidades o romper referencias de ventas.
+    if(rows.length>1||rows.length&&existing.length)return;
     if(rows.length){
       const ix=out.indexOf(base);
       out.splice(ix,1);
