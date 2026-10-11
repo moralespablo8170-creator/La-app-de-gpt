@@ -60,7 +60,7 @@ function verify(doc){
   }
  });
  sales.forEach(sale=>{
-  const sum=(sale?.items||[]).reduce((a,i)=>a+Number(i.qty||0)*Number(i.price||0),0);
+  const sum=(sale?.items||[]).reduce((a,i)=>a+Math.round(Number(i.qty||0)*Number(i.price||0)),0);
   if(sale?.total!=null&&Math.abs(Number(sale.total)-sum)>1)warnings.push('Total de venta no coincide con items: '+sale.id);
  });
  const visits=Object.keys(d).filter(k=>k.startsWith('zipperVisitados-')).map(k=>({key:k,ids:parse(k)}));
