@@ -9,4 +9,7 @@ const route=(client,week)=>client.routeAssignments[week]||null;
 assert.deepEqual(choose(()=>({week:'B',day:'Jueves'}),route,c),{week:'B',day:'Jueves'});
 assert.deepEqual(choose(()=>({week:'A',day:'Lunes'}),route,c),{week:'A',day:'Lunes'});
 assert.deepEqual(choose(()=>({week:'B',day:'Martes'}),route,c),{week:'A',day:'Lunes'});
-console.log('Three active route attribution scenarios passed.');
+const bOnly={routeWeek:'A',routeDay:'',routeAssignments:{B:{day:'Viernes',position:3}}};
+assert.deepEqual(choose(()=>null,route,bOnly),{week:'B',day:'Viernes'});
+assert.deepEqual(choose(()=>({week:'A',day:'Lunes'}),route,bOnly),{week:'B',day:'Viernes'});
+console.log('Five active route attribution scenarios passed.');
