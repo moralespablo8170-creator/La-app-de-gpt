@@ -733,7 +733,57 @@ function receiptFormat(){return '80'}
 function applyReceiptFormat(){const f='80';$('receiptFormat').value=f;localStorage.setItem('zipperPrintFormat',f);const width=f==='58'?'48mm':f==='80'?'72mm':'190mm';const receipt=$('printArea').querySelector('.receipt');if(receipt)receipt.style.width=width;$('receiptPreview').innerHTML=$('printArea').innerHTML;const preview=$('receiptPreview').querySelector('.receipt');if(preview){preview.style.maxWidth='100%';preview.style.margin='0 auto'}let style=$('receiptPageStyle');if(!style){style=document.createElement('style');style.id='receiptPageStyle';document.head.appendChild(style)}const chars=f==='58'?16:28;const lines=(preparedReceipt?.items||[]).reduce((sum,i)=>sum+Math.ceil((String(i.desc||'')+(i.promotion?' · OFERTA':'')).length/chars)+1,0);let height=Math.max(65,50+lines*5);if(f!=='letter'&&receipt){const measure=document.createElement('div');measure.className='print-area';measure.style.cssText='position:fixed;left:-10000px;top:0;visibility:hidden;display:block;pointer-events:none';const copy=receipt.cloneNode(true);copy.style.cssText='width:'+width+';max-width:none;margin:0;font-size:11px;overflow-wrap:anywhere';measure.appendChild(copy);document.body.appendChild(measure);try{const actual=copy.getBoundingClientRect().height;if(actual>0)height=Math.max(65,Math.ceil(actual*25.4/96)+10)}finally{measure.remove()}}style.textContent='@media print{@page{size:'+(f==='letter'?'letter':f+'mm '+height+'mm')+';margin:3mm}.print-area .receipt{width:'+width+';max-width:100%;margin:0;font-size:11px;overflow-wrap:anywhere}.receipt .line{gap:6px}.receipt .line strong{white-space:nowrap;flex:none}}';$('receiptFormatNote').textContent=f==='letter'?'Papel carta. Selecciona también carta en el diálogo de impresión.':'Rollo de '+f+' mm. En el diálogo de Android, selecciona el servicio de impresión y el mismo ancho de papel. Desactiva encabezados y pies del navegador si aparecen.'}
 function openReceiptPreview(){if(!preparedReceipt)return;$('receiptFormat').value=receiptFormat();applyReceiptFormat();$('receiptPrintModal').classList.remove('hidden')}
 function closeReceiptPreview(){$('receiptPrintModal').classList.add('hidden')}
-function sendReceiptToSystem(){if(!preparedReceipt){alert('Primero selecciona un comprobante.');return}applyReceiptFormat();closeReceiptPreview();requestAnimationFrame(()=>window.print())}
+// Fun Print: PDF temporal en memoria; la venta permanece únicamente en Historial.
+function zipperReceiptPdf(sale){
+ const mm=72/25.4, width=58*mm, left=5*mm, right=4*mm;
+ const lines=[];
+ const add=(str,size=11,space=3)=>{lines.push({str:String(str),size,space})};
+ const ascii=v=>String(v??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\x20-\x7e]/g,' ');
+ const wrap=(value,max)=>{const words=ascii(value).split(/\s+/);let line='';for(const w of words){if(line&&line.length+1+w.length>max){add(line,11,1);line=w}else line+=(line?' ':'')+w}if(line)add(line,11,1)};
+ add('DISTRIBUIDORA ZIPPER',10,2);
+ add('Comprobante #'+sale.folio,11,1);
+ add(String(sale.fecha||'').split('-').reverse().join('-'),11,3);
+ wrap(sale.cliente||'',23);add('',11,3);
+ for(const item of sale.items||[]){
+  wrap(item.desc||'',22);
+  add(String(item.qty)+' x '+money(item.price),11,1);
+  add('= '+money(Math.round(Number(item.qty)*Number(item.price))),11,3);
+ }
+ add('TOTAL: '+money(saleTotal(sale)),13,1);
+ const height=Math.max(35*mm,lines.reduce((n,l)=>n+(l.size*1.35+l.space),0)+11*mm);
+ let y=height-6*mm,stream='';
+ for(const l of lines){if(l.str){const escaped=ascii(l.str).replace(/[\\()]/g,'\\function sendReceiptToSystem(){if(!preparedReceipt){alert('Primero selecciona un comprobante.');return}applyReceiptFormat();closeReceiptPreview();requestAnimationFrame(()=>window.print())}');stream+='BT /F1 '+l.size+' Tf 1 0 0 1 '+left.toFixed(2)+' '+y.toFixed(2)+' Tm ('+escaped+') Tj ET\n'}y-=l.size*1.35+l.space}
+ const objects=[
+ '<< /Type /Catalog /Pages 2 0 R >>',
+ '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+ '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+width.toFixed(2)+' '+height.toFixed(2)+'] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>',
+ '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>',
+ '<< /Length '+stream.length+' >>\nstream\n'+stream+'endstream'
+ ];
+ let pdf='%PDF-1.4\n',offsets=[0];
+ for(let i=0;i<objects.length;i++){offsets.push(pdf.length);pdf+=(i+1)+' 0 obj\n'+objects[i]+'\nendobj\n'}
+ const start=pdf.length;pdf+='xref\n0 '+(objects.length+1)+'\n0000000000 65535 f \n';
+ for(const o of offsets.slice(1))pdf+=String(o).padStart(10,'0')+' 00000 n \n';
+ pdf+='trailer\n<< /Size '+(objects.length+1)+' /Root 1 0 R >>\nstartxref\n'+start+'\n%%EOF';
+ return new File([pdf],'Zipper-ticket-'+sale.folio+'.pdf',{type:'application/pdf'});
+}
+async function sendReceiptToSystem(){
+ if(!preparedReceipt){alert('Primero selecciona un comprobante.');return}
+ const sale=preparedReceipt;
+ if(navigator.share&&typeof File!=='undefined'){
+  try{
+   const file=zipperReceiptPdf(sale);
+   if(!navigator.canShare||navigator.canShare({files:[file]})){
+    await navigator.share({files:[file]});
+    closeReceiptPreview();return;
+   }
+  }catch(error){
+   if(error&&error.name==='AbortError')return;
+   console.warn('Compartir PDF no disponible; impresión normal.',error);
+  }
+ }
+ applyReceiptFormat();closeReceiptPreview();requestAnimationFrame(()=>window.print());
+}
 function addCategory(){const n=$('newCategory').value.trim();if(!n)return;const cs=getCategories();if(cs.some(x=>norm(x)===norm(n))){$('categoryStatus').textContent='Esa categoría ya existe.';return}const saved=readArray('zipperCategorias').filter(x=>String(x).trim());const removed=readArray('zipperCategoriasEliminadas').filter(x=>norm(x)!==norm(n));saved.push(n);writeArray('zipperCategorias',saved);writeArray('zipperCategoriasEliminadas',removed);$('newCategory').value='';$('categoryStatus').textContent='Categoría creada.';renderCategories()}
 function renameCategory(oldName,next){if(!next||norm(next)===norm(oldName))return;const cs=getCategories();if(cs.some(x=>norm(x)===norm(next))){alert('Ya existe una categoría con ese nombre.');return}const saved=readArray('zipperCategorias').filter(x=>String(x).trim());const removed=readArray('zipperCategoriasEliminadas').filter(x=>norm(x)!==norm(next));const si=saved.findIndex(x=>norm(x)===norm(oldName));if(si>=0)saved[si]=next;else saved.push(next);if(!removed.some(x=>norm(x)===norm(oldName)))removed.push(oldName);const ps=getRawProducts();ps.forEach(p=>{if(norm(p.category)===norm(oldName))p.category=next});writeArray('zipperCategorias',saved);writeArray('zipperCategoriasEliminadas',removed);writeArray('zipperProductos',ps);renderCategories();renderInventory();renderCategoriesOptions();$('categoryStatus').textContent='Categoría modificada.'}
 function editCategory(oldName){const n=prompt('Nuevo nombre para la categoría:',oldName);if(n!==null)renameCategory(oldName,n.trim())}
