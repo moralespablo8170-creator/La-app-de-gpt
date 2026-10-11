@@ -114,12 +114,23 @@ window.zipperBackupDirect=function(){
   var before={};
   Object.keys(localStorage).filter(function(k){return k.indexOf('zipper')===0}).forEach(function(k){before[k]=localStorage.getItem(k);});
   localStorage.setItem('zipperRespaldoAntesRestauracion',JSON.stringify({createdAt:new Date().toISOString(),data:before}));
-  Object.keys(localStorage).filter(function(k){return k.indexOf('zipper')===0&&k.indexOf('zipperRespaldo')!==0}).forEach(function(k){localStorage.removeItem(k);});
-  Object.keys(file.data).forEach(function(k){if(k.indexOf('zipper')===0&&k.indexOf('zipperRespaldo')!==0&&typeof file.data[k]==='string')localStorage.setItem(k,file.data[k]);});
-  var s=JSON.parse(localStorage.getItem('zipperComprobantes')||'[]');
-  var cl=JSON.parse(localStorage.getItem('zipperClientes')||'[]');
-  var pr=JSON.parse(localStorage.getItem('zipperProductos')||'[]');
-  if(s.length!==parsed.zipperComprobantes.length||cl.length!==parsed.zipperClientes.length||pr.length!==parsed.zipperProductos.length)throw new Error('El teléfono no confirmó todos los datos escritos.');
+  try{
+   Object.keys(localStorage).filter(function(k){return k.indexOf('zipper')===0&&k.indexOf('zipperRespaldo')!==0}).forEach(function(k){localStorage.removeItem(k);});
+   Object.keys(file.data).forEach(function(k){if(k.indexOf('zipper')===0&&k.indexOf('zipperRespaldo')!==0&&typeof file.data[k]==='string')localStorage.setItem(k,file.data[k]);});
+   var s=JSON.parse(localStorage.getItem('zipperComprobantes')||'[]');
+   var cl=JSON.parse(localStorage.getItem('zipperClientes')||'[]');
+   var pr=JSON.parse(localStorage.getItem('zipperProductos')||'[]');
+   if(s.length!==parsed.zipperComprobantes.length||cl.length!==parsed.zipperClientes.length||pr.length!==parsed.zipperProductos.length)throw new Error('El teléfono no confirmó todos los datos escritos.');
+   Object.keys(file.data).forEach(function(k){
+    if(k.indexOf('zipper')===0&&k.indexOf('zipperRespaldo')!==0&&typeof file.data[k]==='string'&&localStorage.getItem(k)!==file.data[k])throw new Error('No se confirmó la escritura de '+k+'.');
+   });
+  }catch(err){
+   try{
+    Object.keys(localStorage).filter(function(k){return k.indexOf('zipper')===0&&k.indexOf('zipperRespaldo')!==0}).forEach(function(k){localStorage.removeItem(k);});
+    Object.keys(before).forEach(function(k){if(k.indexOf('zipperRespaldo')!==0)localStorage.setItem(k,before[k]);});
+   }catch(rollbackError){throw new Error('Falló la restauración y la recuperación automática. Conserva tu respaldo original. '+rollbackError.message);}
+   throw new Error('La restauración no se completó; se recuperaron los datos anteriores. '+err.message);
+  }
   sessionStorage.setItem('zipperRestoreResult',JSON.stringify({sales:s.length,clients:cl.length,products:pr.length}));
   say('RESTAURACIÓN CORRECTA: '+s.length+' ventas recuperadas.');
   alert('RESPALDO RESTAURADO CORRECTAMENTE. Ventas recuperadas: '+s.length+'.');
