@@ -683,7 +683,10 @@ function saveClient(){
   const rawPos=String($('clientPosition').value||'').trim();
   const wanted=rawPos?Math.max(1,parseInt(rawPos,10)||1):null;
   const id=editingClientId||uid();
-  if(!editingClientId && cs.some(c=>norm(c.name)===norm(name) && norm(c.address)===norm(address) && clientRoute(c,week)?.day===day))return;
+  if(cs.some(c=>String(c.id)!==String(id) && norm(c.name)===norm(name) && norm(c.address)===norm(address) && norm(clientRoute(c,week)?.day)===norm(day) && !!clientRoute(c,week))){
+    $('clientValidation').textContent='Este cliente ya figura en el mismo día y semana. Busca el registro existente para editarlo.';
+    return;
+  }
   let current=cs.find(c=>String(c.id)===String(id));
   const oldRoute=current?clientRoute(current,week):null;
   const data={name,rut,razonSocial:$('clientBusinessName').value.trim(),comuna:$('clientComuna').value.trim(),observations:$('clientObservations').value.trim(),sendInvoice:$('clientSendInvoice').checked,phone:($('clientPhone').value.replace(/\D/g,'')==='569'?'':$('clientPhone').value.replace(/\D/g,'')),address,route:'',active:true};
