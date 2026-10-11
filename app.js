@@ -690,13 +690,13 @@ async function createReceiptPdfFile(){
   rows.push({spacer:true});
   (sale.items||[]).forEach(item=>{wrap(item.desc+(item.promotion?' · OFERTA':''),13,true);wrap(item.qty+' x '+money(item.price)+' = '+money(Math.round(Number(item.qty)*Number(item.price))),13,true)});
   rows.push({spacer:true});wrap('TOTAL: '+money(saleTotal(sale)),14,true);
-  const height=Math.max(35,9+rows.reduce((sum,r)=>sum+(r.spacer?2: r.size===15?7.4:6.6),0)+8);
+  const height=Math.max(25,3+rows.reduce((sum,r)=>sum+(r.spacer?1: r.size===15?7.4:6.6),0)+3);
   // Generador PDF local: sin CDN, sin conexión y sin dependencias externas.
   const pt=72/25.4, pageW=width*pt, pageH=height*pt;
   const clean=t=>String(t??'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^\x20-\x7e]/g,'-').replace(/([\\()])/g,'\\$1');
-  let y=5, commands=[];
+  let y=3, commands=[];
   for(const row of rows){
-   if(row.spacer){y+=2;continue}
+   if(row.spacer){y+=1;continue}
    const font=row.bold?'F2':'F1', yy=(pageH-y*pt).toFixed(2);
    commands.push('BT /'+font+' '+row.size+' Tf 2 Tr 0.35 w 1 0 0 1 '+(margin*pt).toFixed(2)+' '+yy+' Tm ('+clean(row.text)+') Tj ET');
    y+=row.size===15?7.4:6.6;
