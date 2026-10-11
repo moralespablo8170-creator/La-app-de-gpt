@@ -44,13 +44,23 @@ function verify(doc){
    if(pid!=null&&!productIds.has(String(pid)))warnings.push('Venta '+(i+1)+' producto histórico no presente en inventario: '+pid+' (ítem '+(j+1)+')');
   });
  });
+ const visits=Object.keys(d).filter(k=>k.startsWith('zipperVisitados-')).map(k=>({key:k,ids:parse(k)}));
+ visits.forEach(({key,ids})=>{
+  const seen=new Set();
+  ids.forEach((id,i)=>{
+   const value=String(id);
+   if(seen.has(value))warnings.push('Visitado repetido en '+key+': '+value);
+   seen.add(value);
+   if(!clientIds.has(value))warnings.push('Visitado referencia cliente inexistente en '+key+': '+value);
+  });
+ });
  const payments=d.zipperPagos?parse('zipperPagos'):[];
  payments.forEach((p,i)=>{
   const cid=p?.clienteId??p?.clientId;
   if(cid!=null&&!clientIds.has(String(cid)))errors.push('Abono '+(i+1)+' referencia cliente inexistente: '+cid);
   if(p?.saleId!=null&&!saleIds.has(String(p.saleId)))errors.push('Abono '+(i+1)+' referencia venta inexistente: '+p.saleId);
  });
- return {clients:clients.length,sales:sales.length,products:products.length,payments:payments.length,weekCounts,errors,warnings};
+ return {clients:clients.length,sales:sales.length,products:products.length,payments:payments.length,visits:visits.reduce((n,v)=>n+v.ids.length,0),weekCounts,errors,warnings};
 }
 $('file').addEventListener('change',async e=>{
  try{
