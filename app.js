@@ -69,7 +69,7 @@ function migrateVariantInventory(){
   // If old Tabaco was a single product, split its stock into the 15 independent flavors.
   ps.forEach(p=>{
     const n=norm(p.name);
-    if(n.includes('tabaco bristol') && !p.flavor){
+    if(n.includes('tabaco bristol') && !p.flavor && !p.variantKey && !n.includes(' · ') && !/\b(chocolate|cherry|caramelo|vainilla|original|mango|uva|arandano|arándano|menta|sandia|sandía|maracuya|maracuyá|coco|virginia|cafe turco|café turco|chicle)\b/.test(n)){
       tabacoSabores.forEach((flavor,i)=>out.push({...p,id:i===0?p.id:uid(),name:'Tabaco Bristol 45 gr · '+flavor,flavor,variantKey:'tabaco-bristol',stock:i===4?Number(p.stock||0):0}));
       changed=true;
     }else out.push(p);
