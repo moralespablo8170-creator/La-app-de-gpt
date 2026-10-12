@@ -136,6 +136,7 @@ window.zipperBackupDirect=function(){
     if(!clientIds.has(String(p.clienteId)))throw new Error('Abono '+(i+1)+' con cliente inexistente.');
     if(!Number.isSafeInteger(Number(p.amount))||Number(p.amount)<=0)throw new Error('Abono '+(i+1)+' con monto inválido.');
     if(p.saleId&& !saleIds.has(String(p.saleId)))throw new Error('Abono '+(i+1)+' asociado a una venta inexistente.');
+    if(p.saleId){var linkedSale=parsed.zipperComprobantes.find(function(x){return String(x.id)===String(p.saleId)});if(String(linkedSale.clienteId)!==String(p.clienteId))throw new Error('Abono '+(i+1)+' asociado a una venta de otro cliente.')}
     if(!['cash','transfer'].includes(p.paymentMethod))throw new Error('Abono '+(i+1)+' con medio de pago inválido.');
    });
   }
