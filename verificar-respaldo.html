@@ -21,7 +21,15 @@ document.getElementById('file').addEventListener('change',async e=>{
    if(k.includes('::')&&/zipperClientes$/i.test(k))throw Error('Base auxiliar antigua no reconciliada');
    if(/(?:abono|pago|visitad)/i.test(k)){const arr=JSON.parse(v);if(Array.isArray(arr))for(const x of arr){const id=x&&(x.clienteId||x.clientId);if(id&&!clients.has(id))throw Error('Referencia inválida en '+k)}}
   }
-  out.textContent='VALIDACIÓN CORRECTA\nClientes: '+parsed.zipperClientes.length+'\nProductos: '+parsed.zipperProductos.length+'\nComprobantes: '+parsed.zipperComprobantes.length+'\nSecciones de datos: '+Object.keys(data).length+'\n\nNo se ha restaurado ni modificado ningún dato.';
+  // Simulación de escritura y lectura sin tocar localStorage.
+  const virtualStorage=new Map();
+  for(const [k,v] of Object.entries(data))virtualStorage.set(k,v);
+  for(const k of names){
+   const restored=JSON.parse(virtualStorage.get(k));
+   if(restored.length!==parsed[k].length)throw Error('Conteo inconsistente al simular restauración: '+k);
+  }
+  if(virtualStorage.size!==Object.keys(data).length)throw Error('Secciones incompletas en restauración simulada');
+  out.textContent='VALIDACIÓN CORRECTA\nClientes: '+parsed.zipperClientes.length+'\nProductos: '+parsed.zipperProductos.length+'\nComprobantes: '+parsed.zipperComprobantes.length+'\nSecciones de datos: '+Object.keys(data).length+'\n\nSIMULACIÓN EN MEMORIA CORRECTA. No se ha restaurado ni modificado ningún dato del teléfono.';
  }catch(err){out.textContent='VALIDACIÓN FALLIDA: '+err.message+'\nNo se modificó ningún dato.'}
 });
 </script>
