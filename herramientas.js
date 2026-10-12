@@ -11,7 +11,7 @@ function exportZipperBackup(){
  try{
   status.textContent='Preparando respaldo…';
   const data={};zipperDataKeys(localStorage).forEach(k=>data[k]=localStorage.getItem(k));
-  for(const k of ['zipperProductos','zipperClientes','zipperComprobantes'])if(!data[k])data[k]='[]';
+  for(const k of ['zipperProductos','zipperClientes','zipperComprobantes','zipperPagos','zipperGastosCaja'])if(!data[k])data[k]='[]';
   const backup={app:'Distribuidora zipper',schemaVersion:1,createdAt:new Date().toISOString(),data};validateZipperBackup(backup);
   const name='Zipper-respaldo-'+localDate()+'.json';
   const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json;charset=utf-8'});
@@ -19,7 +19,7 @@ function exportZipperBackup(){
   const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);
   a.click();
   setTimeout(()=>{a.remove();URL.revokeObjectURL(url)},30000);
-  status.textContent='Respaldo solicitado: '+name+'. Si Android pregunta, elige Descargar o Guardar.';
+  status.textContent='Respaldo solicitado: '+name+' · '+JSON.parse(data.zipperComprobantes).length+' ventas · '+JSON.parse(data.zipperPagos).length+' abonos · '+JSON.parse(data.zipperGastosCaja).length+' gastos. Revisa Descargas.';
   alert('Respaldo preparado. Revisa Descargas: '+name);
  }catch(e){
   status.textContent='ERROR DE RESPALDO: '+(e&&e.message?e.message:e);
