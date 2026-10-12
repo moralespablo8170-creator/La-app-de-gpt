@@ -658,11 +658,14 @@ function saveClient(){
   const insertAt=wanted||group.reduce((m,c)=>Math.max(m,clientRoute(c,week).position===999999?0:clientRoute(c,week).position),0)+1;
   const targetIndex=group.findIndex(c=>clientRoute(c,week).position>=insertAt);
   group.splice(targetIndex<0?group.length:targetIndex,0,current);
-  // Numerar según el orden definitivo, sin posiciones duplicadas.
-  // Conservar la numeración inicial si comienza después de 1.
-  const firstPosition=Math.min(insertAt,...group.filter(c=>c!==current).map(c=>clientRoute(c,week).position).filter(p=>p<999999));
-  let nextPosition=Math.max(1,Number.isFinite(firstPosition)?firstPosition:1);
-  group.forEach(c=>setClientRoute(c,week,day,nextPosition++));
+  // Respetar los números anteriores y desplazar únicamente los que se solapan.
+  let previous=0;
+  group.forEach(c=>{
+    const desired=c===current?insertAt:clientRoute(c,week).position;
+    const position=Math.max(previous+1,desired===999999?previous+1:desired);
+    setClientRoute(c,week,day,position);
+    previous=position;
+  });
   if(writeArray('zipperClientes',cs)){resetClientForm();$('clientSearchName').value='';$('clientSearchAddress').value='';renderClients();renderHome();window.scrollTo({top:0,behavior:'smooth'});setTimeout(()=>$('clientSearchName').focus(),250)}
 }
 function deleteClient(id){const c=clientById(id);if(!c)return;confirmDelete('Borrar cliente','¿Estás seguro que quieres borrar el cliente "'+c.name+'"? Esta acción no se puede deshacer.',()=>{const cs=getClients().filter(x=>String(x.id)!==String(id));if(writeArray('zipperClientes',cs)){resetClientForm();$('clientSearchName').value='';$('clientSearchAddress').value='';renderClients();renderHome();window.scrollTo({top:0,behavior:'smooth'});setTimeout(()=>$('clientSearchName').focus(),250);$('clientValidation').textContent='Cliente borrado correctamente.';$('clientValidation').className='validation ok'}})}
