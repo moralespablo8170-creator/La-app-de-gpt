@@ -11,22 +11,16 @@
   "lang": "es-CL",
   "icons": [
     {
-      "src": "./assets/icon-large-192.png?v=20261008-logo-v4",
+      "src": "./assets/icon-192.png?v=20261012-dz",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "./assets/icon-large-512.png?v=20261008-logo-v4",
+      "src": "./assets/icono-512.png?v=20261012-dz",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
-    },
-    {
-      "src": "./assets/icon-large-512-v2.png?v=20261008-logo-v4",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
     }
   ]
 }
