@@ -124,6 +124,21 @@ window.zipperBackupDirect=function(){
   parsed.zipperComprobantes.forEach(function(x){
    if((x.clienteId||x.clientId)&&!clientIds.has(x.clienteId||x.clientId))throw new Error('Comprobante con cliente inexistente: '+x.id);
   });
+  if(Object.prototype.hasOwnProperty.call(data,'zipperPagos')){
+   if(typeof data.zipperPagos!=='string')throw new Error('Los abonos del respaldo no tienen un formato válido.');
+   var restoredPayments=JSON.parse(data.zipperPagos);
+   if(!Array.isArray(restoredPayments))throw new Error('Los abonos del respaldo no son una lista.');
+   var saleIds=new Set(parsed.zipperComprobantes.map(function(x){return String(x.id)}));
+   var seenPaymentIds=new Set();
+   restoredPayments.forEach(function(p,i){
+    if(!p||typeof p!=='object'||Array.isArray(p)||!p.id||seenPaymentIds.has(String(p.id)))throw new Error('Abono '+(i+1)+' sin identificador único.');
+    seenPaymentIds.add(String(p.id));
+    if(!clientIds.has(String(p.clienteId)))throw new Error('Abono '+(i+1)+' con cliente inexistente.');
+    if(!Number.isSafeInteger(Number(p.amount))||Number(p.amount)<=0)throw new Error('Abono '+(i+1)+' con monto inválido.');
+    if(p.saleId&& !saleIds.has(String(p.saleId)))throw new Error('Abono '+(i+1)+' asociado a una venta inexistente.');
+    if(!['cash','transfer'].includes(p.paymentMethod))throw new Error('Abono '+(i+1)+' con medio de pago inválido.');
+   });
+  }
   Object.keys(data).forEach(function(k){
    if(k.indexOf('zipper')!==0||typeof data[k]!=='string')throw new Error('Clave o contenido no permitido: '+k);
    if(k==='zipperClientes'||k==='zipperProductos'||k==='zipperComprobantes')return;
