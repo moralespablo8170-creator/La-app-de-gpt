@@ -179,7 +179,7 @@ window.zipperBackupDirect=function(){
    Object.keys(target).forEach(function(k){localStorage.setItem(k,target[k])});
    Object.keys(target).forEach(function(k){if(localStorage.getItem(k)!==target[k])throw new Error('Error de escritura en '+k)});
    required.forEach(function(k){if(JSON.parse(localStorage.getItem(k)).length!==parsed[k].length)throw new Error('Conteo incorrecto en '+k)});
-  }catch(e){try{rollback()}catch(rollbackError){throw new Error('Restauración fallida y recuperación incompleta. Conserva el respaldo original. '+rollbackError.message)}throw new Error('Restauración cancelada; datos anteriores recuperados. '+e.message)}
+  }catch(e){try{rollback()}catch(rollbackError){window.zipperStorageRecoveryFailed=true;document.body.dataset.storageRecoveryFailed='true';try{localStorage.setItem('zipperStorageRecoveryFailed','1')}catch(flagError){}throw new Error('Restauración fallida y recuperación incompleta. Se bloquearon nuevas ventas por seguridad. Conserva el respaldo original. '+rollbackError.message)}throw new Error('Restauración cancelada; datos anteriores recuperados. '+e.message)}
   localStorage.removeItem('zipperStorageRecoveryFailed');
   window.zipperStorageRecoveryFailed=false;
   sessionStorage.setItem('zipperRestoreResult',JSON.stringify({sales:parsed.zipperComprobantes.length,clients:parsed.zipperClientes.length,products:parsed.zipperProductos.length}));
