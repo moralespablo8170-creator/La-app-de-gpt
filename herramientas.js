@@ -47,6 +47,8 @@ async function restoreZipperBackup(input){
    try{
     localStorage.setItem('zipperRespaldoAntesRestauracion',JSON.stringify({createdAt:new Date().toISOString(),data:before}));
     for(const [k,v] of Object.entries(file.data))localStorage.setItem(k,v);
+    // Verificar todas las claves, incluidas rutas, visitados, pendientes y preferencias.
+    for(const [k,v] of Object.entries(file.data))if(localStorage.getItem(k)!==v)throw Error('Falló la restauración de '+k);
     for(const [k,n] of Object.entries(expected)){
      const restored=JSON.parse(localStorage.getItem(k)||'null');
      if(!Array.isArray(restored)||restored.length!==n||localStorage.getItem(k)!==file.data[k])throw Error('Falló la comprobación de '+k);
