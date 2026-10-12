@@ -323,7 +323,7 @@ function renderHome(){
   const visited=visitedIds().map(String),hn=norm($('homeName').value),ha=norm($('homeAddress').value);
   const members=all.filter(c=>{const r=clientRoute(c,view.week);return r&&norm(r.day)===norm(view.day)});const extraIds=[...new Set([...visited,...getSales().filter(s=>saleDate(s)===localDate()).map(s=>String(s.clienteId))])].filter(id=>!members.some(c=>String(c.id)===id));
   const filtered=members.filter(c=>(!hn||searchMatches(c.name,hn))&&(!ha||searchMatches(c.address,ha)));
-  const rows=filtered.filter(c=>showVisited?visited.includes(String(c.id)):!visited.includes(String(c.id))).sort((a,b)=>showVisited?visited.indexOf(String(a.id))-visited.indexOf(String(b.id)):bestSearchScore([a.name,a.address],hn)-bestSearchScore([b.name,b.address],hn)||bestSearchScore([a.address,a.name],ha)-bestSearchScore([b.address,b.name],ha)||clientRoute(a,view.week).position-clientRoute(b,view.week).position||a.name.localeCompare(b.name,'es',{sensitivity:'base'}));
+  const rows=filtered.filter(c=>showVisited?visited.includes(String(c.id)):!visited.includes(String(c.id))).sort((a,b)=>showVisited?visited.indexOf(String(a.id))-visited.indexOf(String(b.id)):clientRoute(a,view.week).position-clientRoute(b,view.week).position||bestSearchScore([a.name,a.address],hn)-bestSearchScore([b.name,b.address],hn)||bestSearchScore([a.address,a.name],ha)-bestSearchScore([b.address,b.name],ha)||a.name.localeCompare(b.name,'es',{sensitivity:'base'}));
   $('routeClients').innerHTML=rows.length?rows.map(c=>{const sale=latestSalesForClient(c.id).find(s=>saleDate(s)===localDate());return '<article class="route-client '+(showVisited?'visited-row':'')+'"><div><strong>'+esc(c.name)+'</strong><span>'+esc(c.address||'Sin dirección')+'</span><span>Semana '+esc(view.week)+' · '+esc(view.day)+'</span></div><div class="actions-small">'+(showVisited?'<span class="sale-status-badge '+(sale?'has-sale':'no-sale')+'">'+(sale?'VENTA · '+money(saleTotal(sale)):'VISITADO · SIN VENTA')+'</span><button class="primary review-visited" data-id="'+esc(c.id)+'" type="button">Revisar</button><button class="primary edit-visited-sale" data-id="'+esc(c.id)+'" type="button">Agregar / modificar venta</button><button class="secondary reprint-last" data-id="'+esc(c.id)+'" type="button">Reimprimir último</button>' +(sale?'<button class="danger annul-visited" data-id="'+esc(sale.id)+'" type="button">Anular venta</button>':'')+'<button class="ghost view-client-sales" data-id="'+esc(c.id)+'" type="button">Ventas anteriores</button>':'<button class="primary select-client" data-id="'+esc(c.id)+'" type="button">Carrito</button><button class="secondary mark-visited" data-id="'+esc(c.id)+'" type="button">Visitado</button>')+'</div></article>'}).join(''):'<p class="muted">'+(showVisited?'Aún no hay clientes visitados.':'No quedan clientes pendientes para esta ruta.')+'</p>';
   if(showVisited&&extraIds.length)$('routeClients').insertAdjacentHTML('beforeend',renderExtraVisitedRows(extraIds));
   $('visitedSales').classList.toggle('hidden',!showVisited);$('visitedBack').classList.toggle('hidden',!showVisited);
@@ -654,9 +654,18 @@ function saveClient(){
   const data={name,rut,razonSocial:$('clientBusinessName').value.trim(),comuna:$('clientComuna').value.trim(),observations:$('clientObservations').value.trim(),sendInvoice:$('clientSendInvoice').checked,phone:($('clientPhone').value.replace(/\D/g,'')==='569'?'':$('clientPhone').value.replace(/\D/g,'')),address,route:'',active:true};
   if(current)Object.assign(current,data);else{current={id,...data};cs.push(current)}
   const group=cs.filter(c=>String(c.id)!==String(id)&&norm(clientRoute(c,week)?.day)===norm(day)&&clientRoute(c,week));
+  group.sort((a,b)=>clientRoute(a,week).position-clientRoute(b,week).position||a.name.localeCompare(b.name,'es',{sensitivity:'base'}));
   const insertAt=wanted||group.reduce((m,c)=>Math.max(m,clientRoute(c,week).position===999999?0:clientRoute(c,week).position),0)+1;
-  if(!oldRoute||norm(oldRoute.day)!==norm(day)||oldRoute.position!==insertAt){group.forEach(c=>{const r=clientRoute(c,week);if(r.position>=insertAt&&r.position<999999)setClientRoute(c,week,day,r.position+1)})}
-  setClientRoute(current,week,day,insertAt);
+  // Reordenar de verdad la ruta: insertar en la posición solicitada y desplazar los siguientes.
+  const targetIndex=group.findIndex(c=>clientRoute(c,week).position>=insertAt);
+  group.splice(targetIndex<0?group.length:targetIndex,0,current);
+  let previous=0;
+  group.forEach((c,i)=>{
+    const original=c===current?insertAt:clientRoute(c,week).position;
+    const position=c===current?Math.max(previous+1,insertAt):Math.max(previous+1,original===999999?previous+1:original);
+    setClientRoute(c,week,day,position);
+    previous=position;
+  });
   if(writeArray('zipperClientes',cs)){resetClientForm();$('clientSearchName').value='';$('clientSearchAddress').value='';renderClients();renderHome();window.scrollTo({top:0,behavior:'smooth'});setTimeout(()=>$('clientSearchName').focus(),250)}
 }
 function deleteClient(id){const c=clientById(id);if(!c)return;confirmDelete('Borrar cliente','¿Estás seguro que quieres borrar el cliente "'+c.name+'"? Esta acción no se puede deshacer.',()=>{const cs=getClients().filter(x=>String(x.id)!==String(id));if(writeArray('zipperClientes',cs)){resetClientForm();$('clientSearchName').value='';$('clientSearchAddress').value='';renderClients();renderHome();window.scrollTo({top:0,behavior:'smooth'});setTimeout(()=>$('clientSearchName').focus(),250);$('clientValidation').textContent='Cliente borrado correctamente.';$('clientValidation').className='validation ok'}})}
