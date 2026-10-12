@@ -171,6 +171,7 @@ window.zipperBackupDirect=function(){
     try{if(localStorage.getItem(k)!==before[k])localStorage.setItem(k,before[k])}catch(e){errors.push(k)}
    });
    Object.keys(before).forEach(function(k){if(localStorage.getItem(k)!==before[k])errors.push(k)});
+   Object.keys(localStorage).filter(function(k){return k.indexOf('zipper')===0&&!Object.prototype.hasOwnProperty.call(before,k)&&k!=='zipperRespaldoAntesRestauracion'}).forEach(function(k){errors.push(k)});
    if(errors.length)throw new Error('No se recuperaron estas claves: '+Array.from(new Set(errors)).join(', '));
   };
   try{
