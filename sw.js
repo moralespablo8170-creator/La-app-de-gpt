@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zipper-app-pwa-20261012-dz-correcto-v28';
+const CACHE_NAME = 'zipper-app-pwa-20261012-finanzas-v29';
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -6,7 +6,7 @@ const APP_SHELL = [
   "./app.js?v=zipper-compartir-directo-v10",
   "./route-position-migration.js?v=1.2",
   "./route-position-migration-b.js?v=1.0",
-  "./herramientas.js?v=8",
+  "./herramientas.js?v=20261012-finanzas-v2",
   "./pwa.js?v=20261007-2",
   "./manifest.json?v=20261012-dz-correcto",
   "./data/zipper-seed.json",
