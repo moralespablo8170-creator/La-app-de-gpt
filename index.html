@@ -78,7 +78,7 @@
 <script>
 window.zipperBackupDirect=function(){
  try{
-  var data={},keys=Object.keys(localStorage).filter(function(k){return k.indexOf('zipper')===0&&k.indexOf('zipperRespaldo')!==0});
+  var data={},keys=Object.keys(localStorage).filter(function(k){return k.indexOf('zipper')===0&&k.indexOf('zipperRespaldo')!==0&&k!=='zipperStorageRecoveryFailed'});
   keys.forEach(function(k){data[k]=localStorage.getItem(k)});
   ['zipperProductos','zipperClientes','zipperComprobantes'].forEach(function(k){if(!data[k])data[k]='[]'});
   var backup={app:'Distribuidora zipper',schemaVersion:1,createdAt:new Date().toISOString(),data:data};
@@ -156,10 +156,10 @@ window.zipperBackupDirect=function(){
   if(!confirm('Se restaurarán '+parsed.zipperComprobantes.length+' ventas, '+parsed.zipperClientes.length+' clientes y '+parsed.zipperProductos.length+' productos. Se verificaron sus identificadores. ¿Continuar?')){say('Restauración cancelada.');return;}
   var before={};Object.keys(localStorage).filter(function(k){return k.indexOf('zipper')===0}).forEach(function(k){before[k]=localStorage.getItem(k)});
   var snapshot=JSON.stringify({createdAt:new Date().toISOString(),data:before});
-  var target={};Object.keys(data).forEach(function(k){if(k.indexOf('zipper')===0&&k.indexOf('zipperRespaldo')!==0&&typeof data[k]==='string')target[k]=data[k]});
+  var target={};Object.keys(data).forEach(function(k){if(k.indexOf('zipper')===0&&k.indexOf('zipperRespaldo')!==0&&k!=='zipperStorageRecoveryFailed'&&typeof data[k]==='string')target[k]=data[k]});
   var rollback=function(){
    var errors=[];
-   var current=Object.keys(localStorage).filter(function(k){return k.indexOf('zipper')===0});
+   var current=Object.keys(localStorage).filter(function(k){return k.indexOf('zipper')===0&&k!=='zipperStorageRecoveryFailed'});
    current.forEach(function(k){
     try{
      if(Object.prototype.hasOwnProperty.call(before,k)){
@@ -171,16 +171,17 @@ window.zipperBackupDirect=function(){
     try{if(localStorage.getItem(k)!==before[k])localStorage.setItem(k,before[k])}catch(e){errors.push(k)}
    });
    Object.keys(before).forEach(function(k){if(localStorage.getItem(k)!==before[k])errors.push(k)});
-   Object.keys(localStorage).filter(function(k){return k.indexOf('zipper')===0&&!Object.prototype.hasOwnProperty.call(before,k)&&k!=='zipperRespaldoAntesRestauracion'}).forEach(function(k){errors.push(k)});
+   Object.keys(localStorage).filter(function(k){return k.indexOf('zipper')===0&&!Object.prototype.hasOwnProperty.call(before,k)&&k!=='zipperRespaldoAntesRestauracion'&&k!=='zipperStorageRecoveryFailed'}).forEach(function(k){errors.push(k)});
    if(errors.length)throw new Error('No se recuperaron estas claves: '+Array.from(new Set(errors)).join(', '));
   };
   try{
    localStorage.setItem('zipperRespaldoAntesRestauracion',snapshot);
+   localStorage.setItem('zipperStorageRecoveryFailed','1');
    Object.keys(target).forEach(function(k){if(localStorage.getItem(k)!==target[k])localStorage.setItem(k,target[k])});
    Object.keys(target).forEach(function(k){if(localStorage.getItem(k)!==target[k])throw new Error('Error de escritura en '+k)});
-   Object.keys(localStorage).filter(function(k){return k.indexOf('zipper')===0&&k.indexOf('zipperRespaldo')!==0&&k!=='zipperStorageRecoveryFailed'&&!Object.prototype.hasOwnProperty.call(target,k)}).forEach(function(k){localStorage.removeItem(k)});
+   Object.keys(localStorage).filter(function(k){return k.indexOf('zipper')===0&&k.indexOf('zipperRespaldo')!==0&&k!=='zipperStorageRecoveryFailed'&&k!=='zipperStorageRecoveryFailed'&&!Object.prototype.hasOwnProperty.call(target,k)}).forEach(function(k){localStorage.removeItem(k)});
    required.forEach(function(k){if(JSON.parse(localStorage.getItem(k)).length!==parsed[k].length)throw new Error('Conteo incorrecto en '+k)});
-  }catch(e){try{rollback()}catch(rollbackError){window.zipperStorageRecoveryFailed=true;document.body.dataset.storageRecoveryFailed='true';try{localStorage.setItem('zipperStorageRecoveryFailed','1')}catch(flagError){}throw new Error('Restauración fallida y recuperación incompleta. Se bloquearon nuevas ventas por seguridad. Conserva el respaldo original. '+rollbackError.message)}throw new Error('Restauración cancelada; datos anteriores recuperados. '+e.message)}
+  }catch(e){try{rollback()}catch(rollbackError){window.zipperStorageRecoveryFailed=true;document.body.dataset.storageRecoveryFailed='true';try{localStorage.setItem('zipperStorageRecoveryFailed','1')}catch(flagError){}throw new Error('Restauración fallida y recuperación incompleta. Se bloquearon nuevas ventas por seguridad. Conserva el respaldo original. '+rollbackError.message)}if(before.zipperStorageRecoveryFailed==='1')localStorage.setItem('zipperStorageRecoveryFailed','1');else localStorage.removeItem('zipperStorageRecoveryFailed');throw new Error('Restauración cancelada; datos anteriores recuperados. '+e.message)}
   localStorage.removeItem('zipperStorageRecoveryFailed');
   window.zipperStorageRecoveryFailed=false;
   sessionStorage.setItem('zipperRestoreResult',JSON.stringify({sales:parsed.zipperComprobantes.length,clients:parsed.zipperClientes.length,products:parsed.zipperProductos.length}));
