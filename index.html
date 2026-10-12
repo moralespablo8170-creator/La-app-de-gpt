@@ -152,6 +152,8 @@ window.zipperBackupDirect=function(){
    Object.keys(target).forEach(function(k){if(localStorage.getItem(k)!==target[k])throw new Error('Error de escritura en '+k)});
    required.forEach(function(k){if(JSON.parse(localStorage.getItem(k)).length!==parsed[k].length)throw new Error('Conteo incorrecto en '+k)});
   }catch(e){try{rollback()}catch(rollbackError){throw new Error('Restauración fallida y recuperación incompleta. Conserva el respaldo original. '+rollbackError.message)}throw new Error('Restauración cancelada; datos anteriores recuperados. '+e.message)}
+  localStorage.removeItem('zipperStorageRecoveryFailed');
+  window.zipperStorageRecoveryFailed=false;
   sessionStorage.setItem('zipperRestoreResult',JSON.stringify({sales:parsed.zipperComprobantes.length,clients:parsed.zipperClientes.length,products:parsed.zipperProductos.length}));
   say('RESTAURACIÓN CORRECTA: '+parsed.zipperComprobantes.length+' ventas recuperadas.');
   alert('RESPALDO RESTAURADO CORRECTAMENTE.');
