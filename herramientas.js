@@ -49,7 +49,7 @@ async function restoreZipperBackup(input){
     for(const [k,v] of Object.entries(file.data))localStorage.setItem(k,v);
     for(const [k,n] of Object.entries(expected)){
      const restored=JSON.parse(localStorage.getItem(k)||'null');
-     if(!Array.isArray(restored)||restored.length!==n)throw Error('Falló la comprobación de '+k);
+     if(!Array.isArray(restored)||restored.length!==n||localStorage.getItem(k)!==file.data[k])throw Error('Falló la comprobación de '+k);
     }
     for(const k of zipperDataKeys(localStorage))if(!Object.prototype.hasOwnProperty.call(file.data,k))localStorage.removeItem(k);
     $('backupStatus').textContent='RESTAURACIÓN VERIFICADA: '+sales.length+' ventas, '+expected.zipperPagos+' abonos y '+expected.zipperGastosCaja+' gastos. Recargando…';
