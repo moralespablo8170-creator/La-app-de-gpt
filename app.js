@@ -653,11 +653,18 @@ function saveClient(){
   const oldRoute=current?clientRoute(current,week):null;
   const data={name,rut,razonSocial:$('clientBusinessName').value.trim(),comuna:$('clientComuna').value.trim(),observations:$('clientObservations').value.trim(),sendInvoice:$('clientSendInvoice').checked,phone:($('clientPhone').value.replace(/\D/g,'')==='569'?'':$('clientPhone').value.replace(/\D/g,'')),address,route:'',active:true};
   if(current)Object.assign(current,data);else{current={id,...data};cs.push(current)}
-  const group=cs.filter(c=>String(c.id)!==String(id)&&norm(clientRoute(c,week)?.day)===norm(day)&&clientRoute(c,week));
+  // Rebuild only the selected route; never change unrelated clients or sales.
+  const group=cs.filter(c=>String(c.id)!==String(id)&&norm(clientRoute(c,week)?.day)===norm(day)&&!!clientRoute(c,week));
   group.sort((a,b)=>clientRoute(a,week).position-clientRoute(b,week).position||cs.indexOf(a)-cs.indexOf(b));
-  const insertAt=wanted||group.length+1;
-  group.splice(Math.min(group.length,insertAt-1),0,current);
+  const insertAt=Math.min(group.length,Math.max(0,(wanted??group.length+1)-1));
+  group.splice(insertAt,0,current);
   group.forEach((c,index)=>setClientRoute(c,week,day,index+1));
+  // When moving a client to a different day, close gaps in the old route too.
+  if(oldRoute&&norm(oldRoute.day)!==norm(day)){
+    const previous=cs.filter(c=>String(c.id)!==String(id)&&norm(clientRoute(c,week)?.day)===norm(oldRoute.day));
+    previous.sort((a,b)=>clientRoute(a,week).position-clientRoute(b,week).position||cs.indexOf(a)-cs.indexOf(b));
+    previous.forEach((c,index)=>setClientRoute(c,week,oldRoute.day,index+1));
+  }
   if(writeArray('zipperClientes',cs)){resetClientForm();$('clientSearchName').value='';$('clientSearchAddress').value='';renderClients();renderHome();window.scrollTo({top:0,behavior:'smooth'});setTimeout(()=>$('clientSearchName').focus(),250)}
 }
 function deleteClient(id){const c=clientById(id);if(!c)return;confirmDelete('Borrar cliente','¿Estás seguro que quieres borrar el cliente "'+c.name+'"? Esta acción no se puede deshacer.',()=>{const cs=getClients().filter(x=>String(x.id)!==String(id));if(writeArray('zipperClientes',cs)){resetClientForm();$('clientSearchName').value='';$('clientSearchAddress').value='';renderClients();renderHome();window.scrollTo({top:0,behavior:'smooth'});setTimeout(()=>$('clientSearchName').focus(),250);$('clientValidation').textContent='Cliente borrado correctamente.';$('clientValidation').className='validation ok'}})}
