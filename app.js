@@ -249,6 +249,7 @@ function applyInventoryUpdate(){
 function installDictatedInventory(s){
  const version=s.inventoryBaselineVersion;
  if(!version||localStorage.getItem('zipperDictatedInventoryVersion')===version)return false;
+ if(getRawProducts().length>0){localStorage.setItem('zipperDictatedInventoryVersion',version);return false}
  if(s.products.some(p=>!p.id||!String(p.name||'').trim()||!Number.isInteger(p.stock)||p.stock<0)||new Set(s.products.map(p=>String(p.id))).size!==s.products.length)throw Error('Inventario base inválido');
  const existing=getRawProducts(),clean=v=>norm(v).replace(/\s+/g,' ');
  const products=s.products.map(p=>{const aliases=(p.baselineAliases||[p.name]).map(clean);let found=p.variantKey?existing.find(x=>x.variantKey===p.variantKey&&clean(x.flavor||x.color||'')===clean(p.flavor||p.color||'')):existing.find(x=>!x.variantKey&&aliases.includes(clean(x.name)));const next={...p};delete next.baselineAliases;if(found){next.price=found.price;next.pricePurchase=found.pricePurchase;next.promotions=found.promotions}return next});
