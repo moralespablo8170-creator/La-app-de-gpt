@@ -689,9 +689,27 @@ function annulSale(saleId){
   const currentSales=getSales();
   if(!currentSales.some(x=>String(x.id)===String(sale.id))){alert('La venta ya no existe.');return}
   (sale.items||[]).forEach(i=>{const p=products.find(x=>String(x.id)===String(saleItemStockId(i)));p.stock=Number(p.stock||0)+Number(i.qty||0)});
-  if(!writeArray('zipperProductos',products))return;
+  // Registrar primero una copia íntegra de la venta anulada para auditoría.
+  const auditKey='zipperAnulaciones';
+  const previousAudit=localStorage.getItem(auditKey);
+  let audit;
+  try{
+   audit=previousAudit===null?[]:JSON.parse(previousAudit);
+   if(!Array.isArray(audit))throw Error('Registro de auditoría inválido');
+  }catch(e){alert('No se pudo validar el historial de anulaciones. Operación cancelada.');return}
+  if(audit.some(x=>String(x.saleId)===String(sale.id))){alert('Esta venta ya figura en anulaciones. Revisa el historial antes de continuar.');return}
+  const record={id:uid(),saleId:sale.id,folio:sale.folio,annulledAt:new Date().toISOString(),sale:JSON.parse(JSON.stringify(sale)),total:saleTotal(sale)};
+  try{localStorage.setItem(auditKey,JSON.stringify([...audit,record]))}
+  catch(e){alert('No se pudo registrar la anulación. No se cambió la venta ni el inventario.');return}
+  if(!writeArray('zipperProductos',products)){
+   if(previousAudit===null)localStorage.removeItem(auditKey);else localStorage.setItem(auditKey,previousAudit);
+   return;
+  }
   if(!writeArray('zipperComprobantes',currentSales.filter(x=>String(x.id)!==String(sale.id)))){
-   writeArray('zipperProductos',previousProducts);return;
+   const restored=writeArray('zipperProductos',previousProducts);
+   if(restored){try{if(previousAudit===null)localStorage.removeItem(auditKey);else localStorage.setItem(auditKey,previousAudit)}catch(e){alert('Revisa el registro de anulaciones antes de reintentar.')}}
+   else alert('ATENCIÓN: No se pudo restaurar el inventario. Detén las operaciones y recupera el último respaldo verificado.');
+   return;
   }
   // El cliente permanece visitado sin venta; la visita ya ocurrió.
   renderInventory();renderHistory();renderHome();
