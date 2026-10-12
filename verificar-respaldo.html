@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Zipper — verificación local de respaldo</title>
+<style>body{font:16px system-ui;max-width:700px;margin:32px auto;padding:0 16px;color:#17212b}main{border:1px solid #ddd;border-radius:14px;padding:20px}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f5f5f5;padding:15px;border-radius:10px}input{max-width:100%}</style>
+<main><h1>Verificar respaldo Zipper</h1><p>Selecciona un respaldo JSON. Se analiza únicamente en este navegador: no se sube, no se importa y no se modifica la información guardada.</p>
+<input id="file" type="file" accept=".json,application/json"><pre id="result" aria-live="polite">Esperando archivo…</pre></main>
+<script>
+document.getElementById('file').addEventListener('change',async e=>{
+ const out=document.getElementById('result'),file=e.target.files[0];if(!file)return;
+ try{
+  if(file.size>20*1024*1024)throw Error('Archivo mayor de 20 MB');
+  const b=JSON.parse(await file.text());
+  if(b.app!=='Distribuidora zipper'||b.schemaVersion!==1||!b.data||Array.isArray(b.data)||typeof b.data!=='object')throw Error('Formato de respaldo incompatible');
+  const data=b.data, names=['zipperClientes','zipperProductos','zipperComprobantes'],parsed={};
+  for(const k of names){if(typeof data[k]!=='string')throw Error('Falta '+k);parsed[k]=JSON.parse(data[k]);if(!Array.isArray(parsed[k]))throw Error(k+' no es una lista')}
+  for(const k of names){const seen=new Set();for(const [i,x] of parsed[k].entries()){if(!x||typeof x!=='object'||Array.isArray(x)||typeof x.id!=='string'||!x.id.trim())throw Error(k+' registro '+(i+1)+' sin ID válido');if(seen.has(x.id))throw Error(k+' ID duplicado');seen.add(x.id)}}
+  const clients=new Set(parsed.zipperClientes.map(x=>x.id));
+  for(const sale of parsed.zipperComprobantes){const id=sale.clienteId||sale.clientId;if(id&&!clients.has(id))throw Error('Comprobante con cliente inexistente')}
+  for(const [k,v] of Object.entries(data)){
+   if(!k.startsWith('zipper')||typeof v!=='string')throw Error('Clave no permitida: '+k);
+   if(k.includes('::')&&/zipperClientes$/i.test(k))throw Error('Base auxiliar antigua no reconciliada');
+   if(/(?:abono|pago|visitad)/i.test(k)){const arr=JSON.parse(v);if(Array.isArray(arr))for(const x of arr){const id=x&&(x.clienteId||x.clientId);if(id&&!clients.has(id))throw Error('Referencia inválida en '+k)}}
+  }
+  out.textContent='VALIDACIÓN CORRECTA\nClientes: '+parsed.zipperClientes.length+'\nProductos: '+parsed.zipperProductos.length+'\nComprobantes: '+parsed.zipperComprobantes.length+'\nSecciones de datos: '+Object.keys(data).length+'\n\nNo se ha restaurado ni modificado ningún dato.';
+ }catch(err){out.textContent='VALIDACIÓN FALLIDA: '+err.message+'\nNo se modificó ningún dato.'}
+});
+</script>
