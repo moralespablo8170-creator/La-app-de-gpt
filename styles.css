@@ -251,3 +251,8 @@
 .invoice-table th{background:#dbeafe;color:#1e3a8a}
 
 .client-invoice-option{display:flex;align-items:center;gap:10px;background:#fee2e2;border:1px solid #fca5a5;border-radius:11px;padding:12px;color:#991b1b;font-size:14px;font-weight:850}.client-invoice-option input{width:24px;height:24px;min-height:24px;margin:0;flex:none}
+
+/* Identificación visual de variantes Verso y Freegels */
+.color-menta{background:#9ae6b4!important;border:1px solid #4b9b72}
+.color-cafe{background:#8b5e3c!important}
+.color-amarillo{background:#facc15!important;border:1px solid #b48a08}
