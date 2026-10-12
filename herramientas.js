@@ -54,6 +54,8 @@ async function restoreZipperBackup(input){
      if(!Array.isArray(restored)||restored.length!==n||localStorage.getItem(k)!==file.data[k])throw Error('Falló la comprobación de '+k);
     }
     for(const k of zipperDataKeys(localStorage))if(!Object.prototype.hasOwnProperty.call(file.data,k))localStorage.removeItem(k);
+    for(const [k,v] of Object.entries(file.data))if(localStorage.getItem(k)!==v)throw Error('Verificación final fallida: '+k);
+    for(const k of zipperDataKeys(localStorage))if(!Object.prototype.hasOwnProperty.call(file.data,k))throw Error('Quedó una clave ajena al respaldo: '+k);
     $('backupStatus').textContent='RESTAURACIÓN VERIFICADA: '+sales.length+' ventas, '+expected.zipperPagos+' abonos y '+expected.zipperGastosCaja+' gastos. Recargando…';
     alert('Restauración completa verificada, incluidos abonos y gastos de caja.');
     setTimeout(()=>window.location.reload(),500);
