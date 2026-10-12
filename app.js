@@ -413,11 +413,13 @@ try{
  saved=true;
 }catch(e){
  let restored=true;
- try{
-  localStorage.setItem('zipperProductos',JSON.stringify(previousProducts));
-  if(previousSales===null)localStorage.removeItem('zipperComprobantes');else localStorage.setItem('zipperComprobantes',previousSales);
-  if(previousPayments===null)localStorage.removeItem('zipperPagos');else localStorage.setItem('zipperPagos',previousPayments);
- }catch(rollbackError){restored=false}
+ const originals=[['zipperProductos',JSON.stringify(previousProducts)],['zipperComprobantes',previousSales],['zipperPagos',previousPayments]];
+ for(const [key,value] of originals){
+  try{
+   if(value===null)localStorage.removeItem(key);else localStorage.setItem(key,value);
+   if(localStorage.getItem(key)!==value)restored=false;
+  }catch(rollbackError){restored=false}
+ }
  alert(restored?'No se pudo guardar la venta completa. Se restauraron los datos anteriores.':'ATENCIÓN: Falló el guardado y la recuperación. No continúes vendiendo hasta restaurar un respaldo verificado.');
 }
 if(saved){markVisited(c.id);closeSaveOptions();cart=[];draftProductId='';draftQty='';showCartTray=false;editingSaleId='';renderInventory();$('saleStatus').textContent=(oldSale?(printAfter?'Venta modificada. Vista previa de impresión abierta. ':'Venta modificada correctamente. '):(printAfter?'Venta guardada. Vista previa de impresión abierta. ':'Venta guardada correctamente. '))+'Folio #'+folio;renderPrint(sale);if(printAfter)sendReceiptToSystem();selectedClientId='';$('cartSection').classList.add('hidden');renderHome();}else{closeSaveOptions();}}
