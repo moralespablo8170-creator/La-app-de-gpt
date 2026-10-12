@@ -34,24 +34,32 @@ async function restoreZipperBackup(input){
   const sales=JSON.parse(file.data.zipperComprobantes||'[]');
   const clients=JSON.parse(file.data.zipperClientes||'[]');
   const products=JSON.parse(file.data.zipperProductos||'[]');
-  confirmDelete('Restaurar respaldo','Este archivo contiene '+products.length+' productos, '+clients.length+' clientes y '+sales.length+' ventas. Reemplazará los datos actuales de este navegador. ¿Restaurar?',()=>{
+  const financialKeys=['zipperPagos','zipperGastosCaja'];
+  const missing=financialKeys.filter(k=>!Object.prototype.hasOwnProperty.call(file.data,k));
+  if(missing.length)throw Error('El respaldo no incluye '+missing.join(' y ')+'. No se reemplazará la información actual. Busca el respaldo completo del teléfono original.');
+  const expected={};
+  for(const k of ['zipperProductos','zipperClientes','zipperComprobantes',...financialKeys]){
+   const a=JSON.parse(file.data[k]);if(!Array.isArray(a))throw Error('Datos inválidos en '+k);
+   expected[k]=a.length;
+  }
+  confirmDelete('Restaurar respaldo','El archivo contiene '+products.length+' productos, '+clients.length+' clientes, '+sales.length+' ventas, '+expected.zipperPagos+' abonos y '+expected.zipperGastosCaja+' gastos. Reemplazará los datos de este navegador. ¿Restaurar?',()=>{
+   const before={};zipperDataKeys(localStorage).forEach(k=>before[k]=localStorage.getItem(k));
    try{
-    const before={};zipperDataKeys(localStorage).forEach(k=>before[k]=localStorage.getItem(k));
     localStorage.setItem('zipperRespaldoAntesRestauracion',JSON.stringify({createdAt:new Date().toISOString(),data:before}));
-    /* Restauración exacta: primero quitamos los datos Zipper actuales y después escribimos TODO el respaldo. */
-    zipperDataKeys(localStorage).forEach(k=>localStorage.removeItem(k));
-    Object.entries(file.data).forEach(([k,v])=>localStorage.setItem(k,v));
-    /* Verificación obligatoria antes de recargar. */
-    const restoredSales=JSON.parse(localStorage.getItem('zipperComprobantes')||'[]');
-    const restoredClients=JSON.parse(localStorage.getItem('zipperClientes')||'[]');
-    const restoredProducts=JSON.parse(localStorage.getItem('zipperProductos')||'[]');
-    if(restoredSales.length!==sales.length||restoredClients.length!==clients.length||restoredProducts.length!==products.length)throw Error('La verificación de los datos restaurados falló.');
-    /* Evita que la carga inicial trate el respaldo restaurado como una instalación nueva y reemplace datos. */
-    const seedVersion=file.data.zipperSeedVersion;if(seedVersion!=null)localStorage.setItem('zipperSeedVersion',seedVersion);
-    $('backupStatus').textContent='RESTAURACIÓN CORRECTA: '+restoredSales.length+' ventas, '+restoredClients.length+' clientes y '+restoredProducts.length+' productos. Recargando…';
-    alert('RESPALDO RESTAURADO CORRECTAMENTE. Se recuperaron '+restoredSales.length+' ventas.');
+    for(const [k,v] of Object.entries(file.data))localStorage.setItem(k,v);
+    for(const [k,n] of Object.entries(expected)){
+     const restored=JSON.parse(localStorage.getItem(k)||'null');
+     if(!Array.isArray(restored)||restored.length!==n)throw Error('Falló la comprobación de '+k);
+    }
+    for(const k of zipperDataKeys(localStorage))if(!Object.prototype.hasOwnProperty.call(file.data,k))localStorage.removeItem(k);
+    $('backupStatus').textContent='RESTAURACIÓN VERIFICADA: '+sales.length+' ventas, '+expected.zipperPagos+' abonos y '+expected.zipperGastosCaja+' gastos. Recargando…';
+    alert('Restauración completa verificada, incluidos abonos y gastos de caja.');
     setTimeout(()=>window.location.reload(),500);
    }catch(e){
+    try{
+     for(const k of zipperDataKeys(localStorage))if(!Object.prototype.hasOwnProperty.call(before,k))localStorage.removeItem(k);
+     for(const [k,v] of Object.entries(before))localStorage.setItem(k,v);
+    }catch(rollbackError){alert('No se pudo recuperar automáticamente el estado anterior. Conserva el respaldo y no borres la aplicación.');}
     $('backupStatus').textContent='ERROR AL RESTAURAR: '+(e&&e.message?e.message:e);
     alert($('backupStatus').textContent);
    }
