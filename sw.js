@@ -1,9 +1,9 @@
-const CACHE_NAME = 'zipper-app-pwa-20261015-icono-v2';
+const CACHE_NAME = 'zipper-app-pwa-20261021-reimpresion-v1';
 const APP_SHELL = [
   "./",
   "./index.html",
   "./styles.css?v=zipper-colores-20261012-v36",
-  "./app.js?v=zipper-caja-detalle-20261014-v1",
+  "./app.js?v=zipper-history-reprint-20261021-v1",
   "./route-position-migration.js?v=1.2",
   "./route-position-migration-b.js?v=1.0",
   "./herramientas.js?v=20261012-restauracion-v32",
