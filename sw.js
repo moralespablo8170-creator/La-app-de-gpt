@@ -1,9 +1,9 @@
-const CACHE_NAME = 'zipper-app-pwa-20261021-reimpresion-v1';
+const CACHE_NAME = 'zipper-app-pwa-20261024-abonos-v2';
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=zipper-colores-20261012-v36",
-  "./app.js?v=zipper-history-reprint-20261021-v1",
+  "./styles.css?v=zipper-current-debt-edit-20261024-v1",
+  "./app.js?v=zipper-current-debt-edit-20261024-v3",
   "./route-position-migration.js?v=1.2",
   "./route-position-migration-b.js?v=1.0",
   "./herramientas.js?v=20261012-restauracion-v32",
@@ -15,7 +15,7 @@ const APP_SHELL = [
   "./assets/icono-512.png?v=20261015-icono-exterior-v2"
 ];
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));
+  event.waitUntil((async () => { await caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)); await self.skipWaiting(); })());
 });
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
