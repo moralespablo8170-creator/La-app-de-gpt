@@ -414,7 +414,7 @@ function cashFilteredSales(){const rf=$('statRouteFilter')?.value||'',df=$('stat
 function statsPeriodRows(){return cashFilteredSales().filter(s=>periodMatch(saleDate(s),statPeriod))}
 function getPayments(){return readArray('zipperPagos')}
 function clientDebt(id){const credit=getSales().filter(s=>String(s.clienteId)===String(id)&&(paymentMethodOf(s)==='pending'||s.paymentStatus==='pending')).reduce((a,s)=>a+saleTotal(s),0);const paid=getPayments().filter(p=>String(p.clienteId)===String(id)).reduce((a,p)=>a+Number(p.amount||0),0);return Math.max(0,credit-paid)}
-function debtClients(){const ids=[...new Set(getSales().filter(s=>paymentMethodOf(s)==='pending'||s.paymentStatus==='pending').map(s=>String(s.clienteId)))];return ids.map(id=>{const c=clientById(id);return{id,name:c?.name||getSales().find(s=>String(s.clienteId)===id)?.cliente||'Cliente',debt:clientDebt(id)}}).sort((a,b)=>b.debt-a.debt||a.name.localeCompare(b.name,'es'))}
+function debtClients(){const ids=[...new Set(getSales().filter(s=>paymentMethodOf(s)==='pending'||s.paymentStatus==='pending').map(s=>String(s.clienteId)))];return ids.map(id=>{const c=clientById(id);return{id,name:c?.name||getSales().find(s=>String(s.clienteId)===id)?.cliente||'Cliente',debt:clientDebt(id)}}).filter(x=>x.debt>0).sort((a,b)=>b.debt-a.debt||a.name.localeCompare(b.name,'es'))}
 let pendingDebtPayment=null;
 function addDebtPayment(clientId){
  const debt=clientDebt(clientId);if(debt<=0)return;
@@ -451,25 +451,41 @@ function closePaymentHistory(){
  currentPaymentHistoryClientId='';editingDebtPaymentId='';
  $('paymentHistoryDialog')?.classList.add('hidden');
 }
+function currentDebtLedger(clientId){
+ const events=[],creditSales=getSales().filter(s=>String(s.clienteId)===String(clientId)&&(paymentMethodOf(s)==='pending'||s.paymentStatus==='pending'));
+ creditSales.forEach((sale,index)=>events.push({kind:'sale',date:saleDate(sale),amount:saleTotal(sale),saleId:String(sale.id),order:index}));
+ getPayments().filter(p=>String(p.clienteId)===String(clientId)).forEach((payment,index)=>events.push({kind:'payment',date:String(payment.date||''),amount:Number(payment.amount||0),paymentId:String(payment.id),paymentMethod:payment.paymentMethod,order:creditSales.length+index}));
+ events.sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))||(a.kind===b.kind?a.order-b.order:(a.kind==='sale'?-1:1)));
+ let balance=0,openEvents=[];
+ for(const event of events){
+  balance=event.kind==='sale'?balance+event.amount:Math.max(0,balance-event.amount);
+  openEvents.push({...event,balanceAfter:balance});
+  if(balance===0)openEvents=[];
+ }
+ return openEvents;
+}
 function renderPaymentHistory(){
  const clientId=currentPaymentHistoryClientId;if(!clientId)return;
  const client=clientById(clientId),name=client?.name||getSales().find(s=>String(s.clienteId)===clientId)?.cliente||'Cliente';
- const credit=clientCreditTotal(clientId),payments=getPayments().filter(p=>String(p.clienteId)===clientId).map((p,index)=>({...p,_index:index})).sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))||a._index-b._index);
- const paid=payments.reduce((sum,p)=>sum+Number(p.amount||0),0),balance=Math.max(0,credit-paid);
- $('paymentHistoryTitle').textContent='Historial de abonos';
+ const ledger=currentDebtLedger(clientId),balance=clientDebt(clientId);
+ $('paymentHistoryTitle').textContent='Historial del saldo pendiente';
  $('paymentHistoryClient').textContent=name;
- $('paymentHistorySummary').innerHTML='<div><span>Ventas a crédito</span><strong>'+money(credit)+'</strong></div><div><span>Total abonado</span><strong>'+money(paid)+'</strong></div><div><span>Saldo actual</span><strong>'+money(balance)+'</strong></div>';
- const entries=payments.slice().reverse();
- $('paymentHistoryList').innerHTML=entries.length?entries.map(p=>'<article class="history-row"><div><strong>'+money(p.amount)+'</strong><span>'+esc(p.date||'Fecha no registrada')+' · '+(p.paymentMethod==='transfer'?'Transferencia':'Efectivo')+'</span></div><button class="secondary edit-debt-payment" data-id="'+esc(p.id)+'" type="button">Corregir</button></article>').join(''):'<p class="muted">Todavía no hay abonos registrados para este cliente.</p>';
+ $('paymentHistorySummary').innerHTML='<div><span>Saldo pendiente actual</span><strong>'+money(balance)+'</strong></div>';
+ $('paymentHistoryList').innerHTML=ledger.length?ledger.map(event=>{
+  const heading=event.kind==='sale'?'Venta a crédito':(event.paymentMethod==='transfer'?'Abono · Transferencia':event.paymentMethod==='cash'?'Abono · Efectivo':'Abono');
+  const correction=event.kind==='payment'?'<button class="secondary edit-debt-payment" data-id="'+esc(event.paymentId)+'" type="button">Corregir</button>':'';
+  return '<article class="history-row"><div><strong>'+heading+' · '+money(event.amount)+'</strong><span>'+esc(event.date||'Fecha no registrada')+' · Saldo después: '+money(event.balanceAfter)+'</span></div>'+correction+'</article>';
+ }).join(''):'<p class="muted">No hay movimientos del saldo pendiente actual.</p>';
  const edit=$('paymentHistoryEdit');
  if(edit)edit.classList.toggle('hidden',!editingDebtPaymentId);
  if(editingDebtPaymentId){
   const payment=getPayments().find(p=>String(p.id)===String(editingDebtPaymentId));
   if(payment){$('paymentEditAmount').value=Number(payment.amount||0);$('paymentEditDate').value=String(payment.date||localDate()).slice(0,10);$('paymentEditMethod').value=payment.paymentMethod==='transfer'?'transfer':'cash'}
   else editingDebtPaymentId='';
-  if(edit&& !editingDebtPaymentId)edit.classList.add('hidden');
+  if(edit&&!editingDebtPaymentId)edit.classList.add('hidden');
  }
 }
+
 function beginEditDebtPayment(paymentId){
  const p=getPayments().find(x=>String(x.id)===String(paymentId));
  if(!p||String(p.clienteId)!==currentPaymentHistoryClientId)return;
@@ -484,12 +500,12 @@ function saveDebtPaymentEdit(){
  const parsedDate=new Date(date+'T12:00:00');
  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||Number.isNaN(parsedDate.getTime())||parsedDate.toISOString().slice(0,10)!==date){alert('Selecciona una fecha válida.');return}
  if(!['cash','transfer'].includes(method)){alert('Selecciona efectivo o transferencia.');return}
- const others=rows.filter((p,i)=>i!==index&&String(p.clienteId)===currentPaymentHistoryClientId).reduce((sum,p)=>sum+Number(p.amount||0),0);
- const maxAmount=Math.max(Number(payment.amount||0),clientCreditTotal(currentPaymentHistoryClientId)-others);
+ const ledger=currentDebtLedger(currentPaymentHistoryClientId),cycleCredit=ledger.filter(event=>event.kind==='sale').reduce((sum,event)=>sum+event.amount,0),otherPayments=ledger.filter(event=>event.kind==='payment'&&event.paymentId!==editingDebtPaymentId).reduce((sum,event)=>sum+event.amount,0);
+ const maxAmount=Math.max(Number(payment.amount||0),cycleCredit-otherPayments);
  if(amount>maxAmount){alert('El monto supera el crédito disponible para este abono ('+money(maxAmount)+').');return}
  rows[index]={...payment,amount,date,paymentMethod:method};
  if(writeArray('zipperPagos',rows)){
-  editingDebtPaymentId='';renderPaymentHistory();renderCash();renderHistory();
+  editingDebtPaymentId='';renderCash();renderHistory();if(clientDebt(currentPaymentHistoryClientId)<=0)closePaymentHistory();else renderPaymentHistory();
  }
 }
 
