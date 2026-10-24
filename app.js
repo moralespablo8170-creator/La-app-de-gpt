@@ -481,7 +481,8 @@ function saveDebtPaymentEdit(){
  if(index<0){alert('No se encontró ese abono.');return}
  const payment=rows[index],amount=Number($('paymentEditAmount').value),date=String($('paymentEditDate').value||''),method=$('paymentEditMethod').value;
  if(!Number.isSafeInteger(amount)||amount<=0){alert('Ingresa un monto válido en pesos.');return}
- if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(date)||Number.isNaN(new Date(date+'T12:00:00').getTime())){alert('Selecciona una fecha válida.');return}
+ const parsedDate=new Date(date+'T12:00:00');
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||Number.isNaN(parsedDate.getTime())||parsedDate.toISOString().slice(0,10)!==date){alert('Selecciona una fecha válida.');return}
  if(!['cash','transfer'].includes(method)){alert('Selecciona efectivo o transferencia.');return}
  const others=rows.filter((p,i)=>i!==index&&String(p.clienteId)===currentPaymentHistoryClientId).reduce((sum,p)=>sum+Number(p.amount||0),0);
  const maxAmount=Math.max(Number(payment.amount||0),clientCreditTotal(currentPaymentHistoryClientId)-others);
