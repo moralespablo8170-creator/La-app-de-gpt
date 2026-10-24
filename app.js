@@ -468,7 +468,7 @@ function renderPaymentHistory(){
  const clientId=currentPaymentHistoryClientId;if(!clientId)return;
  const client=clientById(clientId),name=client?.name||getSales().find(s=>String(s.clienteId)===clientId)?.cliente||'Cliente';
  const ledger=currentDebtLedger(clientId),balance=clientDebt(clientId);
- $('paymentHistoryTitle').textContent='Historial del saldo pendiente';
+ $('paymentHistoryTitle').textContent='Historial del saldo pendiente actual';
  $('paymentHistoryClient').textContent=name;
  $('paymentHistorySummary').innerHTML='<div><span>Saldo pendiente actual</span><strong>'+money(balance)+'</strong></div>';
  $('paymentHistoryList').innerHTML=ledger.length?ledger.map(event=>{

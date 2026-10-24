@@ -256,3 +256,15 @@
 .color-menta{background:#9ae6b4!important;border:1px solid #4b9b72}
 .color-cafe{background:#8b5e3c!important}
 .color-amarillo{background:#facc15!important;border:1px solid #b48a08}
+
+/* Historial de la deuda abierta: destaca solo el saldo de hoy y mantiene guardar visible en móvil. */
+#paymentHistoryDialog .zipper-modal-panel{width:min(100%,520px);max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain}
+.payment-current-balance{margin:12px 0;padding:14px;border:2px solid #2563eb;border-radius:12px;background:#eff6ff}
+.payment-current-balance>div{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.payment-current-balance span{color:#1e3a8a;font-size:14px;font-weight:800}
+.payment-current-balance strong{font-size:clamp(24px,6vw,32px);color:#1d4ed8;white-space:nowrap}
+.payment-edit-card{margin:10px 0;padding:12px;border:2px solid #93c5fd}
+.payment-edit-actions{grid-template-columns:1fr!important}
+#paymentEditSave{grid-row:1;min-height:58px;background:#15803d;color:#fff;font-size:18px;font-weight:900}
+#paymentEditCancel{grid-row:2;min-height:48px}
+#paymentHistoryList{max-height:30vh!important}
