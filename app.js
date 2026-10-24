@@ -5,6 +5,7 @@ const DAYS=['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
 const DEFAULT_CATEGORIES=['Tabaquería','Caramelos','Arcor','Nestlé','Remedios','Otros'];
 let currentView='home',selectedClientId='',cart=[],editingSaleId='',editingProductId=null,editingProductVariant='',editingClientId=null,currentPromos=[],statType='route',statPeriod='day',totalPeriod='week',clientFilter='all',historyType='sales',showVisited=false,routePickerOpen=false,draftProductId='',draftQty='',showCartTray=false;
 let lastClientAlertId='',lastClientAlertAt=0;
+let currentPaymentHistoryClientId='',editingDebtPaymentId='';
 
 function readArray(k){try{const v=JSON.parse(localStorage.getItem(k)||'[]');return Array.isArray(v)?v:[]}catch(e){return[]}}
 function writeArray(k,a){try{localStorage.setItem(k,JSON.stringify(a));return true}catch(e){alert('No se pudo guardar en este dispositivo.');return false}}
@@ -413,7 +414,7 @@ function cashFilteredSales(){const rf=$('statRouteFilter')?.value||'',df=$('stat
 function statsPeriodRows(){return cashFilteredSales().filter(s=>periodMatch(saleDate(s),statPeriod))}
 function getPayments(){return readArray('zipperPagos')}
 function clientDebt(id){const credit=getSales().filter(s=>String(s.clienteId)===String(id)&&(paymentMethodOf(s)==='pending'||s.paymentStatus==='pending')).reduce((a,s)=>a+saleTotal(s),0);const paid=getPayments().filter(p=>String(p.clienteId)===String(id)).reduce((a,p)=>a+Number(p.amount||0),0);return Math.max(0,credit-paid)}
-function debtClients(){const ids=[...new Set(getSales().filter(s=>paymentMethodOf(s)==='pending'||s.paymentStatus==='pending').map(s=>String(s.clienteId)))];return ids.map(id=>{const c=clientById(id);return{id,name:c?.name||getSales().find(s=>String(s.clienteId)===id)?.cliente||'Cliente',debt:clientDebt(id)}}).filter(x=>x.debt>0).sort((a,b)=>b.debt-a.debt)}
+function debtClients(){const ids=[...new Set(getSales().filter(s=>paymentMethodOf(s)==='pending'||s.paymentStatus==='pending').map(s=>String(s.clienteId)))];return ids.map(id=>{const c=clientById(id);return{id,name:c?.name||getSales().find(s=>String(s.clienteId)===id)?.cliente||'Cliente',debt:clientDebt(id)}}).sort((a,b)=>b.debt-a.debt||a.name.localeCompare(b.name,'es'))}
 let pendingDebtPayment=null;
 function addDebtPayment(clientId){
  const debt=clientDebt(clientId);if(debt<=0)return;
@@ -438,6 +439,57 @@ function confirmDebtPayment(){
  const c=clientById(clientId),rows=getPayments();
  rows.push({id:uid(),clienteId:clientId,cliente:c?.name||'Cliente',date:localDate(),amount,paymentMethod});
  if(writeArray('zipperPagos',rows)){closeDebtPayment();renderCash();renderHistory();const target=$('cashPaymentsToday');if(target){let notice=$('cashPaymentSuccessNotice');if(!notice){notice=document.createElement('p');notice.id='cashPaymentSuccessNotice';notice.setAttribute('role','status');notice.style.cssText='padding:12px;border:2px solid #16a34a;border-radius:10px;background:#f0fdf4;color:#166534;font-weight:700';target.parentNode.insertBefore(notice,target)}notice.textContent='Abono de '+(c?.name||'cliente')+' por '+money(amount)+' guardado correctamente. Saldo actualizado: '+money(Math.max(0,debt-amount))+'.';notice.scrollIntoView({behavior:'smooth',block:'center'})}}
+}
+
+function clientCreditTotal(clientId){return getSales().filter(s=>String(s.clienteId)===String(clientId)&&(paymentMethodOf(s)==='pending'||s.paymentStatus==='pending')).reduce((sum,s)=>sum+saleTotal(s),0)}
+function openPaymentHistory(clientId){
+ currentPaymentHistoryClientId=String(clientId);editingDebtPaymentId='';
+ const dialog=$('paymentHistoryDialog');if(!dialog){alert('No se pudo abrir el historial de abonos.');return}
+ dialog.classList.remove('hidden');renderPaymentHistory();
+}
+function closePaymentHistory(){
+ currentPaymentHistoryClientId='';editingDebtPaymentId='';
+ $('paymentHistoryDialog')?.classList.add('hidden');
+}
+function renderPaymentHistory(){
+ const clientId=currentPaymentHistoryClientId;if(!clientId)return;
+ const client=clientById(clientId),name=client?.name||getSales().find(s=>String(s.clienteId)===clientId)?.cliente||'Cliente';
+ const credit=clientCreditTotal(clientId),payments=getPayments().filter(p=>String(p.clienteId)===clientId).map((p,index)=>({...p,_index:index})).sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))||a._index-b._index);
+ const paid=payments.reduce((sum,p)=>sum+Number(p.amount||0),0),balance=Math.max(0,credit-paid);
+ $('paymentHistoryTitle').textContent='Historial de abonos';
+ $('paymentHistoryClient').textContent=name;
+ $('paymentHistorySummary').innerHTML='<div><span>Ventas a crédito</span><strong>'+money(credit)+'</strong></div><div><span>Total abonado</span><strong>'+money(paid)+'</strong></div><div><span>Saldo actual</span><strong>'+money(balance)+'</strong></div>';
+ const entries=payments.slice().reverse();
+ $('paymentHistoryList').innerHTML=entries.length?entries.map(p=>'<article class="history-row"><div><strong>'+money(p.amount)+'</strong><span>'+esc(p.date||'Fecha no registrada')+' · '+(p.paymentMethod==='transfer'?'Transferencia':'Efectivo')+'</span></div><button class="secondary edit-debt-payment" data-id="'+esc(p.id)+'" type="button">Corregir</button></article>').join(''):'<p class="muted">Todavía no hay abonos registrados para este cliente.</p>';
+ const edit=$('paymentHistoryEdit');
+ if(edit)edit.classList.toggle('hidden',!editingDebtPaymentId);
+ if(editingDebtPaymentId){
+  const payment=getPayments().find(p=>String(p.id)===String(editingDebtPaymentId));
+  if(payment){$('paymentEditAmount').value=Number(payment.amount||0);$('paymentEditDate').value=String(payment.date||localDate()).slice(0,10);$('paymentEditMethod').value=payment.paymentMethod==='transfer'?'transfer':'cash'}
+  else editingDebtPaymentId='';
+  if(edit&& !editingDebtPaymentId)edit.classList.add('hidden');
+ }
+}
+function beginEditDebtPayment(paymentId){
+ const p=getPayments().find(x=>String(x.id)===String(paymentId));
+ if(!p||String(p.clienteId)!==currentPaymentHistoryClientId)return;
+ editingDebtPaymentId=String(paymentId);renderPaymentHistory();$('paymentEditAmount')?.focus();
+}
+function saveDebtPaymentEdit(){
+ if(!editingDebtPaymentId)return;
+ const rows=getPayments(),index=rows.findIndex(p=>String(p.id)===editingDebtPaymentId);
+ if(index<0){alert('No se encontró ese abono.');return}
+ const payment=rows[index],amount=Number($('paymentEditAmount').value),date=String($('paymentEditDate').value||''),method=$('paymentEditMethod').value;
+ if(!Number.isSafeInteger(amount)||amount<=0){alert('Ingresa un monto válido en pesos.');return}
+ if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(date)||Number.isNaN(new Date(date+'T12:00:00').getTime())){alert('Selecciona una fecha válida.');return}
+ if(!['cash','transfer'].includes(method)){alert('Selecciona efectivo o transferencia.');return}
+ const others=rows.filter((p,i)=>i!==index&&String(p.clienteId)===currentPaymentHistoryClientId).reduce((sum,p)=>sum+Number(p.amount||0),0);
+ const maxAmount=Math.max(Number(payment.amount||0),clientCreditTotal(currentPaymentHistoryClientId)-others);
+ if(amount>maxAmount){alert('El monto supera el crédito disponible para este abono ('+money(maxAmount)+').');return}
+ rows[index]={...payment,amount,date,paymentMethod:method};
+ if(writeArray('zipperPagos',rows)){
+  editingDebtPaymentId='';renderPaymentHistory();renderCash();renderHistory();
+ }
 }
 
 let cashRange='day'
@@ -489,7 +541,7 @@ function renderCash(){
  if($('cashExpenseList'))$('cashExpenseList').innerHTML=expenses.length?expenses.slice().reverse().map(x=>'<article class="history-row"><div><strong>'+esc(x.reason||'Gasto')+'</strong><span>'+esc(x.date||'')+'</span></div><div class="actions-small"><strong>− '+money(x.amount)+'</strong><button class="secondary delete-cash-expense" data-id="'+esc(x.id)+'" type="button" style="background:#b91c1c;color:white;min-height:42px">Borrar</button></div></article>').join(''):'<p class="muted">No hay gastos registrados en este período.</p>';
  document.querySelectorAll('.delete-cash-expense').forEach(b=>b.onclick=()=>deleteCashExpense(b.dataset.id));
  const debts=debtClients();
- if($('cashPendingList'))$('cashPendingList').innerHTML=debts.length?debts.map(x=>'<article class="history-row"><div><strong>'+esc(x.name)+'</strong><span>Saldo pendiente actual</span></div><div class="actions-small"><strong>'+money(x.debt)+'</strong><button class="primary debt-payment" data-id="'+esc(x.id)+'" type="button">Registrar abono</button></div></article>').join(''):'<p class="muted">No hay clientes con saldo pendiente.</p>';
+ if($('cashPendingList'))$('cashPendingList').innerHTML=debts.length?debts.map(x=>'<article class="history-row"><div><strong>'+esc(x.name)+'</strong><span>'+(x.debt>0?'Saldo pendiente actual':'Cuenta pagada · saldo $0')+'</span></div><div class="actions-small"><strong>'+money(x.debt)+'</strong>'+(x.debt>0?'<button class="primary debt-payment" data-id="'+esc(x.id)+'" type="button">Agregar abono</button>':'')+'<button class="secondary debt-payment-history" data-id="'+esc(x.id)+'" type="button">Historial</button></div></article>').join(''):'<p class="muted">No hay cuentas con ventas pendientes registradas.</p>';
  document.querySelectorAll('.debt-payment').forEach(b=>b.onclick=()=>addDebtPayment(b.dataset.id));
  if($('cashPaymentsToday'))$('cashPaymentsToday').innerHTML=payments.length?payments.slice().reverse().map(p=>'<article class="history-row"><div><strong>'+esc(p.cliente||'Cliente')+'</strong><span>'+esc(p.paymentMethod==='transfer'?'Transferencia':'Efectivo')+' · '+esc(p.date)+'</span></div><strong>Abono '+money(p.amount)+'</strong></article>').join(''):'<p class="muted">No hay abonos registrados en esta fecha.</p>';
 }
@@ -840,6 +892,7 @@ $('newClient').onclick=()=>{resetClientForm();$('clientEditor').scrollIntoView({
 document.querySelectorAll('#historyType button').forEach(b=>b.onclick=()=>{historyType=b.dataset.history;document.querySelectorAll('#historyType button').forEach(x=>x.classList.toggle('active',x===b));renderHistory()});$('historyFrom').onchange=renderHistory;$('historyTo').onchange=renderHistory}
 try{bind()}catch(error){console.error('Zipper: error al conectar botones',error);alert('Error al iniciar botones: '+error.message)}
 if($('cashExpenseSave'))$('cashExpenseSave').onclick=addCashExpense;
+document.addEventListener('click',e=>{const history=e.target.closest('.debt-payment-history');if(history){openPaymentHistory(history.dataset.id);return}const edit=e.target.closest('.edit-debt-payment');if(edit){beginEditDebtPayment(edit.dataset.id);return}if(e.target.closest('#paymentHistoryClose')){closePaymentHistory();return}if(e.target.closest('#paymentEditSave')){saveDebtPaymentEdit();return}if(e.target.closest('#paymentEditCancel')){editingDebtPaymentId='';renderPaymentHistory();return}});
 document.addEventListener('click',e=>{const button=e.target.closest('#debtPaymentConfirm,#debtPaymentCancel');if(!button)return;e.preventDefault();if(button.id==='debtPaymentConfirm')confirmDebtPayment();else closeDebtPayment()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('debtPaymentDialog')?.classList.contains('hidden'))closeDebtPayment()});
 migrateVariantInventory();
