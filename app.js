@@ -426,7 +426,9 @@ function addDebtPayment(clientId){
  $('debtPaymentMethod').value='cash';
  $('debtPaymentError').textContent='';
  dialog.classList.remove('hidden');
- $('debtPaymentAmount').focus();
+ const amountInput=$('debtPaymentAmount');
+ amountInput?.focus({preventScroll:true});
+ requestAnimationFrame(()=>{if(!dialog.classList.contains('hidden'))amountInput?.focus({preventScroll:true})});
 }
 function closeDebtPayment(){pendingDebtPayment=null;$('debtPaymentDialog')?.classList.add('hidden');$('cashPendingList')?.scrollIntoView({behavior:'smooth',block:'start'})}
 function parsePesoAmount(value){
