@@ -430,8 +430,8 @@ function addDebtPayment(clientId){
 }
 function closeDebtPayment(){pendingDebtPayment=null;$('debtPaymentDialog')?.classList.add('hidden');$('cashPendingList')?.scrollIntoView({behavior:'smooth',block:'start'})}
 function parsePesoAmount(value){
- const raw=String(value??'').trim().replace(/[\\s$]/g,'');
- if(!raw||! /^(?:\\d+|\\d{1,3}(?:[.,]\\d{3})+)$/.test(raw))return NaN;
+ const raw=String(value??'').trim().replace(/[\s$]/g,'');
+ if(!raw||! /^(?:\d+|\d{1,3}(?:[.,]\d{3})+)$/.test(raw))return NaN;
  return Number(raw.replace(/[.,]/g,''));
 }
 function confirmDebtPayment(){
