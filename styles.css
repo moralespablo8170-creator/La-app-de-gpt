@@ -268,3 +268,9 @@
 #paymentEditSave{grid-row:1;min-height:58px;background:#15803d;color:#fff;font-size:18px;font-weight:900}
 #paymentEditCancel{grid-row:2;min-height:48px}
 #paymentHistoryList{max-height:30vh!important}
+
+
+/* El formulario de abono se mantiene visible y cómodo con el teclado Android abierto. */
+#debtPaymentDialog .zipper-modal-panel{max-height:calc(100dvh - 20px);overflow-y:auto;overscroll-behavior:contain}
+#debtPaymentAmount{min-height:56px;font-size:20px;touch-action:manipulation}
+#debtPaymentAmount:focus{outline:3px solid #2563eb;outline-offset:2px}
