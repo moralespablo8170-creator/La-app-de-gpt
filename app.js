@@ -429,11 +429,17 @@ function addDebtPayment(clientId){
  $('debtPaymentAmount').focus();
 }
 function closeDebtPayment(){pendingDebtPayment=null;$('debtPaymentDialog')?.classList.add('hidden');$('cashPendingList')?.scrollIntoView({behavior:'smooth',block:'start'})}
+function parsePesoAmount(value){
+ const raw=String(value??'').trim().replace(/[\s$]/g,'');
+ if(!raw||! /^(?:\d+|\d{1,3}(?:[.,]\d{3})+)$/.test(raw))return NaN;
+ return Number(raw.replace(/[.,]/g,''));
+}
 function confirmDebtPayment(){
  if(!pendingDebtPayment)return;
- const {clientId}=pendingDebtPayment,debt=clientDebt(clientId),amount=Number($('debtPaymentAmount').value),paymentMethod=$('debtPaymentMethod').value;
+ const {clientId}=pendingDebtPayment,debt=clientDebt(clientId),amount=parsePesoAmount($('debtPaymentAmount').value),paymentMethod=$('debtPaymentMethod').value;
  const error=$('debtPaymentError');
- if(!Number.isSafeInteger(amount)||amount<=0){error.textContent='Ingresa un monto válido.';return}
+ if(debt<=0){error.textContent='Esta deuda ya no tiene saldo pendiente.';return}
+ if(!Number.isSafeInteger(amount)||amount<=0){error.textContent='Ingresa un monto válido en pesos (por ejemplo, 100000 o 100.000).';return}
  if(amount>debt){error.textContent='El abono supera el saldo pendiente de '+money(debt)+'.';return}
  if(!['cash','transfer'].includes(paymentMethod)){error.textContent='Selecciona efectivo o transferencia.';return}
  const c=clientById(clientId),rows=getPayments();
