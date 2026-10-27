@@ -78,7 +78,7 @@
 <script>
 window.zipperBackupDirect=function(){
  try{
-  var data={},keys=Object.keys(localStorage).filter(function(k){return k.indexOf('zipper')===0&&k.indexOf('zipperRespaldo')!==0});
+  var data={},keys=Object.keys(localStorage).filter(function(k){return k.indexOf('zipper')===0&&k.indexOf('zipperRespaldo')!==0&&k!=='zipperStorageRecoveryFailed'});
   keys.forEach(function(k){data[k]=localStorage.getItem(k)});
   ['zipperProductos','zipperClientes','zipperComprobantes'].forEach(function(k){if(!data[k])data[k]='[]'});
   var backup={app:'Distribuidora zipper',schemaVersion:1,createdAt:new Date().toISOString(),data:data};

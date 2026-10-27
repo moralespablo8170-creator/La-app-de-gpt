@@ -1,0 +1,23 @@
+name: Storage safety checks
+
+on:
+  pull_request:
+    paths:
+      - 'app.js'
+      - 'herramientas.js'
+      - 'tests/storage-safety.test.cjs'
+      - '.github/workflows/storage-safety.yml'
+  push:
+    branches:
+      - main
+      - correccion-abonos-atomicos-20261011
+
+jobs:
+  storage-safety:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: node --test tests/storage-safety.test.cjs
