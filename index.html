@@ -154,7 +154,7 @@ window.zipperBackupDirect=function(){
   var stale=Object.keys(data).filter(function(k){return k.indexOf('::')>=0&&/zipperClientes$/i.test(k)});
   if(stale.length)throw new Error('El respaldo contiene bases auxiliares de clientes sin reconciliar ('+stale.length+'). Requiere depuración antes de restaurar.');
   if(!confirm('Se restaurarán '+parsed.zipperComprobantes.length+' ventas, '+parsed.zipperClientes.length+' clientes y '+parsed.zipperProductos.length+' productos. Se verificaron sus identificadores. ¿Continuar?')){say('Restauración cancelada.');return;}
-  var before={};Object.keys(localStorage).filter(function(k){return k.indexOf('zipper')===0}).forEach(function(k){before[k]=localStorage.getItem(k)});
+  var before={};Object.keys(localStorage).filter(function(k){return k.indexOf('zipper')===0&&k!=='zipperRespaldoAntesRestauracion'}).forEach(function(k){before[k]=localStorage.getItem(k)});
   var snapshot=JSON.stringify({createdAt:new Date().toISOString(),data:before});
   var target={};Object.keys(data).forEach(function(k){if(k.indexOf('zipper')===0&&k.indexOf('zipperRespaldo')!==0&&k!=='zipperStorageRecoveryFailed'&&typeof data[k]==='string')target[k]=data[k]});
   var rollback=function(){
