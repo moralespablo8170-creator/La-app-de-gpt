@@ -144,8 +144,8 @@ async function commitSale(sale){
 async function saveSale(){
  if(!session||session.status==='closed'){status('Inicia la jornada antes de registrar una venta.','error');return}
  if(!selectedClient||!cart.length){status('Selecciona un cliente y agrega productos.','error');return}
- const paymentMethod=$('sellerPayment').value,total=cart.reduce((n,i)=>n+i.qty*i.price,0),{week,day}=selectedRoute();
- const sale={id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random(),folio:Math.max(0,...sales.map(s=>Number(s.folio)||0))+1,fecha:localDate(),date:localDate(),occurredAt:new Date().toISOString(),clienteId:String(selectedClient.id),cliente:selectedClient.name,clientZone:String(selectedClient.comuna||selectedClient.zone||'').trim(),ruta:selectedClient.route||'',routeWeek:week,routeDay:day,items:cart.map(i=>({productId:i.productId,baseProductId:i.baseProductId,desc:i.name,qty:i.qty,price:i.price})),total,paymentMethod,paymentStatus:paymentMethod==='pending'?'pending':'paid',sellerUid:profile.uid};
+ const paymentMethod=$('sellerPayment').value;if(!['cash','transfer'].includes(paymentMethod)){status('Solo se puede registrar efectivo o transferencia.','error');return}const total=cart.reduce((n,i)=>n+i.qty*i.price,0),{week,day}=selectedRoute();
+ const sale={id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random(),folio:Math.max(0,...sales.map(s=>Number(s.folio)||0))+1,fecha:localDate(),date:localDate(),occurredAt:new Date().toISOString(),clienteId:String(selectedClient.id),cliente:selectedClient.name,clientZone:String(selectedClient.comuna||selectedClient.zone||'').trim(),ruta:selectedClient.route||'',routeWeek:week,routeDay:day,items:cart.map(i=>({productId:i.productId,baseProductId:i.baseProductId,desc:i.name,qty:i.qty,price:i.price})),total,paymentMethod,paymentStatus:'paid',sellerUid:profile.uid};
  const button=$('sellerSaveSale');button.disabled=true;status(navigator.onLine?'Guardando venta y descontando el stock…':'Sin internet · guardando la venta en este teléfono para sincronizarla después.','warn');
  try{
   if(navigator.onLine)await commitSale(sale);
