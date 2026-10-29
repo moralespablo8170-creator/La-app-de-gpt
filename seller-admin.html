@@ -10,7 +10,7 @@
 {"imports":{"firebase/app":"https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js","firebase/auth":"https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js","firebase/firestore":"https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js"}}
 </script>
 <style>
-.admin-shell{max-width:900px;margin:0 auto;padding:16px 16px 80px}.admin-card{background:#fff;border-radius:22px;padding:20px;margin:14px 0;box-shadow:0 8px 24px #0002}.admin-card h1,.admin-card h2{margin:0 0 12px;color:#10233c}.admin-muted{color:#697381}.admin-shell label{display:block;font-weight:700;margin:12px 0}.admin-shell input[type=checkbox]{display:inline;width:auto}.admin-shell input:not([type=checkbox]),.admin-shell select{display:block;width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:12px;padding:13px;font:inherit;margin-top:6px}.admin-btn{display:block;width:100%;border:0;border-radius:14px;padding:14px 16px;font:inherit;font-weight:800;margin:10px 0;background:#1265e8;color:white}.admin-btn.secondary{background:#e5e7eb;color:#111827}.admin-status{padding:12px;border-radius:12px;background:#e8f1ff;color:#174476;font-weight:700}.admin-status.ok{background:#dcfce7;color:#166534}.admin-status.error{background:#fee2e2;color:#991b1b}.admin-hidden{display:none!important}.admin-list{display:grid;gap:10px}.admin-row{border:1px solid #e5e7eb;border-radius:14px;padding:13px}.admin-row strong{display:block;color:#10233c}.admin-row small{display:block;color:#687381;margin-top:5px}.admin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.admin-stat{background:#f1f5f9;border-radius:13px;padding:12px}.admin-stat strong{display:block;font-size:19px;color:#10233c}.admin-stat span{font-size:12px;color:#64748b}.admin-toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between}.admin-toolbar button{width:auto}@media(max-width:600px){.admin-grid{grid-template-columns:1fr 1fr}.admin-shell{padding:12px 12px 80px}.admin-card{padding:16px}.admin-toolbar{display:block}}
+.admin-shell{max-width:900px;margin:0 auto;padding:16px 16px 80px}.admin-card{background:#fff;border-radius:22px;padding:20px;margin:14px 0;box-shadow:0 8px 24px #0002}.admin-card h1,.admin-card h2{margin:0 0 12px;color:#10233c}.admin-muted{color:#697381}.admin-shell label{display:block;font-weight:700;margin:12px 0}.admin-shell input[type=checkbox]{display:inline;width:auto}.admin-shell input:not([type=checkbox]),.admin-shell select{display:block;width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:12px;padding:13px;font:inherit;margin-top:6px}.admin-btn{display:block;width:100%;border:0;border-radius:14px;padding:14px 16px;font:inherit;font-weight:800;margin:10px 0;background:#1265e8;color:white}.admin-btn.secondary{background:#e5e7eb;color:#111827}.admin-status{padding:12px;border-radius:12px;background:#e8f1ff;color:#174476;font-weight:700}.admin-status.ok{background:#dcfce7;color:#166534}.admin-status.error{background:#fee2e2;color:#991b1b}.admin-hidden{display:none!important}.admin-list{display:grid;gap:10px}.admin-row{border:1px solid #e5e7eb;border-radius:14px;padding:13px}.admin-row strong{display:block;color:#10233c}.admin-row small{display:block;color:#687381;margin-top:5px}.admin-table{width:100%;border-collapse:collapse;min-width:680px}.admin-table th,.admin-table td{padding:10px;border-bottom:1px solid #e5e7eb;text-align:left;white-space:nowrap}.admin-table th{color:#334155;background:#f1f5f9}.admin-table td:last-child{text-align:right;font-weight:800}.admin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.admin-stat{background:#f1f5f9;border-radius:13px;padding:12px}.admin-stat strong{display:block;font-size:19px;color:#10233c}.admin-stat span{font-size:12px;color:#64748b}.admin-toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between}.admin-toolbar button{width:auto}@media(max-width:600px){.admin-grid{grid-template-columns:1fr 1fr}.admin-shell{padding:12px 12px 80px}.admin-card{padding:16px}.admin-toolbar{display:block}}
 </style>
 </head>
 <body>
@@ -46,6 +46,12 @@
 <label>Fecha<input id="adminDate" type="date"></label>
 </section>
 <section class="admin-card">
+<h2>Resumen mensual por vendedor y zona</h2>
+<label>Mes<input id="adminMonth" type="month"></label>
+<p class="admin-muted">La participación es la parte de las ventas de cada vendedor dentro del total de su zona en el mes. Las ventas antiguas sin zona guardada se agrupan usando la comuna actual del cliente y se identifican como estimadas.</p>
+<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Vendedor</th><th>Zona</th><th>Ruta</th><th>Ventas</th><th>Total vendido</th><th>Participación zona</th></tr></thead><tbody id="monthlySellerRows"><tr><td colspan="6">Sin datos del mes.</td></tr></tbody></table></div>
+</section>
+<section class="admin-card">
 <h2>Acceso de vendedores</h2>
 <p class="admin-muted">Primero crea la cuenta de acceso en Firebase Authentication y copia su UID. Aquí solo se asocia ese UID con un perfil vendedor; nunca escribas ni compartas su contraseña. El acceso seguirá bloqueado hasta que el dueño active el modo vendedor.</p>
 <label>UID de la cuenta<input id="sellerUid" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="UID copiado desde Firebase Authentication"></label>
@@ -69,6 +75,6 @@
 </section>
 </section>
 </main>
-<script type="module" src="./seller-admin.js?v=zipper-seller-admin-20261029-v4"></script>
+<script type="module" src="./seller-admin.js?v=zipper-seller-admin-20261029-v5"></script>
 </body>
 </html>
