@@ -93,20 +93,21 @@ async function savePayment(){
  const method=$('sellerPaymentMethod').value;
  paymentSaving=true;renderDebt();status('Validando saldo y guardando el abono en Firebase…','warn');
  try{
-  await runTransaction(db,async tx=>{
-   const [ledgerSnap,balanceSnap,movementSnap]=await Promise.all([tx.get(ledgerRef),tx.get(balanceRef),tx.get(movementRef)]);
+  const result=await runTransaction(db,async tx=>{
+   const [ledgerSnap,balanceSnap]=await Promise.all([tx.get(ledgerRef),tx.get(balanceRef)]);
    if(!ledgerSnap.exists()||ledgerSnap.data().ready!==true)throw new Error('Los saldos están en actualización. Espera y vuelve a consultar.');
-   if(movementSnap.exists())throw new Error('Este abono ya fue registrado. Actualiza el saldo antes de continuar.');
    if(!balanceSnap.exists())throw new Error('No hay saldo preparado para este cliente.');
    const current=Math.max(0,Math.round(Number(balanceSnap.data().balance)||0));
+   if(balanceSnap.data().lastPaymentId===movementId)return {already:true,balance:current};
    if(amount>current)throw new Error('El saldo cambió. El saldo actual es '+money(current)+'.');
    const next=current-amount;
    const payment={id:movementId,sourceType:'payment',origin:'seller',clientId,clienteId:clientId,cliente:String(client.name||''),amount,paymentMethod:method,date:localDate(),sellerUid:profile.uid,sellerName:String(profile.displayName||profile.email||''),createdAt:serverTimestamp()};
    tx.set(balanceRef,{clientId,balance:next,updatedAt:serverTimestamp(),lastPaymentId:movementId,lastPaymentSellerUid:profile.uid});
    tx.set(movementRef,payment);
+   return {already:false,balance:next};
   });
-  balanceCacheWrite(clientId,currentDebt-amount);if(selectedClient&&String(selectedClient.id)===clientId)currentDebt-=amount;$('sellerPaymentAmount').value='';
-  status('Abono de '+money(amount)+' registrado. Saldo pendiente: '+money(currentDebt)+'.','ok');
+  currentDebt=result.balance;balanceCacheWrite(clientId,result.balance);$('sellerPaymentAmount').value='';
+  status(result.already?'El abono ya estaba confirmado. Saldo pendiente: '+money(result.balance)+'.':'Abono de '+money(amount)+' registrado. Saldo pendiente: '+money(result.balance)+'.','ok');
  }catch(error){status('No se confirmó el abono: '+(error.message||'revisa la conexión y vuelve a consultar el saldo.'),'error');if(selectedClient&&String(selectedClient.id)===clientId)await loadSelectedDebt()}
  finally{paymentSaving=false;button.disabled=false;renderDebt()}
 }
