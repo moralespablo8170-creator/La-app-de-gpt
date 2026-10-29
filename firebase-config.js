@@ -12,7 +12,12 @@ const productionConfig=Object.freeze({
 });
 const testConfig=testFirebaseConfig;
 const isolatedPreview=/(^|\/)preview\/pr-9(?:\/|$)/.test(window.location.pathname);
-if(isolatedPreview&&(!testConfig.projectId||testConfig.projectId===productionConfig.projectId)){
+const requiredTestFields=['apiKey','authDomain','projectId','storageBucket','messagingSenderId','appId'];
+const completeTestConfig=requiredTestFields.every(key=>String(testConfig[key]||'').trim());
+const distinctTestConfig=testConfig.projectId!==productionConfig.projectId
+ && testConfig.apiKey!==productionConfig.apiKey
+ && testConfig.authDomain!==productionConfig.authDomain;
+if(isolatedPreview&&(!completeTestConfig||!distinctTestConfig)){
  throw new Error('Vista de vendedores aislada: falta configurar un Firebase de pruebas. No se conectó al proyecto real.');
 }
 export const firebaseConfig=isolatedPreview?testConfig:productionConfig;
