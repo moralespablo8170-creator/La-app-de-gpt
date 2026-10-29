@@ -102,13 +102,13 @@ async function startSession(){
  try{
   const snap=await getDoc(ref);
   if(snap.exists()&&snap.data().status==='open'){session={id,...snap.data()};status('La jornada de hoy ya estaba abierta.','ok')}
-  else{const existing=snap.exists()?snap.data():{};const row={id,sellerUid:profile.uid,routeWeek:week,routeDay:day,status:'open',openedAt:existing.openedAt||serverTimestamp(),closedAt:null,firstSaleAt:existing.firstSaleAt||null,salesCount:Number(existing.salesCount||0)};await setDoc(ref,row,{merge:true});session=row;status(navigator.onLine?'Jornada iniciada.':'Jornada guardada en este teléfono; se enviará al reconectar.','ok')}
+  else{const existing=snap.exists()?snap.data():{};const row={id,sellerUid:profile.uid,routeWeek:week,routeDay:day,status:'open',openedAt:existing.openedAt||serverTimestamp(),openedAtLocal:existing.openedAtLocal||new Date().toISOString(),closedAt:null,closedAtLocal:null,firstSaleAt:existing.firstSaleAt||null,firstSaleAtLocal:existing.firstSaleAtLocal||null,salesCount:Number(existing.salesCount||0)};await setDoc(ref,row,{merge:true});session=row;status(navigator.onLine?'Jornada iniciada.':'Jornada guardada en este teléfono; se enviará al reconectar.','ok')}
   render();
  }catch(error){status('No se pudo iniciar la jornada: '+(error.message||''),'error')}
 }
 async function closeSession(){
  if(!session)return;
- try{await setDoc(doc(db,'orgs',ORG,'sessions',session.id),{status:'closed',closedAt:serverTimestamp(),updatedAt:serverTimestamp()},{merge:true});session={...session,status:'closed',closedAt:new Date().toISOString()};renderSession();status(navigator.onLine?'Jornada cerrada.':'Cierre guardado pendiente de conexión.','ok')}
+ try{await setDoc(doc(db,'orgs',ORG,'sessions',session.id),{status:'closed',closedAt:serverTimestamp(),closedAtLocal:new Date().toISOString(),updatedAt:serverTimestamp()},{merge:true});session={...session,status:'closed',closedAt:new Date().toISOString()};renderSession();status(navigator.onLine?'Jornada cerrada.':'Cierre guardado pendiente de conexión.','ok')}
  catch(error){status('No se pudo cerrar la jornada: '+(error.message||''),'error')}
 }
 async function markVisited(clientId){
@@ -138,14 +138,14 @@ async function commitSale(sale){
   productSnaps.forEach((snap,index)=>{const current=snap.data(),ref=productRefs[index],qty=deductions[ref.id];tx.update(ref,{stock:Number(current.stock||0)-qty,lastSellerSaleId:String(sale.id)})});
   tx.set(saleRef,{...sale,stockDeductions:deductions,createdAt:serverTimestamp()});
   const previous=sessionSnap.exists()?sessionSnap.data():{};
-  tx.set(sessionRef,{id:sessionRef.id,sellerUid:profile.uid,status:previous.status||'open',routeWeek:sale.routeWeek,routeDay:sale.routeDay,firstSaleAt:previous.firstSaleAt||serverTimestamp(),salesCount:Number(previous.salesCount||0)+1,lastSaleAt:serverTimestamp()},{merge:true});
+  tx.set(sessionRef,{id:sessionRef.id,sellerUid:profile.uid,status:previous.status||'open',routeWeek:sale.routeWeek,routeDay:sale.routeDay,firstSaleAt:previous.firstSaleAt||serverTimestamp(),firstSaleAtLocal:previous.firstSaleAtLocal||sale.occurredAt||new Date().toISOString(),salesCount:Number(previous.salesCount||0)+1,lastSaleAt:serverTimestamp(),lastSaleAtLocal:sale.occurredAt||new Date().toISOString()},{merge:true});
  });
 }
 async function saveSale(){
  if(!session||session.status==='closed'){status('Inicia la jornada antes de registrar una venta.','error');return}
  if(!selectedClient||!cart.length){status('Selecciona un cliente y agrega productos.','error');return}
  const paymentMethod=$('sellerPayment').value,total=cart.reduce((n,i)=>n+i.qty*i.price,0),{week,day}=selectedRoute();
- const sale={id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random(),folio:Math.max(0,...sales.map(s=>Number(s.folio)||0))+1,fecha:localDate(),date:localDate(),clienteId:String(selectedClient.id),cliente:selectedClient.name,ruta:selectedClient.route||'',routeWeek:week,routeDay:day,items:cart.map(i=>({productId:i.productId,baseProductId:i.baseProductId,desc:i.name,qty:i.qty,price:i.price})),total,paymentMethod,paymentStatus:paymentMethod==='pending'?'pending':'paid',sellerUid:profile.uid};
+ const sale={id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random(),folio:Math.max(0,...sales.map(s=>Number(s.folio)||0))+1,fecha:localDate(),date:localDate(),occurredAt:new Date().toISOString(),clienteId:String(selectedClient.id),cliente:selectedClient.name,ruta:selectedClient.route||'',routeWeek:week,routeDay:day,items:cart.map(i=>({productId:i.productId,baseProductId:i.baseProductId,desc:i.name,qty:i.qty,price:i.price})),total,paymentMethod,paymentStatus:paymentMethod==='pending'?'pending':'paid',sellerUid:profile.uid};
  const button=$('sellerSaveSale');button.disabled=true;status(navigator.onLine?'Guardando venta y descontando el stock…':'Sin internet · guardando la venta en este teléfono para sincronizarla después.','warn');
  try{
   if(navigator.onLine)await commitSale(sale);
