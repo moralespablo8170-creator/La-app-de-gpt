@@ -103,6 +103,9 @@ function updateSyncIndicator() {
       ?'Sincronizando cambios pendientes con Firebase…'
       :'Hay cambios guardados en el teléfono pendientes de sincronizar.';
     state='sync-pending';
+  } else if(!activeProfile) {
+    message='Conectando cuenta con Firebase…';
+    state='sync-pending';
   } else {
     message='Firebase al día · cambios sincronizados.';
     state='sync-ok';
@@ -128,7 +131,6 @@ function enqueueLocalChange(key, previousRaw, currentRaw) {
   const existing=outbox[key];
   outbox[key]={
     previousIds:existing?.previousIds||parseArray(previousRaw).map(row=>typeof row==='object'&&row?row.id:row),
-    rows:parseArray(currentRaw),
     revision:String(Date.now())+'-'+Math.random().toString(36).slice(2)
   };
   saveOutbox(outbox);
