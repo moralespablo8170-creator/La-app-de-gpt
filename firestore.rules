@@ -21,9 +21,20 @@ service cloud.firestore {
         && get(memberPath(orgId, request.auth.uid)).data.role == 'owner';
     }
 
+    function sellerModePath(orgId) {
+      return /databases/$(database)/documents/orgs/$(orgId)/settings/sellerMode;
+    }
+
+    function sellerModeEnabled(orgId) {
+      return exists(sellerModePath(orgId))
+        && get(sellerModePath(orgId)).data.enabled == true
+        && get(sellerModePath(orgId)).data.catalogVersion == 1;
+    }
+
     function isSeller(orgId) {
       return isMember(orgId)
-        && get(memberPath(orgId, request.auth.uid)).data.role == 'seller';
+        && get(memberPath(orgId, request.auth.uid)).data.role == 'seller'
+        && sellerModeEnabled(orgId);
     }
 
     function isActiveMember(orgId) {
