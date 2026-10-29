@@ -38,8 +38,18 @@ const localArray = key => {
     return Array.isArray(value) ? value : [];
   } catch (_) { return []; }
 };
-const localCount = () => ['zipperClientes','zipperProductos','zipperComprobantes','zipperPagos','zipperGastosCaja']
-  .reduce((sum,key)=>sum+localArray(key).length,0);
+const localCounts = () => ({
+  clients:localArray('zipperClientes').length,
+  products:localArray('zipperProductos').length,
+  sales:localArray('zipperComprobantes').length,
+  payments:localArray('zipperPagos').length,
+  expenses:localArray('zipperGastosCaja').length
+});
+const localCount = () => Object.values(localCounts()).reduce((sum,count)=>sum+count,0);
+const countsLabel = state => {
+  const local=state.localCounts;
+  return 'En el teléfono: '+state.localCount+' registros (clientes: '+local.clients+', productos: '+local.products+', ventas: '+local.sales+', abonos/pagos: '+local.payments+', gastos: '+local.expenses+'). En Firebase: '+state.cloudCount+' registros.';
+};
 const colRef = name => collection(db, ...ORG_PATH, name);
 const safeId = value => {
   const id = String(value ?? '');
@@ -98,7 +108,7 @@ async function inspectCloud() {
   const counts={};
   for (const name of names) counts[name]=(await getDocs(colRef(name))).size;
   counts.settings=(await getDocs(colRef('settings'))).size;
-  return {localCount:localCount(),cloudCount:Object.values(counts).reduce((a,b)=>a+b,0),counts};
+  return {localCount:localCount(),localCounts:localCounts(),cloudCount:Object.values(counts).reduce((a,b)=>a+b,0),counts};
 }
 function toCloudRows(key, rows, profile) {
   if (key==='zipperProductos') return {collection:'products',rows};
@@ -342,7 +352,7 @@ async function connectUi() {
       document.getElementById('cloudAccount').textContent=(profile.displayName||profile.email)+' · '+profile.role;
       document.getElementById('cloudAfterLogin').classList.remove('hidden');
       const state=await inspectCloud();
-      document.getElementById('cloudCounts').textContent='En este teléfono: '+state.localCount+' registros. En Firebase: '+state.cloudCount+' registros.';
+      document.getElementById('cloudCounts').textContent=countsLabel(state);
       const localData=state.localCount>0;
       const cloudData=state.cloudCount>0;
       const importBtn=document.getElementById('cloudImport');
@@ -392,7 +402,7 @@ async function connectUi() {
       button.textContent='Importación completada';
       const counts=await inspectCloud();
       const cloudCounts=document.getElementById('cloudCounts');
-      if(cloudCounts)cloudCounts.textContent='En este teléfono: '+counts.localCount+' registros. En Firebase: '+counts.cloudCount+' registros.';
+      if(cloudCounts)cloudCounts.textContent=countsLabel(counts);
       cloudLabel();
     } catch(error) {
       const message=error.message||'No se pudo completar la importación.';
