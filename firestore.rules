@@ -49,7 +49,7 @@ service cloud.firestore {
     }
 
     match /orgs/{orgId}/members/{uid} {
-      allow get: if isMember(orgId)
+      allow get: if signedIn()
         && (uid == request.auth.uid || isOwner(orgId));
       allow list: if isOwner(orgId);
       allow create, update: if isOwner(orgId)
