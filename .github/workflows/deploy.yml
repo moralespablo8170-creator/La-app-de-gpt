@@ -8,7 +8,7 @@ on:
 
 concurrency:
   group: github-pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 permissions:
   actions: read
@@ -17,11 +17,8 @@ permissions:
   id-token: write
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout main app
         uses: actions/checkout@v6
@@ -78,6 +75,17 @@ jobs:
               await new Promise(resolve => setTimeout(resolve, 5000));
             }
             throw new Error('Timed out waiting for the branch-based Pages deployment.');
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
