@@ -26,7 +26,7 @@ catch(_){db=getFirestore(app)}
 const ORG='zipper-a12f1';
 const DAYS=['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
 const $=id=>document.getElementById(id);
-let profile=null,clients=[],products=[],sales=[],selectedClient=null,cart=[],session=null,unsubs=[],loading=false,currentDebt=null,debtLoading=false,debtClientId='',paymentSaving=false;
+let profile=null,clients=[],products=[],sales=[],selectedClient=null,cart=[],session=null,unsubs=[],loading=false;
 const localDate=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
 const prefix=()=>profile?'zipperSeller_'+profile.uid+'_':'zipperSeller_guest_';
 const cacheRead=name=>{try{const v=JSON.parse(localStorage.getItem(prefix()+name)||'[]');return Array.isArray(v)?v:[]}catch(_){return []}};
@@ -41,87 +41,12 @@ function routeDays(week){return [...new Set(clients.map(c=>routeFor(c,week)?.day
 function selectedRoute(){return {week:$('sellerWeek').value||'A',day:$('sellerDay').value||''}}
 function filteredClients(){const {week,day}=selectedRoute(),q=String($('sellerSearch').value||'').trim().toLocaleLowerCase('es');return clients.filter(c=>{const r=routeFor(c,week);return c.active!==false&&r&&r.day===day&&(!q||String(c.name||'').toLocaleLowerCase('es').includes(q)||String(c.address||'').toLocaleLowerCase('es').includes(q))}).sort((a,b)=>(Number(routeFor(a,week)?.position)||999999)-(Number(routeFor(b,week)?.position)||999999)||String(a.name).localeCompare(String(b.name),'es'))}
 function renderRouteDays(){const week=$('sellerWeek').value||'A',days=routeDays(week),select=$('sellerDay'),current=select.value;select.innerHTML='<option value="">Seleccionar día</option>'+days.map(d=>'<option>'+safeText(d)+'</option>').join('');if(days.includes(current))select.value=current;else if(days.length===1)select.value=days[0]}
-function renderClients(){const rows=filteredClients();$('sellerClientCount').textContent=String(rows.length);$('sellerClients').innerHTML=rows.length?rows.map((c,i)=>'<article class="seller-row"><strong>'+(i+1)+'. '+safeText(c.name)+'</strong><small>'+safeText(c.address||'Sin dirección')+' · '+safeText(c.phone||'Sin teléfono')+'</small><div class="seller-actions"><button class="seller-btn secondary" type="button" data-visit="'+safeText(c.id)+'">Marcar visitado</button><button class="seller-btn secondary" type="button" data-payment-select="'+safeText(c.id)+'">Abonar</button><button class="seller-btn" type="button" data-select="'+safeText(c.id)+'">Vender</button></div></article>').join(''):'<p class="seller-muted">No hay clientes asignados para esta semana y día.</p>';document.querySelectorAll('[data-visit]').forEach(b=>b.onclick=()=>markVisited(b.dataset.visit));document.querySelectorAll('[data-select],[data-payment-select]').forEach(b=>b.onclick=()=>selectClient(b.dataset.select||b.dataset.paymentSelect))}
+function renderClients(){const rows=filteredClients();$('sellerClientCount').textContent=String(rows.length);$('sellerClients').innerHTML=rows.length?rows.map((c,i)=>'<article class="seller-row"><strong>'+(i+1)+'. '+safeText(c.name)+'</strong><small>'+safeText(c.address||'Sin dirección')+' · '+safeText(c.phone||'Sin teléfono')+'</small><div class="seller-actions"><button class="seller-btn secondary" type="button" data-visit="'+safeText(c.id)+'">Marcar visitado</button><button class="seller-btn" type="button" data-select="'+safeText(c.id)+'">Vender</button></div></article>').join(''):'<p class="seller-muted">No hay clientes asignados para esta semana y día.</p>';document.querySelectorAll('[data-visit]').forEach(b=>b.onclick=()=>markVisited(b.dataset.visit));document.querySelectorAll('[data-select]').forEach(b=>b.onclick=()=>selectClient(b.dataset.select))}
 function renderProducts(){const available=products.filter(p=>p&&p.active!==false&&p.id!=null&&String(p.name||'').trim());$('sellerProduct').innerHTML='<option value="">Seleccionar producto</option>'+available.map(p=>'<option value="'+safeText(p.id)+'">'+safeText(p.name)+' · '+money(p.price)+' · stock '+Number(p.stock||0)+'</option>').join('');$('sellerInventory').innerHTML=available.slice().sort((a,b)=>String(a.name).localeCompare(String(b.name),'es')).map(p=>'<div class="seller-product"><strong>'+safeText(p.name)+'</strong><span>Stock: '+Number(p.stock||0)+' · '+money(p.price)+'</span></div>').join('')||'<p class="seller-muted">Inventario aún no disponible. Conéctate a internet para cargarlo la primera vez.</p>'}
-function balanceCacheRead(){try{const v=JSON.parse(localStorage.getItem(prefix()+'clientBalances')||'{}');return v&&typeof v==='object'&&!Array.isArray(v)?v:{}}catch(_){return {}}}
-function pendingPaymentId(clientId){const key=prefix()+'pendingPayment_'+String(clientId);let id=localStorage.getItem(key);if(!id){id='payment_'+profile.uid+'_'+(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random());try{localStorage.setItem(key,id)}catch(error){console.error(error)}}return id}
-function clearPendingPaymentId(clientId){try{localStorage.removeItem(prefix()+'pendingPayment_'+String(clientId))}catch(error){console.error(error)}}
-function balanceCacheWrite(clientId,balance){const v=balanceCacheRead();v[String(clientId)]={balance:Number(balance)||0,updatedAt:new Date().toISOString()};try{localStorage.setItem(prefix()+'clientBalances',JSON.stringify(v))}catch(error){console.error(error)}}
-function renderDebt(){
- const label=$('sellerDebtStatus'),button=$('sellerSavePayment'),input=$('sellerPaymentAmount');
- if(!label||!button)return;
- const active=!!session&&!session.closedAt&&session.status!=='closed';
- if(!selectedClient){label.textContent='Selecciona un cliente de tu ruta para consultar su saldo.';button.disabled=true;return}
- if(debtClientId!==String(selectedClient.id)){label.textContent='Consultando saldo del cliente…';button.disabled=true;return}
- if(debtLoading){label.textContent='Consultando el saldo actualizado en Firebase…';button.disabled=true;return}
- if(currentDebt==null){label.textContent=navigator.onLine?'No se pudo confirmar el saldo. Intenta actualizar con internet.':'Sin conexión: el saldo no está disponible para confirmar un abono.';button.disabled=true;return}
- label.textContent=(navigator.onLine?'Saldo pendiente en Firebase: ':'Último saldo guardado: ')+money(currentDebt)+(navigator.onLine?'':'. Conéctate para registrar el abono.');
- button.disabled=!navigator.onLine||!active||currentDebt<1||paymentSaving;
- if(input&&currentDebt>0)input.max=String(currentDebt);
-}
-async function loadSelectedDebt(){
- if(!selectedClient){currentDebt=null;debtClientId='';renderDebt();return}
- const clientId=String(selectedClient.id);debtClientId=clientId;
- const cached=balanceCacheRead()[clientId];
- currentDebt=cached?Number(cached.balance):null;
- if(navigator.onLine===false){debtLoading=false;renderDebt();return}
- debtLoading=true;renderDebt();
- try{
-  const [ledgerSnap,balanceSnap]=await Promise.all([
-   getDoc(doc(db,'orgs',ORG,'settings','debtLedger')),
-   getDoc(doc(db,'orgs',ORG,'clientBalances',clientId))
-  ]);
-  if(!selectedClient||String(selectedClient.id)!==clientId)return;
-  if(!ledgerSnap.exists()||ledgerSnap.data().ready!==true)throw new Error('El saldo compartido está actualizándose. Intenta nuevamente en unos segundos.');
-  if(!balanceSnap.exists())throw new Error('El dueño todavía no ha preparado el saldo de este cliente.');
-  const fresh=Number(balanceSnap.data().balance);
-  if(!Number.isFinite(fresh)||fresh<0)throw new Error('El saldo recibido no es válido.');
-  currentDebt=fresh;balanceCacheWrite(clientId,fresh);
- }catch(error){if(selectedClient&&String(selectedClient.id)===clientId){currentDebt=null;status(error.message||'No se pudo consultar el saldo del cliente.','warn')}}
- finally{debtLoading=false;renderDebt()}
-}
-async function savePayment(){
- if(!selectedClient||!session||session.status==='closed'){status('Selecciona un cliente e inicia la jornada antes de registrar un abono.','error');return}
- if(navigator.onLine===false){status('El abono necesita internet para validar el saldo y quedar confirmado.','warn');return}
- const amount=Math.floor(Number($('sellerPaymentAmount').value));
- if(!Number.isFinite(amount)||amount<1){status('Ingresa un monto válido en pesos.','error');return}
- const client=selectedClient,clientId=String(client.id),button=$('sellerSavePayment');
- if(debtClientId!==clientId||currentDebt==null){await loadSelectedDebt();if(!selectedClient||String(selectedClient.id)!==clientId||currentDebt==null)return}
- if(amount>currentDebt){status('El monto supera el saldo pendiente de '+money(currentDebt)+'.','error');return}
- const movementId=pendingPaymentId(clientId);
- const movementRef=doc(db,'orgs',ORG,'cashMovements',movementId);
- const balanceRef=doc(db,'orgs',ORG,'clientBalances',clientId);
- const ledgerRef=doc(db,'orgs',ORG,'settings','debtLedger');
- const method=$('sellerPaymentMethod').value;
- paymentSaving=true;renderDebt();status('Validando saldo y guardando el abono en Firebase…','warn');
- try{
-  const result=await runTransaction(db,async tx=>{
-   const [ledgerSnap,balanceSnap,movementSnap]=await Promise.all([tx.get(ledgerRef),tx.get(balanceRef),tx.get(movementRef)]);
-   if(!ledgerSnap.exists()||ledgerSnap.data().ready!==true)throw new Error('Los saldos están en actualización. Espera y vuelve a consultar.');
-   if(!balanceSnap.exists())throw new Error('No hay saldo preparado para este cliente.');
-   const current=Math.max(0,Math.round(Number(balanceSnap.data().balance)||0));
-   if(movementSnap.exists()) {
-    const prior=movementSnap.data();
-    if(prior.sellerUid!==profile.uid||prior.clientId!==clientId||Number(prior.amount)!==amount||prior.paymentMethod!==method)throw new Error('Este intento de abono ya existe con otros datos. Consulta al dueño antes de repetirlo.');
-    return {already:true,balance:current};
-   }
-   if(balanceSnap.data().lastPaymentId===movementId)return {already:true,balance:current};
-   if(amount>current)throw new Error('El saldo cambió. El saldo actual es '+money(current)+'.');
-   const next=current-amount;
-   const payment={id:movementId,sourceType:'payment',origin:'seller',clientId,clienteId:clientId,cliente:String(client.name||''),amount,paymentMethod:method,date:localDate(),sellerUid:profile.uid,sellerName:String(profile.displayName||profile.email||''),createdAt:serverTimestamp()};
-   tx.set(balanceRef,{clientId,balance:next,updatedAt:serverTimestamp(),lastPaymentId:movementId,lastPaymentSellerUid:profile.uid});
-   tx.set(movementRef,payment);
-   return {already:false,balance:next};
-  });
-  currentDebt=result.balance;balanceCacheWrite(clientId,result.balance);clearPendingPaymentId(clientId);$('sellerPaymentAmount').value='';
-  status(result.already?'El abono ya estaba confirmado. Saldo pendiente: '+money(result.balance)+'.':'Abono de '+money(amount)+' registrado. Saldo pendiente: '+money(result.balance)+'.','ok');
- }catch(error){if(!['unavailable','deadline-exceeded','unknown'].includes(error.code))clearPendingPaymentId(clientId);status('No se confirmó el abono: '+(error.message||'revisa la conexión y vuelve a consultar el saldo.'),'error');if(selectedClient&&String(selectedClient.id)===clientId)await loadSelectedDebt()}
- finally{paymentSaving=false;button.disabled=false;renderDebt()}
-}
 function renderCart(){const total=cart.reduce((n,item)=>n+item.qty*item.price,0);$('sellerCart').innerHTML=cart.length?cart.map((item,i)=>'<div class="seller-row"><strong>'+safeText(item.name)+' × '+item.qty+'</strong><small>'+money(item.price)+' c/u · '+money(item.qty*item.price)+'</small><button class="seller-btn secondary" type="button" data-remove="'+i+'">Quitar</button></div>').join(''):'<p class="seller-muted">Carrito vacío.</p>';document.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{cart.splice(Number(b.dataset.remove),1);renderCart()});$('sellerSaleTotal').textContent=money(total)}
 function renderSales(){const today=sales.filter(s=>String(s.fecha||'').slice(0,10)===localDate()).sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));const pending=queueRead();$('sellerSalesToday').innerHTML=[...pending.map(s=>({...s,_pending:true})),...today].map(s=>'<article class="seller-row"><strong>#'+safeText(s.folio||'pendiente')+' · '+safeText(s.cliente)+'</strong><small>'+safeText(s.fecha||localDate())+' · '+money(s.total)+' · '+(s._pending?'Pendiente de sincronizar':'Guardada en Firebase')+'</small></article>').join('')||'<p class="seller-muted">Todavía no hay ventas hoy.</p>'}
-function renderSession(){const active=!!session&&!session.closedAt;$('sellerSessionLabel').textContent=active?'Jornada abierta · Semana '+session.routeWeek+' · '+session.routeDay:'Jornada cerrada';$('sellerStart').classList.toggle('seller-hidden',active);$('sellerClose').classList.toggle('seller-hidden',!active);$('sellerSaveSale').disabled=!active||!selectedClient;$('sellerAddItem').disabled=!active;renderDebt()}
-function render(){if(!profile)return;renderRouteDays();renderClients();renderProducts();renderCart();renderSales();renderSession();$('sellerSelectedClient').textContent=selectedClient?'Cliente: '+selectedClient.name:'Selecciona un cliente de la ruta.';renderDebt()}
+function renderSession(){const active=!!session&&!session.closedAt;$('sellerSessionLabel').textContent=active?'Jornada abierta · Semana '+session.routeWeek+' · '+session.routeDay:'Jornada cerrada';$('sellerStart').classList.toggle('seller-hidden',active);$('sellerClose').classList.toggle('seller-hidden',!active);$('sellerSaveSale').disabled=!active||!selectedClient;$('sellerAddItem').disabled=!active}
+function render(){if(!profile)return;renderRouteDays();renderClients();renderProducts();renderCart();renderSales();renderSession();$('sellerSelectedClient').textContent=selectedClient?'Cliente: '+selectedClient.name:'Selecciona un cliente de la ruta.'}
 async function requirePreparedSellerMode(){
  const snap=await getDoc(doc(db,'orgs',ORG,'settings','sellerMode'));
  const mode=snap.exists()?snap.data():null;
@@ -192,7 +117,7 @@ async function markVisited(clientId){
  try{await setDoc(doc(db,'orgs',ORG,'visits',id),{id,sellerUid:profile.uid,clientId:String(client.id),date,status:'visited',routeWeek:week,routeDay:day,visitedAt:serverTimestamp()},{merge:true});status(navigator.onLine?'Visita guardada.':'Visita guardada pendiente de conexión.','ok')}
  catch(error){status('No se pudo guardar la visita: '+(error.message||''),'error')}
 }
-function selectClient(id){selectedClient=clients.find(c=>String(c.id)===String(id))||null;cart=[];currentDebt=null;debtClientId=selectedClient?String(selectedClient.id):'';renderCart();renderSession();loadSelectedDebt()}
+function selectClient(id){selectedClient=clients.find(c=>String(c.id)===String(id))||null;cart=[];renderCart();renderSession()}
 function addItem(){
  const id=$('sellerProduct').value,p=products.find(x=>String(x.id)===String(id)),qty=Math.floor(Number($('sellerQuantity').value));
  if(!p||qty<1){status('Selecciona un producto y una cantidad válida.','error');return}
@@ -254,10 +179,10 @@ async function flushPendingSales(){
 }
 async function logout(){unsubs.forEach(fn=>{try{fn()}catch(_){}});await signOut(auth);profile=null;session=null;$('sellerApp').classList.add('seller-hidden');$('sellerLogin').classList.remove('seller-hidden');status('Sesión cerrada.');}
 function wire(){
- $('sellerLoginButton').onclick=signIn;$('sellerLogout').onclick=logout;$('sellerStart').onclick=startSession;$('sellerClose').onclick=closeSession;$('sellerAddItem').onclick=addItem;$('sellerSaveSale').onclick=saveSale;$('sellerSavePayment').onclick=savePayment;
+ $('sellerLoginButton').onclick=signIn;$('sellerLogout').onclick=logout;$('sellerStart').onclick=startSession;$('sellerClose').onclick=closeSession;$('sellerAddItem').onclick=addItem;$('sellerSaveSale').onclick=saveSale;
  $('sellerWeek').onchange=()=>{renderRouteDays();renderClients()};$('sellerDay').onchange=renderClients;$('sellerSearch').oninput=renderClients;
  window.addEventListener('online',async()=>{status('Conexión recuperada · sincronizando…','warn');await flushPendingSales();if(navigator.onLine)await refreshFromServer();if(selectedClient)await loadSelectedDebt()});
- window.addEventListener('offline',()=>{status('Sin internet · ventas pendientes quedan en cola; los abonos requieren conexión.','warn');renderDebt()});
+ window.addEventListener('offline',()=>status('Sin internet · los cambios quedarán pendientes.','warn'));
 }
 wire();
 onAuthStateChanged(auth,async user=>{
