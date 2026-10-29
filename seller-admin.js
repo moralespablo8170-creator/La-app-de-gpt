@@ -115,8 +115,8 @@ async function saveCompensation(){
  if(!owner||!uid){$('compStatus').textContent='Selecciona un vendedor.';return}
  if(navigator.onLine===false){$('compStatus').textContent='Conéctate a internet para guardar las condiciones.';return}
  const base=Number(baseRaw),tiers=readCompTiers();
- if(!Number.isFinite(base)||base<0){$('compStatus').textContent='El sueldo base debe ser cero o un monto positivo.';return}
- if(!tiers.length||tiers.some(t=>t.threshold===''||t.ratePct===''||!Number.isFinite(t.threshold)||!Number.isFinite(t.ratePct)||t.threshold<0||t.ratePct<0||t.ratePct>100)){
+ if(baseRaw===''||!Number.isInteger(base)||base<0){$('compStatus').textContent='Ingresa un sueldo base en pesos enteros; puede ser cero si corresponde.';return}
+ if(!tiers.length||tiers.some(t=>t.threshold===''||t.ratePct===''||!Number.isFinite(t.threshold)||!Number.isFinite(t.ratePct)||!Number.isInteger(t.threshold)||t.threshold<0||t.ratePct<0||t.ratePct>100)){
   $('compStatus').textContent='Completa cada meta y porcentaje entre 0% y 100%.';return
  }
  tiers.sort((a,b)=>a.threshold-b.threshold);
