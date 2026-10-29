@@ -176,24 +176,62 @@ async function collectLocalImport(profile) {
   groups.push(['settings',[settings]]);
   return groups;
 }
+async function importFingerprint(groups) {
+  const bytes=new TextEncoder().encode(JSON.stringify(groups));
+  const digest=await crypto.subtle.digest('SHA-256',bytes);
+  return Array.from(new Uint8Array(digest)).map(byte=>byte.toString(16).padStart(2,'0')).join('');
+}
+async function validateImportResume(groups) {
+  const allowed={};
+  groups.forEach(([name,rows])=>{allowed[name]=new Set(rows.map(row=>safeId(row.id)))});
+  allowed.settings.add('ownerImport');
+  for(const [name,ids] of Object.entries(allowed)) {
+    const snapshot=await getDocs(colRef(name));
+    for(const item of snapshot.docs) if(!ids.has(item.id))
+      throw new Error('La nube contiene datos ajenos a la importación interrumpida. No se modificó ningún dato local.');
+  }
+}
 async function importLocalData() {
   if (!activeProfile || activeProfile.role!=='owner') throw new Error('Solo el dueño puede importar los datos locales.');
-  const state=await inspectCloud();
-  if(state.cloudCount!==0) throw new Error('Ya existen datos en la nube. La importación se detuvo para no reemplazarlos.');
   const groups=await collectLocalImport(activeProfile);
-  let total=0;
-  for(const [name,rows] of groups) {
-    const operations=rows.map(row=>({ref:doc(colRef(name),safeId(row.id)),data:row}));
-    for(let start=0;start<operations.length;start+=450) {
-      const batch=writeBatch(db);
-      operations.slice(start,start+450).forEach(op=>batch.set(op.ref,op.data));
-      await batch.commit();
-    }
-    total+=rows.length;
+  const fingerprint=await importFingerprint(groups);
+  const migrationRef=doc(colRef('settings'),'ownerImport');
+  const migrationSnap=await getDoc(migrationRef);
+  let marker=migrationSnap.exists()?migrationSnap.data():null;
+  if(marker) {
+    if(marker.state!=='importing'||marker.ownerUid!==activeProfile.uid||marker.fingerprint!==fingerprint)
+      throw new Error('La nube ya contiene datos o una importación distinta. No se reemplazó nada.');
+    await validateImportResume(groups);
+  } else {
+    const state=await inspectCloud();
+    if(state.cloudCount!==0) throw new Error('Ya existen datos en la nube. La importación se detuvo para no reemplazarlos.');
+    marker={id:'ownerImport',state:'importing',ownerUid:activeProfile.uid,fingerprint,startedAt:new Date().toISOString()};
+    await setDoc(migrationRef,marker);
   }
-  localStorage.setItem('zipperStorageMode','cloud');
-  await startSync(activeProfile);
-  return total;
+  let total=0;
+  const completedGroups=[];
+  try {
+    for(const [name,rows] of groups) {
+      const operations=rows.map(row=>({ref:doc(colRef(name),safeId(row.id)),data:row}));
+      for(let start=0;start<operations.length;start+=450) {
+        const batch=writeBatch(db);
+        operations.slice(start,start+450).forEach(op=>batch.set(op.ref,op.data));
+        await batch.commit();
+      }
+      total+=rows.length;
+      completedGroups.push(name);
+      await setDoc(migrationRef,{completedGroups:[...completedGroups],updatedAt:new Date().toISOString()},{merge:true});
+    }
+    await setDoc(migrationRef,{state:'complete',completedAt:new Date().toISOString()},{merge:true});
+    localStorage.setItem('zipperStorageMode','cloud');
+    await startSync(activeProfile);
+    return total;
+  } catch(error) {
+    console.error('Firebase: importación local interrumpida; se puede reanudar.',error);
+    const status=document.getElementById('cloudModalStatus');
+    if(status) status.textContent='Importación pausada. Tus datos locales siguen intactos. Corrige la conexión y vuelve a pulsar Importar para continuar con esta misma copia.';
+    throw new Error('La importación se pausó y quedó lista para reanudarse. Los datos locales no se cambiaron.');
+  }
 }
 async function useExistingCloudData() {
   if (!activeProfile || activeProfile.role!=='owner') throw new Error('Solo el dueño puede activar esta opción.');
