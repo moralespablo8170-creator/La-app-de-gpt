@@ -484,6 +484,10 @@ async function startSync(profile) {
     const modeSnap=await getDoc(doc(colRef('settings'),'sellerMode'));
     sellerCatalogVersion=modeSnap.exists()?Number(modeSnap.data().catalogVersion)||0:0;
     localStorage.setItem('zipperSellerCatalogVersion',String(sellerCatalogVersion));
+    if(sellerCatalogVersion>=1) {
+      productCostsCache=(await getDocs(colRef('productCosts'))).docs.map(d=>({id:d.id,...d.data()}));
+      writeLocal('zipperProductCostsV1',productCostsCache);
+    }
   } catch (_) { sellerCatalogVersion=Number(localStorage.getItem('zipperSellerCatalogVersion')||0); }
   activeProfile=profile;
   if(profile.role!=='owner') throw new Error('La sincronización de vendedores se habilitará cuando quede lista la vista separada por vendedor.');
