@@ -1,4 +1,5 @@
 import { initializeApp } from 'firebase/app';
+import { firebaseConfig, ORG_ID } from './firebase-config.js';
 import {
   getAuth, setPersistence, browserLocalPersistence, signInWithEmailAndPassword,
   onAuthStateChanged, signOut
@@ -9,21 +10,12 @@ import {
   runTransaction, serverTimestamp
 } from 'firebase/firestore';
 
-const config={
-  apiKey:'AIzaSyAFYoHdqS1QP04MXzHbMpcpuvzNLqElZF4',
-  authDomain:'zipper-a12f1.firebaseapp.com',
-  projectId:'zipper-a12f1',
-  storageBucket:'zipper-a12f1.firebasestorage.app',
-  messagingSenderId:'729619217486',
-  appId:'1:729619217486:web:6350b05ead8ecd70c1171f',
-  measurementId:'G-KX0HXC2Z54'
-};
-const app=initializeApp(config);
+const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 let db;
 try{db=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})})}
 catch(_){db=getFirestore(app)}
-const ORG='zipper-a12f1';
+const ORG=ORG_ID;
 const DAYS=['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
 const $=id=>document.getElementById(id);
 let profile=null,clients=[],products=[],sales=[],selectedClient=null,cart=[],session=null,unsubs=[],loading=false;
