@@ -37,7 +37,7 @@ const ORG_ID = 'zipper-a12f1';
 const ORG_PATH = ['orgs', ORG_ID];
 let activeProfile = null;
 let sellerCatalogVersion = Number(localStorage.getItem('zipperSellerCatalogVersion')||0);
-let productCostsCache = localArray('zipperProductCostsV1');
+let productCostsCache = [];
 let unsubs = [];
 let refreshing = false;
 let applyingCloud = false;
@@ -52,6 +52,7 @@ const localArray = key => {
     return Array.isArray(value) ? value : [];
   } catch (_) { return []; }
 };
+productCostsCache = localArray('zipperProductCostsV1');
 function parseArray(raw) {
   try {
     const value=JSON.parse(raw||'[]');
@@ -285,6 +286,48 @@ async function writeRows(collectionName, rows, previousRows=[]) {
     await batch.commit();
   }
 }
+
+async function prepareSellerCatalog() {
+  if(!activeProfile||activeProfile.role!=='owner') throw new Error('Solo el dueño puede preparar el catálogo.');
+  if(localStorage.getItem('zipperStorageMode')!=='cloud') throw new Error('Conecta primero la app del dueño con Firebase.');
+  if(navigator.onLine===false) throw new Error('Conéctate a internet antes de preparar el catálogo.');
+  const settingRef=doc(colRef('settings'),'sellerMode');
+  const modeSnap=await getDoc(settingRef);
+  if(modeSnap.exists()&&Number(modeSnap.data().catalogVersion)>=1) {
+    sellerCatalogVersion=1;
+    localStorage.setItem('zipperSellerCatalogVersion','1');
+    return {count:0,alreadyPrepared:true};
+  }
+  const [productSnap,costSnap]=await Promise.all([
+    getDocs(colRef('products')),
+    getDocs(colRef('productCosts'))
+  ]);
+  if(!productSnap.size) throw new Error('No se encontraron productos para preparar.');
+  const costMap=new Map(costSnap.docs.map(item=>[item.id,item.data()]));
+  const operations=[];
+  for(const item of productSnap.docs) {
+    const raw={id:item.id,...item.data()};
+    const previousCost=costMap.get(item.id)||{};
+    const pricePurchase=raw.pricePurchase??raw.purchasePrice??raw.costPrice??raw.cost??raw.buyPrice??raw.precioCompra??previousCost.pricePurchase??0;
+    const safe=publicSellerProduct(raw);
+    safe.sellerVisible=true;
+    operations.push({type:'set',ref:item.ref,data:safe});
+    operations.push({type:'set',ref:doc(colRef('productCosts'),item.id),data:{id:item.id,pricePurchase:Math.max(0,Number(pricePurchase)||0),updatedAt:new Date().toISOString()}});
+  }
+  for(let start=0;start<operations.length;start+=450) {
+    const batch=writeBatch(db);
+    operations.slice(start,start+450).forEach(op=>batch.set(op.ref,op.data));
+    await batch.commit();
+  }
+  await setDoc(settingRef,{id:'sellerMode',enabled:false,catalogVersion:1,preparedAt:new Date().toISOString(),preparedBy:activeProfile.uid});
+  sellerCatalogVersion=1;
+  localStorage.setItem('zipperSellerCatalogVersion','1');
+  productCostsCache=(await getDocs(colRef('productCosts'))).docs.map(d=>({id:d.id,...d.data()}));
+  writeLocal('zipperProductCostsV1',productCostsCache);
+  await startSync(activeProfile);
+  return {count:productSnap.size,alreadyPrepared:false};
+}
+
 async function writeLocalArrayToCloud(key, rows, previousRows=[]) {
   if(!activeProfile||activeProfile.role!=='owner') throw new Error('Conecta la cuenta propietaria para sincronizar los cambios pendientes.');
   if(key==='zipperCategorias'||key==='zipperCategoriasEliminadas') {
@@ -630,7 +673,7 @@ async function connectUi() {
     if(user&&localStorage.getItem('zipperStorageMode')==='cloud') {
       try {
         const profile=await memberFor(user);
-        if(profile?.role==='owner') startSync(profile);
+        if(profile?.role==='owner') await startSync(profile);
         else await flushPendingChanges();
       } catch(error) {
         lastSyncError=error.message||'No se pudo restaurar la cuenta de Firebase.';
@@ -661,7 +704,7 @@ async function connectUi() {
     }
   });
 }
-const api={login,signOut:()=>signOut(auth),memberFor,listMembers,inspectCloud,importLocalData,useExistingCloudData,startSync,stopSync,onLocalArrayChanged,cloudLabel};
+const api={login,signOut:()=>signOut(auth),memberFor,listMembers,inspectCloud,importLocalData,useExistingCloudData,prepareSellerCatalog,startSync,stopSync,onLocalArrayChanged,cloudLabel};
 window.zipperFirebaseCloud=api;
 installStorageSyncHooks();
 if(!window.zipperRefreshAfterCloud)window.zipperRefreshAfterCloud=()=>['renderHome','renderCash','renderInventory','renderClients','renderHistory'].forEach(name=>{try{if(typeof window[name]==='function')window[name]()}catch(error){console.error(error)}});
