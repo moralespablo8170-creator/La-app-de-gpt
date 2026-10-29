@@ -46,6 +46,7 @@ const safeId = value => {
   if (!id || id.includes('/')) throw new Error('Hay un registro sin identificador válido. No se subieron datos.');
   return id;
 };
+function announceProfile(profile) { window.dispatchEvent(new CustomEvent('zipper-cloud-profile',{detail:{profile,cloudEnabled:localStorage.getItem('zipperStorageMode')==='cloud'}})); }
 async function memberFor(user) {
   if (!user) return null;
   const snap = await getDoc(doc(db, ...ORG_PATH, 'members', user.uid));
@@ -67,7 +68,13 @@ async function login(email,password) {
     throw new Error('El acceso vendedor todavía no se activa en esta versión. La app seguirá usando el modo local mientras se termina la vista protegida por vendedor.');
   }
   activeProfile = profile;
+  announceProfile(profile);
   return profile;
+}
+async function listMembers() {
+  if (!activeProfile || activeProfile.role !== 'owner') throw new Error('Solo el dueño puede consultar los vendedores.');
+  const snapshot = await getDocs(collection(db, ...ORG_PATH, 'members'));
+  return snapshot.docs.map(item=>({uid:item.id,...item.data()})).filter(item=>item.active===true && item.role==='seller');
 }
 function stopSync() { unsubs.forEach(fn=>{try{fn()}catch(_){}}); unsubs=[]; }
 function writeLocal(key,rows) {
@@ -323,7 +330,7 @@ async function connectUi() {
     catch(error){if(status)status.textContent=error.message||'No se pudo activar el modo nube.'}
   });
   document.getElementById('cloudLogout')?.addEventListener('click',async()=>{
-    stopSync();localStorage.setItem('zipperStorageMode','local');await signOut(auth);activeProfile=null;cloudLabel();close();
+    stopSync();localStorage.setItem('zipperStorageMode','local');await signOut(auth);activeProfile=null;announceProfile(null);cloudLabel();close();
   });
   cloudLabel();
   onAuthStateChanged(auth,async user=>{
@@ -333,11 +340,12 @@ async function connectUi() {
       if(!profile || profile.role!=='owner'){await signOut(auth);return}
       activeProfile=profile;
       if(localStorage.getItem('zipperStorageMode')==='cloud') await startSync(profile);
+      announceProfile(profile);
       cloudLabel();
     } catch(error){console.error('Firebase: no se pudo restaurar la sesión.',error)}
   });
 }
-const api={login,signOut:()=>signOut(auth),memberFor,inspectCloud,importLocalData,useExistingCloudData,startSync,stopSync,onLocalArrayChanged,cloudLabel};
+const api={login,signOut:()=>signOut(auth),memberFor,listMembers,inspectCloud,importLocalData,useExistingCloudData,startSync,stopSync,onLocalArrayChanged,cloudLabel};
 window.zipperFirebaseCloud=api;
 installStorageSyncHooks();
 if(!window.zipperRefreshAfterCloud)window.zipperRefreshAfterCloud=()=>['renderHome','renderCash','renderInventory','renderClients','renderHistory'].forEach(name=>{try{if(typeof window[name]==='function')window[name]()}catch(error){console.error(error)}});
