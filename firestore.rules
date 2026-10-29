@@ -57,6 +57,17 @@ service cloud.firestore {
         && get(clientPath).data.sellerRoutes[request.auth.uid][week].day == request.resource.data.routeDay;
     }
 
+    function assignedClientForVisit(orgId) {
+      let clientId = request.resource.data.clientId;
+      let clientPath = /databases/$(database)/documents/orgs/$(orgId)/clients/$(clientId);
+      let week = request.resource.data.routeWeek;
+      return clientId is string
+        && exists(clientPath)
+        && request.auth.uid in get(clientPath).data.assignedSellerUids
+        && week in get(clientPath).data.sellerRoutes[request.auth.uid]
+        && get(clientPath).data.sellerRoutes[request.auth.uid][week].day == request.resource.data.routeDay;
+    }
+
     function canCreateOwnSale(orgId) {
       return isOwner(orgId)
         || (isSeller(orgId)
@@ -196,8 +207,10 @@ service cloud.firestore {
     match /orgs/{orgId}/visits/{visitId} {
       allow read: if isOwner(orgId)
         || (isSeller(orgId) && resource.data.sellerUid == request.auth.uid);
-      allow create, update: if isActiveMember(orgId)
-        && request.resource.data.sellerUid == request.auth.uid;
+      allow create, update: if isOwner(orgId)
+        || (isSeller(orgId)
+          && request.resource.data.sellerUid == request.auth.uid
+          && assignedClientForVisit(orgId));
       allow delete: if isOwner(orgId);
     }
 
