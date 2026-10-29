@@ -203,11 +203,26 @@ function scheduleRefresh() {
 }
 function docsToRows(snapshot) { return snapshot.docs.map(s=>({id:s.id,...s.data()})); }
 
-async function inspectCloud() {
-  const names=['products','clients','sales','cashMovements','visits'];
+function withReadTimeout(promise, milliseconds, collectionName) {
+  let timer;
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      timer=setTimeout(() => reject(new Error('Firebase está tardando demasiado al consultar '+collectionName+'. No se modificó ningún dato; vuelve a intentarlo cuando tengas mejor conexión.')), milliseconds);
+    })
+  ]).finally(() => clearTimeout(timer));
+}
+async function inspectCloud(onProgress) {
+  const names=['products','clients','sales','cashMovements','visits','settings'];
   const counts={};
-  for (const name of names) counts[name]=(await getDocs(colRef(name))).size;
-  counts.settings=(await getDocs(colRef('settings'))).size;
+  const deadline=Date.now()+25000;
+  for (const name of names) {
+    const label=name==='cashMovements'?'abonos y gastos':name==='settings'?'configuración':name==='products'?'productos':name==='clients'?'clientes':name==='sales'?'ventas':'visitas';
+    if(onProgress) onProgress('Cuenta verificada. Consultando '+label+' en Firebase…');
+    const remaining=deadline-Date.now();
+    if(remaining<=0) throw new Error('Firebase demoró demasiado en responder. No se modificó ningún dato; vuelve a intentarlo cuando tengas mejor conexión.');
+    counts[name]=(await withReadTimeout(getDocs(colRef(name)),remaining,label)).size;
+  }
   return {localCount:localCount(),localCounts:localCounts(),cloudCount:Object.values(counts).reduce((a,b)=>a+b,0),counts};
 }
 function toCloudRows(key, rows, profile) {
@@ -486,7 +501,7 @@ async function connectUi() {
       document.getElementById('cloudPassword').value='';
       document.getElementById('cloudAccount').textContent=(profile.displayName||profile.email)+' · '+profile.role;
       document.getElementById('cloudAfterLogin').classList.remove('hidden');
-      const state=await inspectCloud();
+      const state=await inspectCloud(message=>{if(status)status.textContent=message;});
       document.getElementById('cloudCounts').textContent=countsLabel(state);
       const localData=state.localCount>0;
       const cloudData=state.cloudCount>0;
