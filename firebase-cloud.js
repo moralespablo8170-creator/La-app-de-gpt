@@ -231,6 +231,7 @@ function startSync(profile) {
   });
   const status=document.getElementById('cloudStatus');
   if(status) status.textContent='Modo nube activo · propietario · sincronización conectada.';
+  announceProfile(profile);
 }
 function installStorageSyncHooks() {
   if (Storage.prototype.__zipperCloudHooked) return;
