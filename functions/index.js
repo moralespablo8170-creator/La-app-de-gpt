@@ -22,7 +22,7 @@ exports.createSellerAccount=onCall(
   const password=typeof input.password==='string'?input.password:'';
   if(displayName.length<2||displayName.length>80)
    throw new HttpsError('invalid-argument','Escribe el nombre del vendedor (2 a 80 caracteres).');
-  if(email.length>254||!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email))
+  if(email.length>254||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
    throw new HttpsError('invalid-argument','Escribe un correo electrónico válido para el acceso.');
   if(password.length<8||password.length>128)
    throw new HttpsError('invalid-argument','La clave inicial debe tener entre 8 y 128 caracteres.');
