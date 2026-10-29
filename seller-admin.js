@@ -35,12 +35,34 @@ function chosenVisits(){const date=$('adminDate').value;return visits.filter(v=>
 function chosenCash(){const date=$('adminDate').value;return cash.filter(v=>rowDate(v,'cash')===date&&(!selectedSellerId||v.sellerUid===selectedSellerId))}
 function sessionFor(uid){const date=$('adminDate').value;return sessions.find(s=>s.sellerUid===uid&&rowDate(s,'sessions')===date)||null}
 function sellerLabel(uid){const s=sellers.find(x=>x.uid===uid);return s?.displayName||s?.email||uid||''}
+function renderMonthlyReport(){
+ const month=$('adminMonth').value;
+ const clientById=new Map(clients.map(c=>[String(c.id),c]));
+ const zoneTotals=new Map(),groups=new Map();
+ sales.filter(s=>String(s.date||s.fecha||s.occurredAt||'').slice(0,7)===month).forEach(s=>{
+  const client=clientById.get(String(s.clienteId||s.clientId||''));
+  const zone=s.clientZone?String(s.clientZone).trim():(client?.comuna?'Comuna actual: '+String(client.comuna).trim():String(client?.zone||'Sin zona registrada'));
+  const route=[s.routeWeek&&('Semana '+s.routeWeek),s.routeDay].filter(Boolean).join(' · ')||'Sin ruta registrada';
+  const sellerUid=String(s.sellerUid||'sin-vendedor');
+  const amount=Number(s.total)||0;
+  const groupKey=JSON.stringify([sellerUid,zone,route]);
+  const group=groups.get(groupKey)||{sellerUid,zone,route,count:0,total:0};
+  group.count+=1;group.total+=amount;groups.set(groupKey,group);
+  zoneTotals.set(zone,(zoneTotals.get(zone)||0)+amount);
+ });
+ const rows=[...groups.values()].sort((a,b)=>a.zone.localeCompare(b.zone,'es')||b.total-a.total);
+ $('monthlySellerRows').innerHTML=rows.length?rows.map(row=>{
+  const share=zoneTotals.get(row.zone)?row.total/zoneTotals.get(row.zone)*100:0;
+  return '<tr><td>'+safe(sellerLabel(row.sellerUid))+'</td><td>'+safe(row.zone)+'</td><td>'+safe(row.route)+'</td><td>'+row.count+'</td><td>'+money(row.total)+'</td><td>'+share.toLocaleString('es-CL',{minimumFractionDigits:1,maximumFractionDigits:1})+'%</td></tr>';
+ }).join(''):'<tr><td colspan="6">No hay ventas registradas en este mes.</td></tr>';
+}
 function render(){
  const date=$('adminDate').value,filteredSales=chosenSales(),filteredVisits=chosenVisits(),filteredCash=chosenCash();
  $('statSales').textContent=String(filteredSales.length);
  $('statTotal').textContent=money(filteredSales.reduce((n,s)=>n+Number(s.total||0),0));
  $('statCash').textContent=money(filteredSales.filter(s=>s.paymentStatus!=='pending'&&s.paymentMethod!=='pending').reduce((n,s)=>n+Number(s.total||0),0)+filteredCash.filter(x=>x.sourceType==='payment'||x.type==='payment').reduce((n,x)=>n+Number(x.amount??x.monto??x.total??0),0));
  $('statVisits').textContent=String(filteredVisits.length);
+ renderMonthlyReport();
  $('adminCount').textContent=sellers.length+' vendedor'+(sellers.length===1?'':'es')+' · '+date;
  $('adminSellers').innerHTML=sellers.length?sellers.map(s=>{
   const selected=s.uid===selectedSellerId,active=s.active===true;
@@ -84,7 +106,7 @@ async function verify(user){
  if(!user){owner=null;$('adminApp').classList.add('admin-hidden');$('adminLogin').classList.remove('admin-hidden');status('Ingresa con la cuenta propietaria.');return}
  const snap=await getDoc(doc(db,'orgs',ORG,'members',user.uid)),data=snap.exists()?snap.data():null;
  if(!data||data.active!==true||data.role!=='owner'){owner=null;await signOut(auth);$('adminApp').classList.add('admin-hidden');$('adminLogin').classList.remove('admin-hidden');status('Esta cuenta no tiene permisos de propietario.','error');return}
- owner={uid:user.uid,email:user.email||'',...data};$('adminLogin').classList.add('admin-hidden');$('adminApp').classList.remove('admin-hidden');$('adminDate').value=localDate();await refresh();await refreshCatalogPrepState();
+ owner={uid:user.uid,email:user.email||'',...data};$('adminLogin').classList.add('admin-hidden');$('adminApp').classList.remove('admin-hidden');$('adminDate').value=localDate();$('adminMonth').value=localDate().slice(0,7);await refresh();await refreshCatalogPrepState();
 }
 async function login(){
  const b=$('adminLoginButton');b.disabled=true;status('Verificando cuenta propietaria…');
@@ -175,7 +197,7 @@ async function toggleSeller(uid){
  }catch(error){console.error(error);status(error.message||'No se pudo cambiar el acceso.','error')}
 }
 async function logout(){await signOut(auth);owner=null;sellers=[];sessions=[];sales=[];visits=[];cash=[]}
-$('adminLoginButton').onclick=login;$('adminLogout').onclick=logout;$('adminDate').onchange=render;$('sellerSaveProfile').onclick=saveSellerProfile;
+$('adminLoginButton').onclick=login;$('adminLogout').onclick=logout;$('adminDate').onchange=render;$('adminMonth').onchange=render;$('sellerSaveProfile').onclick=saveSellerProfile;
 $('catalogBackupConfirm').onchange=refreshCatalogPrepState;
 $('catalogPrepareButton').onclick=prepareCatalog;
 onAuthStateChanged(auth,user=>verify(user).catch(error=>{console.error(error);status('No se pudo verificar la cuenta.','error')}));
