@@ -109,6 +109,8 @@ async function prepareCatalog(){
  const button=$('catalogPrepareButton'),label=$('catalogPrepStatus');
  if(!owner||!$('catalogBackupConfirm').checked)return;
  if(navigator.onLine===false){label.textContent='Conéctate a internet antes de preparar el catálogo.';return}
+ if(localStorage.getItem('zipperStorageMode')!=='cloud'){label.textContent='Primero conecta la app principal a Firebase.';return}
+ try{const outbox=JSON.parse(localStorage.getItem('zipperFirebaseOutboxV1')||'{}');if(outbox.zipperProductos){label.textContent='Hay cambios de inventario pendientes de sincronizar. Espera a que la app principal indique “Firebase al día” e inténtalo nuevamente.';return}}catch(_){}
  button.disabled=true;button.textContent='Preparando…';label.textContent='Separando precios de compra y protegiendo el catálogo…';
  try{
   const settingRef=doc(db,'orgs',ORG,'settings','sellerMode');
