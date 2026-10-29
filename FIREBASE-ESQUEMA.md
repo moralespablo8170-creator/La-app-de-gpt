@@ -17,7 +17,7 @@ Todos los datos quedan bajo `orgs/zipper-a12f1`:
 
 - `members/{uid}`: `displayName`, `role` (`owner` o `seller`), `active`.
 - `products/{productId}`: catálogo, precio y stock.
-- `clients/{clientId}`: datos compartidos del cliente; `assignedSellerUids` limita qué vendedores lo consultan y `sellerRoutes/{sellerUid}/{week}` guarda el día y posición de cada ruta semanal.
+- `clients/{clientId}`: datos compartidos del cliente; `assignedSellerUids` limita qué vendedores lo consultan y `sellerRoutes.{sellerUid}.{week}` guarda el día y la posición de cada ruta semanal.
 - `sales/{saleId}`: cliente, detalle, fecha, forma de pago y `sellerUid`.
 - `sessions/{sessionId}`: apertura, primera venta y cierre, con `sellerUid`.
 - `cashMovements/{movementId}`: abonos, gastos u otros movimientos, con `sellerUid`.
@@ -42,4 +42,4 @@ La carga inicial debe ser una operación separada, iniciada por el dueño despu�
 
 El documento de propietario ya fue creado y revisado en Firebase Console. Su UID y otros datos personales no se guardan en este repositorio.
 
-La app todavía no sincroniza datos con Firestore. La próxima etapa de código debe añadir inicio de sesión, permisos por rol, modo nube opcional y migración confirmada, manteniendo operativa la versión local.
+El borrador ya incluye conexión y sincronización opcional del dueño, importación confirmada y asignación de rutas de clientes por vendedor. El inicio de sesión de vendedor seguirá bloqueado hasta terminar su vista separada y el descuento seguro de inventario.
