@@ -74,7 +74,7 @@ async function loadSelectedDebt(){
   const fresh=Number(balanceSnap.data().balance);
   if(!Number.isFinite(fresh)||fresh<0)throw new Error('El saldo recibido no es válido.');
   currentDebt=fresh;balanceCacheWrite(clientId,fresh);
- }catch(error){currentDebt=null;status(error.message||'No se pudo consultar el saldo del cliente.','warn')}
+ }catch(error){if(selectedClient&&String(selectedClient.id)===clientId){currentDebt=null;status(error.message||'No se pudo consultar el saldo del cliente.','warn')}}
  finally{debtLoading=false;renderDebt()}
 }
 async function savePayment(){
@@ -83,7 +83,7 @@ async function savePayment(){
  const amount=Math.floor(Number($('sellerPaymentAmount').value));
  if(!Number.isFinite(amount)||amount<1){status('Ingresa un monto válido en pesos.','error');return}
  const client=selectedClient,clientId=String(client.id),button=$('sellerSavePayment');
- if(debtClientId!==clientId||currentDebt==null){await loadSelectedDebt();if(currentDebt==null)return}
+ if(debtClientId!==clientId||currentDebt==null){await loadSelectedDebt();if(!selectedClient||String(selectedClient.id)!==clientId||currentDebt==null)return}
  if(amount>currentDebt){status('El monto supera el saldo pendiente de '+money(currentDebt)+'.','error');return}
  const movementId='payment_'+profile.uid+'_'+(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random());
  const movementRef=doc(db,'orgs',ORG,'cashMovements',movementId);
