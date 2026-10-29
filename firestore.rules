@@ -165,10 +165,87 @@ service cloud.firestore {
           && sellerStockReduction(orgId, productId));
     }
 
+    function debtLedgerReady(orgId) {
+      let ledgerPath = /databases/$(database)/documents/orgs/$(orgId)/settings/debtLedger;
+      return exists(ledgerPath) && get(ledgerPath).data.ready == true;
+    }
+
+    function assignedClientForAbono(orgId, clientId) {
+      let clientPath = /databases/$(database)/documents/orgs/$(orgId)/clients/$(clientId);
+      return exists(clientPath)
+        && request.auth.uid in get(clientPath).data.assignedSellerUids;
+    }
+
+    function validSellerAbono(orgId, movementId) {
+      let clientId = request.resource.data.clientId;
+      let balancePath = /databases/$(database)/documents/orgs/$(orgId)/clientBalances/$(clientId);
+      let balanceAfter = getAfter(balancePath).data;
+      let currentBalance = get(balancePath).data.balance;
+      return isSeller(orgId)
+        && debtLedgerReady(orgId)
+        && request.resource.data.keys().hasOnly([
+          'id', 'sourceType', 'origin', 'clientId', 'clienteId', 'cliente',
+          'amount', 'paymentMethod', 'date', 'sellerUid', 'sellerName', 'createdAt'
+        ])
+        && request.resource.data.id == movementId
+        && request.resource.data.sourceType == 'payment'
+        && request.resource.data.origin == 'seller'
+        && request.resource.data.clientId is string
+        && request.resource.data.clienteId == clientId
+        && assignedClientForAbono(orgId, clientId)
+        && request.resource.data.amount is int
+        && request.resource.data.amount > 0
+        && currentBalance is int
+        && request.resource.data.amount <= currentBalance
+        && request.resource.data.paymentMethod in ['cash', 'transfer']
+        && request.resource.data.date is string
+        && request.resource.data.sellerUid == request.auth.uid
+        && request.resource.data.sellerName is string
+        && exists(balancePath)
+        && balanceAfter.balance == currentBalance - request.resource.data.amount
+        && balanceAfter.lastPaymentId == movementId
+        && balanceAfter.lastPaymentSellerUid == request.auth.uid;
+    }
+
+    function validSellerBalanceUpdate(orgId, clientId) {
+      let movementId = request.resource.data.lastPaymentId;
+      let movementPath = /databases/$(database)/documents/orgs/$(orgId)/cashMovements/$(movementId);
+      let movement = getAfter(movementPath).data;
+      return isSeller(orgId)
+        && debtLedgerReady(orgId)
+        && assignedClientForAbono(orgId, clientId)
+        && request.resource.data.keys().hasOnly([
+          'clientId', 'balance', 'updatedAt', 'lastPaymentId', 'lastPaymentSellerUid'
+        ])
+        && request.resource.data.clientId == clientId
+        && resource.data.clientId == clientId
+        && resource.data.balance is int
+        && request.resource.data.balance is int
+        && request.resource.data.balance >= 0
+        && request.resource.data.balance < resource.data.balance
+        && movementId is string
+        && existsAfter(movementPath)
+        && movement.id == movementId
+        && movement.sourceType == 'payment'
+        && movement.origin == 'seller'
+        && movement.clientId == clientId
+        && movement.sellerUid == request.auth.uid
+        && movement.amount == resource.data.balance - request.resource.data.balance
+        && request.resource.data.lastPaymentSellerUid == request.auth.uid;
+    }
+
     function canReadClient(orgId) {
       return isOwner(orgId)
         || (isSeller(orgId)
           && request.auth.uid in resource.data.assignedSellerUids);
+    }
+
+    match /orgs/{orgId}/clientBalances/{clientId} {
+      allow get, list: if isOwner(orgId)
+        || (isSeller(orgId) && debtLedgerReady(orgId)
+          && assignedClientForAbono(orgId, clientId));
+      allow create, delete: if isOwner(orgId);
+      allow update: if isOwner(orgId) || validSellerBalanceUpdate(orgId, clientId);
     }
 
     match /orgs/{orgId}/clients/{clientId} {
@@ -215,7 +292,8 @@ service cloud.firestore {
     match /orgs/{orgId}/cashMovements/{movementId} {
       allow read: if isOwner(orgId)
         || (isSeller(orgId) && resource.data.sellerUid == request.auth.uid);
-      allow create, update, delete: if isOwner(orgId);
+      allow create: if isOwner(orgId) || validSellerAbono(orgId, movementId);
+      allow update, delete: if isOwner(orgId);
     }
 
     match /orgs/{orgId}/visits/{visitId} {
