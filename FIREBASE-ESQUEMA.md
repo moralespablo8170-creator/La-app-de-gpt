@@ -23,4 +23,6 @@ No se guardan contraseñas en Firestore ni se muestran al dueño. Para dar acces
 
 ## Estado de esta preparación
 
-Estos archivos definen el proyecto y las reglas de acceso, pero la aplicación todavía no sincroniza datos con Firestore. La integración del código debe mapear los datos actuales guardados en el teléfono a estas colecciones y conservar una copia local antes de activar la nube. No iniciar una migración automática ni reemplazar los datos locales hasta tener la pantalla de acceso, asignación de roles y migración revisadas.
+El documento de propietario ya fue creado y revisado en Firebase Console. Su UID y otros datos personales no se guardan en este repositorio.
+
+La aplicación todavía no sincroniza datos con Firestore. La integración debe mapear los datos actuales del teléfono a estas colecciones y conservar una copia local antes de activar la nube. La siguiente etapa es integrar autenticación, permisos por rol y una migración controlada, sin reemplazar los datos locales.
