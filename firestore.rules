@@ -1,0 +1,102 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function memberPath(orgId, uid) {
+      return /databases/$(database)/documents/orgs/$(orgId)/members/$(uid);
+    }
+
+    function isMember(orgId) {
+      return signedIn()
+        && exists(memberPath(orgId, request.auth.uid))
+        && get(memberPath(orgId, request.auth.uid)).data.active == true;
+    }
+
+    function isOwner(orgId) {
+      return isMember(orgId)
+        && get(memberPath(orgId, request.auth.uid)).data.role == 'owner';
+    }
+
+    function isSeller(orgId) {
+      return isMember(orgId)
+        && get(memberPath(orgId, request.auth.uid)).data.role == 'seller';
+    }
+
+    function canReadSale(orgId) {
+      return isOwner(orgId)
+        || (isSeller(orgId) && resource.data.sellerUid == request.auth.uid);
+    }
+
+    function canCreateOwnSale(orgId) {
+      return isOwner(orgId)
+        || (isSeller(orgId)
+          && request.resource.data.sellerUid == request.auth.uid);
+    }
+
+    function canUpdateOwnSale(orgId) {
+      return isOwner(orgId)
+        || (isSeller(orgId)
+          && resource.data.sellerUid == request.auth.uid
+          && request.resource.data.sellerUid == request.auth.uid);
+    }
+
+    match /orgs/{orgId}/members/{uid} {
+      allow get: if isMember(orgId)
+        && (uid == request.auth.uid || isOwner(orgId));
+      allow list: if isOwner(orgId);
+      allow create, update: if isOwner(orgId)
+        && request.resource.data.keys().hasAll(['role', 'active', 'displayName'])
+        && request.resource.data.role in ['owner', 'seller']
+        && request.resource.data.active is bool
+        && request.resource.data.displayName is string;
+      allow delete: if false;
+    }
+
+    match /orgs/{orgId}/products/{productId} {
+      allow read: if isMember(orgId);
+      allow create, update, delete: if isOwner(orgId);
+    }
+
+    match /orgs/{orgId}/clients/{clientId} {
+      allow read, create, update: if isMember(orgId);
+      allow delete: if isOwner(orgId);
+    }
+
+    match /orgs/{orgId}/sales/{saleId} {
+      allow read: if canReadSale(orgId);
+      allow create: if canCreateOwnSale(orgId);
+      allow update: if canUpdateOwnSale(orgId);
+      allow delete: if isOwner(orgId);
+    }
+
+    match /orgs/{orgId}/sessions/{sessionId} {
+      allow read: if isOwner(orgId)
+        || (isSeller(orgId) && resource.data.sellerUid == request.auth.uid);
+      allow create: if isSeller(orgId)
+        && request.resource.data.sellerUid == request.auth.uid;
+      allow update: if isSeller(orgId)
+        && resource.data.sellerUid == request.auth.uid
+        && request.resource.data.sellerUid == request.auth.uid;
+      allow delete: if isOwner(orgId);
+    }
+
+    match /orgs/{orgId}/cashMovements/{movementId} {
+      allow read: if isOwner(orgId)
+        || (isSeller(orgId) && resource.data.sellerUid == request.auth.uid);
+      allow create: if isSeller(orgId)
+        && request.resource.data.sellerUid == request.auth.uid;
+      allow update: if isSeller(orgId)
+        && resource.data.sellerUid == request.auth.uid
+        && request.resource.data.sellerUid == request.auth.uid;
+      allow delete: if isOwner(orgId);
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
