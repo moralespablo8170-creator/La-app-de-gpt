@@ -46,22 +46,14 @@
 <h2>Registrar venta</h2>
 <p id="sellerSelectedClient" class="seller-muted">Selecciona un cliente de la ruta.</p>
 <label>Producto<select id="sellerProduct"></select></label>
-<div class="seller-grid"><label>Cantidad<input id="sellerQuantity" type="number" min="1" step="1" value="1" inputmode="numeric"></label><label>Forma de pago<select id="sellerPayment"><option value="cash">Efectivo</option><option value="transfer">Transferencia</option><option value="pending">Pendiente</option></select></label></div>
+<div class="seller-grid"><label>Cantidad<input id="sellerQuantity" type="number" min="1" step="1" value="1" inputmode="numeric"></label><label>Forma de pago<select id="sellerPayment"><option value="cash">Efectivo</option><option value="transfer">Transferencia</option></select></label></div>
 <button id="sellerAddItem" class="seller-btn secondary" type="button">Agregar producto</button>
 <div id="sellerCart" class="seller-list"></div>
 <p id="sellerSaleTotal" class="seller-total">$0</p>
 <button id="sellerSaveSale" class="seller-btn" type="button">Guardar venta</button>
+<p class="seller-note">El vendedor registra si el cliente informa efectivo o transferencia; el pago lo recibe la persona que entrega. No se permiten ventas a crédito ni abonos.</p>
 </section>
-<section class="seller-card">
-<h2>Registrar abono</h2>
-<p id="sellerDebtStatus" class="seller-muted">Selecciona un cliente de tu ruta para consultar su saldo.</p>
-<div class="seller-grid">
-<label>Monto<input id="sellerPaymentAmount" type="number" min="1" step="1" inputmode="numeric" placeholder="0"></label>
-<label>Forma de pago<select id="sellerPaymentMethod"><option value="cash">Efectivo</option><option value="transfer">Transferencia</option></select></label>
-</div>
-<button id="sellerSavePayment" class="seller-btn" type="button" disabled>Guardar abono</button>
-<p class="seller-note">Para confirmar un abono se necesita internet. Antes, el dueño debe conectar su teléfono y esperar “Firebase al día”; el saldo refleja los últimos datos sincronizados. El abono no crea una venta ni descuenta stock.</p>
-</section>
+
 <section class="seller-card">
 <div class="seller-heading"><h2>Inventario</h2><span class="seller-pill">Solo consulta</span></div>
 <div id="sellerInventory" class="seller-products"></div>
@@ -72,6 +64,6 @@
 </section>
 </section>
 </main>
-<script type="module" src="./seller-app.js?v=zipper-seller-abonos-20261029-v2"></script>
+<script type="module" src="./seller-app.js?v=zipper-seller-cash-transfer-20261029-v1"></script>
 </body>
 </html>
