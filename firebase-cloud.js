@@ -179,9 +179,12 @@ async function rebuildDebtLedger() {
     if(!clientId||!balances.has(clientId)) continue;
     balances.set(clientId,balances.get(clientId)-Math.max(0,Number(payment.amount)||0));
   }
+  const previousBalances=new Map(balanceSnap.docs.map(item=>[item.id,item.data()]));
   const operations=[];
-  for(const [clientId,amount] of balances)
-    operations.push({type:'set',ref:doc(colRef('clientBalances'),safeId(clientId)),data:{clientId,balance:Math.max(0,Math.round(amount)),updatedAt:new Date().toISOString()}});
+  for(const [clientId,amount] of balances) {
+    const previous=previousBalances.get(clientId)||{};
+    operations.push({type:'set',ref:doc(colRef('clientBalances'),safeId(clientId)),data:{clientId,balance:Math.max(0,Math.round(amount)),updatedAt:new Date().toISOString(),...(previous.lastPaymentId?{lastPaymentId:previous.lastPaymentId,lastPaymentSellerUid:previous.lastPaymentSellerUid}:{})}});
+  }
   for(const item of balanceSnap.docs) if(!balances.has(item.id)) operations.push({type:'delete',ref:item.ref});
   for(let start=0;start<operations.length;start+=450) {
     const batch=writeBatch(db);
