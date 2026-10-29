@@ -196,12 +196,7 @@ service cloud.firestore {
     match /orgs/{orgId}/cashMovements/{movementId} {
       allow read: if isOwner(orgId)
         || (isSeller(orgId) && resource.data.sellerUid == request.auth.uid);
-      allow create: if isActiveMember(orgId)
-        && request.resource.data.sellerUid == request.auth.uid;
-      allow update: if isActiveMember(orgId)
-        && resource.data.sellerUid == request.auth.uid
-        && request.resource.data.sellerUid == request.auth.uid;
-      allow delete: if isOwner(orgId);
+      allow create, update, delete: if isOwner(orgId);
     }
 
     match /orgs/{orgId}/visits/{visitId} {
