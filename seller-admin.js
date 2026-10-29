@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc, collection, getDocs, writeBatch, setDoc, updateDoc } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 const config={
  apiKey:'AIzaSyAFYoHdqS1QP04MXzHbMpcpuvzNLqElZF4',
@@ -11,7 +12,8 @@ const config={
  appId:'1:729619217486:web:6350b05ead8ecd70c1171f',
  measurementId:'G-KX0HXC2Z54'
 };
-const app=initializeApp(config),auth=getAuth(app),db=getFirestore(app),ORG='zipper-a12f1';
+const app=initializeApp(config),auth=getAuth(app),db=getFirestore(app),functions=getFunctions(app,'southamerica-west1'),createSellerAccountCall=httpsCallable(functions,'createSellerAccount'),setSellerAccessCall=httpsCallable(functions,'setSellerAccess'),ORG='zipper-a12f1';
+const SELLER_ACCOUNT_CREATION_READY=false;
 const $=id=>document.getElementById(id);
 let owner=null,sellers=[],sessions=[],sales=[],visits=[],cash=[],clients=[],compensationBySeller={},selectedSellerId=null,loading=false;
 const localDate=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
@@ -192,10 +194,10 @@ async function refresh(){
  finally{loading=false}
 }
 async function verify(user){
- if(!user){owner=null;$('adminApp').classList.add('admin-hidden');$('adminLogin').classList.remove('admin-hidden');status('Ingresa con la cuenta propietaria.');return}
+ if(!user){owner=null;updateSellerCreationState();$('adminApp').classList.add('admin-hidden');$('adminLogin').classList.remove('admin-hidden');status('Ingresa con la cuenta propietaria.');return}
  const snap=await getDoc(doc(db,'orgs',ORG,'members',user.uid)),data=snap.exists()?snap.data():null;
  if(!data||data.active!==true||data.role!=='owner'){owner=null;await signOut(auth);$('adminApp').classList.add('admin-hidden');$('adminLogin').classList.remove('admin-hidden');status('Esta cuenta no tiene permisos de propietario.','error');return}
- owner={uid:user.uid,email:user.email||'',...data};$('adminLogin').classList.add('admin-hidden');$('adminApp').classList.remove('admin-hidden');$('adminDate').value=localDate();$('reportReference').value=localDate();$('commissionMonth').value=localDate().slice(0,7);await refresh();await refreshCatalogPrepState();
+ owner={uid:user.uid,email:user.email||'',...data};updateSellerCreationState();$('adminLogin').classList.add('admin-hidden');$('adminApp').classList.remove('admin-hidden');$('adminDate').value=localDate();$('reportReference').value=localDate();$('commissionMonth').value=localDate().slice(0,7);await refresh();await refreshCatalogPrepState();
 }
 async function login(){
  const b=$('adminLoginButton');b.disabled=true;status('Verificando cuenta propietaria…');
@@ -258,22 +260,35 @@ async function prepareCatalog(){
   button.disabled=!$('catalogBackupConfirm').checked;button.textContent='Reintentar preparación';
  }
 }
-async function saveSellerProfile(){
- const button=$('sellerSaveProfile'),uid=$('sellerUid').value.trim(),displayName=$('sellerDisplayName').value.trim(),label=$('sellerProfileStatus');
+function updateSellerCreationState(){
+ const button=$('sellerCreateAccount');
+ if(button)button.disabled=!owner||!SELLER_ACCOUNT_CREATION_READY;
+ if(!owner)$('sellerProfileStatus').textContent='Inicia sesión como propietario.';
+ else if(!SELLER_ACCOUNT_CREATION_READY)$('sellerProfileStatus').textContent='Formulario preparado. Se habilitará después de desplegar el servicio seguro del servidor.';
+}
+async function createSellerAccount(){
+ const button=$('sellerCreateAccount'),label=$('sellerProfileStatus');
+ const displayName=$('sellerDisplayName').value.trim(),email=$('sellerEmail').value.trim(),password=$('sellerPassword').value;
  if(!owner){label.textContent='Inicia sesión como propietario.';return}
- if(navigator.onLine===false){label.textContent='Conéctate a internet para guardar el perfil.';return}
- if(!uid||uid.includes('/')||uid.length<10||!displayName){label.textContent='Revisa el UID y escribe el nombre visible del vendedor.';return}
- if(uid===owner.uid){label.textContent='No puedes registrar tu cuenta propietaria como vendedor.';return}
- button.disabled=true;label.textContent='Guardando perfil…';
+ if(!SELLER_ACCOUNT_CREATION_READY){label.textContent='El servicio seguro aún no está desplegado. No se creó ninguna cuenta.';return}
+ if(navigator.onLine===false){label.textContent='Conéctate a internet para crear la cuenta.';return}
+ if(displayName.length<2||!email||password.length<8){label.textContent='Completa el nombre, correo y una clave inicial de al menos 8 caracteres.';return}
+ button.disabled=true;label.textContent='Creando la cuenta segura…';
  try{
-  const ref=doc(db,'orgs',ORG,'members',uid),existing=await getDoc(ref);
-  if(existing.exists()&&existing.data().role!=='seller')throw new Error('Ese UID ya pertenece a un perfil que no es vendedor. No se modificó.');
-  await setDoc(ref,{role:'seller',active:true,displayName,provisionedBy:owner.uid,updatedAt:new Date().toISOString()},{merge:true});
-  $('sellerUid').value='';$('sellerDisplayName').value='';
-  label.textContent=existing.exists()?'Perfil vendedor activado y actualizado.':'Perfil vendedor asociado. La cuenta de acceso debe existir en Firebase Authentication.';
-  selectedSellerId=uid;await refresh();
- }catch(error){console.error(error);label.textContent=error.message||'No se pudo guardar el perfil.'}
- finally{button.disabled=false}
+  const response=await createSellerAccountCall({displayName,email,password});
+  const created=response.data||{};
+  $('sellerDisplayName').value='';$('sellerEmail').value='';
+  selectedSellerId=created.uid||null;
+  label.textContent='Cuenta creada para '+(created.displayName||displayName)+' · '+(created.email||email)+'. La clave no se guarda en Firestore; entrégala directamente al vendedor.';
+  await refresh();
+ }catch(error){
+  console.error('No se pudo crear la cuenta del vendedor.',error.code||error.message);
+  const code=String(error.code||'');
+  label.textContent=code.includes('already-exists')?'Ese correo ya tiene una cuenta Firebase.':code.includes('not-found')?'El servidor seguro todavía no está desplegado; no se creó ninguna cuenta.':(error.message||'No se pudo crear la cuenta.');
+ }finally{
+  $('sellerPassword').value='';
+  button.disabled=!owner||!SELLER_ACCOUNT_CREATION_READY;
+ }
 }
 async function toggleSeller(uid){
  if(!owner||navigator.onLine===false){status('Necesitas la cuenta propietaria y conexión para cambiar el acceso.','error');return}
@@ -281,12 +296,14 @@ async function toggleSeller(uid){
  const nextActive=seller.active!==true;
  if(!nextActive&&!window.confirm('¿Desactivar el acceso de '+(seller.displayName||seller.email||uid)+'?'))return;
  try{
-  await updateDoc(doc(db,'orgs',ORG,'members',uid),{active:nextActive,updatedAt:new Date().toISOString()});
-  status(nextActive?'Perfil vendedor activado.':'Acceso vendedor desactivado.','ok');await refresh();
+  const result=await setSellerAccessCall({uid,active:nextActive});
+  const authDisabled=result.data?.authDisabled;
+  status(!nextActive&&authDisabled===false?'Perfil bloqueado en Firestore; revisa manualmente el estado de Authentication.':(nextActive?'Perfil vendedor activado.':'Acceso vendedor desactivado y sesiones revocadas.'),authDisabled===false?'error':'ok');
+  await refresh();
  }catch(error){console.error(error);status(error.message||'No se pudo cambiar el acceso.','error')}
 }
 async function logout(){await signOut(auth);owner=null;sellers=[];sessions=[];sales=[];visits=[];cash=[]}
-$('adminLoginButton').onclick=login;$('adminLogout').onclick=logout;$('adminDate').onchange=render;$('reportPeriod').onchange=render;$('reportReference').onchange=render;$('commissionMonth').onchange=()=>{renderCompForm();renderCompResults()};$('compSeller').onchange=renderCompForm;$('compAddTier').onclick=()=>{const tiers=readCompTiers();tiers.push({threshold:'',ratePct:''});renderCompTiers(tiers)};$('compSave').onclick=saveCompensation;$('sellerSaveProfile').onclick=saveSellerProfile;
+$('adminLoginButton').onclick=login;$('adminLogout').onclick=logout;$('adminDate').onchange=render;$('reportPeriod').onchange=render;$('reportReference').onchange=render;$('commissionMonth').onchange=()=>{renderCompForm();renderCompResults()};$('compSeller').onchange=renderCompForm;$('compAddTier').onclick=()=>{const tiers=readCompTiers();tiers.push({threshold:'',ratePct:''});renderCompTiers(tiers)};$('compSave').onclick=saveCompensation;$('sellerCreateAccount').onclick=createSellerAccount;updateSellerCreationState();
 $('catalogBackupConfirm').onchange=refreshCatalogPrepState;
 $('catalogPrepareButton').onclick=prepareCatalog;
 onAuthStateChanged(auth,user=>verify(user).catch(error=>{console.error(error);status('No se pudo verificar la cuenta.','error')}));
