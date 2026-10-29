@@ -34,6 +34,16 @@ const cacheWrite=(name,value)=>{try{localStorage.setItem(prefix()+name,JSON.stri
 const queueRead=()=>{try{const v=JSON.parse(localStorage.getItem(prefix()+'pendingSales')||'[]');return Array.isArray(v)?v:[]}catch(_){return []}};
 const queueWrite=value=>{try{localStorage.setItem(prefix()+'pendingSales',JSON.stringify(value))}catch(error){console.error(error)}};
 function status(message,state=''){const el=$('sellerStatus');if(!el)return;el.textContent=message;el.className='seller-status'+(state?' '+state:'')}
+function clearSellerLocalData(uid){const keyPrefix='zipperSeller_'+uid+'_';Object.keys(localStorage).filter(key=>key.startsWith(keyPrefix)).forEach(key=>localStorage.removeItem(key))}
+function lockRevokedSeller(){
+ const uid=profile?.uid||auth.currentUser?.uid;
+ unsubs.forEach(fn=>{try{fn()}catch(_){}});unsubs=[];
+ if(uid)clearSellerLocalData(uid);
+ profile=null;clients=[];products=[];sales=[];selectedClient=null;cart=[];session=null;
+ $('sellerApp').classList.add('seller-hidden');$('sellerLogin').classList.remove('seller-hidden');$('sellerLoginButton').disabled=false;
+ status('El dueño desactivó este perfil. La sesión se cerró y la app dejó de mostrar los datos del vendedor.','error');
+ signOut(auth).catch(error=>console.warn('No se pudo completar el cierre de sesión tras desactivar el perfil.',error));
+}
 function safeText(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function money(value){return '$'+Math.round(Number(value)||0).toLocaleString('es-CL')}
 function routeFor(client,week){return client?.sellerRoutes?.[profile.uid]?.[week]||null}
@@ -78,6 +88,10 @@ async function activate(){
 }
 function watchCloud(){
  unsubs.forEach(fn=>{try{fn()}catch(_){}});unsubs=[];
+ unsubs.push(onSnapshot(doc(db,'orgs',ORG,'members',profile.uid),snap=>{
+  const member=snap.exists()?snap.data():null;
+  if(!member||member.active!==true||member.role!=='seller')lockRevokedSeller();
+ },error=>{console.warn('No se pudo revisar el estado del perfil vendedor.',error)}));
  const watch=(q,kind)=>unsubs.push(onSnapshot(q,snap=>{const rows=snap.docs.map(d=>({id:d.id,...d.data()}));if(kind==='clients')clients=rows;else if(kind==='products')products=rows;else if(kind==='sales')sales=rows;cacheWrite(kind,rows);render();if(!snap.metadata.hasPendingWrites)status('Datos de ruta actualizados.', 'ok')},error=>{console.error(error);status('No se pudo actualizar '+kind+'. Los datos guardados en este teléfono siguen disponibles.','warn')}));
  watch(query(collection(db,'orgs',ORG,'clients'),where('assignedSellerUids','array-contains',profile.uid)),'clients');
  watch(query(collection(db,'orgs',ORG,'products'),where('sellerVisible','==',true)),'products');
