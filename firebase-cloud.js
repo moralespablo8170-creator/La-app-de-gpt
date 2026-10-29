@@ -155,44 +155,6 @@ const countsLabel = state => {
   return 'En el teléfono: '+state.localCount+' registros (clientes: '+local.clients+', productos: '+local.products+', ventas: '+local.sales+', abonos/pagos: '+local.payments+', gastos: '+local.expenses+'). En Firebase: '+state.cloudCount+' registros.';
 };
 const colRef = name => collection(db, ...ORG_PATH, name);
-const debtLedgerRef=()=>doc(colRef('settings'),'debtLedger');
-async function setDebtLedgerReady(ready, extra={}) {
-  await setDoc(debtLedgerRef(),{id:'debtLedger',ready:!!ready,updatedAt:new Date().toISOString(),...extra},{merge:true});
-}
-async function rebuildDebtLedger() {
-  if(!activeProfile||activeProfile.role!=='owner') throw new Error('Solo el dueño puede actualizar los saldos de clientes.');
-  await setDebtLedgerReady(false);
-  const [clientSnap,saleSnap,movementSnap,balanceSnap]=await Promise.all([
-    getDocs(colRef('clients')),getDocs(colRef('sales')),getDocs(colRef('cashMovements')),getDocs(colRef('clientBalances'))
-  ]);
-  const balances=new Map(clientSnap.docs.map(item=>[item.id,0]));
-  for(const item of saleSnap.docs) {
-    const sale=item.data(),clientId=String(sale.clienteId??sale.clientId??'');
-    if(!clientId||!balances.has(clientId)) continue;
-    if(sale.paymentMethod==='pending'||sale.paymentStatus==='pending')
-      balances.set(clientId,balances.get(clientId)+Math.max(0,Number(sale.total)||0));
-  }
-  for(const item of movementSnap.docs) {
-    const payment=item.data();
-    if(payment.sourceType!=='payment') continue;
-    const clientId=String(payment.clienteId??payment.clientId??'');
-    if(!clientId||!balances.has(clientId)) continue;
-    balances.set(clientId,balances.get(clientId)-Math.max(0,Number(payment.amount)||0));
-  }
-  const previousBalances=new Map(balanceSnap.docs.map(item=>[item.id,item.data()]));
-  const operations=[];
-  for(const [clientId,amount] of balances) {
-    const previous=previousBalances.get(clientId)||{};
-    operations.push({type:'set',ref:doc(colRef('clientBalances'),safeId(clientId)),data:{clientId,balance:Math.max(0,Math.round(amount)),updatedAt:new Date().toISOString(),...(previous.lastPaymentId?{lastPaymentId:previous.lastPaymentId,lastPaymentSellerUid:previous.lastPaymentSellerUid}:{})}});
-  }
-  for(const item of balanceSnap.docs) if(!balances.has(item.id)) operations.push({type:'delete',ref:item.ref});
-  for(let start=0;start<operations.length;start+=450) {
-    const batch=writeBatch(db);
-    operations.slice(start,start+450).forEach(op=>op.type==='set'?batch.set(op.ref,op.data):batch.delete(op.ref));
-    await batch.commit();
-  }
-  await setDebtLedgerReady(true,{clientCount:balances.size,rebuiltAt:new Date().toISOString()});
-}
 const privateProductFields=['pricePurchase','purchasePrice','cost','costPrice','buyPrice','precioCompra'];
 function publicSellerProduct(row) {
   const clean={...row};
@@ -443,18 +405,11 @@ async function flushPendingChanges() {
   lastSyncError='';
   updateSyncIndicator();
   try {
-    const initiallyPending=readOutbox();
-    const hasDebtChanges=Object.keys(initiallyPending).some(key=>key==='zipperComprobantes'||key==='zipperPagos'||key==='zipperGastosCaja');
-    if(hasDebtChanges) await setDebtLedgerReady(false);
     while(navigator.onLine!==false) {
       const outbox=readOutbox();
       const entry=Object.entries(outbox)[0];
       if(!entry) break;
       const [key,item]=entry;
-      if(key==='zipperComprobantes'||key==='zipperPagos'||key==='zipperGastosCaja') {
-        const ledgerSnap=await getDoc(debtLedgerRef());
-        if(!ledgerSnap.exists()||ledgerSnap.data().ready===true) await setDebtLedgerReady(false);
-      }
       const previousRows=key.startsWith('zipperVisitados-')
         ?(item.previousIds||[])
         :key==='zipperProductos'&&Array.isArray(item.previousRows)
@@ -467,10 +422,6 @@ async function flushPendingChanges() {
         saveOutbox(latest);
       }
     }
-    const remaining=readOutbox();
-    const debtPending=Object.keys(remaining).some(key=>key==='zipperComprobantes'||key==='zipperPagos'||key==='zipperGastosCaja');
-    const ledgerSnap=await getDoc(debtLedgerRef());
-    if(!debtPending&&(!ledgerSnap.exists()||ledgerSnap.data().ready!==true)) await rebuildDebtLedger();
   } catch(error) {
     console.error('Firebase: cambio pendiente conservado en el teléfono.',error);
     lastSyncError=error.message||'No se pudo sincronizar un cambio pendiente.';
@@ -537,7 +488,6 @@ async function importLocalData(onProgress) {
     marker={id:'ownerImport',state:'importing',ownerUid:activeProfile.uid,fingerprint,startedAt:new Date().toISOString()};
     await setDoc(migrationRef,marker);
   }
-  await setDebtLedgerReady(false);
   let total=0;
   const completedGroups=[];
   try {
@@ -554,7 +504,6 @@ async function importLocalData(onProgress) {
       await setDoc(migrationRef,{completedGroups:[...completedGroups],updatedAt:new Date().toISOString()},{merge:true});
       if(onProgress) onProgress(name+' guardado ('+total+' registros procesados)…');
     }
-    await rebuildDebtLedger();
     await setDoc(migrationRef,{state:'complete',completedAt:new Date().toISOString()},{merge:true});
     localStorage.setItem('zipperStorageMode','cloud');
     await startSync(activeProfile);
