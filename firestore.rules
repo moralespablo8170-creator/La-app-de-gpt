@@ -51,10 +51,31 @@ service cloud.firestore {
           && !('purchasePrice' in resource.data));
     }
 
+    function assignedClientForSale(orgId) {
+      let clientId = request.resource.data.clienteId;
+      let clientPath = /databases/$(database)/documents/orgs/$(orgId)/clients/$(clientId);
+      let week = request.resource.data.routeWeek;
+      return clientId is string
+        && exists(clientPath)
+        && request.auth.uid in get(clientPath).data.assignedSellerUids
+        && week in get(clientPath).data.sellerRoutes[request.auth.uid]
+        && get(clientPath).data.sellerRoutes[request.auth.uid][week].day == request.resource.data.routeDay;
+    }
+
     function canCreateOwnSale(orgId) {
       return isOwner(orgId)
         || (isSeller(orgId)
-          && request.resource.data.sellerUid == request.auth.uid);
+          && request.resource.data.sellerUid == request.auth.uid
+          && assignedClientForSale(orgId)
+          && request.resource.data.keys().hasOnly([
+            'id', 'folio', 'fecha', 'date', 'clienteId', 'cliente', 'ruta',
+            'routeWeek', 'routeDay', 'items', 'total', 'paymentMethod',
+            'paymentStatus', 'sellerUid', 'stockDeductions', 'createdAt'
+          ])
+          && !('cost' in request.resource.data)
+          && !('profit' in request.resource.data)
+          && !('pricePurchase' in request.resource.data)
+          && !('purchasePrice' in request.resource.data));
     }
 
     function canUpdateOwnSale(orgId) {
