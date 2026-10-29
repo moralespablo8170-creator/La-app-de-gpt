@@ -114,7 +114,7 @@ function renderCompResults(){
   const policy=compensationFor(s.uid,month),salesTotal=totals.get(s.uid)||0;
   if(!policy||!Array.isArray(policy.tiers)||!policy.tiers.length)return '<tr><td>'+safe(s.displayName||s.email||s.uid)+'</td><td>'+money(salesTotal)+'</td><td colspan="5">Falta configurar sueldo base y metas.</td></tr>';
   const calc=commissionBreakdown(salesTotal,policy.tiers),base=Number(policy.monthlyBaseSalary)||0;
-  return '<tr><td>'+safe(s.displayName||s.email||s.uid)+'</td><td>'+money(salesTotal)+'</td><td>'+safe(calc.targetLabel)+'<details><summary>Ver cálculo por tramo</summary>'+safe(calc.breakdown)+'</details></td><td>'+calc.effective.toLocaleString('es-CL',{minimumFractionDigits:2,maximumFractionDigits:2})+'%</td><td>'+money(calc.total)+'</td><td>'+money(base)+'</td><td>'+money(calc.total+base)+'</td></tr>';
+  return '<tr><td>'+safe(s.displayName||s.email||s.uid)+'</td><td>'+money(salesTotal)+'</td><td>'+safe(calc.targetLabel)+'<small>Condiciones desde '+safe(policy.effectiveMonth||'sin fecha')+'</small><details><summary>Ver cálculo por tramo</summary>'+safe(calc.breakdown)+'</details></td><td>'+calc.effective.toLocaleString('es-CL',{minimumFractionDigits:2,maximumFractionDigits:2})+'%</td><td>'+money(calc.total)+'</td><td>'+money(base)+'</td><td>'+money(calc.total+base)+'</td></tr>';
  });
  $('compResults').innerHTML=rows.join('')||'<tr><td colspan="7">Aún no hay vendedores registrados.</td></tr>';
 }
