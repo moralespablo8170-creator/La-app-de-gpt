@@ -290,7 +290,33 @@ service cloud.firestore {
     }
 
     match /orgs/{orgId}/cashMovements/{movementId} {
+      allow get: if isOwner(orgId)
+        || (isSeller(orgId)
+          && (resource.data.sellerUid == request.auth.uid
+            || movementId.matches('^payment_' + request.auth.uid + '_.*
+
+    match /orgs/{orgId}/visits/{visitId} {
       allow read: if isOwner(orgId)
+        || (isSeller(orgId) && resource.data.sellerUid == request.auth.uid);
+      allow create, update: if isOwner(orgId)
+        || (isSeller(orgId)
+          && request.resource.data.sellerUid == request.auth.uid
+          && assignedClientForVisit(orgId));
+      allow delete: if isOwner(orgId);
+    }
+
+    match /orgs/{orgId}/settings/{settingId} {
+      allow read: if isMember(orgId);
+      allow write: if isOwner(orgId);
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+)));
+      allow list: if isOwner(orgId)
         || (isSeller(orgId) && resource.data.sellerUid == request.auth.uid);
       allow create: if isOwner(orgId) || validSellerAbono(orgId, movementId);
       allow update, delete: if isOwner(orgId);
