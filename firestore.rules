@@ -26,6 +26,10 @@ service cloud.firestore {
         && get(memberPath(orgId, request.auth.uid)).data.role == 'seller';
     }
 
+    function isActiveMember(orgId) {
+      return isOwner(orgId) || isSeller(orgId);
+    }
+
     function canReadSale(orgId) {
       return isOwner(orgId)
         || (isSeller(orgId) && resource.data.sellerUid == request.auth.uid);
@@ -76,9 +80,9 @@ service cloud.firestore {
     match /orgs/{orgId}/sessions/{sessionId} {
       allow read: if isOwner(orgId)
         || (isSeller(orgId) && resource.data.sellerUid == request.auth.uid);
-      allow create: if (isSeller(orgId) || isOwner(orgId))
+      allow create: if isActiveMember(orgId)
         && request.resource.data.sellerUid == request.auth.uid;
-      allow update: if (isSeller(orgId) || isOwner(orgId))
+      allow update: if isActiveMember(orgId)
         && resource.data.sellerUid == request.auth.uid
         && request.resource.data.sellerUid == request.auth.uid;
       allow delete: if isOwner(orgId);
@@ -87,12 +91,25 @@ service cloud.firestore {
     match /orgs/{orgId}/cashMovements/{movementId} {
       allow read: if isOwner(orgId)
         || (isSeller(orgId) && resource.data.sellerUid == request.auth.uid);
-      allow create: if isSeller(orgId)
+      allow create: if isActiveMember(orgId)
         && request.resource.data.sellerUid == request.auth.uid;
-      allow update: if isSeller(orgId)
+      allow update: if isActiveMember(orgId)
         && resource.data.sellerUid == request.auth.uid
         && request.resource.data.sellerUid == request.auth.uid;
       allow delete: if isOwner(orgId);
+    }
+
+    match /orgs/{orgId}/visits/{visitId} {
+      allow read: if isOwner(orgId)
+        || (isSeller(orgId) && resource.data.sellerUid == request.auth.uid);
+      allow create, update: if isActiveMember(orgId)
+        && request.resource.data.sellerUid == request.auth.uid;
+      allow delete: if isOwner(orgId);
+    }
+
+    match /orgs/{orgId}/settings/{settingId} {
+      allow read: if isMember(orgId);
+      allow write: if isOwner(orgId);
     }
 
     match /{document=**} {
