@@ -1,6 +1,7 @@
 // Firebase connection and owner-only first migration for Distribuidora Zipper.
 // The local phone database remains the default. Cloud mode is enabled only after an explicit backup and import.
 import { initializeApp } from 'firebase/app';
+import { firebaseConfig, ORG_ID } from './firebase-config.js';
 import {
   getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged,
   setPersistence, browserLocalPersistence
@@ -9,16 +10,6 @@ import {
   getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
   doc, getDoc, collection, getDocs, onSnapshot, writeBatch, setDoc, deleteDoc, runTransaction
 } from 'firebase/firestore';
-
-const firebaseConfig = {
-  apiKey: 'AIzaSyAFYoHdqS1QP04MXzHbMpcpuvzNLqElZF4',
-  authDomain: 'zipper-a12f1.firebaseapp.com',
-  projectId: 'zipper-a12f1',
-  storageBucket: 'zipper-a12f1.firebasestorage.app',
-  messagingSenderId: '729619217486',
-  appId: '1:729619217486:web:6350b05ead8ecd70c1171f',
-  measurementId: 'G-KX0HXC2Z54'
-};
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
@@ -33,7 +24,6 @@ try {
   console.warn('Firebase: la caché persistente no está disponible; se usará la cola local de la app.', error);
   db = getFirestore(firebaseApp);
 }
-const ORG_ID = 'zipper-a12f1';
 const ORG_PATH = ['orgs', ORG_ID];
 let activeProfile = null;
 let sellerCatalogVersion = Number(localStorage.getItem('zipperSellerCatalogVersion')||0);
