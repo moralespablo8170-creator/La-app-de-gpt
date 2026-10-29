@@ -22,7 +22,7 @@ Todos los datos quedan bajo `orgs/zipper-a12f1`:
 - El panel del dueño agrupa ventas por mes, vendedor, zona y ruta; el porcentaje significa participación del vendedor en el total vendido de esa zona durante el mes.
 - `sessions/{sessionId}`: apertura, primera venta y cierre, con `sellerUid`.
 - `cashMovements/{movementId}`: abonos, gastos u otros movimientos, con `sellerUid`.
-- `visits/{visitId}`: registro de visitas por cliente, fecha y vendedor.
+- `visits/{visitId}`: registro de visitas por cliente, fecha y vendedor. Las reglas exigen que un vendedor solo registre visitas a clientes, semanas y días asignados a su perfil.
 - `productCosts/{productId}`: costo actual de compra, solo lectura y escritura del dueño; nunca accesible a vendedores.
 - `sellerSaleCosts/{saleId}`: copia privada e inmutable del costo unitario usado en cada venta, con cantidades, ingreso, costo y ganancia bruta por línea. Solo el dueño puede leerla; la escribe un proceso de servidor confiable, nunca el navegador del vendedor.
 - `sellerCompensation/{sellerUid_YYYY-MM}`: sueldo base mensual y tramos de metas/porcentajes de un vendedor, con `effectiveMonth`. Cada versión rige desde ese mes hasta la siguiente; así, actualizar sueldo o porcentaje no modifica cálculos de meses anteriores. Solo el dueño puede leer o modificar esta colección.
