@@ -191,8 +191,9 @@ async function validateImportResume(groups) {
       throw new Error('La nube contiene datos ajenos a la importación interrumpida. No se modificó ningún dato local.');
   }
 }
-async function importLocalData() {
+async function importLocalData(onProgress) {
   if (!activeProfile || activeProfile.role!=='owner') throw new Error('Solo el dueño puede importar los datos locales.');
+  if(onProgress) onProgress('Preparando la importación y comprobando Firebase…');
   const groups=await collectLocalImport(activeProfile);
   const fingerprint=await importFingerprint(groups);
   const migrationRef=doc(colRef('settings'),'ownerImport');
@@ -212,6 +213,7 @@ async function importLocalData() {
   const completedGroups=[];
   try {
     for(const [name,rows] of groups) {
+      if(onProgress) onProgress('Subiendo '+name+' ('+rows.length+' registros)…');
       const operations=rows.map(row=>({ref:doc(colRef(name),safeId(row.id)),data:row}));
       for(let start=0;start<operations.length;start+=450) {
         const batch=writeBatch(db);
@@ -221,6 +223,7 @@ async function importLocalData() {
       total+=rows.length;
       completedGroups.push(name);
       await setDoc(migrationRef,{completedGroups:[...completedGroups],updatedAt:new Date().toISOString()},{merge:true});
+      if(onProgress) onProgress(name+' guardado ('+total+' registros procesados)…');
     }
     await setDoc(migrationRef,{state:'complete',completedAt:new Date().toISOString()},{merge:true});
     localStorage.setItem('zipperStorageMode','cloud');
@@ -311,7 +314,13 @@ async function connectUi() {
   const close=()=>modal.classList.add('hidden');
   document.getElementById('cloudOpen')?.addEventListener('click',()=>modal.classList.remove('hidden'));
   document.getElementById('cloudClose')?.addEventListener('click',close);
-  document.getElementById('cloudBackup')?.addEventListener('click',()=>{if(backupLocal())document.getElementById('cloudImport')?.removeAttribute('disabled')});
+  document.getElementById('cloudBackup')?.addEventListener('click',()=>{
+    if(backupLocal()) {
+      document.getElementById('cloudImport')?.removeAttribute('disabled');
+      const progress=document.getElementById('cloudImportProgress');
+      if(progress) progress.textContent='Respaldo generado. Comprueba que esté en Descargas; luego pulsa Importar mis datos a Firebase.';
+    }
+  });
   document.getElementById('cloudSignIn')?.addEventListener('click',async()=>{
     const status=document.getElementById('cloudModalStatus');
     const email=document.getElementById('cloudEmail')?.value||'';
@@ -333,8 +342,9 @@ async function connectUi() {
       document.getElementById('cloudBackup').classList.toggle('hidden',!localData||cloudData);
       importBtn.classList.toggle('hidden',!localData||cloudData);
       importBtn.disabled=localData;
-      useBtn.classList.toggle('hidden',cloudData&& !localData);
-      useBtn.disabled=localData;
+      const canUseCloud=cloudData && !localData;
+      useBtn.classList.toggle('hidden',!canUseCloud);
+      useBtn.disabled=!canUseCloud;
       if(profile.role==='seller') {
         if(status)status.textContent='Perfil de vendedor validado. La vista y sincronización por vendedor aún están en preparación; no se activó la nube.';
         document.getElementById('cloudImport').classList.add('hidden');
@@ -356,12 +366,30 @@ async function connectUi() {
   });
   document.getElementById('cloudImport')?.addEventListener('click',async()=>{
     const status=document.getElementById('cloudModalStatus');
-    const button=document.getElementById('cloudImport');button.disabled=true;
+    const progress=document.getElementById('cloudImportProgress');
+    const button=document.getElementById('cloudImport');
+    if(button.disabled) return;
+    button.disabled=true;
+    const originalLabel='Importar mis datos a Firebase';
+    button.textContent='Importando…';
+    if(progress) progress.textContent='Importación iniciada. Mantén esta ventana abierta; te mostraré qué grupo se está guardando.';
     try {
-      const total=await importLocalData();
-      if(status)status.textContent='Respaldo local generado e importación terminada: '+total+' registros. El modo nube está activo.';
+      const total=await importLocalData(message=>{if(progress)progress.textContent=message;});
+      if(status)status.textContent='Importación terminada. El modo nube está activo.';
+      if(progress)progress.textContent='Importación completada: '+total+' registros guardados en Firebase.';
+      button.textContent='Importación completada';
+      const counts=await inspectCloud();
+      const cloudCounts=document.getElementById('cloudCounts');
+      if(cloudCounts)cloudCounts.textContent='En este teléfono: '+counts.localCount+' registros. En Firebase: '+counts.cloudCount+' registros.';
       cloudLabel();
-    } catch(error) { if(status)status.textContent=error.message||'No se pudo completar la importación.';button.disabled=false; }
+    } catch(error) {
+      const message=error.message||'No se pudo completar la importación.';
+      if(status)status.textContent='La importación no terminó.';
+      if(progress)progress.textContent='Error de importación: '+message;
+      button.disabled=false;
+      button.textContent=originalLabel;
+      alert('No se pudo completar la importación: '+message);
+    }
   });
   document.getElementById('cloudUseExisting')?.addEventListener('click',async()=>{
     const status=document.getElementById('cloudModalStatus');
