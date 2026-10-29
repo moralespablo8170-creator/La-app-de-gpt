@@ -34,6 +34,7 @@ function chosenSales(){const date=$('adminDate').value;return sales.filter(s=>ro
 function chosenVisits(){const date=$('adminDate').value;return visits.filter(v=>rowDate(v,'visits')===date&&(!selectedSellerId||v.sellerUid===selectedSellerId))}
 function chosenCash(){const date=$('adminDate').value;return cash.filter(v=>rowDate(v,'cash')===date&&(!selectedSellerId||v.sellerUid===selectedSellerId))}
 function sessionFor(uid){const date=$('adminDate').value;return sessions.find(s=>s.sellerUid===uid&&rowDate(s,'sessions')===date)||null}
+function sellerLabel(uid){const s=sellers.find(x=>x.uid===uid);return s?.displayName||s?.email||uid||''}
 function render(){
  const date=$('adminDate').value,filteredSales=chosenSales(),filteredVisits=chosenVisits(),filteredCash=chosenCash();
  $('statSales').textContent=String(filteredSales.length);
@@ -55,8 +56,8 @@ function render(){
  const detailSales=seller?filteredSales:filteredSales;
  $('detailSales').textContent=String(detailSales.length);
  $('adminCash').innerHTML=filteredCash.map(x=>'<article class="admin-row"><strong>'+safe(x.sourceType==='expense'||x.type==='expense'?'Gasto':'Abono / movimiento')+' · '+money(x.amount??x.monto??x.total)+'</strong><small>'+safe(x.clientName||x.cliente||x.description||x.descripcion||'')+' · '+safe(time(x.createdAt||x.fecha))+' · '+safe(x.paymentMethod||x.formaPago||'')+'</small></article>').join('')||'<p class="admin-muted">Sin movimientos de caja en esta fecha.</p>';
- $('adminSales').innerHTML=filteredSales.map(s=>'<article class="admin-row"><strong>'+safe(s.cliente||s.clientName||'Cliente')+' · '+money(s.total)+'</strong><small>'+safe(s.folio||s.id)+' · '+safe(time(s.createdAt||s.fecha))+' · '+safe(s.paymentMethod||s.formaPago||'')+' · '+safe(s.sellerName||s.sellerUid||'')+'</small></article>').join('')||'<p class="admin-muted">Sin ventas en esta fecha.</p>';
- $('adminVisits').innerHTML=filteredVisits.map(v=>{const client=clients.find(c=>String(c.id)===String(v.clientId));return '<article class="admin-row"><strong>'+safe(v.clientName||v.cliente||client?.name||v.clientId||'Cliente')+' · '+safe(v.status||'visitado')+'</strong><small>'+safe(v.routeWeek||'')+' '+safe(v.routeDay||'')+' · '+safe(v.sellerUid||'')+'</small></article>'}).join('')||'<p class="admin-muted">Sin visitas en esta fecha.</p>';
+ $('adminSales').innerHTML=filteredSales.map(s=>'<article class="admin-row"><strong>'+safe(s.cliente||s.clientName||'Cliente')+' · '+money(s.total)+'</strong><small>'+safe(s.folio||s.id)+' · '+safe(time(s.occurredAt||s.createdAt||s.fecha))+' · '+safe(s.paymentMethod||s.formaPago||'')+' · '+safe(sellerLabel(s.sellerUid)||s.sellerName||'')+'</small></article>').join('')||'<p class="admin-muted">Sin ventas en esta fecha.</p>';
+ $('adminVisits').innerHTML=filteredVisits.map(v=>{const client=clients.find(c=>String(c.id)===String(v.clientId));return '<article class="admin-row"><strong>'+safe(v.clientName||v.cliente||client?.name||v.clientId||'Cliente')+' · '+safe(v.status||'visitado')+'</strong><small>'+safe(v.routeWeek||'')+' '+safe(v.routeDay||'')+' · '+safe(sellerLabel(v.sellerUid))+'</small></article>'}).join('')||'<p class="admin-muted">Sin visitas en esta fecha.</p>';
 }
 async function refresh(){
  if(!owner||loading)return;loading=true;status('Actualizando información de vendedores…');
