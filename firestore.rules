@@ -64,7 +64,7 @@ service cloud.firestore {
           && assignedClientForSale(orgId)
           && request.resource.data.keys().hasOnly([
             'id', 'folio', 'fecha', 'date', 'clienteId', 'cliente', 'ruta',
-            'routeWeek', 'routeDay', 'occurredAt', 'items', 'total', 'paymentMethod',
+            'routeWeek', 'routeDay', 'clientZone', 'occurredAt', 'items', 'total', 'paymentMethod',
             'paymentStatus', 'sellerUid', 'stockDeductions', 'createdAt'
           ])
           && !('cost' in request.resource.data)
