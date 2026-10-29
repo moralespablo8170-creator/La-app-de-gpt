@@ -43,12 +43,7 @@ service cloud.firestore {
 
     function canReadSale(orgId) {
       return isOwner(orgId)
-        || (isSeller(orgId)
-          && resource.data.sellerUid == request.auth.uid
-          && !('cost' in resource.data)
-          && !('profit' in resource.data)
-          && !('pricePurchase' in resource.data)
-          && !('purchasePrice' in resource.data));
+        || (isSeller(orgId) && resource.data.sellerUid == request.auth.uid);
     }
 
     function assignedClientForSale(orgId) {
@@ -115,18 +110,12 @@ service cloud.firestore {
 
     match /orgs/{orgId}/products/{productId} {
       allow read: if isOwner(orgId)
-        || (isSeller(orgId)
-          && !('pricePurchase' in resource.data)
-          && !('purchasePrice' in resource.data)
-          && !('cost' in resource.data)
-          && !('costPrice' in resource.data));
+        || (isSeller(orgId) && resource.data.sellerVisible == true);
       allow create, delete: if isOwner(orgId);
       allow update: if isOwner(orgId)
         || (isSeller(orgId)
-          && !('pricePurchase' in resource.data)
-          && !('purchasePrice' in resource.data)
-          && !('cost' in resource.data)
-          && !('costPrice' in resource.data)
+          && resource.data.sellerVisible == true
+          && request.resource.data.sellerVisible == true
           && request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['stock', 'lastSellerSaleId'])
           && request.resource.data.stock is number
