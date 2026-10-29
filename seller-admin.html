@@ -46,7 +46,13 @@
 <label>Fecha<input id="adminDate" type="date"></label>
 </section>
 <section class="admin-card">
-<h2>Vendedores</h2>
+<h2>Acceso de vendedores</h2>
+<p class="admin-muted">Primero crea la cuenta de acceso en Firebase Authentication y copia su UID. Aquí solo se asocia ese UID con un perfil vendedor; nunca escribas ni compartas su contraseña. El acceso seguirá bloqueado hasta que el dueño active el modo vendedor.</p>
+<label>UID de la cuenta<input id="sellerUid" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="UID copiado desde Firebase Authentication"></label>
+<label>Nombre visible<input id="sellerDisplayName" type="text" autocomplete="name" maxlength="80" placeholder="Nombre del vendedor"></label>
+<button id="sellerSaveProfile" class="admin-btn" type="button">Crear o activar perfil</button>
+<p id="sellerProfileStatus" class="admin-status" role="status" aria-live="polite">No se crean cuentas ni se activa el modo vendedor desde este panel.</p>
+<h2>Vendedores registrados</h2>
 <div id="adminSellers" class="admin-list"></div>
 </section>
 <section class="admin-card">
@@ -63,6 +69,6 @@
 </section>
 </section>
 </main>
-<script type="module" src="./seller-admin.js?v=zipper-seller-admin-20261029-v3"></script>
+<script type="module" src="./seller-admin.js?v=zipper-seller-admin-20261029-v4"></script>
 </body>
 </html>
