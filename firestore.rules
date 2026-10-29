@@ -291,7 +291,11 @@ service cloud.firestore {
     }
 
     match /orgs/{orgId}/cashMovements/{movementId} {
-      allow read: if isOwner(orgId)
+      allow get: if isOwner(orgId)
+        || (isSeller(orgId)
+          && (movementId.matches('^payment_' + request.auth.uid + '_.*')
+            || resource.data.sellerUid == request.auth.uid));
+      allow list: if isOwner(orgId)
         || (isSeller(orgId) && resource.data.sellerUid == request.auth.uid);
       allow create: if isOwner(orgId) || validSellerAbono(orgId, movementId);
       allow update, delete: if isOwner(orgId);
