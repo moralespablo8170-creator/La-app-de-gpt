@@ -21,7 +21,7 @@ Todos los datos quedan bajo `orgs/zipper-a12f1`:
 - `sales/{saleId}`: cliente, detalle, fecha, forma de pago, `sellerUid`, semana/día de ruta y `clientZone` copiada al momento de la venta para conservar la zona histórica.
 - El panel del dueño agrupa ventas por mes, vendedor, zona y ruta; el porcentaje significa participación del vendedor en el total vendido de esa zona durante el mes.
 - `sessions/{sessionId}`: apertura, primera venta y cierre, con `sellerUid`.
-- `cashMovements/{movementId}`: abonos, gastos u otros movimientos, con `sellerUid`.
+- `cashMovements/{movementId}`: abonos, gastos u otros movimientos, con `sellerUid`. El dueño es el único que puede crear, modificar o borrar movimientos; el vendedor puede consultar solo los propios.
 - `visits/{visitId}`: registro de visitas por cliente, fecha y vendedor. Las reglas exigen que un vendedor solo registre visitas a clientes, semanas y días asignados a su perfil.
 - `productCosts/{productId}`: costo actual de compra, solo lectura y escritura del dueño; nunca accesible a vendedores.
 - `sellerSaleCosts/{saleId}`: copia privada e inmutable del costo unitario usado en cada venta, con cantidades, ingreso, costo y ganancia bruta por línea. Solo el dueño puede leerla; la escribe un proceso de servidor confiable, nunca el navegador del vendedor.
