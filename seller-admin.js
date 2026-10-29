@@ -1,18 +1,10 @@
 import { initializeApp } from 'firebase/app';
+import { firebaseConfig, ORG_ID } from './firebase-config.js';
 import { getAuth, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc, collection, getDocs, writeBatch, setDoc, updateDoc } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 
-const config={
- apiKey:'AIzaSyAFYoHdqS1QP04MXzHbMpcpuvzNLqElZF4',
- authDomain:'zipper-a12f1.firebaseapp.com',
- projectId:'zipper-a12f1',
- storageBucket:'zipper-a12f1.firebasestorage.app',
- messagingSenderId:'729619217486',
- appId:'1:729619217486:web:6350b05ead8ecd70c1171f',
- measurementId:'G-KX0HXC2Z54'
-};
-const app=initializeApp(config),auth=getAuth(app),db=getFirestore(app),functions=getFunctions(app,'southamerica-west1'),createSellerAccountCall=httpsCallable(functions,'createSellerAccount'),setSellerAccessCall=httpsCallable(functions,'setSellerAccess'),ORG='zipper-a12f1';
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),functions=getFunctions(app,'southamerica-west1'),createSellerAccountCall=httpsCallable(functions,'createSellerAccount'),setSellerAccessCall=httpsCallable(functions,'setSellerAccess'),ORG=ORG_ID;
 const SELLER_ACCOUNT_CREATION_READY=false;
 const SELLER_ACCESS_SERVER_READY=false;
 const $=id=>document.getElementById(id);
