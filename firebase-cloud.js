@@ -28,6 +28,9 @@ const ORG_PATH = ['orgs', ORG_ID];
 let activeProfile = null;
 let unsubs = [];
 let refreshing = false;
+let applyingCloud = false;
+let syncScheduled = false;
+const queuedLocalChanges = new Map();
 
 const localArray = key => {
   try {
@@ -68,8 +71,10 @@ async function login(email,password) {
 }
 function stopSync() { unsubs.forEach(fn=>{try{fn()}catch(_){}}); unsubs=[]; }
 function writeLocal(key,rows) {
+  const previous=applyingCloud; applyingCloud=true;
   try { localStorage.setItem(key,JSON.stringify(rows)); }
   catch (error) { console.error('No se pudo actualizar el almacenamiento local desde Firebase.',error); }
+  finally { applyingCloud=previous; }
 }
 function scheduleRefresh() {
   if (refreshing) return;
@@ -220,11 +225,36 @@ function startSync(profile) {
   const status=document.getElementById('cloudStatus');
   if(status) status.textContent='Modo nube activo · propietario · sincronización conectada.';
 }
+function installStorageSyncHooks() {
+  if (Storage.prototype.__zipperCloudHooked) return;
+  const nativeSet=Storage.prototype.setItem, nativeRemove=Storage.prototype.removeItem;
+  const syncable=key=>['zipperProductos','zipperClientes','zipperComprobantes','zipperPagos','zipperGastosCaja','zipperCategorias','zipperCategoriasEliminadas'].includes(key)||String(key).startsWith('zipperVisitados-');
+  const queue=(key,previousRaw)=>{
+    if(!syncable(key)||localStorage.getItem('zipperStorageMode')!=='cloud'||applyingCloud)return;
+    if(!queuedLocalChanges.has(key)){let previous=[];try{const parsed=JSON.parse(previousRaw||'[]');if(Array.isArray(parsed))previous=parsed}catch(_){}queuedLocalChanges.set(key,previous)}
+    if(syncScheduled)return;syncScheduled=true;
+    Promise.resolve().then(async()=>{
+      syncScheduled=false;const pending=[...queuedLocalChanges.entries()];queuedLocalChanges.clear();
+      for(const [changedKey,previous] of pending){let current=[];try{const parsed=JSON.parse(localStorage.getItem(changedKey)||'[]');if(Array.isArray(parsed))current=parsed}catch(_){}await onLocalArrayChanged(changedKey,current,previous)}
+    });
+  };
+  Storage.prototype.setItem=function(key,value){
+    const isLocal=this===localStorage,previous=isLocal&&syncable(String(key))?this.getItem(key):null;
+    const result=nativeSet.call(this,key,value);if(isLocal)queue(String(key),previous);return result;
+  };
+  Storage.prototype.removeItem=function(key){
+    const isLocal=this===localStorage,previous=isLocal&&syncable(String(key))?this.getItem(key):null;
+    const result=nativeRemove.call(this,key);if(isLocal)queue(String(key),previous);return result;
+  };
+  Object.defineProperty(Storage.prototype,'__zipperCloudHooked',{value:true,configurable:false});
+}
+
 function cloudLabel() {
   const status=document.getElementById('cloudStatus');
   if(status) status.textContent=localStorage.getItem('zipperStorageMode')==='cloud'
-    ?'Modo nube activo · los cambios se sincronizan con Firebase.'
+    ?(activeProfile?'Modo nube activo · los cambios se sincronizan con Firebase.':'Modo nube seleccionado · conecta la cuenta propietaria para sincronizar.')
     :'Modo local activo · los datos permanecen en este teléfono.';
+  document.getElementById('cloudLogout')?.classList.toggle('hidden',!activeProfile);
 }
 function backupLocal() {
   if(typeof window.zipperBackupDirect==='function') window.zipperBackupDirect();
@@ -303,9 +333,12 @@ async function connectUi() {
       if(!profile || profile.role!=='owner'){await signOut(auth);return}
       activeProfile=profile;
       if(localStorage.getItem('zipperStorageMode')==='cloud') await startSync(profile);
+      cloudLabel();
     } catch(error){console.error('Firebase: no se pudo restaurar la sesión.',error)}
   });
 }
 const api={login,signOut:()=>signOut(auth),memberFor,inspectCloud,importLocalData,useExistingCloudData,startSync,stopSync,onLocalArrayChanged,cloudLabel};
 window.zipperFirebaseCloud=api;
+installStorageSyncHooks();
+if(!window.zipperRefreshAfterCloud)window.zipperRefreshAfterCloud=()=>['renderHome','renderCash','renderInventory','renderClients','renderHistory'].forEach(name=>{try{if(typeof window[name]==='function')window[name]()}catch(error){console.error(error)}});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',connectUi,{once:true});else connectUi();
