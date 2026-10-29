@@ -56,3 +56,38 @@ exports.createSellerAccount=onCall(
 
   return {uid:user.uid,email:user.email,displayName:user.displayName};
  });
+
+exports.setSellerAccess=onCall(
+ {region:'southamerica-west1',maxInstances:1,concurrency:1},
+ async request=>{
+  if(!request.auth)throw new HttpsError('unauthenticated','Inicia sesión como propietario.');
+  const ownerSnap=await db.doc('orgs/'+ORG+'/members/'+request.auth.uid).get();
+  if(!ownerSnap.exists||ownerSnap.data().active!==true||ownerSnap.data().role!=='owner')
+   throw new HttpsError('permission-denied','Solo el propietario activo puede cambiar accesos.');
+
+  const input=request.data||{},uid=typeof input.uid==='string'?input.uid.trim():'',active=input.active;
+  if(!uid||uid.includes('/')||uid===request.auth.uid||typeof active!=='boolean')
+   throw new HttpsError('invalid-argument','El vendedor o el estado de acceso no es válido.');
+  const memberRef=db.doc('orgs/'+ORG+'/members/'+uid);
+  const memberSnap=await memberRef.get();
+  if(!memberSnap.exists||memberSnap.data().role!=='seller')
+   throw new HttpsError('not-found','No se encontró ese perfil de vendedor.');
+
+  if(active){
+   try{await auth.updateUser(uid,{disabled:false})}
+   catch(error){throw new HttpsError('failed-precondition','No se pudo habilitar la cuenta de Firebase Authentication.')}
+   await memberRef.update({active:true,updatedAt:new Date().toISOString()});
+   return {uid,active:true,authDisabled:false};
+  }
+
+  // Deny Firestore immediately; Auth account disable and token revocation follow.
+  await memberRef.update({active:false,updatedAt:new Date().toISOString()});
+  try{
+   await auth.updateUser(uid,{disabled:true});
+   await auth.revokeRefreshTokens(uid);
+   return {uid,active:false,authDisabled:true};
+  }catch(error){
+   console.error('El perfil quedó bloqueado en Firestore, pero no se pudo deshabilitar Authentication.',error.code||error.message);
+   return {uid,active:false,authDisabled:false};
+  }
+ });
