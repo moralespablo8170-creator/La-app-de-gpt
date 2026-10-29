@@ -44,6 +44,8 @@ function renderRouteDays(){const week=$('sellerWeek').value||'A',days=routeDays(
 function renderClients(){const rows=filteredClients();$('sellerClientCount').textContent=String(rows.length);$('sellerClients').innerHTML=rows.length?rows.map((c,i)=>'<article class="seller-row"><strong>'+(i+1)+'. '+safeText(c.name)+'</strong><small>'+safeText(c.address||'Sin dirección')+' · '+safeText(c.phone||'Sin teléfono')+'</small><div class="seller-actions"><button class="seller-btn secondary" type="button" data-visit="'+safeText(c.id)+'">Marcar visitado</button><button class="seller-btn secondary" type="button" data-payment-select="'+safeText(c.id)+'">Abonar</button><button class="seller-btn" type="button" data-select="'+safeText(c.id)+'">Vender</button></div></article>').join(''):'<p class="seller-muted">No hay clientes asignados para esta semana y día.</p>';document.querySelectorAll('[data-visit]').forEach(b=>b.onclick=()=>markVisited(b.dataset.visit));document.querySelectorAll('[data-select],[data-payment-select]').forEach(b=>b.onclick=()=>selectClient(b.dataset.select||b.dataset.paymentSelect))}
 function renderProducts(){const available=products.filter(p=>p&&p.active!==false&&p.id!=null&&String(p.name||'').trim());$('sellerProduct').innerHTML='<option value="">Seleccionar producto</option>'+available.map(p=>'<option value="'+safeText(p.id)+'">'+safeText(p.name)+' · '+money(p.price)+' · stock '+Number(p.stock||0)+'</option>').join('');$('sellerInventory').innerHTML=available.slice().sort((a,b)=>String(a.name).localeCompare(String(b.name),'es')).map(p=>'<div class="seller-product"><strong>'+safeText(p.name)+'</strong><span>Stock: '+Number(p.stock||0)+' · '+money(p.price)+'</span></div>').join('')||'<p class="seller-muted">Inventario aún no disponible. Conéctate a internet para cargarlo la primera vez.</p>'}
 function balanceCacheRead(){try{const v=JSON.parse(localStorage.getItem(prefix()+'clientBalances')||'{}');return v&&typeof v==='object'&&!Array.isArray(v)?v:{}}catch(_){return {}}}
+function pendingPaymentId(clientId){const key=prefix()+'pendingPayment_'+String(clientId);let id=localStorage.getItem(key);if(!id){id='payment_'+profile.uid+'_'+(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random());try{localStorage.setItem(key,id)}catch(error){console.error(error)}}return id}
+function clearPendingPaymentId(clientId){try{localStorage.removeItem(prefix()+'pendingPayment_'+String(clientId))}catch(error){console.error(error)}}
 function balanceCacheWrite(clientId,balance){const v=balanceCacheRead();v[String(clientId)]={balance:Number(balance)||0,updatedAt:new Date().toISOString()};try{localStorage.setItem(prefix()+'clientBalances',JSON.stringify(v))}catch(error){console.error(error)}}
 function renderDebt(){
  const label=$('sellerDebtStatus'),button=$('sellerSavePayment'),input=$('sellerPaymentAmount');
@@ -86,7 +88,7 @@ async function savePayment(){
  const client=selectedClient,clientId=String(client.id),button=$('sellerSavePayment');
  if(debtClientId!==clientId||currentDebt==null){await loadSelectedDebt();if(!selectedClient||String(selectedClient.id)!==clientId||currentDebt==null)return}
  if(amount>currentDebt){status('El monto supera el saldo pendiente de '+money(currentDebt)+'.','error');return}
- const movementId='payment_'+profile.uid+'_'+(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random());
+ const movementId=pendingPaymentId(clientId);
  const movementRef=doc(db,'orgs',ORG,'cashMovements',movementId);
  const balanceRef=doc(db,'orgs',ORG,'clientBalances',clientId);
  const ledgerRef=doc(db,'orgs',ORG,'settings','debtLedger');
@@ -106,9 +108,9 @@ async function savePayment(){
    tx.set(movementRef,payment);
    return {already:false,balance:next};
   });
-  currentDebt=result.balance;balanceCacheWrite(clientId,result.balance);$('sellerPaymentAmount').value='';
+  currentDebt=result.balance;balanceCacheWrite(clientId,result.balance);clearPendingPaymentId(clientId);$('sellerPaymentAmount').value='';
   status(result.already?'El abono ya estaba confirmado. Saldo pendiente: '+money(result.balance)+'.':'Abono de '+money(amount)+' registrado. Saldo pendiente: '+money(result.balance)+'.','ok');
- }catch(error){status('No se confirmó el abono: '+(error.message||'revisa la conexión y vuelve a consultar el saldo.'),'error');if(selectedClient&&String(selectedClient.id)===clientId)await loadSelectedDebt()}
+ }catch(error){if(!['unavailable','deadline-exceeded','unknown'].includes(error.code))clearPendingPaymentId(clientId);status('No se confirmó el abono: '+(error.message||'revisa la conexión y vuelve a consultar el saldo.'),'error');if(selectedClient&&String(selectedClient.id)===clientId)await loadSelectedDebt()}
  finally{paymentSaving=false;button.disabled=false;renderDebt()}
 }
 function renderCart(){const total=cart.reduce((n,item)=>n+item.qty*item.price,0);$('sellerCart').innerHTML=cart.length?cart.map((item,i)=>'<div class="seller-row"><strong>'+safeText(item.name)+' × '+item.qty+'</strong><small>'+money(item.price)+' c/u · '+money(item.qty*item.price)+'</small><button class="seller-btn secondary" type="button" data-remove="'+i+'">Quitar</button></div>').join(''):'<p class="seller-muted">Carrito vacío.</p>';document.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{cart.splice(Number(b.dataset.remove),1);renderCart()});$('sellerSaleTotal').textContent=money(total)}
