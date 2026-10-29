@@ -119,8 +119,9 @@ function renderCompResults(){
  $('compResults').innerHTML=rows.join('')||'<tr><td colspan="7">Aún no hay vendedores registrados.</td></tr>';
 }
 async function saveCompensation(){
- const uid=$('compSeller').value,baseRaw=$('compBaseSalary').value;
+ const uid=$('compSeller').value,baseRaw=$('compBaseSalary').value,month=$('commissionMonth').value;
  if(!owner||!uid){$('compStatus').textContent='Selecciona un vendedor.';return}
+ if(!month){$('compStatus').textContent='Selecciona el mes desde el que aplicarán estas condiciones.';return}
  if(navigator.onLine===false){$('compStatus').textContent='Conéctate a internet para guardar las condiciones.';return}
  const base=Number(baseRaw),tiers=readCompTiers();
  if(baseRaw===''||!Number.isInteger(base)||base<0){$('compStatus').textContent='Ingresa un sueldo base en pesos enteros; puede ser cero si corresponde.';return}
@@ -133,10 +134,12 @@ async function saveCompensation(){
  }
  const button=$('compSave');button.disabled=true;$('compStatus').textContent='Guardando condiciones…';
  try{
-  const policy={sellerUid:uid,monthlyBaseSalary:Math.round(base),tiers,updatedBy:owner.uid,updatedAt:new Date().toISOString()};
-  await setDoc(doc(db,'orgs',ORG,'sellerCompensation',uid),policy);
-  compensationBySeller[uid]=policy;$('compStatus').textContent='Condiciones guardadas. El cálculo usa venta mensual total del vendedor y aplica cada porcentaje solo al tramo sobre su meta.';
-  renderCompResults();
+  const policy={sellerUid:uid,effectiveMonth:month,monthlyBaseSalary:Math.round(base),tiers,updatedBy:owner.uid,updatedAt:new Date().toISOString()};
+  const policyId=uid+'_'+month;
+  await setDoc(doc(db,'orgs',ORG,'sellerCompensation',policyId),policy);
+  compensationBySeller[policyId]=policy;
+  $('compStatus').textContent='Condiciones guardadas desde '+month+'. Los meses anteriores conservan sus propias condiciones.';
+  renderCompForm();renderCompResults();
  }catch(error){console.error(error);$('compStatus').textContent=error.message||'No se pudieron guardar las condiciones.'}
  finally{button.disabled=false}
 }
