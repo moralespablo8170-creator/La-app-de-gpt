@@ -438,11 +438,11 @@ async function flushPendingChanges() {
   if(!activeProfile) { updateSyncIndicator(); return; }
   flushingPendingChanges=true;
   lastSyncError='';
-  const initiallyPending=readOutbox();
-  const hasDebtChanges=Object.keys(initiallyPending).some(key=>key==='zipperComprobantes'||key==='zipperPagos'||key==='zipperGastosCaja');
-  if(hasDebtChanges) await setDebtLedgerReady(false);
   updateSyncIndicator();
   try {
+    const initiallyPending=readOutbox();
+    const hasDebtChanges=Object.keys(initiallyPending).some(key=>key==='zipperComprobantes'||key==='zipperPagos'||key==='zipperGastosCaja');
+    if(hasDebtChanges) await setDebtLedgerReady(false);
     while(navigator.onLine!==false) {
       const outbox=readOutbox();
       const entry=Object.entries(outbox)[0];
