@@ -80,7 +80,7 @@ function watchCloud(){
  unsubs.forEach(fn=>{try{fn()}catch(_){}});unsubs=[];
  const watch=(q,kind)=>unsubs.push(onSnapshot(q,snap=>{const rows=snap.docs.map(d=>({id:d.id,...d.data()}));if(kind==='clients')clients=rows;else if(kind==='products')products=rows;else if(kind==='sales')sales=rows;cacheWrite(kind,rows);render();if(!snap.metadata.hasPendingWrites)status('Datos de ruta actualizados.', 'ok')},error=>{console.error(error);status('No se pudo actualizar '+kind+'. Los datos guardados en este teléfono siguen disponibles.','warn')}));
  watch(query(collection(db,'orgs',ORG,'clients'),where('assignedSellerUids','array-contains',profile.uid)),'clients');
- watch(collection(db,'orgs',ORG,'products'),'products');
+ watch(query(collection(db,'orgs',ORG,'products'),where('sellerVisible','==',true)),'products');
  watch(query(collection(db,'orgs',ORG,'sales'),where('sellerUid','==',profile.uid)),'sales');
  const sid=profile.uid+'_'+localDate();
  unsubs.push(onSnapshot(doc(db,'orgs',ORG,'sessions',sid),snap=>{session=snap.exists()?{id:snap.id,...snap.data()}:null;renderSession()},()=>{}));
@@ -89,7 +89,7 @@ async function refreshFromServer(){
  try{
   const [cs,ps,ss]=await Promise.all([
    getDocs(query(collection(db,'orgs',ORG,'clients'),where('assignedSellerUids','array-contains',profile.uid))),
-   getDocs(collection(db,'orgs',ORG,'products')),
+   getDocs(query(collection(db,'orgs',ORG,'products'),where('sellerVisible','==',true))),
    getDocs(query(collection(db,'orgs',ORG,'sales'),where('sellerUid','==',profile.uid)))
   ]);
   clients=cs.docs.map(d=>({id:d.id,...d.data()}));products=ps.docs.map(d=>({id:d.id,...d.data()}));sales=ss.docs.map(d=>({id:d.id,...d.data()}));
