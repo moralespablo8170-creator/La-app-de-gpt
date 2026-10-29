@@ -13,7 +13,7 @@ const config={
 };
 const app=initializeApp(config),auth=getAuth(app),db=getFirestore(app),ORG='zipper-a12f1';
 const $=id=>document.getElementById(id);
-let owner=null,sellers=[],sessions=[],sales=[],visits=[],cash=[],clients=[],selectedSellerId=null,loading=false;
+let owner=null,sellers=[],sessions=[],sales=[],visits=[],cash=[],clients=[],compensationBySeller={},selectedSellerId=null,loading=false;
 const localDate=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
 const safe=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=value=>'$'+Math.round(Number(value)||0).toLocaleString('es-CL');
@@ -35,26 +35,102 @@ function chosenVisits(){const date=$('adminDate').value;return visits.filter(v=>
 function chosenCash(){const date=$('adminDate').value;return cash.filter(v=>rowDate(v,'cash')===date&&(!selectedSellerId||v.sellerUid===selectedSellerId))}
 function sessionFor(uid){const date=$('adminDate').value;return sessions.find(s=>s.sellerUid===uid&&rowDate(s,'sessions')===date)||null}
 function sellerLabel(uid){const s=sellers.find(x=>x.uid===uid);return s?.displayName||s?.email||uid||''}
-function renderMonthlyReport(){
- const month=$('adminMonth').value;
- const clientById=new Map(clients.map(c=>[String(c.id),c]));
+function dateKey(value){
+ if(value&&typeof value.toDate==='function')value=value.toDate();
+ if(value instanceof Date)return new Date(value.getTime()-value.getTimezoneOffset()*60000).toISOString().slice(0,10);
+ if(typeof value==='number')return dateKey(new Date(value));
+ return typeof value==='string'?value.slice(0,10):'';
+}
+function periodBounds(){
+ const reference=dateValue($('reportReference').value)||new Date(),kind=$('reportPeriod').value;
+ const start=new Date(reference.getFullYear(),reference.getMonth(),reference.getDate());
+ let end=new Date(start);
+ if(kind==='week'){start.setDate(start.getDate()-((start.getDay()+6)%7));end=new Date(start);end.setDate(start.getDate()+6)}
+ else if(kind==='month'){start.setDate(1);end=new Date(start.getFullYear(),start.getMonth()+1,0)}
+ else if(kind==='semester'){const firstMonth=start.getMonth()<6?0:6;start.setMonth(firstMonth,1);end=new Date(start.getFullYear(),firstMonth+6,0)}
+ else{start.setMonth(0,1);end=new Date(start.getFullYear(),11,31)}
+ return {start:dateKey(start),end:dateKey(end)};
+}
+function renderPeriodReport(){
+ const {start,end}=periodBounds(),clientById=new Map(clients.map(c=>[String(c.id),c]));
  const zoneTotals=new Map(),groups=new Map();
- sales.filter(s=>String(s.date||s.fecha||s.occurredAt||'').slice(0,7)===month).forEach(s=>{
+ $('reportPeriodLabel').textContent='Período: '+new Date(start+'T12:00:00').toLocaleDateString('es-CL')+' – '+new Date(end+'T12:00:00').toLocaleDateString('es-CL');
+ sales.filter(s=>{const key=dateKey(s.date||s.fecha||s.occurredAt);return key>=start&&key<=end}).forEach(s=>{
   const client=clientById.get(String(s.clienteId||s.clientId||''));
   const zone=s.clientZone?String(s.clientZone).trim():(client?.comuna?'Comuna actual: '+String(client.comuna).trim():String(client?.zone||'Sin zona registrada'));
   const route=[s.routeWeek&&('Semana '+s.routeWeek),s.routeDay].filter(Boolean).join(' · ')||'Sin ruta registrada';
-  const sellerUid=String(s.sellerUid||'sin-vendedor');
-  const amount=Number(s.total)||0;
+  const sellerUid=String(s.sellerUid||'sin-vendedor'),amount=Number(s.total)||0;
   const groupKey=JSON.stringify([sellerUid,zone,route]);
   const group=groups.get(groupKey)||{sellerUid,zone,route,count:0,total:0};
   group.count+=1;group.total+=amount;groups.set(groupKey,group);
   zoneTotals.set(zone,(zoneTotals.get(zone)||0)+amount);
  });
  const rows=[...groups.values()].sort((a,b)=>a.zone.localeCompare(b.zone,'es')||b.total-a.total);
- $('monthlySellerRows').innerHTML=rows.length?rows.map(row=>{
+ $('periodSellerRows').innerHTML=rows.length?rows.map(row=>{
   const share=zoneTotals.get(row.zone)?row.total/zoneTotals.get(row.zone)*100:0;
   return '<tr><td>'+safe(sellerLabel(row.sellerUid))+'</td><td>'+safe(row.zone)+'</td><td>'+safe(row.route)+'</td><td>'+row.count+'</td><td>'+money(row.total)+'</td><td>'+share.toLocaleString('es-CL',{minimumFractionDigits:1,maximumFractionDigits:1})+'%</td></tr>';
- }).join(''):'<tr><td colspan="6">No hay ventas registradas en este mes.</td></tr>';
+ }).join(''):'<tr><td colspan="6">No hay ventas registradas en este período.</td></tr>';
+}
+function renderCompTiers(tiers){
+ const tbody=$('compTiers');
+ tbody.innerHTML=(tiers.length?tiers:[{threshold:0,ratePct:''}]).map((tier,index)=>'<tr><td><input data-comp-threshold="'+index+'" type="number" min="0" step="10000" inputmode="numeric" value="'+safe(tier.threshold??'')+'" aria-label="Meta inicial del tramo '+(index+1)+'"></td><td><input data-comp-rate="'+index+'" type="number" min="0" max="100" step="0.1" inputmode="decimal" value="'+safe(tier.ratePct??'')+'" aria-label="Porcentaje del tramo '+(index+1)+'"></td><td><button class="admin-btn secondary" type="button" data-comp-remove="'+index+'">Quitar</button></td></tr>').join('');
+ document.querySelectorAll('[data-comp-remove]').forEach(button=>button.onclick=()=>{const current=readCompTiers();current.splice(Number(button.dataset.compRemove),1);renderCompTiers(current)});
+}
+function readCompTiers(){
+ return [...document.querySelectorAll('[data-comp-threshold]')].map((input,index)=>({threshold:input.value===''?'':Number(input.value),ratePct:document.querySelector('[data-comp-rate="'+index+'"]')?.value===''?'':Number(document.querySelector('[data-comp-rate="'+index+'"]')?.value)}));
+}
+function renderCompForm(){
+ const select=$('compSeller'),previous=select.value;
+ select.innerHTML='<option value="">Seleccionar vendedor</option>'+sellers.map(s=>'<option value="'+safe(s.uid)+'">'+safe(s.displayName||s.email||s.uid)+(s.active===true?'':' · desactivado')+'</option>').join('');
+ const next=sellers.some(s=>s.uid===previous)?previous:(sellers.some(s=>s.uid===selectedSellerId)?selectedSellerId:'');
+ select.value=next;
+ const policy=compensationBySeller[next];
+ $('compBaseSalary').value=policy?String(policy.monthlyBaseSalary??''):'';
+ renderCompTiers(policy?.tiers?.length?policy.tiers:[{threshold:0,ratePct:''}]);
+ $('compStatus').textContent=next?(policy?'Condiciones cargadas. La escala aplica por tramos mensuales.':'Aún no hay condiciones guardadas para este vendedor.'):'Selecciona un vendedor para definir sus condiciones.';
+}
+function commissionFor(salesTotal,tiers){
+ const sorted=tiers.slice().sort((a,b)=>a.threshold-b.threshold);let total=0;
+ sorted.forEach((tier,index)=>{
+  const upper=index+1<sorted.length?Math.min(salesTotal,sorted[index+1].threshold):salesTotal;
+  const segment=Math.max(0,upper-tier.threshold);
+  total+=segment*tier.ratePct/100;
+ });
+ return Math.round(total);
+}
+function renderCompResults(){
+ const month=$('commissionMonth').value;
+ const monthSales=sales.filter(s=>dateKey(s.date||s.fecha||s.occurredAt).slice(0,7)===month),totals=new Map();
+ monthSales.forEach(s=>{const uid=String(s.sellerUid||'');if(uid)totals.set(uid,(totals.get(uid)||0)+(Number(s.total)||0))});
+ const rows=sellers.map(s=>{
+  const policy=compensationBySeller[s.uid],salesTotal=totals.get(s.uid)||0;
+  if(!policy||!Array.isArray(policy.tiers)||!policy.tiers.length)return '<tr><td>'+safe(s.displayName||s.email||s.uid)+'</td><td>'+money(salesTotal)+'</td><td colspan="3">Falta configurar sueldo base y metas.</td></tr>';
+  const commission=commissionFor(salesTotal,policy.tiers),base=Number(policy.monthlyBaseSalary)||0;
+  return '<tr><td>'+safe(s.displayName||s.email||s.uid)+'</td><td>'+money(salesTotal)+'</td><td>'+money(commission)+'</td><td>'+money(base)+'</td><td>'+money(commission+base)+'</td></tr>';
+ });
+ $('compResults').innerHTML=rows.join('')||'<tr><td colspan="5">Aún no hay vendedores registrados.</td></tr>';
+}
+async function saveCompensation(){
+ const uid=$('compSeller').value,baseRaw=$('compBaseSalary').value;
+ if(!owner||!uid){$('compStatus').textContent='Selecciona un vendedor.';return}
+ if(navigator.onLine===false){$('compStatus').textContent='Conéctate a internet para guardar las condiciones.';return}
+ const base=Number(baseRaw),tiers=readCompTiers();
+ if(!Number.isFinite(base)||base<0){$('compStatus').textContent='El sueldo base debe ser cero o un monto positivo.';return}
+ if(!tiers.length||tiers.some(t=>t.threshold===''||t.ratePct===''||!Number.isFinite(t.threshold)||!Number.isFinite(t.ratePct)||t.threshold<0||t.ratePct<0||t.ratePct>100)){
+  $('compStatus').textContent='Completa cada meta y porcentaje entre 0% y 100%.';return
+ }
+ tiers.sort((a,b)=>a.threshold-b.threshold);
+ if(tiers[0].threshold!==0||tiers.some((t,i)=>i>0&&t.threshold===tiers[i-1].threshold)){
+  $('compStatus').textContent='La primera meta debe comenzar en $0 y las siguientes deben ser distintas.';return
+ }
+ const button=$('compSave');button.disabled=true;$('compStatus').textContent='Guardando condiciones…';
+ try{
+  const policy={sellerUid:uid,monthlyBaseSalary:Math.round(base),tiers,updatedBy:owner.uid,updatedAt:new Date().toISOString()};
+  await setDoc(doc(db,'orgs',ORG,'sellerCompensation',uid),policy);
+  compensationBySeller[uid]=policy;$('compStatus').textContent='Condiciones guardadas. El cálculo usa venta mensual total del vendedor y aplica cada porcentaje solo al tramo sobre su meta.';
+  renderCompResults();
+ }catch(error){console.error(error);$('compStatus').textContent=error.message||'No se pudieron guardar las condiciones.'}
+ finally{button.disabled=false}
 }
 function render(){
  const date=$('adminDate').value,filteredSales=chosenSales(),filteredVisits=chosenVisits(),filteredCash=chosenCash();
@@ -62,7 +138,7 @@ function render(){
  $('statTotal').textContent=money(filteredSales.reduce((n,s)=>n+Number(s.total||0),0));
  $('statCash').textContent=money(filteredSales.filter(s=>s.paymentStatus!=='pending'&&s.paymentMethod!=='pending').reduce((n,s)=>n+Number(s.total||0),0)+filteredCash.filter(x=>x.sourceType==='payment'||x.type==='payment').reduce((n,x)=>n+Number(x.amount??x.monto??x.total??0),0));
  $('statVisits').textContent=String(filteredVisits.length);
- renderMonthlyReport();
+ renderPeriodReport();renderCompForm();renderCompResults();
  $('adminCount').textContent=sellers.length+' vendedor'+(sellers.length===1?'':'es')+' · '+date;
  $('adminSellers').innerHTML=sellers.length?sellers.map(s=>{
   const selected=s.uid===selectedSellerId,active=s.active===true;
@@ -85,15 +161,17 @@ function render(){
 async function refresh(){
  if(!owner||loading)return;loading=true;status('Actualizando información de vendedores…');
  try{
-  const [ms,ss,vs,cs,ks,cl]=await Promise.all([
+  const [ms,ss,vs,cs,ks,cl,comp]=await Promise.all([
    getDocs(collection(db,'orgs',ORG,'members')),
    getDocs(collection(db,'orgs',ORG,'sessions')),
    getDocs(collection(db,'orgs',ORG,'sales')),
    getDocs(collection(db,'orgs',ORG,'visits')),
    getDocs(collection(db,'orgs',ORG,'cashMovements')),
-   getDocs(collection(db,'orgs',ORG,'clients'))
+   getDocs(collection(db,'orgs',ORG,'clients')),
+   getDocs(collection(db,'orgs',ORG,'sellerCompensation'))
   ]);
   sellers=ms.docs.map(d=>({uid:d.id,...d.data()})).filter(x=>x.role==='seller');
+  compensationBySeller=Object.fromEntries(comp.docs.map(d=>[d.id,d.data()]));
   sessions=ss.docs.map(d=>({id:d.id,...d.data()}));sales=vs.docs.map(d=>({id:d.id,...d.data()}));visits=cs.docs.map(d=>({id:d.id,...d.data()}));cash=ks.docs.map(d=>({id:d.id,...d.data()}));clients=cl.docs.map(d=>({id:d.id,...d.data()}));
   if(selectedSellerId&&!sellers.some(s=>s.uid===selectedSellerId))selectedSellerId=null;
   if(!selectedSellerId&&sellers.length)selectedSellerId=sellers[0].uid;
@@ -106,7 +184,7 @@ async function verify(user){
  if(!user){owner=null;$('adminApp').classList.add('admin-hidden');$('adminLogin').classList.remove('admin-hidden');status('Ingresa con la cuenta propietaria.');return}
  const snap=await getDoc(doc(db,'orgs',ORG,'members',user.uid)),data=snap.exists()?snap.data():null;
  if(!data||data.active!==true||data.role!=='owner'){owner=null;await signOut(auth);$('adminApp').classList.add('admin-hidden');$('adminLogin').classList.remove('admin-hidden');status('Esta cuenta no tiene permisos de propietario.','error');return}
- owner={uid:user.uid,email:user.email||'',...data};$('adminLogin').classList.add('admin-hidden');$('adminApp').classList.remove('admin-hidden');$('adminDate').value=localDate();$('adminMonth').value=localDate().slice(0,7);await refresh();await refreshCatalogPrepState();
+ owner={uid:user.uid,email:user.email||'',...data};$('adminLogin').classList.add('admin-hidden');$('adminApp').classList.remove('admin-hidden');$('adminDate').value=localDate();$('reportReference').value=localDate();$('commissionMonth').value=localDate().slice(0,7);await refresh();await refreshCatalogPrepState();
 }
 async function login(){
  const b=$('adminLoginButton');b.disabled=true;status('Verificando cuenta propietaria…');
@@ -197,7 +275,7 @@ async function toggleSeller(uid){
  }catch(error){console.error(error);status(error.message||'No se pudo cambiar el acceso.','error')}
 }
 async function logout(){await signOut(auth);owner=null;sellers=[];sessions=[];sales=[];visits=[];cash=[]}
-$('adminLoginButton').onclick=login;$('adminLogout').onclick=logout;$('adminDate').onchange=render;$('adminMonth').onchange=render;$('sellerSaveProfile').onclick=saveSellerProfile;
+$('adminLoginButton').onclick=login;$('adminLogout').onclick=logout;$('adminDate').onchange=render;$('reportPeriod').onchange=render;$('reportReference').onchange=render;$('commissionMonth').onchange=renderCompResults;$('compSeller').onchange=renderCompForm;$('compAddTier').onclick=()=>{const tiers=readCompTiers();tiers.push({threshold:'',ratePct:''});renderCompTiers(tiers)};$('compSave').onclick=saveCompensation;$('sellerSaveProfile').onclick=saveSellerProfile;
 $('catalogBackupConfirm').onchange=refreshCatalogPrepState;
 $('catalogPrepareButton').onclick=prepareCatalog;
 onAuthStateChanged(auth,user=>verify(user).catch(error=>{console.error(error);status('No se pudo verificar la cuenta.','error')}));
