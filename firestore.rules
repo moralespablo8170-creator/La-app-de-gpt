@@ -65,8 +65,28 @@ service cloud.firestore {
       allow create, update, delete: if isOwner(orgId);
     }
 
+    function canReadClient(orgId) {
+      return isOwner(orgId)
+        || (isSeller(orgId)
+          && request.auth.uid in resource.data.assignedSellerUids);
+    }
+
     match /orgs/{orgId}/clients/{clientId} {
-      allow read, create, update: if isMember(orgId);
+      allow get, list: if canReadClient(orgId);
+      allow create: if isOwner(orgId)
+        || (isSeller(orgId)
+          && request.auth.uid in request.resource.data.assignedSellerUids
+          && request.auth.uid in request.resource.data.sellerRoutes);
+      allow update: if isOwner(orgId)
+        || (isSeller(orgId)
+          && canReadClient(orgId)
+          && request.auth.uid in request.resource.data.assignedSellerUids
+          && request.resource.data.assignedSellerUids == resource.data.assignedSellerUids
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['name', 'rut', 'razonSocial', 'comuna', 'observations',
+              'sendInvoice', 'phone', 'address', 'active', 'sellerRoutes'])
+          && request.resource.data.sellerRoutes.diff(resource.data.sellerRoutes)
+            .affectedKeys().hasOnly([request.auth.uid]));
       allow delete: if isOwner(orgId);
     }
 
