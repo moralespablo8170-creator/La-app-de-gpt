@@ -53,6 +53,16 @@
 <button id="sellerSaveSale" class="seller-btn" type="button">Guardar venta</button>
 </section>
 <section class="seller-card">
+<h2>Registrar abono</h2>
+<p id="sellerDebtStatus" class="seller-muted">Selecciona un cliente de tu ruta para consultar su saldo.</p>
+<div class="seller-grid">
+<label>Monto<input id="sellerPaymentAmount" type="number" min="1" step="1" inputmode="numeric" placeholder="0"></label>
+<label>Forma de pago<select id="sellerPaymentMethod"><option value="cash">Efectivo</option><option value="transfer">Transferencia</option></select></label>
+</div>
+<button id="sellerSavePayment" class="seller-btn" type="button" disabled>Guardar abono</button>
+<p class="seller-note">Para confirmar un abono se necesita internet. El saldo se valida en Firebase y el abono se registra sin crear una venta ni descontar stock.</p>
+</section>
+<section class="seller-card">
 <div class="seller-heading"><h2>Inventario</h2><span class="seller-pill">Solo consulta</span></div>
 <div id="sellerInventory" class="seller-products"></div>
 </section>
@@ -62,6 +72,6 @@
 </section>
 </section>
 </main>
-<script type="module" src="./seller-app.js?v=zipper-seller-mode-20261029-v3"></script>
+<script type="module" src="./seller-app.js?v=zipper-seller-abonos-20261029-v1"></script>
 </body>
 </html>
