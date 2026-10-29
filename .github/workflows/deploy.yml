@@ -1,52 +1,100 @@
-name: Validate isolated Firebase preview
+name: Deploy to GitHub Pages
 
 on:
   push:
     branches:
+      - main
       - firebase/secure-foundation-zipper
+  workflow_dispatch:
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
 
 permissions:
+  actions: read
   contents: read
+  pages: write
+  id-token: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout unchanged main app
+      - name: Checkout main app
         uses: actions/checkout@v6
         with:
           ref: main
           path: main-src
 
-      - name: Checkout Firebase draft
+      # Always package the latest Firebase preview branch with the unchanged main app, including the durable compact queue and sync status.
+      - name: Checkout Firebase preview
         uses: actions/checkout@v6
         with:
           ref: firebase/secure-foundation-zipper
           path: preview-src
 
-      - name: Assemble main and isolated preview
+      - name: Assemble production app and isolated preview
         run: |
           mkdir -p _site/preview/pr-9
           cp -a main-src/. _site/
           rm -rf _site/.git
           cp -a preview-src/. _site/preview/pr-9/
-          rm -rf _site/preview/pr-9/.git _site/preview/pr-9/.github
+          rm -rf _site/preview/pr-9/.git
           touch _site/.nojekyll
           test -f _site/index.html
           test -f _site/preview/pr-9/index.html
-          test -f _site/preview/pr-9/seller-admin.html
-          test -f _site/preview/pr-9/vendedor.html
 
-      - name: Bundle owner Firebase module in the preview
+      - name: Bundle Firebase SDK into isolated preview
         run: |
           mkdir -p /tmp/zipper-firebase-build
           cp _site/preview/pr-9/firebase-cloud.js /tmp/zipper-firebase-build/firebase-cloud-entry.js
           npm install --prefix /tmp/zipper-firebase-build --no-save firebase@13.1.0 esbuild@0.25.0
           /tmp/zipper-firebase-build/node_modules/.bin/esbuild /tmp/zipper-firebase-build/firebase-cloud-entry.js --bundle --platform=browser --format=esm --target=es2022 --outfile=_site/preview/pr-9/firebase-cloud.js
 
-      - name: Upload review artifact without publishing
-        uses: actions/upload-artifact@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v4
         with:
-          name: zipper-firebase-preview
           path: _site
-          retention-days: 7
+
+      - name: Wait for the branch-based Pages deployment
+        if: github.event_name == 'push' && github.ref_name == 'main'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const deadline = Date.now() + 5 * 60 * 1000;
+            while (Date.now() < deadline) {
+              const response = await github.rest.actions.listWorkflowRunsForRepo({
+                owner, repo, head_sha: context.sha, per_page: 100
+              });
+              const runs = response.data.workflow_runs
+                .filter(run => run.name === 'pages build and deployment' && run.event === 'dynamic');
+              if (runs.length) {
+                const run = runs.sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))[0];
+                if (run.status === 'completed') {
+                  if (run.conclusion !== 'success') core.warning('The branch-based Pages build failed; deploying the combined artifact anyway.');
+                  else core.info('The branch-based Pages deployment completed; the isolated preview will now be deployed.');
+                  return;
+                }
+              }
+              await new Promise(resolve => setTimeout(resolve, 5000));
+            }
+            throw new Error('Timed out waiting for the branch-based Pages deployment.');
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
