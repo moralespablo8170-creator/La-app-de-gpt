@@ -3,7 +3,7 @@ import { getAuth, setPersistence, browserLocalPersistence, signInWithEmailAndPas
 import { getFirestore, doc, getDoc, collection, getDocs, writeBatch, setDoc, updateDoc } from 'firebase/firestore';
 
 const config={
- apiKey:'AIzaSyAFYoHdqS1QP04MXzHbMpcpuvzNLqElZF',
+ apiKey:'AIzaSyAFYoHdqS1QP04MXzHbMpcpuvzNLqElZF4',
  authDomain:'zipper-a12f1.firebaseapp.com',
  projectId:'zipper-a12f1',
  storageBucket:'zipper-a12f1.firebasestorage.app',
