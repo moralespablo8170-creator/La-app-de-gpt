@@ -557,12 +557,21 @@ function deleteCashExpense(id){
  const rows=getCashExpenses();if(writeArray('zipperGastosCaja',rows.filter(x=>String(x.id)!==String(id))))renderCash();
 }
 function paymentMethodOf(s){return s?.paymentMethod||'cash'}
+function markDeliverySaleCollected(id){
+ const sales=getSales(),sale=sales.find(s=>String(s.id)===String(id));
+ if(!sale||sale.collectionStatus!=='awaiting_delivery')return;
+ const method=paymentMethodOf(sale)==='transfer'?'TRANSFERENCIA':'EFECTIVO';
+ if(!confirm('Cliente: '+(sale.cliente||'Cliente')+'\\nMonto: '+money(saleTotal(sale))+'\\nForma indicada: '+method+'\\n\\n¿Confirmas que la persona que entrega ya recibió este pago?'))return;
+ sale.collectionStatus='collected';
+ sale.collectedAt=new Date().toISOString();
+ if(writeArray('zipperComprobantes',sales)){renderCash();renderHistory();alert('Cobro de entrega marcado como recibido.')}
+}
 function renderCash(){
  // Las estadísticas se actualizan independientemente de los cobros y deudas.
  try{renderStats();renderGeneralTotal()}catch(e){console.error('Estadísticas Zipper:',e);if($('statsOutput')&&!$('statsOutput').innerHTML.trim())$('statsOutput').textContent='No se pudieron calcular las estadísticas. Revisa los datos de ventas.'}
  const selected=cashSelectedDate(),range=cashRangeDates(),inRange=x=>x>=range.start&&x<=range.end,rows=getSales().filter(s=>inRange(saleDate(s))),payments=getPayments().filter(p=>inRange(String(p.date||'').slice(0,10)));
  const sales=rows.reduce((a,s)=>a+saleTotal(s),0),cost=rows.reduce((a,s)=>a+saleCost(s),0),profit=sales-cost;
- const paidSales=rows.filter(s=>paymentMethodOf(s)!=='pending'&&s.paymentStatus!=='pending');
+ const paidSales=rows.filter(s=>paymentMethodOf(s)!=='pending'&&s.paymentStatus!=='pending'&&s.collectionStatus!=='awaiting_delivery');
  const cashSales=paidSales.filter(s=>paymentMethodOf(s)==='cash').reduce((a,s)=>a+saleTotal(s),0),transferSales=paidSales.filter(s=>paymentMethodOf(s)==='transfer').reduce((a,s)=>a+saleTotal(s),0);
  const expenses=getCashExpenses().filter(x=>inRange(String(x.date||'').slice(0,10)));
  const expensesTotal=expenses.reduce((a,x)=>a+Number(x.amount||0),0);
@@ -580,6 +589,12 @@ function renderCash(){
   '<div><span>Ventas a crédito del período</span><strong>'+money(creditSales)+'</strong><small>Importe original vendido como pendiente o con abono parcial; los abonos se muestran aparte</small></div>'+
   '<div><span>Total recibido (todos los medios)</span><strong>'+money(cashReceived+transferReceived)+'</strong><small>Efectivo + transferencias, incluidos abonos. No confundir con efectivo físico.</small></div>'+
   '<div style="grid-column:1/-1"><small><strong>Cómo cuadrar:</strong> efectivo de ventas '+money(cashSales)+' + abonos en efectivo '+money(cashAbonos)+' − gastos '+money(expensesTotal)+' = <strong>'+money(cashReceived-expensesTotal)+'</strong>. Caja inicial $0. Registra todas las salidas de efectivo.</small></div>';
+ const deliveryCollectionRows=rows.filter(s=>s.collectionStatus==='awaiting_delivery');
+ if($('cashPaymentSummary')&&deliveryCollectionRows.length){
+  const deliveryCollectionTotal=deliveryCollectionRows.reduce((n,s)=>n+saleTotal(s),0);
+  $('cashPaymentSummary').insertAdjacentHTML('afterbegin','<section style="grid-column:1/-1;padding:14px;border:2px solid #d97706;border-radius:12px;background:#fffbeb"><strong>POR COBRAR AL ENTREGAR · NO ES CRÉDITO</strong><p style="margin:6px 0">Total: '+money(deliveryCollectionTotal)+' · '+deliveryCollectionRows.length+' venta(s)</p>'+deliveryCollectionRows.map(s=>'<article class="history-row"><div><strong>'+esc(s.cliente||clientById(s.clienteId)?.name||'Cliente')+' · '+money(saleTotal(s))+'</strong><span>'+esc(paymentMethodOf(s)==='transfer'?'Transferencia':'Efectivo')+' · Venta '+esc(saleDate(s))+'</span></div><button class="primary mark-delivery-collected" data-id="'+esc(String(s.id))+'" type="button">Marcar cobrado</button></article>').join('')+'</section>');
+  document.querySelectorAll('.mark-delivery-collected').forEach(b=>b.onclick=()=>markDeliverySaleCollected(b.dataset.id));
+ }
  const detailRows=(salesList,paymentList)=>'<div style="grid-column:1/-1;display:grid;gap:8px">'+salesList.map(x=>'<article class="history-row"><div><strong>'+esc(x.cliente||clientById(x.clienteId)?.name||'Cliente')+'</strong><span>Venta · '+esc(saleDate(x))+'</span></div><div class="actions-small"><strong>'+money(saleTotal(x))+'</strong><button class="secondary zipper-fix-payment" data-id="'+esc(String(x.id))+'" type="button">Corregir pago</button></div></article>').join('')+paymentList.map(p=>'<article class="history-row"><div><strong>'+esc(p.cliente||clientById(p.clienteId)?.name||'Cliente')+'</strong><span>ABONO · '+esc(String(p.date||''))+'</span></div><strong>'+money(p.amount)+'</strong></article>').join('')+(salesList.length+paymentList.length===0?'<p class="muted" style="margin:8px 0">No hay movimientos de esta categoría en el período seleccionado.</p>':'')+'</div>';
  const details=(name,salesList,paymentList)=>'<details style="grid-column:1/-1;border:1px solid #d1d5db;border-radius:12px;padding:12px"><summary style="cursor:pointer;font-weight:800">'+name+' · '+(salesList.length+paymentList.length)+' movimientos</summary>'+detailRows(salesList,paymentList)+'</details>';
  if($('cashPaymentSummary'))$('cashPaymentSummary').insertAdjacentHTML('beforeend',details('💵 Efectivo: clientes',paidSales.filter(s=>paymentMethodOf(s)==='cash'),payments.filter(p=>p.paymentMethod==='cash'))+details('🏦 Transferencias: clientes',paidSales.filter(s=>paymentMethodOf(s)==='transfer'),payments.filter(p=>p.paymentMethod==='transfer'))+details('💰 Abonos: clientes (no son ventas)',[],payments));
