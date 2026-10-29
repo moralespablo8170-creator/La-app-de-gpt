@@ -6,8 +6,8 @@ import {
   setPersistence, browserLocalPersistence
 } from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js';
 import {
-  getFirestore, doc, getDoc, collection, getDocs, onSnapshot,
-  writeBatch, setDoc, deleteDoc
+  getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
+  doc, getDoc, collection, getDocs, onSnapshot, writeBatch, setDoc, deleteDoc
 } from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js';
 
 const firebaseConfig = {
@@ -22,7 +22,17 @@ const firebaseConfig = {
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
-const db = getFirestore(firebaseApp);
+let db;
+let firestorePersistentCache = false;
+try {
+  db = initializeFirestore(firebaseApp, {
+    localCache: persistentLocalCache({tabManager: persistentMultipleTabManager()})
+  });
+  firestorePersistentCache = true;
+} catch (error) {
+  console.warn('Firebase: la caché persistente no está disponible; se usará la cola local de la app.', error);
+  db = getFirestore(firebaseApp);
+}
 const ORG_ID = 'zipper-a12f1';
 const ORG_PATH = ['orgs', ORG_ID];
 let activeProfile = null;
@@ -30,7 +40,9 @@ let unsubs = [];
 let refreshing = false;
 let applyingCloud = false;
 let syncScheduled = false;
-const queuedLocalChanges = new Map();
+let flushingPendingChanges = false;
+let lastSyncError = '';
+const OUTBOX_KEY = 'zipperFirebaseOutboxV1';
 
 const localArray = key => {
   try {
@@ -38,6 +50,92 @@ const localArray = key => {
     return Array.isArray(value) ? value : [];
   } catch (_) { return []; }
 };
+function parseArray(raw) {
+  try {
+    const value=JSON.parse(raw||'[]');
+    return Array.isArray(value)?value:[];
+  } catch (_) { return []; }
+}
+function readOutbox() {
+  try {
+    const value=JSON.parse(localStorage.getItem(OUTBOX_KEY)||'{}');
+    return value && typeof value==='object' && !Array.isArray(value)?value:{};
+  } catch (_) { return {}; }
+}
+function saveOutbox(outbox) {
+  try { localStorage.setItem(OUTBOX_KEY,JSON.stringify(outbox)); }
+  catch(error) { console.error('Firebase: no se pudo guardar la cola pendiente local.',error); }
+}
+function pendingCloudCollection(name) {
+  const keys=Object.keys(readOutbox());
+  if(name==='visits') return keys.some(key=>key.startsWith('zipperVisitados-'));
+  const map={
+    products:['zipperProductos'],
+    clients:['zipperClientes'],
+    sales:['zipperComprobantes'],
+    cashMovements:['zipperPagos','zipperGastosCaja'],
+    settings:['zipperCategorias','zipperCategoriasEliminadas']
+  };
+  return (map[name]||[]).some(key=>keys.includes(key));
+}
+function updateSyncIndicator() {
+  const indicator=document.getElementById('cloudSyncIndicator');
+  const status=document.getElementById('cloudStatus');
+  const cloudMode=localStorage.getItem('zipperStorageMode')==='cloud';
+  if(!cloudMode) {
+    indicator?.classList.add('hidden');
+    if(status) status.textContent='Modo local activo · los datos permanecen en este teléfono.';
+    return;
+  }
+  const pending=Object.keys(readOutbox()).length;
+  const online=navigator.onLine!==false;
+  let message='',state='';
+  if(lastSyncError) {
+    message='No se pudo confirmar el envío · los cambios siguen guardados en el teléfono y se reintentará.';
+    state='sync-error';
+  } else if(!online) {
+    message=pending
+      ?'Sin conexión · cambios guardados en el teléfono; pendientes de enviar a Firebase.'
+      :'Sin conexión · puedes consultar los datos disponibles en este teléfono.';
+    state='sync-offline';
+  } else if(pending) {
+    message=flushingPendingChanges
+      ?'Sincronizando cambios pendientes con Firebase…'
+      :'Hay cambios guardados en el teléfono pendientes de sincronizar.';
+    state='sync-pending';
+  } else {
+    message='Firebase al día · cambios sincronizados.';
+    state='sync-ok';
+  }
+  if(indicator) {
+    indicator.textContent=message;
+    indicator.classList.remove('hidden','sync-ok','sync-pending','sync-offline','sync-error');
+    indicator.classList.add(state);
+  }
+  if(status) status.textContent=message+(firestorePersistentCache?'':' · cola local de seguridad activa.');
+}
+function schedulePendingFlush(delay=0) {
+  if(syncScheduled) return;
+  syncScheduled=true;
+  setTimeout(()=>{
+    syncScheduled=false;
+    flushPendingChanges();
+  },delay);
+}
+function enqueueLocalChange(key, previousRaw, currentRaw) {
+  if(localStorage.getItem('zipperStorageMode')!=='cloud'||applyingCloud) return;
+  const outbox=readOutbox();
+  const existing=outbox[key];
+  outbox[key]={
+    previousRows:existing?.previousRows||parseArray(previousRaw),
+    rows:parseArray(currentRaw),
+    revision:String(Date.now())+'-'+Math.random().toString(36).slice(2)
+  };
+  saveOutbox(outbox);
+  lastSyncError='';
+  updateSyncIndicator();
+  if(navigator.onLine!==false) schedulePendingFlush();
+}
 const localCounts = () => ({
   clients:localArray('zipperClientes').length,
   products:localArray('zipperProductos').length,
@@ -142,30 +240,59 @@ async function writeRows(collectionName, rows, previousRows=[]) {
     await batch.commit();
   }
 }
-async function onLocalArrayChanged(key, rows, previousRows=[]) {
-  if (localStorage.getItem('zipperStorageMode')!=='cloud' || !activeProfile) return;
-  if (activeProfile.role!=='owner') return;
-  if (key==='zipperCategorias'||key==='zipperCategoriasEliminadas') {
+async function writeLocalArrayToCloud(key, rows, previousRows=[]) {
+  if(!activeProfile||activeProfile.role!=='owner') throw new Error('Conecta la cuenta propietaria para sincronizar los cambios pendientes.');
+  if(key==='zipperCategorias'||key==='zipperCategoriasEliminadas') {
     const catalog={id:'catalog',categories:localArray('zipperCategorias'),deletedCategories:localArray('zipperCategoriasEliminadas')};
-    try { await setDoc(doc(colRef('settings'),'catalog'),catalog,{merge:true}); }
-    catch(error) { console.error('Firebase: no se pudo sincronizar la configuración.',error); }
+    await setDoc(doc(colRef('settings'),'catalog'),catalog,{merge:true});
     return;
   }
   const mapped=toCloudRows(key,rows,activeProfile);
-  if (!mapped) return;
-  try {
-    let previous=previousRows;
-    if (key==='zipperPagos') previous=previousRows.map(row=>({...row,id:'payment_'+row.id,sourceType:'payment',sellerUid:row.sellerUid||activeProfile.uid}));
-    else if (key==='zipperGastosCaja') previous=previousRows.map(row=>({...row,id:'expense_'+row.id,sourceType:'expense',sellerUid:row.sellerUid||activeProfile.uid}));
-    else if (key==='zipperVisitados-'+key.slice('zipperVisitados-'.length)) previous=previousRows.map(clientId=>({id:activeProfile.uid+'_'+key.slice('zipperVisitados-'.length)+'_'+String(clientId)}));
-    if (key==='zipperPagos') mapped.rows=mapped.rows.map(row=>({...row,id:'payment_'+row.id}));
-    if (key==='zipperGastosCaja') mapped.rows=mapped.rows.map(row=>({...row,id:'expense_'+row.id}));
-    await writeRows(mapped.collection,mapped.rows,previous);
-  } catch(error) {
-    console.error('Firebase: no se pudo sincronizar el cambio.',error);
-    const status=document.getElementById('cloudStatus');
-    if(status) status.textContent='No se pudo guardar el último cambio en la nube. Tus datos locales siguen guardados.';
+  if(!mapped) return;
+  let previous=previousRows;
+  if(key==='zipperPagos') previous=previousRows.map(row=>({...row,id:'payment_'+row.id,sourceType:'payment',sellerUid:row.sellerUid||activeProfile.uid}));
+  else if(key==='zipperGastosCaja') previous=previousRows.map(row=>({...row,id:'expense_'+row.id,sourceType:'expense',sellerUid:row.sellerUid||activeProfile.uid}));
+  else if(key.startsWith('zipperVisitados-')) {
+    const date=key.slice('zipperVisitados-'.length);
+    previous=previousRows.map(clientId=>({id:activeProfile.uid+'_'+date+'_'+String(clientId)}));
   }
+  if(key==='zipperPagos') mapped.rows=mapped.rows.map(row=>({...row,id:'payment_'+row.id}));
+  if(key==='zipperGastosCaja') mapped.rows=mapped.rows.map(row=>({...row,id:'expense_'+row.id}));
+  await writeRows(mapped.collection,mapped.rows,previous);
+}
+async function flushPendingChanges() {
+  if(flushingPendingChanges||localStorage.getItem('zipperStorageMode')!=='cloud') { updateSyncIndicator(); return; }
+  if(navigator.onLine===false) { updateSyncIndicator(); return; }
+  if(!activeProfile) { updateSyncIndicator(); return; }
+  flushingPendingChanges=true;
+  lastSyncError='';
+  updateSyncIndicator();
+  try {
+    while(navigator.onLine!==false) {
+      const outbox=readOutbox();
+      const entry=Object.entries(outbox)[0];
+      if(!entry) break;
+      const [key,item]=entry;
+      await writeLocalArrayToCloud(key,item.rows||[],item.previousRows||[]);
+      const latest=readOutbox();
+      if(latest[key]?.revision===item.revision) {
+        delete latest[key];
+        saveOutbox(latest);
+      }
+    }
+  } catch(error) {
+    console.error('Firebase: cambio pendiente conservado en el teléfono.',error);
+    lastSyncError=error.message||'No se pudo sincronizar un cambio pendiente.';
+    schedulePendingFlush(30000);
+  } finally {
+    flushingPendingChanges=false;
+    updateSyncIndicator();
+  }
+}
+async function onLocalArrayChanged(key, rows, previousRows=[]) {
+  const previousRaw=JSON.stringify(previousRows);
+  enqueueLocalChange(key,previousRaw,JSON.stringify(rows));
+  await flushPendingChanges();
 }
 async function collectLocalImport(profile) {
   const groups=[
@@ -258,18 +385,20 @@ function startSync(profile) {
   if(profile.role!=='owner') throw new Error('La sincronización de vendedores se habilitará cuando quede lista la vista separada por vendedor.');
   const watch=(name,callback)=>unsubs.push(onSnapshot(colRef(name),snapshot=>callback(docsToRows(snapshot)),error=>{
     console.error('Firebase: error leyendo '+name,error);
-    const status=document.getElementById('cloudStatus');
-    if(status) status.textContent='No se pudo leer '+name+' desde la nube. Los datos locales se conservaron.';
+    lastSyncError=error.message||'No se pudo leer '+name+' desde Firebase.';
+    updateSyncIndicator();
   }));
-  watch('products',rows=>{writeLocal('zipperProductos',rows);scheduleRefresh()});
-  watch('clients',rows=>{writeLocal('zipperClientes',rows);scheduleRefresh()});
-  watch('sales',rows=>{writeLocal('zipperComprobantes',rows);scheduleRefresh()});
+  watch('products',rows=>{if(!pendingCloudCollection('products')){writeLocal('zipperProductos',rows);scheduleRefresh()}});
+  watch('clients',rows=>{if(!pendingCloudCollection('clients')){writeLocal('zipperClientes',rows);scheduleRefresh()}});
+  watch('sales',rows=>{if(!pendingCloudCollection('sales')){writeLocal('zipperComprobantes',rows);scheduleRefresh()}});
   watch('cashMovements',rows=>{
+    if(pendingCloudCollection('cashMovements')) return;
     writeLocal('zipperPagos',rows.filter(row=>row.sourceType==='payment').map(row=>({...row,id:String(row.id).replace(/^payment_/, '')})));
     writeLocal('zipperGastosCaja',rows.filter(row=>row.sourceType==='expense').map(row=>({...row,id:String(row.id).replace(/^expense_/, '')})));
     scheduleRefresh();
   });
   watch('visits',rows=>{
+    if(pendingCloudCollection('visits')) return;
     const byDate={};
     rows.forEach(row=>{if(row.sellerUid!==profile.uid)return;const date=String(row.date||'');if(!date)return;(byDate[date]||= []).push(String(row.clientId))});
     Object.keys(localStorage).filter(key=>key.startsWith('zipperVisitados-')).forEach(key=>localStorage.removeItem(key));
@@ -277,43 +406,44 @@ function startSync(profile) {
     scheduleRefresh();
   });
   watch('settings',rows=>{
+    if(pendingCloudCollection('settings')) return;
     const catalog=rows.find(row=>row.id==='catalog');
     if(catalog){writeLocal('zipperCategorias',Array.isArray(catalog.categories)?catalog.categories:[]);writeLocal('zipperCategoriasEliminadas',Array.isArray(catalog.deletedCategories)?catalog.deletedCategories:[]);scheduleRefresh()}
   });
-  const status=document.getElementById('cloudStatus');
-  if(status) status.textContent='Modo nube activo · propietario · sincronización conectada.';
+  lastSyncError='';
+  updateSyncIndicator();
   announceProfile(profile);
+  schedulePendingFlush();
 }
 function installStorageSyncHooks() {
-  if (Storage.prototype.__zipperCloudHooked) return;
+  if(Storage.prototype.__zipperCloudHooked) return;
   const nativeSet=Storage.prototype.setItem, nativeRemove=Storage.prototype.removeItem;
   const syncable=key=>['zipperProductos','zipperClientes','zipperComprobantes','zipperPagos','zipperGastosCaja','zipperCategorias','zipperCategoriasEliminadas'].includes(key)||String(key).startsWith('zipperVisitados-');
   const queue=(key,previousRaw)=>{
-    if(!syncable(key)||localStorage.getItem('zipperStorageMode')!=='cloud'||applyingCloud)return;
-    if(!queuedLocalChanges.has(key)){let previous=[];try{const parsed=JSON.parse(previousRaw||'[]');if(Array.isArray(parsed))previous=parsed}catch(_){}queuedLocalChanges.set(key,previous)}
-    if(syncScheduled)return;syncScheduled=true;
-    Promise.resolve().then(async()=>{
-      syncScheduled=false;const pending=[...queuedLocalChanges.entries()];queuedLocalChanges.clear();
-      for(const [changedKey,previous] of pending){let current=[];try{const parsed=JSON.parse(localStorage.getItem(changedKey)||'[]');if(Array.isArray(parsed))current=parsed}catch(_){}await onLocalArrayChanged(changedKey,current,previous)}
-    });
+    if(!syncable(key)||localStorage.getItem('zipperStorageMode')!=='cloud'||applyingCloud) return;
+    const currentRaw=localStorage.getItem(key)||'[]';
+    enqueueLocalChange(key,previousRaw,currentRaw);
   };
-  Storage.prototype.setItem=function(key,value){
-    const isLocal=this===localStorage,previous=isLocal&&syncable(String(key))?this.getItem(key):null;
-    const result=nativeSet.call(this,key,value);if(isLocal)queue(String(key),previous);return result;
+  Storage.prototype.setItem=function(key,value) {
+    const isLocal=this===localStorage,storageKey=String(key);
+    const previousRaw=isLocal&&syncable(storageKey)?this.getItem(storageKey):null;
+    const result=nativeSet.call(this,key,value);
+    if(isLocal) queue(storageKey,previousRaw);
+    return result;
   };
-  Storage.prototype.removeItem=function(key){
-    const isLocal=this===localStorage,previous=isLocal&&syncable(String(key))?this.getItem(key):null;
-    const result=nativeRemove.call(this,key);if(isLocal)queue(String(key),previous);return result;
+  Storage.prototype.removeItem=function(key) {
+    const isLocal=this===localStorage,storageKey=String(key);
+    const previousRaw=isLocal&&syncable(storageKey)?this.getItem(storageKey):null;
+    const result=nativeRemove.call(this,key);
+    if(isLocal) queue(storageKey,previousRaw);
+    return result;
   };
   Object.defineProperty(Storage.prototype,'__zipperCloudHooked',{value:true,configurable:false});
 }
 
 function cloudLabel() {
-  const status=document.getElementById('cloudStatus');
-  if(status) status.textContent=localStorage.getItem('zipperStorageMode')==='cloud'
-    ?(activeProfile?'Modo nube activo · los cambios se sincronizan con Firebase.':'Modo nube seleccionado · conecta la cuenta propietaria para sincronizar.')
-    :'Modo local activo · los datos permanecen en este teléfono.';
   document.getElementById('cloudLogout')?.classList.toggle('hidden',!activeProfile);
+  updateSyncIndicator();
 }
 function backupLocal() {
   return typeof window.zipperBackupDirect==='function' ? window.zipperBackupDirect()===true : false;
@@ -422,6 +552,28 @@ async function connectUi() {
     stopSync();localStorage.setItem('zipperStorageMode','local');await signOut(auth);activeProfile=null;announceProfile(null);cloudLabel();close();
   });
   cloudLabel();
+  window.addEventListener('online',async()=>{
+    lastSyncError='';
+    updateSyncIndicator();
+    const user=auth.currentUser;
+    if(user&&localStorage.getItem('zipperStorageMode')==='cloud') {
+      try {
+        const profile=await memberFor(user);
+        if(profile?.role==='owner') startSync(profile);
+        else await flushPendingChanges();
+      } catch(error) {
+        lastSyncError=error.message||'No se pudo restaurar la cuenta de Firebase.';
+        updateSyncIndicator();
+      }
+    }
+  });
+  window.addEventListener('offline',updateSyncIndicator);
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible') {
+      updateSyncIndicator();
+      if(navigator.onLine!==false) schedulePendingFlush();
+    }
+  });
   onAuthStateChanged(auth,async user=>{
     if(!user)return;
     try {
@@ -429,11 +581,14 @@ async function connectUi() {
       if(!profile || profile.role!=='owner'){await signOut(auth);return}
       activeProfile=profile;
       if(localStorage.getItem('zipperStorageMode')==='cloud') await startSync(profile);
+      else updateSyncIndicator();
       announceProfile(profile);
       cloudLabel();
-    } catch(error){console.error('Firebase: no se pudo restaurar la sesión.',error)}
+    } catch(error) {
+      console.error('Firebase: no se pudo restaurar la sesión.',error);
+      updateSyncIndicator();
+    }
   });
-}
 const api={login,signOut:()=>signOut(auth),memberFor,listMembers,inspectCloud,importLocalData,useExistingCloudData,startSync,stopSync,onLocalArrayChanged,cloudLabel};
 window.zipperFirebaseCloud=api;
 installStorageSyncHooks();
