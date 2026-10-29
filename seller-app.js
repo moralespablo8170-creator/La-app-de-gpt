@@ -47,6 +47,13 @@ function renderCart(){const total=cart.reduce((n,item)=>n+item.qty*item.price,0)
 function renderSales(){const today=sales.filter(s=>String(s.fecha||'').slice(0,10)===localDate()).sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));const pending=queueRead();$('sellerSalesToday').innerHTML=[...pending.map(s=>({...s,_pending:true})),...today].map(s=>'<article class="seller-row"><strong>#'+safeText(s.folio||'pendiente')+' · '+safeText(s.cliente)+'</strong><small>'+safeText(s.fecha||localDate())+' · '+money(s.total)+' · '+(s._pending?'Pendiente de sincronizar':'Guardada en Firebase')+'</small></article>').join('')||'<p class="seller-muted">Todavía no hay ventas hoy.</p>'}
 function renderSession(){const active=!!session&&!session.closedAt;$('sellerSessionLabel').textContent=active?'Jornada abierta · Semana '+session.routeWeek+' · '+session.routeDay:'Jornada cerrada';$('sellerStart').classList.toggle('seller-hidden',active);$('sellerClose').classList.toggle('seller-hidden',!active);$('sellerSaveSale').disabled=!active||!selectedClient;$('sellerAddItem').disabled=!active}
 function render(){if(!profile)return;renderRouteDays();renderClients();renderProducts();renderCart();renderSales();renderSession();$('sellerSelectedClient').textContent=selectedClient?'Cliente: '+selectedClient.name:'Selecciona un cliente de la ruta.'}
+async function requirePreparedSellerMode(){
+ const snap=await getDoc(doc(db,'orgs',ORG,'settings','sellerMode'));
+ const mode=snap.exists()?snap.data():null;
+ if(!mode||mode.enabled!==true||mode.catalogVersion!==1){
+  throw new Error('El acceso de vendedores aún no está preparado. El dueño debe proteger costos y catálogo antes de habilitar cuentas.');
+ }
+}
 async function signIn(){
  const button=$('sellerLoginButton');button.disabled=true;status('Verificando cuenta…');
  try{
@@ -55,6 +62,7 @@ async function signIn(){
    const member=await getDoc(doc(db,'orgs',ORG,'members',result.user.uid));
    const data=member.exists()?member.data():null;
    if(!data||data.active!==true||data.role!=='seller'){await signOut(auth);throw new Error('Esta cuenta no tiene un perfil de vendedor activo. Pide al dueño que revise su acceso.')}
+   await requirePreparedSellerMode();
    profile={uid:result.user.uid,email:result.user.email||'',...data};
    $('sellerPassword').value='';
    await activate();
@@ -179,6 +187,11 @@ function wire(){
 wire();
 onAuthStateChanged(auth,async user=>{
  if(!user||profile)return;
- try{const snap=await getDoc(doc(db,'orgs',ORG,'members',user.uid));if(!snap.exists()||snap.data().active!==true||snap.data().role!=='seller'){await signOut(auth);return}profile={uid:user.uid,email:user.email||'',...snap.data()};await activate()}
- catch(error){console.warn(error)}
+ try{
+  const snap=await getDoc(doc(db,'orgs',ORG,'members',user.uid));
+  if(!snap.exists()||snap.data().active!==true||snap.data().role!=='seller'){await signOut(auth);return}
+  await requirePreparedSellerMode();
+  profile={uid:user.uid,email:user.email||'',...snap.data()};
+  await activate();
+ }catch(error){status(error.message||'No se pudo validar el perfil vendedor.','error');await signOut(auth)}
 });
