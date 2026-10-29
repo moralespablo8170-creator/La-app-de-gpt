@@ -68,6 +68,24 @@ service cloud.firestore {
         && get(clientPath).data.sellerRoutes[request.auth.uid][week].day == request.resource.data.routeDay;
     }
 
+    function validSellerSession(sessionId) {
+      return request.resource.data.keys().hasOnly([
+          'id', 'sellerUid', 'routeWeek', 'routeDay', 'status',
+          'openedAt', 'openedAtLocal', 'closedAt', 'closedAtLocal',
+          'firstSaleAt', 'firstSaleAtLocal', 'salesCount',
+          'lastSaleAt', 'lastSaleAtLocal', 'updatedAt'
+        ])
+        && request.resource.data.id == sessionId
+        && request.resource.data.sellerUid == request.auth.uid
+        && request.resource.data.routeWeek in ['A', 'B']
+        && request.resource.data.routeDay in [
+          'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'
+        ]
+        && request.resource.data.status in ['open', 'closed']
+        && request.resource.data.salesCount is int
+        && request.resource.data.salesCount >= 0;
+    }
+
     function canCreateOwnSale(orgId) {
       return isOwner(orgId)
         || (isSeller(orgId)
@@ -185,11 +203,12 @@ service cloud.firestore {
     match /orgs/{orgId}/sessions/{sessionId} {
       allow read: if isOwner(orgId)
         || (isSeller(orgId) && resource.data.sellerUid == request.auth.uid);
-      allow create: if isActiveMember(orgId)
-        && request.resource.data.sellerUid == request.auth.uid;
-      allow update: if isActiveMember(orgId)
-        && resource.data.sellerUid == request.auth.uid
-        && request.resource.data.sellerUid == request.auth.uid;
+      allow create: if isOwner(orgId)
+        || (isSeller(orgId) && validSellerSession(sessionId));
+      allow update: if isOwner(orgId)
+        || (isSeller(orgId)
+          && resource.data.sellerUid == request.auth.uid
+          && validSellerSession(sessionId));
       allow delete: if isOwner(orgId);
     }
 
