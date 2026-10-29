@@ -26,7 +26,7 @@ Se puede mantener Firebase en el plan gratuito usando alta manual de la cuenta y
 6. En la app maestra, asignar clientes y sus rutas de semana/día al vendedor.
 7. Entregarle el enlace de la app y sus credenciales. El vendedor inicia sesión desde Chrome y puede instalarla como aplicación en su teléfono.
 
-El plan Spark no pide una cuenta de facturación. Firestore ofrece cuotas gratuitas para empezar; si se supera una cuota, el servicio puede detenerse durante el resto del mes en vez de facturar automáticamente.
+El plan Spark no pide una cuenta de facturación. Firestore ofrece cuotas gratuitas con límites diarios y 1 GiB de almacenamiento; sus cuotas diarias se reinician alrededor de la medianoche, hora del Pacífico. Si se excede un límite, las operaciones afectadas pueden fallar hasta el reinicio. Spark no factura automáticamente por exceder una cuota.
 
 ## Bloquear el acceso
 
