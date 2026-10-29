@@ -25,6 +25,13 @@
 <button id="adminLoginButton" class="admin-btn" type="button">Ingresar</button>
 </section>
 <section id="adminApp" class="admin-hidden">
+<section class="admin-card" id="adminCatalogPrep">
+<h2>Preparar inventario para vendedores</h2>
+<p class="admin-muted">Esta acción mueve los precios de compra a una zona privada del dueño y deja el catálogo visible sin esos costos. No crea cuentas ni activa el acceso vendedor.</p>
+<label><input id="catalogBackupConfirm" type="checkbox"> Confirmo que guardé y revisé un respaldo local antes de preparar el catálogo.</label>
+<button id="catalogPrepareButton" class="admin-btn" type="button" disabled>Preparar catálogo seguro</button>
+<p id="catalogPrepStatus" class="admin-status" role="status" aria-live="polite"></p>
+</section>
 <section class="admin-card">
 <div class="admin-toolbar"><div><h2 id="adminOwnerName">Propietario</h2><p id="adminCount" class="admin-muted"></p></div><button id="adminLogout" class="admin-btn secondary" type="button">Salir</button></div>
 <div class="admin-grid">
