@@ -8,6 +8,7 @@ Esta guía conserva la app maestra en modo local hasta que se contrate al primer
 - El modo vendedor, la importación de datos y la preparación del catálogo requieren acciones separadas del dueño.
 - El borrador incluye el acceso del vendedor, sus rutas, visitas, jornadas y ventas, con inventario solo de consulta.
 - El alta directa desde el panel está apagada. La opción de servidor seguro se habilitará solo si se elige Blaze y se despliegan Cloud Functions.
+- La vista `/preview/pr-9/` ahora falla de forma segura hasta configurar un Firebase de pruebas distinto de `zipper-a12f1`; el despliegue con Firebase CLI tampoco tiene un proyecto predeterminado.
 - No se han creado vendedores ficticios ni se han migrado datos del proyecto Firebase real.
 
 ## Al contratar al primer vendedor: empezar en Spark
@@ -44,4 +45,4 @@ Blaze es pago por uso, no una tarifa mensual fija. Las cuotas gratuitas siguen a
 
 ## Estado de esta guía
 
-Este documento pertenece al borrador de preparación de vendedores. No modifica Firebase, la app principal publicada, ni los datos del teléfono. Antes de entregar una cuenta real, hay que probar el flujo en un proyecto Firebase de pruebas separado.
+Este documento pertenece al borrador de preparación de vendedores. No modifica Firebase, la app principal publicada, ni los datos del teléfono. Antes de probar el flujo, crear un proyecto Firebase separado y reemplazar los campos vacíos de `firebase-test-config.js` con la configuración web de ese proyecto. La vista de prueba rechaza `zipper-a12f1` y no se conecta a ningún proyecto si los campos siguen vacíos. La CLI tampoco tiene destino predeterminado: para desplegar algo hay que indicar el alias explícito del proyecto.
