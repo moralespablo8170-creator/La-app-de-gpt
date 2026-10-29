@@ -1,15 +1,15 @@
-const CACHE_NAME = 'zipper-app-pwa-20261029-seller-draft-v7';
+const CACHE_NAME = 'zipper-app-pwa-20261029-seller-draft-v8';
 const APP_SHELL = [
   "./",
   "./index.html",
   "./styles.css?v=zipper-sync-status-20261029-v1",
   "./app.js?v=zipper-abonos-teclado-20261026-v1",
-  "./firebase-cloud.js?v=zipper-firebase-offline-queue-20261029-v7",
+  "./firebase-cloud.js?v=zipper-firebase-offline-queue-20261029-v8",
   "./seller-assignments.js?v=zipper-seller-routes-20261029-v1",
   "./vendedor.html",
-  "./seller-app.js?v=zipper-seller-mode-20261029-v1",
+  "./seller-app.js?v=zipper-seller-mode-20261029-v2",
   "./seller-admin.html",
-  "./seller-admin.js?v=zipper-seller-admin-20261029-v1",
+  "./seller-admin.js?v=zipper-seller-admin-20261029-v2",
   "./route-position-migration.js?v=1.2",
   "./route-position-migration-b.js?v=1.0",
   "./herramientas.js?v=20261012-restauracion-v32",
