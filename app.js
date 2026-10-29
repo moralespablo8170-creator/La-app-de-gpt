@@ -561,7 +561,7 @@ function markDeliverySaleCollected(id){
  const sales=getSales(),sale=sales.find(s=>String(s.id)===String(id));
  if(!sale||sale.collectionStatus!=='awaiting_delivery')return;
  const method=paymentMethodOf(sale)==='transfer'?'TRANSFERENCIA':'EFECTIVO';
- if(!confirm('Cliente: '+(sale.cliente||'Cliente')+'\\nMonto: '+money(saleTotal(sale))+'\\nForma indicada: '+method+'\\n\\n¿Confirmas que la persona que entrega ya recibió este pago?'))return;
+ if(!confirm('Cliente: '+(sale.cliente||'Cliente')+'\nMonto: '+money(saleTotal(sale))+'\nForma indicada: '+method+'\n\n¿Confirmas que la persona que entrega ya recibió este pago?'))return;
  sale.collectionStatus='collected';
  sale.collectedAt=new Date().toISOString();
  if(writeArray('zipperComprobantes',sales)){renderCash();renderHistory();alert('Cobro de entrega marcado como recibido.')}
