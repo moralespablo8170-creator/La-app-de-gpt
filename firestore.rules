@@ -224,6 +224,7 @@ service cloud.firestore {
         && request.resource.data.balance >= 0
         && request.resource.data.balance < resource.data.balance
         && movementId is string
+        && !exists(movementPath)
         && existsAfter(movementPath)
         && movement.id == movementId
         && movement.sourceType == 'payment'
