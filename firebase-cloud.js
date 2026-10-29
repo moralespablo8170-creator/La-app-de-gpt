@@ -7,7 +7,7 @@ import {
 } from 'firebase/auth';
 import {
   getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
-  doc, getDoc, collection, getDocs, onSnapshot, writeBatch, setDoc, deleteDoc
+  doc, getDoc, collection, getDocs, onSnapshot, writeBatch, setDoc, deleteDoc, runTransaction
 } from 'firebase/firestore';
 
 const firebaseConfig = {
@@ -134,6 +134,7 @@ function enqueueLocalChange(key, previousRaw, currentRaw) {
   const existing=outbox[key];
   outbox[key]={
     previousIds:existing?.previousIds||parseArray(previousRaw).map(row=>typeof row==='object'&&row?row.id:row),
+    ...(key==='zipperProductos'?{previousRows:existing?.previousRows||parseArray(previousRaw)}:{}),
     revision:String(Date.now())+'-'+Math.random().toString(36).slice(2)
   };
   saveOutbox(outbox);
@@ -328,6 +329,38 @@ async function prepareSellerCatalog() {
   return {count:productSnap.size,alreadyPrepared:false};
 }
 
+async function writeSellerProductRows(rows,previousRows=[]) {
+  const oldById=new Map(previousRows.filter(row=>row&&row.id!=null).map(row=>[String(row.id),row]));
+  const newById=new Map(rows.filter(row=>row&&row.id!=null).map(row=>[String(row.id),row]));
+  const costOps=[];
+  for(const row of rows) {
+    const id=safeId(row.id),old=oldById.get(id),publicRow=publicSellerProduct(row),costRow=privateProductCost(row);
+    const oldPublic=old?publicSellerProduct(old):null;
+    const oldStock=Number(old?.stock||0),newStock=Number(row.stock||0),stockDelta=old?newStock-oldStock:0;
+    const publicChanged=!old||Object.keys(publicRow).some(key=>key!=='stock'&&JSON.stringify(publicRow[key])!==JSON.stringify(oldPublic[key]));
+    if(publicChanged||stockDelta!==0) {
+      const ref=doc(colRef('products'),id);
+      await runTransaction(db,async tx=>{
+        const snap=await tx.get(ref);
+        if(!snap.exists()){tx.set(ref,publicRow);return}
+        const current=snap.data();
+        tx.set(ref,{...publicRow,stock:old?Math.max(0,Number(current.stock||0)+stockDelta):Number(current.stock||0)});
+      });
+    }
+    const oldCost=old?privateProductCost(old).pricePurchase:null;
+    if(!old||Number(oldCost)!==Number(costRow.pricePurchase))
+      costOps.push({type:'set',ref:doc(colRef('productCosts'),id),data:costRow});
+  }
+  for(const [id] of oldById) if(!newById.has(id)) {
+    costOps.push({type:'delete',ref:doc(colRef('productCosts'),safeId(id))});
+    await deleteDoc(doc(colRef('products'),safeId(id)));
+  }
+  for(let start=0;start<costOps.length;start+=450) {
+    const batch=writeBatch(db);
+    costOps.slice(start,start+450).forEach(op=>op.type==='set'?batch.set(op.ref,op.data):batch.delete(op.ref));
+    await batch.commit();
+  }
+}
 async function writeLocalArrayToCloud(key, rows, previousRows=[]) {
   if(!activeProfile||activeProfile.role!=='owner') throw new Error('Conecta la cuenta propietaria para sincronizar los cambios pendientes.');
   if(key==='zipperCategorias'||key==='zipperCategoriasEliminadas') {
@@ -338,9 +371,7 @@ async function writeLocalArrayToCloud(key, rows, previousRows=[]) {
   if(key==='zipperProductos'&&sellerCatalogVersion>=1) {
     const publicRows=rows.map(publicSellerProduct);
     const privateRows=rows.map(privateProductCost);
-    const previousIds=previousRows.map(row=>({id:row.id}));
-    await writeRows('products',publicRows,previousIds);
-    await writeRows('productCosts',privateRows,previousIds);
+    await writeSellerProductRows(rows,previousRows);
     return;
   }
   const mapped=toCloudRows(key,rows,activeProfile);
@@ -371,7 +402,9 @@ async function flushPendingChanges() {
       const [key,item]=entry;
       const previousRows=key.startsWith('zipperVisitados-')
         ?(item.previousIds||[])
-        :(item.previousIds||[]).map(id=>({id}));
+        :key==='zipperProductos'&&Array.isArray(item.previousRows)
+          ?item.previousRows
+          :(item.previousIds||[]).map(id=>({id}));
       await writeLocalArrayToCloud(key,localArray(key),previousRows);
       const latest=readOutbox();
       if(latest[key]?.revision===item.revision) {
