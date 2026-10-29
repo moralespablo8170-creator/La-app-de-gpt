@@ -27,7 +27,7 @@ jobs:
           ref: main
           path: main-src
 
-      # Always package the latest Firebase preview branch with the unchanged main app (including the pinned mobile import button).
+      # Always package the latest Firebase preview branch with the unchanged main app, including offline pending-sync safeguards.
       - name: Checkout Firebase preview
         uses: actions/checkout@v6
         with:
