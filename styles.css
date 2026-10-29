@@ -317,3 +317,16 @@
   flex:0 0 24px;
   accent-color:#2563eb;
 }
+
+
+/* Firebase: mantener Importar accesible aunque el recuadro móvil no desplace. */
+#cloudModal #cloudImport:not(.hidden){
+  position:fixed;
+  left:50%;
+  bottom:calc(14px + env(safe-area-inset-bottom));
+  transform:translateX(-50%);
+  width:min(calc(100vw - 28px),492px);
+  min-height:62px;
+  z-index:20010;
+  box-shadow:0 8px 24px #0007;
+}
