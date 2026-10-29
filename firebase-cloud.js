@@ -59,6 +59,10 @@ async function login(email,password) {
     await signOut(auth);
     throw new Error('La cuenta no tiene un perfil activo en Distribuidora Zipper. Revisa el usuario en Authentication y su perfil members.');
   }
+  if (profile.role !== 'owner') {
+    await signOut(auth);
+    throw new Error('El acceso vendedor todavía no se activa en esta versión. La app seguirá usando el modo local mientras se termina la vista protegida por vendedor.');
+  }
   activeProfile = profile;
   return profile;
 }
@@ -119,6 +123,12 @@ async function writeRows(collectionName, rows, previousRows=[]) {
 async function onLocalArrayChanged(key, rows, previousRows=[]) {
   if (localStorage.getItem('zipperStorageMode')!=='cloud' || !activeProfile) return;
   if (activeProfile.role!=='owner') return;
+  if (key==='zipperCategorias'||key==='zipperCategoriasEliminadas') {
+    const catalog={id:'catalog',categories:localArray('zipperCategorias'),deletedCategories:localArray('zipperCategoriasEliminadas')};
+    try { await setDoc(doc(colRef('settings'),'catalog'),catalog,{merge:true}); }
+    catch(error) { console.error('Firebase: no se pudo sincronizar la configuración.',error); }
+    return;
+  }
   const mapped=toCloudRows(key,rows,activeProfile);
   if (!mapped) return;
   try {
@@ -290,9 +300,9 @@ async function connectUi() {
     if(!user)return;
     try {
       const profile=await memberFor(user);
-      if(!profile){await signOut(auth);return}
+      if(!profile || profile.role!=='owner'){await signOut(auth);return}
       activeProfile=profile;
-      if(localStorage.getItem('zipperStorageMode')==='cloud'&&profile.role==='owner') await startSync(profile);
+      if(localStorage.getItem('zipperStorageMode')==='cloud') await startSync(profile);
     } catch(error){console.error('Firebase: no se pudo restaurar la sesión.',error)}
   });
 }
