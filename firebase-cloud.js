@@ -316,10 +316,18 @@ async function connectUi() {
   document.getElementById('cloudClose')?.addEventListener('click',close);
   document.getElementById('cloudBackup')?.addEventListener('click',()=>{
     if(backupLocal()) {
+      const confirmation=document.getElementById('cloudBackupConfirm');
+      if(confirmation) confirmation.checked=true;
       document.getElementById('cloudImport')?.removeAttribute('disabled');
       const progress=document.getElementById('cloudImportProgress');
       if(progress) progress.textContent='Respaldo generado. Comprueba que esté en Descargas; luego pulsa Importar mis datos a Firebase.';
     }
+  });
+  document.getElementById('cloudBackupConfirm')?.addEventListener('change',event=>{
+    const importButton=document.getElementById('cloudImport');
+    if(importButton) importButton.disabled=!event.target.checked;
+    const progress=document.getElementById('cloudImportProgress');
+    if(progress&&event.target.checked) progress.textContent='Marcaste que el respaldo ya está guardado. Ahora puedes importar los datos locales.';
   });
   document.getElementById('cloudSignIn')?.addEventListener('click',async()=>{
     const status=document.getElementById('cloudModalStatus');
@@ -339,6 +347,10 @@ async function connectUi() {
       const cloudData=state.cloudCount>0;
       const importBtn=document.getElementById('cloudImport');
       const useBtn=document.getElementById('cloudUseExisting');
+      const backupConfirmRow=document.getElementById('cloudBackupConfirmRow');
+      const backupConfirm=document.getElementById('cloudBackupConfirm');
+      if(backupConfirmRow) backupConfirmRow.classList.toggle('hidden',!localData||cloudData);
+      if(backupConfirm) backupConfirm.checked=false;
       document.getElementById('cloudBackup').classList.toggle('hidden',!localData||cloudData);
       importBtn.classList.toggle('hidden',!localData||cloudData);
       importBtn.disabled=localData;
