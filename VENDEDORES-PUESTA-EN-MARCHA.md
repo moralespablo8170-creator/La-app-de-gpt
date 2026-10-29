@@ -19,7 +19,7 @@ Se puede mantener Firebase en el plan gratuito usando alta manual de la cuenta y
 2. Iniciar sesión en la app maestra y elegir explícitamente la conexión con Firebase. Revisar el resumen y confirmar la importación local; los datos originales permanecen en el teléfono.
 3. En Control de vendedores, ejecutar **Preparar catálogo seguro** tras confirmar el respaldo. Esto separa los costos de compra del catálogo visible para el vendedor y habilita el modo vendedor.
 4. En Firebase Console, crear el usuario de correo y contraseña en **Authentication**. Copiar su UID.
-5. En **Firestore Database**, crear `orgs/zipper-a12f1/members/{UID}` con estos campos:
+5. En **Firestore Database**, crear `orgs/{PROJECT_ID}/members/{UID}` con estos campos. Usa el ID del proyecto de pruebas al ensayar y `zipper-a12f1` solo cuando se active el entorno real:
    - `displayName`: nombre del vendedor (texto).
    - `role`: `seller` (texto).
    - `active`: `true` (booleano).
@@ -45,4 +45,4 @@ Blaze es pago por uso, no una tarifa mensual fija. Las cuotas gratuitas siguen a
 
 ## Estado de esta guía
 
-Este documento pertenece al borrador de preparación de vendedores. No modifica Firebase, la app principal publicada, ni los datos del teléfono. Antes de probar el flujo, crear un proyecto Firebase separado y reemplazar los campos vacíos de `firebase-test-config.js` con la configuración web de ese proyecto. La vista de prueba rechaza `zipper-a12f1` y no se conecta a ningún proyecto si los campos siguen vacíos. La CLI tampoco tiene destino predeterminado: para desplegar algo hay que indicar el alias explícito del proyecto.
+Este documento pertenece al borrador de preparación de vendedores. No modifica Firebase, la app principal publicada, ni los datos del teléfono. Antes de probar el flujo, crear un proyecto Firebase separado y reemplazar los campos vacíos de `firebase-test-config.js` con la configuración web de ese proyecto. Las funciones del servidor toman el ID del proyecto Firebase donde se despliegan, por lo que una eventual prueba de Cloud Functions también debe desplegarse de forma explícita al proyecto de pruebas. La vista de prueba rechaza `zipper-a12f1` y no se conecta a ningún proyecto si los campos siguen vacíos. La CLI tampoco tiene destino predeterminado: para desplegar algo hay que indicar el alias explícito del proyecto.
