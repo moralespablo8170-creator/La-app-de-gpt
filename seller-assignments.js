@@ -30,6 +30,7 @@
   const show = async () => {
     const box=$('sellerRouteBox');
     const active=!!profile&&profile.role==='owner'&&localStorage.getItem('zipperStorageMode')==='cloud';
+    $('sellerAdminOpen')?.classList.toggle('hidden',!active);
     if(!box)return;
     box.classList.toggle('hidden',!active);
     if(!active){sellers=[];return;}
@@ -84,6 +85,7 @@
         setTimeout(()=>{if(typeof window.renderClients==='function')window.renderClients();},0);
       }catch(error){setStatus(error.message||'No se pudo guardar la asignación.');}
     },true);
+    $('sellerAdminOpen')?.addEventListener('click',()=>{window.location.href='./seller-admin.html';});
     $('sellerRouteSeller')?.addEventListener('change',fillRoute);
     $('sellerRouteWeek')?.addEventListener('change',fillRoute);
     document.addEventListener('click',event=>{
