@@ -7,7 +7,7 @@
 <title>Vendedores · Distribuidora Zipper</title>
 <link rel="stylesheet" href="./styles.css?v=zipper-sync-status-20261029-v1">
 <script type="importmap">
-{"imports":{"firebase/app":"https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js","firebase/auth":"https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js","firebase/firestore":"https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js"}}
+{"imports":{"firebase/app":"https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js","firebase/auth":"https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js","firebase/firestore":"https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js","firebase/functions":"https://www.gstatic.com/firebasejs/13.1.0/firebase-functions.js"}}
 </script>
 <style>
 .admin-shell{max-width:900px;margin:0 auto;padding:16px 16px 80px}.admin-card{background:#fff;border-radius:22px;padding:20px;margin:14px 0;box-shadow:0 8px 24px #0002}.admin-card h1,.admin-card h2{margin:0 0 12px;color:#10233c}.admin-muted{color:#697381}.admin-shell label{display:block;font-weight:700;margin:12px 0}.admin-shell input[type=checkbox]{display:inline;width:auto}.admin-shell input:not([type=checkbox]),.admin-shell select{display:block;width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:12px;padding:13px;font:inherit;margin-top:6px}.admin-btn{display:block;width:100%;border:0;border-radius:14px;padding:14px 16px;font:inherit;font-weight:800;margin:10px 0;background:#1265e8;color:white}.admin-btn.secondary{background:#e5e7eb;color:#111827}.admin-status{padding:12px;border-radius:12px;background:#e8f1ff;color:#174476;font-weight:700}.admin-status.ok{background:#dcfce7;color:#166534}.admin-status.error{background:#fee2e2;color:#991b1b}.admin-hidden{display:none!important}.admin-list{display:grid;gap:10px}.admin-row{border:1px solid #e5e7eb;border-radius:14px;padding:13px}.admin-row strong{display:block;color:#10233c}.admin-row small{display:block;color:#687381;margin-top:5px}.admin-table{width:100%;border-collapse:collapse;min-width:680px}.admin-table th,.admin-table td{padding:10px;border-bottom:1px solid #e5e7eb;text-align:left;white-space:nowrap}.admin-table th{color:#334155;background:#f1f5f9}.admin-table td:last-child{text-align:right;font-weight:800}.admin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.admin-stat{background:#f1f5f9;border-radius:13px;padding:12px}.admin-stat strong{display:block;font-size:19px;color:#10233c}.admin-stat span{font-size:12px;color:#64748b}.admin-toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between}.admin-toolbar button{width:auto}@media(max-width:600px){.admin-grid{grid-template-columns:1fr 1fr}.admin-shell{padding:12px 12px 80px}.admin-card{padding:16px}.admin-toolbar{display:block}}
@@ -67,11 +67,12 @@
 </section>
 <section class="admin-card">
 <h2>Acceso de vendedores</h2>
-<p class="admin-muted">Primero crea la cuenta de acceso en Firebase Authentication y copia su UID. Aquí solo se asocia ese UID con un perfil vendedor; nunca escribas ni compartas su contraseña. El acceso seguirá bloqueado hasta que el dueño active el modo vendedor.</p>
-<label>UID de la cuenta<input id="sellerUid" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="UID copiado desde Firebase Authentication"></label>
-<label>Nombre visible<input id="sellerDisplayName" type="text" autocomplete="name" maxlength="80" placeholder="Nombre del vendedor"></label>
-<button id="sellerSaveProfile" class="admin-btn" type="button">Crear o activar perfil</button>
-<p id="sellerProfileStatus" class="admin-status" role="status" aria-live="polite">No se crean cuentas ni se activa el modo vendedor desde este panel.</p>
+<p class="admin-muted">Aquí podrás crear una cuenta personal para cada vendedor con su nombre, correo de acceso y clave inicial. La clave no se guarda en la app ni en Firestore. La creación queda deshabilitada hasta instalar el servicio seguro del servidor.</p>
+<label>Nombre del vendedor<input id="sellerDisplayName" type="text" autocomplete="name" maxlength="80" placeholder="Nombre visible"></label>
+<label>Correo de acceso<input id="sellerEmail" type="email" autocomplete="email" maxlength="254" placeholder="correo@ejemplo.cl"></label>
+<label>Clave inicial (mínimo 8 caracteres)<input id="sellerPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="Clave temporal para entregar al vendedor"></label>
+<button id="sellerCreateAccount" class="admin-btn" type="button" disabled>Crear cuenta de vendedor</button>
+<p id="sellerProfileStatus" class="admin-status" role="status" aria-live="polite">La pantalla está preparada. Se habilitará cuando el propietario autorice el despliegue del servicio seguro.</p>
 <h2>Vendedores registrados</h2>
 <div id="adminSellers" class="admin-list"></div>
 </section>
