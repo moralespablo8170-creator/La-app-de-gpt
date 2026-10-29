@@ -127,7 +127,7 @@ function enqueueLocalChange(key, previousRaw, currentRaw) {
   const outbox=readOutbox();
   const existing=outbox[key];
   outbox[key]={
-    previousRows:existing?.previousRows||parseArray(previousRaw),
+    previousIds:existing?.previousIds||parseArray(previousRaw).map(row=>typeof row==='object'&&row?row.id:row),
     rows:parseArray(currentRaw),
     revision:String(Date.now())+'-'+Math.random().toString(36).slice(2)
   };
@@ -273,7 +273,10 @@ async function flushPendingChanges() {
       const entry=Object.entries(outbox)[0];
       if(!entry) break;
       const [key,item]=entry;
-      await writeLocalArrayToCloud(key,item.rows||[],item.previousRows||[]);
+      const previousRows=key.startsWith('zipperVisitados-')
+        ?(item.previousIds||[])
+        :(item.previousIds||[]).map(id=>({id}));
+      await writeLocalArrayToCloud(key,localArray(key),previousRows);
       const latest=readOutbox();
       if(latest[key]?.revision===item.revision) {
         delete latest[key];
