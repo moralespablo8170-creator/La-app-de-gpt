@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
-import { getFirestore, doc, getDoc, collection, getDocs } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, collection, getDocs, writeBatch, setDoc } from 'firebase/firestore';
 
 const config={
  apiKey:'AIzaSyAFYoHdqS1QP04MXzHbMpcpuvzNLqElZF',
@@ -83,7 +83,7 @@ async function verify(user){
  if(!user){owner=null;$('adminApp').classList.add('admin-hidden');$('adminLogin').classList.remove('admin-hidden');status('Ingresa con la cuenta propietaria.');return}
  const snap=await getDoc(doc(db,'orgs',ORG,'members',user.uid)),data=snap.exists()?snap.data():null;
  if(!data||data.active!==true||data.role!=='owner'){owner=null;await signOut(auth);$('adminApp').classList.add('admin-hidden');$('adminLogin').classList.remove('admin-hidden');status('Esta cuenta no tiene permisos de propietario.','error');return}
- owner={uid:user.uid,email:user.email||'',...data};$('adminLogin').classList.add('admin-hidden');$('adminApp').classList.remove('admin-hidden');$('adminDate').value=localDate();await refresh();
+ owner={uid:user.uid,email:user.email||'',...data};$('adminLogin').classList.add('admin-hidden');$('adminApp').classList.remove('admin-hidden');$('adminDate').value=localDate();await refresh();await refreshCatalogPrepState();
 }
 async function login(){
  const b=$('adminLoginButton');b.disabled=true;status('Verificando cuenta propietaria…');
@@ -91,6 +91,61 @@ async function login(){
  catch(error){status(error.message||'No se pudo iniciar sesión.','error')}
  finally{b.disabled=false}
 }
+
+async function refreshCatalogPrepState(){
+ const button=$('catalogPrepareButton'),check=$('catalogBackupConfirm'),label=$('catalogPrepStatus');
+ if(!owner)return;
+ try{
+  const snap=await getDoc(doc(db,'orgs',ORG,'settings','sellerMode'));
+  if(snap.exists()&&Number(snap.data().catalogVersion)>=1){
+   label.textContent=snap.data().enabled===true?'Catálogo protegido. El acceso vendedor ya está activado.':'Catálogo protegido. El acceso vendedor sigue desactivado.';
+   button.textContent='Catálogo ya protegido';button.disabled=true;check.disabled=true;return;
+  }
+  label.textContent='El catálogo todavía no está preparado.';
+  button.disabled=!check.checked||navigator.onLine===false;
+ }catch(error){label.textContent=error.message||'No se pudo revisar el estado del catálogo.';button.disabled=true}
+}
+async function prepareCatalog(){
+ const button=$('catalogPrepareButton'),label=$('catalogPrepStatus');
+ if(!owner||!$('catalogBackupConfirm').checked)return;
+ if(navigator.onLine===false){label.textContent='Conéctate a internet antes de preparar el catálogo.';return}
+ button.disabled=true;button.textContent='Preparando…';label.textContent='Separando precios de compra y protegiendo el catálogo…';
+ try{
+  const settingRef=doc(db,'orgs',ORG,'settings','sellerMode');
+  const modeSnap=await getDoc(settingRef);
+  if(modeSnap.exists()&&Number(modeSnap.data().catalogVersion)>=1){await refreshCatalogPrepState();return}
+  const [productSnap,costSnap]=await Promise.all([
+   getDocs(collection(db,'orgs',ORG,'products')),
+   getDocs(collection(db,'orgs',ORG,'productCosts'))
+  ]);
+  if(!productSnap.size)throw new Error('No se encontraron productos en Firebase.');
+  const costMap=new Map(costSnap.docs.map(item=>[item.id,item.data()])),operations=[];
+  const privateFields=['pricePurchase','purchasePrice','cost','costPrice','buyPrice','precioCompra'];
+  productSnap.docs.forEach(item=>{
+   const data={id:item.id,...item.data()},old=costMap.get(item.id)||{};
+   const purchasePrice=data.pricePurchase??data.purchasePrice??data.costPrice??data.cost??data.buyPrice??data.precioCompra??old.pricePurchase??0;
+   const safeData={...data};
+   privateFields.forEach(key=>delete safeData[key]);
+   safeData.sellerVisible=true;
+   operations.push({ref:item.ref,data:safeData});
+   operations.push({ref:doc(db,'orgs',ORG,'productCosts',item.id),data:{id:item.id,pricePurchase:Math.max(0,Number(purchasePrice)||0),updatedAt:new Date().toISOString()}});
+  });
+  for(let start=0;start<operations.length;start+=450){
+   const batch=writeBatch(db);
+   operations.slice(start,start+450).forEach(op=>batch.set(op.ref,op.data));
+   await batch.commit();
+  }
+  await setDoc(settingRef,{id:'sellerMode',enabled:false,catalogVersion:1,preparedAt:new Date().toISOString(),preparedBy:owner.uid});
+  localStorage.setItem('zipperSellerCatalogVersion','1');
+  label.textContent='Catálogo preparado: '+productSnap.size+' productos. Los costos quedaron privados; el acceso de vendedores sigue desactivado.';
+  await refreshCatalogPrepState();
+ }catch(error){
+  console.error(error);label.textContent=error.message||'No se pudo preparar el catálogo.';
+  button.disabled=!$('catalogBackupConfirm').checked;button.textContent='Reintentar preparación';
+ }
+}
 async function logout(){await signOut(auth);owner=null;sellers=[];sessions=[];sales=[];visits=[];cash=[]}
 $('adminLoginButton').onclick=login;$('adminLogout').onclick=logout;$('adminDate').onchange=render;
+$('catalogBackupConfirm').onchange=refreshCatalogPrepState;
+$('catalogPrepareButton').onclick=prepareCatalog;
 onAuthStateChanged(auth,user=>verify(user).catch(error=>{console.error(error);status('No se pudo verificar la cuenta.','error')}));
