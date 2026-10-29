@@ -86,6 +86,7 @@ jobs:
             throw new Error('Timed out waiting for the branch-based Pages deployment.');
 
   deploy:
+    if: github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
     environment:
