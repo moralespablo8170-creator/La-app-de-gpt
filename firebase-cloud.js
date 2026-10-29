@@ -166,9 +166,13 @@ async function memberFor(user) {
   return { uid:user.uid, email:user.email||'', ...profile };
 }
 async function login(email,password) {
-  await setPersistence(auth,browserLocalPersistence);
-  const credential = await signInWithEmailAndPassword(auth,String(email||'').trim(),String(password||''));
-  const profile = await memberFor(credential.user);
+  await withReadTimeout(setPersistence(auth,browserLocalPersistence),10000,'la sesión');
+  const credential = await withReadTimeout(
+    signInWithEmailAndPassword(auth,String(email||'').trim(),String(password||'')),
+    15000,
+    'el inicio de sesión'
+  );
+  const profile = await withReadTimeout(memberFor(credential.user),15000,'el perfil del propietario');
   if (!profile) {
     await signOut(auth);
     throw new Error('La cuenta no tiene un perfil activo en Distribuidora Zipper. Revisa el usuario en Authentication y su perfil members.');
