@@ -18,7 +18,8 @@ Todos los datos quedan bajo `orgs/zipper-a12f1`:
 - `members/{uid}`: `displayName`, `role` (`owner` o `seller`), `active`.
 - `products/{productId}`: catálogo, precio y stock.
 - `clients/{clientId}`: datos compartidos del cliente; `assignedSellerUids` limita qué vendedores lo consultan y `sellerRoutes.{sellerUid}.{week}` guarda el día y la posición de cada ruta semanal.
-- `sales/{saleId}`: cliente, detalle, fecha, forma de pago y `sellerUid`.
+- `sales/{saleId}`: cliente, detalle, fecha, forma de pago, `sellerUid`, semana/día de ruta y `clientZone` copiada al momento de la venta para conservar la zona histórica.
+- El panel del dueño agrupa ventas por mes, vendedor, zona y ruta; el porcentaje significa participación del vendedor en el total vendido de esa zona durante el mes.
 - `sessions/{sessionId}`: apertura, primera venta y cierre, con `sellerUid`.
 - `cashMovements/{movementId}`: abonos, gastos u otros movimientos, con `sellerUid`.
 - `visits/{visitId}`: registro de visitas por cliente, fecha y vendedor.
