@@ -617,4 +617,14 @@ const api={login,signOut:()=>signOut(auth),memberFor,listMembers,inspectCloud,im
 window.zipperFirebaseCloud=api;
 installStorageSyncHooks();
 if(!window.zipperRefreshAfterCloud)window.zipperRefreshAfterCloud=()=>['renderHome','renderCash','renderInventory','renderClients','renderHistory'].forEach(name=>{try{if(typeof window[name]==='function')window[name]()}catch(error){console.error(error)}});
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',connectUi,{once:true});else connectUi();
+const initializeCloudUi=()=>{
+  connectUi().then(()=>{
+    window.zipperFirebaseUiReady=true;
+    window.dispatchEvent(new Event('zipper-firebase-ui-ready'));
+  }).catch(error=>{
+    console.error('Firebase: no se pudo activar la ventana de conexión.',error);
+    const status=document.getElementById('cloudModalStatus');
+    if(status)status.textContent='No se pudo activar la conexión con Firebase. No se verificó la cuenta ni se cambiaron datos.';
+  });
+};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initializeCloudUi,{once:true});else initializeCloudUi();
