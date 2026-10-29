@@ -1,10 +1,10 @@
-const CACHE_NAME = 'zipper-app-pwa-20261029-seller-routes-v4';
+const CACHE_NAME = 'zipper-app-pwa-20261029-offline-queue-v1';
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=zipper-firebase-scroll-20261029-v3",
+  "./styles.css?v=zipper-sync-status-20261029-v1",
   "./app.js?v=zipper-abonos-teclado-20261026-v1",
-  "./firebase-cloud.js?v=zipper-firebase-owner-sync-20261029-v4",
+  "./firebase-cloud.js?v=zipper-firebase-offline-queue-20261029-v1",
   "./seller-assignments.js?v=zipper-seller-routes-20261029-v1",
   "./route-position-migration.js?v=1.2",
   "./route-position-migration-b.js?v=1.0",
