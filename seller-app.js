@@ -69,7 +69,8 @@ async function loadSelectedDebt(){
    getDoc(doc(db,'orgs',ORG,'settings','debtLedger')),
    getDoc(doc(db,'orgs',ORG,'clientBalances',clientId))
   ]);
-  if(!selectedClient||String(selectedClient.id)!==clientId)return;\n  if(!ledgerSnap.exists()||ledgerSnap.data().ready!==true)throw new Error('El saldo compartido está actualizándose. Intenta nuevamente en unos segundos.');
+  if(!selectedClient||String(selectedClient.id)!==clientId)return;
+  if(!ledgerSnap.exists()||ledgerSnap.data().ready!==true)throw new Error('El saldo compartido está actualizándose. Intenta nuevamente en unos segundos.');
   if(!balanceSnap.exists())throw new Error('El dueño todavía no ha preparado el saldo de este cliente.');
   const fresh=Number(balanceSnap.data().balance);
   if(!Number.isFinite(fresh)||fresh<0)throw new Error('El saldo recibido no es válido.');
