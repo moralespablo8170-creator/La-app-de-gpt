@@ -48,6 +48,22 @@ service cloud.firestore {
           && request.resource.data.sellerUid == request.auth.uid);
     }
 
+    function sellerSalePath(orgId, saleId) {
+      return /databases/$(database)/documents/orgs/$(orgId)/sales/$(saleId);
+    }
+
+    function sellerStockReduction(orgId, productId) {
+      let saleId = request.resource.data.lastSellerSaleId;
+      let salePath = sellerSalePath(orgId, saleId);
+      let sale = getAfter(salePath).data;
+      return request.auth.uid == sale.sellerUid
+        && existsAfter(salePath)
+        && !exists(salePath)
+        && sale.stockDeductions is map
+        && sale.stockDeductions[productId] is number
+        && request.resource.data.stock == resource.data.stock - sale.stockDeductions[productId];
+    }
+
     match /orgs/{orgId}/members/{uid} {
       allow get: if signedIn()
         && (uid == request.auth.uid || isOwner(orgId));
@@ -62,7 +78,15 @@ service cloud.firestore {
 
     match /orgs/{orgId}/products/{productId} {
       allow read: if isMember(orgId);
-      allow create, update, delete: if isOwner(orgId);
+      allow create, delete: if isOwner(orgId);
+      allow update: if isOwner(orgId)
+        || (isSeller(orgId)
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['stock', 'lastSellerSaleId'])
+          && request.resource.data.stock is number
+          && request.resource.data.stock < resource.data.stock
+          && request.resource.data.lastSellerSaleId is string
+          && sellerStockReduction(orgId, productId));
     }
 
     function canReadClient(orgId) {
@@ -92,8 +116,11 @@ service cloud.firestore {
 
     match /orgs/{orgId}/sales/{saleId} {
       allow read: if canReadSale(orgId);
-      allow create: if canCreateOwnSale(orgId);
-      allow update: if canUpdateOwnSale(orgId);
+      allow create: if canCreateOwnSale(orgId)
+        && (isOwner(orgId)
+          || (request.resource.data.stockDeductions is map
+            && request.resource.data.stockDeductions.size() > 0));
+      allow update: if isOwner(orgId);
       allow delete: if isOwner(orgId);
     }
 
