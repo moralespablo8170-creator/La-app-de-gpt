@@ -112,6 +112,14 @@ service cloud.firestore {
       allow read, write: if isOwner(orgId);
     }
 
+    match /orgs/{orgId}/sellerCompensation/{sellerUid} {
+      allow read, write: if isOwner(orgId);
+    }
+
+    match /orgs/{orgId}/sellerSaleCosts/{saleId} {
+      allow read, write: if isOwner(orgId);
+    }
+
     match /orgs/{orgId}/products/{productId} {
       allow read: if isOwner(orgId)
         || (isSeller(orgId) && resource.data.sellerVisible == true);
