@@ -1,0 +1,74 @@
+name: Deploy isolated Firebase preview
+
+on:
+  push:
+    branches:
+      - firebase/secure-foundation-zipper
+  workflow_dispatch:
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout unchanged main app
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          path: main-src
+
+      - name: Checkout Firebase draft
+        uses: actions/checkout@v6
+        with:
+          ref: firebase/secure-foundation-zipper
+          path: preview-src
+
+      - name: Assemble main and isolated preview
+        run: |
+          mkdir -p _site/preview/pr-9
+          cp -a main-src/. _site/
+          rm -rf _site/.git
+          cp -a preview-src/. _site/preview/pr-9/
+          rm -rf _site/preview/pr-9/.git _site/preview/pr-9/.github
+          touch _site/.nojekyll
+          test -f _site/index.html
+          test -f _site/preview/pr-9/index.html
+          test -f _site/preview/pr-9/seller-admin.html
+          test -f _site/preview/pr-9/vendedor.html
+
+      - name: Bundle owner Firebase module in the preview
+        run: |
+          mkdir -p /tmp/zipper-firebase-build
+          cp _site/preview/pr-9/firebase-cloud.js /tmp/zipper-firebase-build/firebase-cloud-entry.js
+          npm install --prefix /tmp/zipper-firebase-build --no-save firebase@13.1.0 esbuild@0.25.0
+          /tmp/zipper-firebase-build/node_modules/.bin/esbuild /tmp/zipper-firebase-build/firebase-cloud-entry.js --bundle --platform=browser --format=esm --target=es2022 --outfile=_site/preview/pr-9/firebase-cloud.js
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload combined artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Publish unchanged main plus isolated preview
+        id: deployment
+        uses: actions/deploy-pages@v4
