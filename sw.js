@@ -9,7 +9,7 @@ const APP_SHELL = [
   "./vendedor.html",
   "./seller-app.js?v=zipper-seller-mode-20261029-v3",
   "./seller-admin.html",
-  "./seller-admin.js?v=zipper-seller-admin-20261029-v10",
+  "./seller-admin.js?v=zipper-seller-admin-20261029-v11",
   "./route-position-migration.js?v=1.2",
   "./route-position-migration-b.js?v=1.0",
   "./herramientas.js?v=20261012-restauracion-v32",
