@@ -448,6 +448,10 @@ async function flushPendingChanges() {
       const entry=Object.entries(outbox)[0];
       if(!entry) break;
       const [key,item]=entry;
+      if(key==='zipperComprobantes'||key==='zipperPagos'||key==='zipperGastosCaja') {
+        const ledgerSnap=await getDoc(debtLedgerRef());
+        if(!ledgerSnap.exists()||ledgerSnap.data().ready===true) await setDebtLedgerReady(false);
+      }
       const previousRows=key.startsWith('zipperVisitados-')
         ?(item.previousIds||[])
         :key==='zipperProductos'&&Array.isArray(item.previousRows)
