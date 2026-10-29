@@ -6,7 +6,9 @@ const {getFirestore}=require('firebase-admin/firestore');
 initializeApp();
 const auth=getAuth();
 const db=getFirestore();
-const ORG='zipper-a12f1';
+const firebaseConfig=JSON.parse(process.env.FIREBASE_CONFIG||'{}');
+const ORG=String(firebaseConfig.projectId||'').trim();
+if(!ORG)throw new Error('FIREBASE_CONFIG no contiene el ID del proyecto Firebase de destino.');
 
 exports.createSellerAccount=onCall(
  {region:'southamerica-west1',maxInstances:1,concurrency:1},
