@@ -336,7 +336,7 @@ async function writeSellerProductRows(rows,previousRows=[]) {
   for(const row of rows) {
     const id=safeId(row.id),old=oldById.get(id),publicRow=publicSellerProduct(row),costRow=privateProductCost(row);
     const oldPublic=old?publicSellerProduct(old):null;
-    const oldStock=Number(old?.stock||0),newStock=Number(row.stock||0),stockDelta=old?newStock-oldStock:0;
+    const hasPriorStock=!!old&&old.stock!=null,oldStock=Number(old?.stock||0),newStock=Number(row.stock||0),stockDelta=hasPriorStock?newStock-oldStock:0;
     const publicChanged=!old||Object.keys(publicRow).some(key=>key!=='stock'&&JSON.stringify(publicRow[key])!==JSON.stringify(oldPublic[key]));
     if(publicChanged||stockDelta!==0) {
       const ref=doc(colRef('products'),id);
@@ -344,7 +344,7 @@ async function writeSellerProductRows(rows,previousRows=[]) {
         const snap=await tx.get(ref);
         if(!snap.exists()){tx.set(ref,publicRow);return}
         const current=snap.data();
-        tx.set(ref,{...publicRow,stock:old?Math.max(0,Number(current.stock||0)+stockDelta):Number(current.stock||0)});
+        tx.set(ref,{...publicRow,stock:hasPriorStock?Math.max(0,Number(current.stock||0)+stockDelta):Number(current.stock||0),...(typeof current.lastSellerSaleId==='string'?{lastSellerSaleId:current.lastSellerSaleId}:{})});
       });
     }
     const oldCost=old?privateProductCost(old).pricePurchase:null;
@@ -369,8 +369,6 @@ async function writeLocalArrayToCloud(key, rows, previousRows=[]) {
     return;
   }
   if(key==='zipperProductos'&&sellerCatalogVersion>=1) {
-    const publicRows=rows.map(publicSellerProduct);
-    const privateRows=rows.map(privateProductCost);
     await writeSellerProductRows(rows,previousRows);
     return;
   }
