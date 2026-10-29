@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
-import { getFirestore, doc, getDoc, collection, getDocs, writeBatch, setDoc } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, collection, getDocs, writeBatch, setDoc, updateDoc } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 
 const config={
@@ -14,6 +14,7 @@ const config={
 };
 const app=initializeApp(config),auth=getAuth(app),db=getFirestore(app),functions=getFunctions(app,'southamerica-west1'),createSellerAccountCall=httpsCallable(functions,'createSellerAccount'),setSellerAccessCall=httpsCallable(functions,'setSellerAccess'),ORG='zipper-a12f1';
 const SELLER_ACCOUNT_CREATION_READY=false;
+const SELLER_ACCESS_SERVER_READY=false;
 const $=id=>document.getElementById(id);
 let owner=null,sellers=[],sessions=[],sales=[],visits=[],cash=[],clients=[],compensationBySeller={},selectedSellerId=null,loading=false;
 const localDate=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
@@ -296,9 +297,14 @@ async function toggleSeller(uid){
  const nextActive=seller.active!==true;
  if(!nextActive&&!window.confirm('¿Desactivar el acceso de '+(seller.displayName||seller.email||uid)+'?'))return;
  try{
-  const result=await setSellerAccessCall({uid,active:nextActive});
-  const authDisabled=result.data?.authDisabled;
-  status(!nextActive&&authDisabled===false?'Perfil bloqueado en Firestore; revisa manualmente el estado de Authentication.':(nextActive?'Perfil vendedor activado.':'Acceso vendedor desactivado y sesiones revocadas.'),authDisabled===false?'error':'ok');
+  if(SELLER_ACCESS_SERVER_READY){
+   const result=await setSellerAccessCall({uid,active:nextActive});
+   const authDisabled=result.data?.authDisabled;
+   status(!nextActive&&authDisabled===false?'Perfil bloqueado en Firestore; revisa manualmente el estado de Authentication.':(nextActive?'Perfil vendedor activado.':'Acceso vendedor desactivado y sesiones revocadas.'),authDisabled===false?'error':'ok');
+  }else{
+   await updateDoc(doc(db,'orgs',ORG,'members',uid),{active:nextActive,updatedAt:new Date().toISOString()});
+   status(nextActive?'Perfil vendedor activado.':'Acceso bloqueado en Firestore. Al instalar el servidor seguro también se deshabilitará Authentication.','ok');
+  }
   await refresh();
  }catch(error){console.error(error);status(error.message||'No se pudo cambiar el acceso.','error')}
 }
