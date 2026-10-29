@@ -92,11 +92,11 @@ service cloud.firestore {
           && request.resource.data.sellerUid == request.auth.uid
           && assignedClientForSale(orgId)
           && request.resource.data.paymentMethod in ['cash', 'transfer']
-          && request.resource.data.paymentStatus == 'paid'
+          && request.resource.data.paymentStatus == 'paid'\n          && request.resource.data.collectionStatus == 'awaiting_delivery'
           && request.resource.data.keys().hasOnly([
             'id', 'folio', 'fecha', 'date', 'clienteId', 'cliente', 'ruta',
             'routeWeek', 'routeDay', 'clientZone', 'occurredAt', 'items', 'total', 'paymentMethod',
-            'paymentStatus', 'sellerUid', 'stockDeductions', 'createdAt'
+            'paymentStatus', 'collectionStatus', 'sellerUid', 'stockDeductions', 'createdAt'
           ])
           && !('cost' in request.resource.data)
           && !('profit' in request.resource.data)
