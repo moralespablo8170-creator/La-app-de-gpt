@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<title>Ruta del vendedor · Distribuidora Zipper</title>
+<link rel="stylesheet" href="./styles.css?v=zipper-sync-status-20261029-v1">
+<style>
+.seller-shell{max-width:760px;margin:0 auto;padding:16px 16px 110px}.seller-card{background:#fff;border-radius:22px;padding:20px;margin:14px 0;box-shadow:0 8px 24px #0002}.seller-card h1,.seller-card h2{margin:0 0 12px;color:#10233c}.seller-muted{color:#697381}.seller-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.seller-shell label{display:block;font-weight:700;margin:12px 0}.seller-shell input,.seller-shell select{display:block;width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:12px;padding:13px;font:inherit;margin-top:6px}.seller-btn{display:block;width:100%;border:0;border-radius:14px;padding:14px 16px;font:inherit;font-weight:800;margin:10px 0;background:#1265e8;color:white}.seller-btn.secondary{background:#e5e7eb;color:#111827}.seller-btn.danger{background:#e11d48;color:white}.seller-row{padding:12px 0;border-bottom:1px solid #e5e7eb}.seller-row strong{display:block;color:#10233c}.seller-row small{display:block;color:#687381;margin-top:4px}.seller-actions{display:flex;gap:8px;margin-top:8px}.seller-actions button{flex:1}.seller-status{padding:12px;border-radius:12px;background:#e8f1ff;color:#174476;font-weight:700}.seller-status.ok{background:#dcfce7;color:#166534}.seller-status.warn{background:#fef3c7;color:#92400e}.seller-status.error{background:#fee2e2;color:#991b1b}.seller-hidden{display:none!important}.seller-total{font-size:22px;font-weight:900;color:#10233c}.seller-list{max-height:45vh;overflow:auto}.seller-pill{display:inline-block;padding:4px 9px;border-radius:999px;background:#dbeafe;color:#1e40af;font-size:12px;font-weight:800}.seller-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.seller-products{display:grid;grid-template-columns:1fr 1fr;gap:8px}.seller-product{border:1px solid #e5e7eb;border-radius:12px;padding:10px}.seller-product span{display:block;color:#64748b;font-size:13px}.seller-note{font-size:13px;color:#64748b;line-height:1.4}@media(max-width:520px){.seller-grid,.seller-products{grid-template-columns:1fr}.seller-shell{padding:12px 12px 100px}.seller-card{padding:16px}}
+</style>
+</head>
+<body>
+<main class="seller-shell">
+<header class="seller-card">
+<div class="seller-heading"><div><span class="seller-pill">DISTRIBUIDORA ZIPPER</span><h1>Ruta del vendedor</h1></div></div>
+<p class="seller-muted">Ingresa con tu cuenta asignada. Solo verás los clientes de tus rutas y el inventario para consulta.</p>
+<div id="sellerStatus" class="seller-status" role="status" aria-live="polite">Esperando conexión…</div>
+</header>
+<section id="sellerLogin" class="seller-card">
+<h2>Iniciar sesión</h2>
+<label>Correo electrónico<input id="sellerEmail" type="email" autocomplete="username"></label>
+<label>Contraseña<input id="sellerPassword" type="password" autocomplete="current-password"></label>
+<button id="sellerLoginButton" class="seller-btn" type="button">Ingresar</button>
+<p class="seller-note">Si aún no tienes una cuenta activa, pide al dueño que la prepare.</p>
+</section>
+<section id="sellerApp" class="seller-hidden">
+<section class="seller-card">
+<div class="seller-heading"><div><h2 id="sellerWelcome">Vendedor</h2><p id="sellerSessionLabel" class="seller-muted">Jornada cerrada</p></div><button id="sellerLogout" class="seller-btn secondary" style="width:auto">Salir</button></div>
+<div class="seller-grid">
+<label>Semana<select id="sellerWeek"><option value="A">Semana A</option><option value="B">Semana B</option></select></label>
+<label>Día<select id="sellerDay"><option value="">Seleccionar día</option></select></label>
+</div>
+<button id="sellerStart" class="seller-btn" type="button">Iniciar jornada</button>
+<button id="sellerClose" class="seller-btn danger seller-hidden" type="button">Cerrar jornada</button>
+</section>
+<section class="seller-card">
+<div class="seller-heading"><h2>Clientes de la ruta</h2><span id="sellerClientCount" class="seller-pill">0</span></div>
+<label>Buscar cliente<input id="sellerSearch" type="search" placeholder="Nombre o dirección"></label>
+<div id="sellerClients" class="seller-list"></div>
+</section>
+<section class="seller-card">
+<h2>Registrar venta</h2>
+<p id="sellerSelectedClient" class="seller-muted">Selecciona un cliente de la ruta.</p>
+<label>Producto<select id="sellerProduct"></select></label>
+<div class="seller-grid"><label>Cantidad<input id="sellerQuantity" type="number" min="1" step="1" value="1" inputmode="numeric"></label><label>Forma de pago<select id="sellerPayment"><option value="cash">Efectivo</option><option value="transfer">Transferencia</option><option value="pending">Pendiente</option></select></label></div>
+<button id="sellerAddItem" class="seller-btn secondary" type="button">Agregar producto</button>
+<div id="sellerCart" class="seller-list"></div>
+<p id="sellerSaleTotal" class="seller-total">$0</p>
+<button id="sellerSaveSale" class="seller-btn" type="button">Guardar venta</button>
+</section>
+<section class="seller-card">
+<div class="seller-heading"><h2>Inventario</h2><span class="seller-pill">Solo consulta</span></div>
+<div id="sellerInventory" class="seller-products"></div>
+</section>
+<section class="seller-card">
+<h2>Ventas de hoy</h2>
+<div id="sellerSalesToday" class="seller-list"></div>
+</section>
+</section>
+</main>
+<script type="module" src="./seller-app.js?v=zipper-seller-mode-20261029-v1"></script>
+</body>
+</html>
