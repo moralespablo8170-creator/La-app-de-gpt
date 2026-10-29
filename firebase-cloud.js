@@ -613,6 +613,7 @@ async function connectUi() {
       updateSyncIndicator();
     }
   });
+}
 const api={login,signOut:()=>signOut(auth),memberFor,listMembers,inspectCloud,importLocalData,useExistingCloudData,startSync,stopSync,onLocalArrayChanged,cloudLabel};
 window.zipperFirebaseCloud=api;
 installStorageSyncHooks();
