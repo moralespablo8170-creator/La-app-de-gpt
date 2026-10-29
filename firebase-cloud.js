@@ -36,6 +36,8 @@ try {
 const ORG_ID = 'zipper-a12f1';
 const ORG_PATH = ['orgs', ORG_ID];
 let activeProfile = null;
+let sellerCatalogVersion = Number(localStorage.getItem('zipperSellerCatalogVersion')||0);
+let productCostsCache = localArray('zipperProductCostsV1');
 let unsubs = [];
 let refreshing = false;
 let applyingCloud = false;
@@ -151,6 +153,28 @@ const countsLabel = state => {
   return 'En el teléfono: '+state.localCount+' registros (clientes: '+local.clients+', productos: '+local.products+', ventas: '+local.sales+', abonos/pagos: '+local.payments+', gastos: '+local.expenses+'). En Firebase: '+state.cloudCount+' registros.';
 };
 const colRef = name => collection(db, ...ORG_PATH, name);
+const privateProductFields=['pricePurchase','purchasePrice','cost','costPrice','buyPrice','precioCompra'];
+function publicSellerProduct(row) {
+  const clean={...row};
+  privateProductFields.forEach(key=>delete clean[key]);
+  clean.sellerVisible=true;
+  return clean;
+}
+function privateProductCost(row) {
+  const id=safeId(row.id);
+  return {id,pricePurchase:Math.max(0,Number(row.pricePurchase??row.purchasePrice??row.costPrice??row.cost??row.buyPrice??row.precioCompra)||0)};
+}
+function mergeProductCosts(rows,costRows=productCostsCache) {
+  const costs=new Map(costRows.map(row=>[String(row.id),Number(row.pricePurchase)||0]));
+  const current=new Map(localArray('zipperProductos').map(row=>[String(row.id),row]));
+  return rows.map(row=>{
+    const cached=current.get(String(row.id));
+    const hasCost=costs.has(String(row.id));
+    const pricePurchase=hasCost?costs.get(String(row.id)):Number(row.pricePurchase??row.purchasePrice??cached?.pricePurchase??cached?.purchasePrice)||0;
+    return {...row,pricePurchase};
+  });
+}
+
 const safeId = value => {
   const id = String(value ?? '');
   if (!id || id.includes('/')) throw new Error('Hay un registro sin identificador válido. No se subieron datos.');
@@ -266,6 +290,14 @@ async function writeLocalArrayToCloud(key, rows, previousRows=[]) {
   if(key==='zipperCategorias'||key==='zipperCategoriasEliminadas') {
     const catalog={id:'catalog',categories:localArray('zipperCategorias'),deletedCategories:localArray('zipperCategoriasEliminadas')};
     await setDoc(doc(colRef('settings'),'catalog'),catalog,{merge:true});
+    return;
+  }
+  if(key==='zipperProductos'&&sellerCatalogVersion>=1) {
+    const publicRows=rows.map(publicSellerProduct);
+    const privateRows=rows.map(privateProductCost);
+    const previousIds=previousRows.map(row=>({id:row.id}));
+    await writeRows('products',publicRows,previousIds);
+    await writeRows('productCosts',privateRows,previousIds);
     return;
   }
   const mapped=toCloudRows(key,rows,activeProfile);
@@ -403,8 +435,13 @@ async function useExistingCloudData() {
   localStorage.setItem('zipperStorageMode','cloud');
   await startSync(activeProfile);
 }
-function startSync(profile) {
+async function startSync(profile) {
   stopSync();
+  try {
+    const modeSnap=await getDoc(doc(colRef('settings'),'sellerMode'));
+    sellerCatalogVersion=modeSnap.exists()?Number(modeSnap.data().catalogVersion)||0:0;
+    localStorage.setItem('zipperSellerCatalogVersion',String(sellerCatalogVersion));
+  } catch (_) { sellerCatalogVersion=Number(localStorage.getItem('zipperSellerCatalogVersion')||0); }
   activeProfile=profile;
   if(profile.role!=='owner') throw new Error('La sincronización de vendedores se habilitará cuando quede lista la vista separada por vendedor.');
   const watch=(name,callback)=>unsubs.push(onSnapshot(colRef(name),snapshot=>callback(docsToRows(snapshot)),error=>{
@@ -412,7 +449,7 @@ function startSync(profile) {
     lastSyncError=error.message||'No se pudo leer '+name+' desde Firebase.';
     updateSyncIndicator();
   }));
-  watch('products',rows=>{if(!pendingCloudCollection('products')){writeLocal('zipperProductos',rows);scheduleRefresh()}});
+  watch('products',rows=>{if(!pendingCloudCollection('products')){writeLocal('zipperProductos',mergeProductCosts(rows));scheduleRefresh()}});
   watch('clients',rows=>{if(!pendingCloudCollection('clients')){writeLocal('zipperClientes',rows);scheduleRefresh()}});
   watch('sales',rows=>{if(!pendingCloudCollection('sales')){writeLocal('zipperComprobantes',rows);scheduleRefresh()}});
   watch('cashMovements',rows=>{
@@ -429,10 +466,20 @@ function startSync(profile) {
     Object.entries(byDate).forEach(([date,ids])=>writeLocal('zipperVisitados-'+date,[...new Set(ids)]));
     scheduleRefresh();
   });
+  watch('productCosts',rows=>{
+    productCostsCache=rows;
+    writeLocal('zipperProductCostsV1',rows);
+    if(!pendingCloudCollection('products')) {
+      writeLocal('zipperProductos',mergeProductCosts(localArray('zipperProductos'),rows));
+      scheduleRefresh();
+    }
+  });
   watch('settings',rows=>{
     if(pendingCloudCollection('settings')) return;
     const catalog=rows.find(row=>row.id==='catalog');
+    const sellerMode=rows.find(row=>row.id==='sellerMode');
     if(catalog){writeLocal('zipperCategorias',Array.isArray(catalog.categories)?catalog.categories:[]);writeLocal('zipperCategoriasEliminadas',Array.isArray(catalog.deletedCategories)?catalog.deletedCategories:[]);scheduleRefresh()}
+    if(sellerMode){sellerCatalogVersion=Number(sellerMode.catalogVersion)||0;localStorage.setItem('zipperSellerCatalogVersion',String(sellerCatalogVersion));}
   });
   lastSyncError='';
   updateSyncIndicator();
