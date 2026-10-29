@@ -1,28 +1,45 @@
 # Firebase para Distribuidora Zipper
 
-Este esquema usa el proyecto Firebase `zipper-a12f1` y una organización fija `zipper-a12f1` dentro de Firestore.
+Proyecto: `zipper-a12f1`. Organización Firestore: `orgs/zipper-a12f1`.
+
+## Requisitos de uso y seguridad
+
+- El modo local del teléfono sigue disponible y es el modo inicial.
+- Activar nube debe ser una acción explícita desde la app. Conectar Firebase no debe subir datos sin que el dueño lo confirme.
+- Mantener intactos los datos locales y el respaldo JSON. Antes de la primera importación, generar una copia y mostrar un resumen para confirmar.
+- El dueño puede ver las cajas y movimientos de todos los vendedores. Cada vendedor solo ve sus propios datos financieros y no puede ver ganancias ajenas.
+- La ficha de clientes es compartida, con asignaciones de ruta/día por vendedor.
+- Todos los miembros pueden consultar productos e inventario. Solo el dueño puede crear, modificar o borrar productos y stock.
 
 ## Colecciones
 
 Todos los datos quedan bajo `orgs/zipper-a12f1`:
 
-- `members/{uid}`: perfil y rol. Campos: `displayName`, `role` (`owner` o `seller`), `active`.
-- `products/{productId}`: catálogo e inventario. Todos los miembros leen; solo el dueño modifica.
-- `clients/{clientId}`: clientes y asignación de semana/día/ruta compartidos.
-- `sales/{saleId}`: venta con `sellerUid`, cliente, detalle, fecha y medio de pago.
-- `sessions/{sessionId}`: apertura, hora de primera venta y cierre por vendedor.
-- `cashMovements/{movementId}`: abonos y otros movimientos atribuidos a `sellerUid`.
+- `members/{uid}`: `displayName`, `role` (`owner` o `seller`), `active`.
+- `products/{productId}`: catálogo, precio y stock.
+- `clients/{clientId}`: datos de cliente y rutas/semana/día por vendedor.
+- `sales/{saleId}`: cliente, detalle, fecha, forma de pago y `sellerUid`.
+- `sessions/{sessionId}`: apertura, primera venta y cierre, con `sellerUid`.
+- `cashMovements/{movementId}`: abonos, gastos u otros movimientos, con `sellerUid`.
+- `visits/{visitId}`: registro de visitas por cliente, fecha y vendedor.
 
-El dueño puede consultar los movimientos de todos. Cada vendedor solo puede consultar sus propias ventas, sesiones y movimientos. Los vendedores no pueden cambiar el inventario.
+Los perfiles se verifican con Firebase Authentication y se autorizan por el documento `members/{uid}`. La app no debe permitir que una cuenta cree o cambie su propio rol. Nunca se almacenan contraseñas en Firestore.
 
-## Alta del dueño y vendedores
+## Mapeo desde el almacenamiento actual
 
-Firebase Authentication verifica el correo y la contraseña. Los permisos se guardan por separado en `members/{uid}`; cada perfil debe crearlo el dueño desde un flujo administrativo protegido o desde Firebase Console. No se debe permitir que la app cree o cambie su propio rol.
+La app usa estas claves locales; deben conservarse para respaldos y modo local:
 
-No se guardan contraseñas en Firestore ni se muestran al dueño. Para dar acceso, se crea una cuenta de autenticación y se asigna su UID al perfil de vendedor. Para retirar el acceso, se establece `active: false`.
+- `zipperClientes` → `clients`
+- `zipperProductos` → `products`
+- `zipperComprobantes` → `sales`
+- `zipperPagos` y `zipperGastosCaja` → `cashMovements`
+- `zipperVisitados-AAAA-MM-DD` → `visits`
+- `zipperCategorias` y `zipperCategoriasEliminadas` → configuración de la organización
+
+La carga inicial debe ser una operación separada, iniciada por el dueño después de revisar cuántos clientes, productos, ventas, abonos y gastos se importarán. No reemplazar ni borrar datos locales automáticamente. Evitar migrar registros de caja sin identificador propio o reasignarlos a un vendedor sin confirmación; algunos abonos antiguos pueden no estar vinculados a una venta.
 
 ## Estado de esta preparación
 
 El documento de propietario ya fue creado y revisado en Firebase Console. Su UID y otros datos personales no se guardan en este repositorio.
 
-La aplicación todavía no sincroniza datos con Firestore. La integración debe mapear los datos actuales del teléfono a estas colecciones y conservar una copia local antes de activar la nube. La siguiente etapa es integrar autenticación, permisos por rol y una migración controlada, sin reemplazar los datos locales.
+La app todavía no sincroniza datos con Firestore. La próxima etapa de código debe añadir inicio de sesión, permisos por rol, modo nube opcional y migración confirmada, manteniendo operativa la versión local.
