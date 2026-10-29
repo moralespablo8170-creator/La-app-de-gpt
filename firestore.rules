@@ -76,9 +76,9 @@ service cloud.firestore {
     match /orgs/{orgId}/sessions/{sessionId} {
       allow read: if isOwner(orgId)
         || (isSeller(orgId) && resource.data.sellerUid == request.auth.uid);
-      allow create: if isSeller(orgId)
+      allow create: if (isSeller(orgId) || isOwner(orgId))
         && request.resource.data.sellerUid == request.auth.uid;
-      allow update: if isSeller(orgId)
+      allow update: if (isSeller(orgId) || isOwner(orgId))
         && resource.data.sellerUid == request.auth.uid
         && request.resource.data.sellerUid == request.auth.uid;
       allow delete: if isOwner(orgId);
