@@ -26,7 +26,7 @@ catch(_){db=getFirestore(app)}
 const ORG='zipper-a12f1';
 const DAYS=['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
 const $=id=>document.getElementById(id);
-let profile=null,clients=[],products=[],sales=[],selectedClient=null,cart=[],session=null,unsubs=[],loading=false,currentDebt=null,debtLoading=false,debtClientId='';
+let profile=null,clients=[],products=[],sales=[],selectedClient=null,cart=[],session=null,unsubs=[],loading=false,currentDebt=null,debtLoading=false,debtClientId='',paymentSaving=false;
 const localDate=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
 const prefix=()=>profile?'zipperSeller_'+profile.uid+'_':'zipperSeller_guest_';
 const cacheRead=name=>{try{const v=JSON.parse(localStorage.getItem(prefix()+name)||'[]');return Array.isArray(v)?v:[]}catch(_){return []}};
@@ -54,7 +54,7 @@ function renderDebt(){
  if(debtLoading){label.textContent='Consultando el saldo actualizado en Firebase…';button.disabled=true;return}
  if(currentDebt==null){label.textContent=navigator.onLine?'No se pudo confirmar el saldo. Intenta actualizar con internet.':'Sin conexión: el saldo no está disponible para confirmar un abono.';button.disabled=true;return}
  label.textContent=(navigator.onLine?'Saldo pendiente en Firebase: ':'Último saldo guardado: ')+money(currentDebt)+(navigator.onLine?'':'. Conéctate para registrar el abono.');
- button.disabled=!navigator.onLine||!active||currentDebt<1;
+ button.disabled=!navigator.onLine||!active||currentDebt<1||paymentSaving;
  if(input&&currentDebt>0)input.max=String(currentDebt);
 }
 async function loadSelectedDebt(){
@@ -69,7 +69,7 @@ async function loadSelectedDebt(){
    getDoc(doc(db,'orgs',ORG,'settings','debtLedger')),
    getDoc(doc(db,'orgs',ORG,'clientBalances',clientId))
   ]);
-  if(!ledgerSnap.exists()||ledgerSnap.data().ready!==true)throw new Error('El saldo compartido está actualizándose. Intenta nuevamente en unos segundos.');
+  if(!selectedClient||String(selectedClient.id)!==clientId)return;\n  if(!ledgerSnap.exists()||ledgerSnap.data().ready!==true)throw new Error('El saldo compartido está actualizándose. Intenta nuevamente en unos segundos.');
   if(!balanceSnap.exists())throw new Error('El dueño todavía no ha preparado el saldo de este cliente.');
   const fresh=Number(balanceSnap.data().balance);
   if(!Number.isFinite(fresh)||fresh<0)throw new Error('El saldo recibido no es válido.');
@@ -90,7 +90,7 @@ async function savePayment(){
  const balanceRef=doc(db,'orgs',ORG,'clientBalances',clientId);
  const ledgerRef=doc(db,'orgs',ORG,'settings','debtLedger');
  const method=$('sellerPaymentMethod').value;
- button.disabled=true;status('Validando saldo y guardando el abono en Firebase…','warn');
+ paymentSaving=true;renderDebt();status('Validando saldo y guardando el abono en Firebase…','warn');
  try{
   await runTransaction(db,async tx=>{
    const [ledgerSnap,balanceSnap,movementSnap]=await Promise.all([tx.get(ledgerRef),tx.get(balanceRef),tx.get(movementRef)]);
@@ -104,7 +104,7 @@ async function savePayment(){
    tx.set(balanceRef,{clientId,balance:next,updatedAt:serverTimestamp(),lastPaymentId:movementId,lastPaymentSellerUid:profile.uid});
    tx.set(movementRef,payment);
   });
-  currentDebt-=amount;balanceCacheWrite(clientId,currentDebt);$('sellerPaymentAmount').value='';
+  balanceCacheWrite(clientId,currentDebt-amount);if(selectedClient&&String(selectedClient.id)===clientId)currentDebt-=amount;$('sellerPaymentAmount').value='';
   status('Abono de '+money(amount)+' registrado. Saldo pendiente: '+money(currentDebt)+'.','ok');
  }catch(error){status('No se confirmó el abono: '+(error.message||'revisa la conexión y vuelve a consultar el saldo.'),'error');await loadSelectedDebt()}
  finally{button.disabled=false;renderDebt()}
