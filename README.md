@@ -27,3 +27,7 @@ Aplicación web para gestionar comprobantes y clientes.
 - `sw.js` — caché básica para uso sin conexión.
 
 > Los datos actuales se guardan en el almacenamiento local del dispositivo/navegador. Antes de cambiar de dispositivo se debe utilizar la opción de respaldo.
+
+<!-- Preview refresh 2026-10-29: publish syntax-fixed, locally bundled Firebase preview from PR #9. -->
+
+<!-- force refreshed Firebase preview cache after bundling -->
