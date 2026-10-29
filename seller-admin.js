@@ -147,7 +147,7 @@ function render(){
  const date=$('adminDate').value,filteredSales=chosenSales(),filteredVisits=chosenVisits(),filteredCash=chosenCash();
  $('statSales').textContent=String(filteredSales.length);
  $('statTotal').textContent=money(filteredSales.reduce((n,s)=>n+Number(s.total||0),0));
- $('statCash').textContent=money(filteredSales.filter(s=>s.paymentStatus!=='pending'&&s.paymentMethod!=='pending').reduce((n,s)=>n+Number(s.total||0),0)+filteredCash.filter(x=>x.sourceType==='payment'||x.type==='payment').reduce((n,x)=>n+Number(x.amount??x.monto??x.total??0),0));
+ $('statCash').textContent=money(filteredSales.filter(s=>s.paymentStatus!=='pending'&&s.paymentMethod!=='pending'&&s.collectionStatus!=='awaiting_delivery').reduce((n,s)=>n+Number(s.total||0),0)+filteredCash.filter(x=>x.sourceType==='payment'||x.type==='payment').reduce((n,x)=>n+Number(x.amount??x.monto??x.total??0),0));
  $('statVisits').textContent=String(filteredVisits.length);
  renderPeriodReport();renderCompForm();renderCompResults();
  $('adminCount').textContent=sellers.length+' vendedor'+(sellers.length===1?'':'es')+' · '+date;
@@ -166,7 +166,7 @@ function render(){
  const detailSales=seller?filteredSales:filteredSales;
  $('detailSales').textContent=String(detailSales.length);
  $('adminCash').innerHTML=filteredCash.map(x=>'<article class="admin-row"><strong>'+safe(x.sourceType==='expense'||x.type==='expense'?'Gasto':'Abono / movimiento')+' · '+money(x.amount??x.monto??x.total)+'</strong><small>'+safe(x.clientName||x.cliente||x.description||x.descripcion||'')+' · '+safe(time(x.createdAt||x.fecha))+' · '+safe(x.paymentMethod||x.formaPago||'')+'</small></article>').join('')||'<p class="admin-muted">Sin movimientos de caja en esta fecha.</p>';
- $('adminSales').innerHTML=filteredSales.map(s=>'<article class="admin-row"><strong>'+safe(s.cliente||s.clientName||'Cliente')+' · '+money(s.total)+'</strong><small>'+safe(s.folio||s.id)+' · '+safe(time(s.occurredAt||s.createdAt||s.fecha))+' · '+safe(s.paymentMethod||s.formaPago||'')+' · '+safe(sellerLabel(s.sellerUid)||s.sellerName||'')+'</small></article>').join('')||'<p class="admin-muted">Sin ventas en esta fecha.</p>';
+ $('adminSales').innerHTML=filteredSales.map(s=>'<article class="admin-row"><strong>'+safe(s.cliente||s.clientName||'Cliente')+' · '+money(s.total)+'</strong><small>'+safe(s.folio||s.id)+' · '+safe(time(s.occurredAt||s.createdAt||s.fecha))+' · '+safe(s.paymentMethod||s.formaPago||'')+(s.collectionStatus==='awaiting_delivery'?' · Por cobrar al entregar':'')+' · '+safe(sellerLabel(s.sellerUid)||s.sellerName||'')+'</small></article>').join('')||'<p class="admin-muted">Sin ventas en esta fecha.</p>';
  $('adminVisits').innerHTML=filteredVisits.map(v=>{const client=clients.find(c=>String(c.id)===String(v.clientId)),saleExists=v.status!=='sale'||sales.some(s=>String(s.id)===String(v.saleId||'')&&String(s.sellerUid||'')===String(v.sellerUid||''))||(!v.saleId&&sales.some(s=>String(s.sellerUid||'')===String(v.sellerUid||'')&&String(s.clienteId||s.clientId||'')===String(v.clientId||'')&&rowDate(s,'sales')===rowDate(v,'visits'))),visitLabel=v.status==='sale'?(saleExists?'visitado · venta registrada':'visitado · sin venta'):v.status||'visitado';return '<article class="admin-row"><strong>'+safe(v.clientName||v.cliente||client?.name||v.clientId||'Cliente')+' · '+safe(visitLabel)+'</strong><small>'+safe(v.routeWeek||'')+' '+safe(v.routeDay||'')+' · '+safe(sellerLabel(v.sellerUid))+'</small></article>'}).join('')||'<p class="admin-muted">Sin visitas en esta fecha.</p>';
 }
 async function refresh(){
