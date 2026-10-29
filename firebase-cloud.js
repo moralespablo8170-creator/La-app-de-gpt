@@ -332,20 +332,27 @@ async function prepareSellerCatalog() {
 async function writeSellerProductRows(rows,previousRows=[]) {
   const oldById=new Map(previousRows.filter(row=>row&&row.id!=null).map(row=>[String(row.id),row]));
   const newById=new Map(rows.filter(row=>row&&row.id!=null).map(row=>[String(row.id),row]));
-  const costOps=[];
+  const costOps=[],metadataOps=[];
   for(const row of rows) {
     const id=safeId(row.id),old=oldById.get(id),publicRow=publicSellerProduct(row),costRow=privateProductCost(row);
-    const oldPublic=old?publicSellerProduct(old):null;
-    const hasPriorStock=!!old&&old.stock!=null,oldStock=Number(old?.stock||0),newStock=Number(row.stock||0),stockDelta=hasPriorStock?newStock-oldStock:0;
-    const publicChanged=!old||Object.keys(publicRow).some(key=>key!=='stock'&&JSON.stringify(publicRow[key])!==JSON.stringify(oldPublic[key]));
-    if(publicChanged||stockDelta!==0) {
-      const ref=doc(colRef('products'),id);
+    const hasPriorStock=!!old&&old.stock!=null,stockDelta=hasPriorStock?Number(row.stock||0)-Number(old.stock||0):0;
+    const changed={};
+    if(old) {
+      const oldPublic=publicSellerProduct(old);
+      Object.keys(publicRow).forEach(key=>{
+        if(key!=='stock'&&key!=='lastSellerSaleId'&&JSON.stringify(publicRow[key])!==JSON.stringify(oldPublic[key]))changed[key]=publicRow[key];
+      });
+    }
+    const ref=doc(colRef('products'),id);
+    if(!old||stockDelta!==0) {
       await runTransaction(db,async tx=>{
         const snap=await tx.get(ref);
         if(!snap.exists()){tx.set(ref,publicRow);return}
         const current=snap.data();
         tx.set(ref,{...publicRow,stock:hasPriorStock?Math.max(0,Number(current.stock||0)+stockDelta):Number(current.stock||0),...(typeof current.lastSellerSaleId==='string'?{lastSellerSaleId:current.lastSellerSaleId}:{})});
       });
+    } else if(Object.keys(changed).length) {
+      metadataOps.push({ref,data:changed});
     }
     const oldCost=old?privateProductCost(old).pricePurchase:null;
     if(!old||Number(oldCost)!==Number(costRow.pricePurchase))
@@ -354,6 +361,11 @@ async function writeSellerProductRows(rows,previousRows=[]) {
   for(const [id] of oldById) if(!newById.has(id)) {
     costOps.push({type:'delete',ref:doc(colRef('productCosts'),safeId(id))});
     await deleteDoc(doc(colRef('products'),safeId(id)));
+  }
+  for(let start=0;start<metadataOps.length;start+=450) {
+    const batch=writeBatch(db);
+    metadataOps.slice(start,start+450).forEach(op=>batch.update(op.ref,op.data));
+    await batch.commit();
   }
   for(let start=0;start<costOps.length;start+=450) {
     const batch=writeBatch(db);
