@@ -257,7 +257,7 @@ function cloudLabel() {
   document.getElementById('cloudLogout')?.classList.toggle('hidden',!activeProfile);
 }
 function backupLocal() {
-  if(typeof window.zipperBackupDirect==='function') window.zipperBackupDirect();
+  return typeof window.zipperBackupDirect==='function' ? window.zipperBackupDirect()===true : false;
 }
 async function connectUi() {
   const modal=document.getElementById('cloudModal');
@@ -265,7 +265,7 @@ async function connectUi() {
   const close=()=>modal.classList.add('hidden');
   document.getElementById('cloudOpen')?.addEventListener('click',()=>modal.classList.remove('hidden'));
   document.getElementById('cloudClose')?.addEventListener('click',close);
-  document.getElementById('cloudBackup')?.addEventListener('click',()=>{backupLocal();document.getElementById('cloudImport')?.removeAttribute('disabled')});
+  document.getElementById('cloudBackup')?.addEventListener('click',()=>{if(backupLocal())document.getElementById('cloudImport')?.removeAttribute('disabled')});
   document.getElementById('cloudSignIn')?.addEventListener('click',async()=>{
     const status=document.getElementById('cloudModalStatus');
     const email=document.getElementById('cloudEmail')?.value||'';
