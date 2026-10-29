@@ -25,6 +25,7 @@ Todos los datos quedan bajo `orgs/zipper-a12f1`:
 - `visits/{visitId}`: registro de visitas por cliente, fecha y vendedor.
 - `productCosts/{productId}`: costo actual de compra, solo lectura y escritura del dueño; nunca accesible a vendedores.
 - `sellerSaleCosts/{saleId}`: copia privada e inmutable del costo unitario usado en cada venta, con cantidades, ingreso, costo y ganancia bruta por línea. Solo el dueño puede leerla; la escribe un proceso de servidor confiable, nunca el navegador del vendedor.
+- `sellerCompensation/{sellerUid}`: sueldo base mensual y tramos de metas/porcentajes configurados por vendedor. Solo el dueño puede leer o modificar esta colección.
 
 Los perfiles se verifican con Firebase Authentication y se autorizan por el documento `members/{uid}`. La app no debe permitir que una cuenta cree o cambie su propio rol. Nunca se almacenan contraseñas en Firestore.
 
@@ -46,6 +47,8 @@ La carga inicial debe ser una operación separada, iniciada por el dueño despu�
 No calcular la ganancia histórica de una venta con el costo actual del producto: ese valor puede haber cambiado desde la fecha de venta. La cifra por venta debe calcularse en un proceso confiable del servidor al confirmar la venta y guardar el resultado en `sellerSaleCosts/{saleId}`. El registro debe ser idempotente para soportar reintentos y marcar productos sin costo conocido como “pendientes de revisión”, nunca asignarles costo cero automáticamente.
 
 Los vendedores no pueden leer ni escribir `productCosts` ni `sellerSaleCosts`. El panel del dueño puede mostrar la ganancia bruta histórica desde las copias de costo; los gastos se descuentan por separado para obtener ganancia neta. No se publicará un margen aproximado como si fuera histórico.
+
+La remuneración se configura por vendedor: sueldo base mensual y una escala de metas. Las metas se comparan con las ventas del mes sumadas entre todas las zonas. El porcentaje de cada tramo se aplica solo al monto que supera su umbral; el sueldo base se suma al resultado. Los tramos pueden extenderse sin límite fijo para permitir bonos posteriores a la tercera meta. La estimación se etiqueta como bruta, antes de descuentos legales u otros pagos.
 
 Para publicar Cloud Functions se requiere el plan Blaze de Firebase. El código del borrador no debe desplegarse ni cambiar el plan del proyecto sin una decisión explícita del dueño. Mientras no exista el proceso confiable desplegado, la ganancia histórica de ventas de vendedor permanece sin calcular y el modo vendedor continúa desactivado.
 
