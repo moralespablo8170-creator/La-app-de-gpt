@@ -108,6 +108,10 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /orgs/{orgId}/productCosts/{productId} {
+      allow read, write: if isOwner(orgId);
+    }
+
     match /orgs/{orgId}/products/{productId} {
       allow read: if isOwner(orgId)
         || (isSeller(orgId) && resource.data.sellerVisible == true);
