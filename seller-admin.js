@@ -89,14 +89,18 @@ function renderCompForm(){
  renderCompTiers(policy?.tiers?.length?policy.tiers:[{threshold:0,ratePct:''}]);
  $('compStatus').textContent=next?(policy?'Condiciones cargadas. La escala aplica por tramos mensuales.':'Aún no hay condiciones guardadas para este vendedor.'):'Selecciona un vendedor para definir sus condiciones.';
 }
-function commissionFor(salesTotal,tiers){
- const sorted=tiers.slice().sort((a,b)=>a.threshold-b.threshold);let total=0;
+function commissionBreakdown(salesTotal,tiers){
+ const sorted=tiers.slice().sort((a,b)=>a.threshold-b.threshold);let total=0;const pieces=[];
  sorted.forEach((tier,index)=>{
-  const upper=index+1<sorted.length?Math.min(salesTotal,sorted[index+1].threshold):salesTotal;
-  const segment=Math.max(0,upper-tier.threshold);
-  total+=segment*tier.ratePct/100;
+  const next=sorted[index+1],upper=next?Math.min(salesTotal,next.threshold):salesTotal;
+  const segment=Math.max(0,upper-tier.threshold),amount=segment*tier.ratePct/100;
+  total+=amount;
+  if(segment>0)pieces.push(money(segment)+' × '+tier.ratePct.toLocaleString('es-CL')+'% = '+money(amount));
  });
- return Math.round(total);
+ const reached=sorted.filter(t=>salesTotal>=t.threshold).at(-1)||sorted[0];
+ const next=sorted.find(t=>t.threshold>salesTotal);
+ const targetLabel='Meta vigente '+money(reached.threshold)+' · '+reached.ratePct.toLocaleString('es-CL')+'% sobre el excedente'+(next?' · próxima '+money(next.threshold):' · último tramo');
+ return {total:Math.round(total),effective:salesTotal>0?Math.round(total)/salesTotal*100:0,targetLabel,breakdown:pieces.length?pieces.join(' · '):'Sin comisión variable por ventas en este mes.'};
 }
 function renderCompResults(){
  const month=$('commissionMonth').value;
@@ -104,11 +108,11 @@ function renderCompResults(){
  monthSales.forEach(s=>{const uid=String(s.sellerUid||'');if(uid)totals.set(uid,(totals.get(uid)||0)+(Number(s.total)||0))});
  const rows=sellers.map(s=>{
   const policy=compensationBySeller[s.uid],salesTotal=totals.get(s.uid)||0;
-  if(!policy||!Array.isArray(policy.tiers)||!policy.tiers.length)return '<tr><td>'+safe(s.displayName||s.email||s.uid)+'</td><td>'+money(salesTotal)+'</td><td colspan="3">Falta configurar sueldo base y metas.</td></tr>';
-  const commission=commissionFor(salesTotal,policy.tiers),base=Number(policy.monthlyBaseSalary)||0;
-  return '<tr><td>'+safe(s.displayName||s.email||s.uid)+'</td><td>'+money(salesTotal)+'</td><td>'+money(commission)+'</td><td>'+money(base)+'</td><td>'+money(commission+base)+'</td></tr>';
+  if(!policy||!Array.isArray(policy.tiers)||!policy.tiers.length)return '<tr><td>'+safe(s.displayName||s.email||s.uid)+'</td><td>'+money(salesTotal)+'</td><td colspan="5">Falta configurar sueldo base y metas.</td></tr>';
+  const calc=commissionBreakdown(salesTotal,policy.tiers),base=Number(policy.monthlyBaseSalary)||0;
+  return '<tr><td>'+safe(s.displayName||s.email||s.uid)+'</td><td>'+money(salesTotal)+'</td><td>'+safe(calc.targetLabel)+'<details><summary>Ver cálculo por tramo</summary>'+safe(calc.breakdown)+'</details></td><td>'+calc.effective.toLocaleString('es-CL',{minimumFractionDigits:2,maximumFractionDigits:2})+'%</td><td>'+money(calc.total)+'</td><td>'+money(base)+'</td><td>'+money(calc.total+base)+'</td></tr>';
  });
- $('compResults').innerHTML=rows.join('')||'<tr><td colspan="5">Aún no hay vendedores registrados.</td></tr>';
+ $('compResults').innerHTML=rows.join('')||'<tr><td colspan="7">Aún no hay vendedores registrados.</td></tr>';
 }
 async function saveCompensation(){
  const uid=$('compSeller').value,baseRaw=$('compBaseSalary').value;
