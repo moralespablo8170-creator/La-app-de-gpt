@@ -1,19 +1,12 @@
-name: Deploy isolated Firebase preview
+name: Validate isolated Firebase preview
 
 on:
   push:
     branches:
       - firebase/secure-foundation-zipper
-  workflow_dispatch:
-
-concurrency:
-  group: github-pages
-  cancel-in-progress: true
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 jobs:
   build:
@@ -51,24 +44,9 @@ jobs:
           npm install --prefix /tmp/zipper-firebase-build --no-save firebase@13.1.0 esbuild@0.25.0
           /tmp/zipper-firebase-build/node_modules/.bin/esbuild /tmp/zipper-firebase-build/firebase-cloud-entry.js --bundle --platform=browser --format=esm --target=es2022 --outfile=_site/preview/pr-9/firebase-cloud.js
 
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload combined artifact
-        uses: actions/upload-pages-artifact@v4
+      - name: Upload review artifact without publishing
+        uses: actions/upload-artifact@v4
         with:
+          name: zipper-firebase-preview
           path: _site
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    permissions:
-      pages: write
-      id-token: write
-    steps:
-      - name: Publish unchanged main plus isolated preview
-        id: deployment
-        uses: actions/deploy-pages@v4
+          retention-days: 7
