@@ -46,10 +46,24 @@
 <label>Fecha<input id="adminDate" type="date"></label>
 </section>
 <section class="admin-card">
-<h2>Resumen mensual por vendedor y zona</h2>
-<label>Mes<input id="adminMonth" type="month"></label>
-<p class="admin-muted">La participación es la parte de las ventas de cada vendedor dentro del total de su zona en el mes. Las ventas antiguas sin zona guardada se agrupan usando la comuna actual del cliente y se identifican como estimadas.</p>
-<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Vendedor</th><th>Zona</th><th>Ruta</th><th>Ventas</th><th>Total vendido</th><th>Participación zona</th></tr></thead><tbody id="monthlySellerRows"><tr><td colspan="6">Sin datos del mes.</td></tr></tbody></table></div>
+<h2>Historial de ventas por período, zona y ruta</h2>
+<label>Período<select id="reportPeriod"><option value="week">Semana</option><option value="month" selected>Mes</option><option value="semester">Semestre</option><option value="year">Año</option></select></label>
+<label>Fecha de referencia<input id="reportReference" type="date"></label>
+<p id="reportPeriodLabel" class="admin-muted"></p>
+<p class="admin-muted">La participación indica qué parte del total vendido en una zona corresponde a cada vendedor. Las ventas antiguas sin zona guardada usan la comuna actual del cliente y se marcan como estimadas.</p>
+<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Vendedor</th><th>Zona</th><th>Ruta</th><th>Ventas</th><th>Total vendido</th><th>Participación zona</th></tr></thead><tbody id="periodSellerRows"><tr><td colspan="6">Sin datos del período.</td></tr></tbody></table></div>
+</section>
+<section class="admin-card">
+<h2>Remuneración mensual estimada</h2>
+<p class="admin-muted">Configura sueldo base y metas para cada vendedor. Los porcentajes son progresivos: cada tasa se aplica solo al monto que supera su meta. Se suma el sueldo base. La estimación es bruta, antes de descuentos u otros pagos.</p>
+<label>Mes de cálculo<input id="commissionMonth" type="month"></label>
+<label>Vendedor a configurar<select id="compSeller"><option value="">Seleccionar vendedor</option></select></label>
+<label>Sueldo base mensual (CLP)<input id="compBaseSalary" type="number" min="0" step="1000" inputmode="numeric"></label>
+<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Desde esta meta mensual (CLP)</th><th>Porcentaje de este tramo</th><th></th></tr></thead><tbody id="compTiers"></tbody></table></div>
+<div class="admin-toolbar"><button id="compAddTier" class="admin-btn secondary" type="button">Añadir meta / tramo</button><button id="compSave" class="admin-btn" type="button">Guardar remuneración</button></div>
+<p id="compStatus" class="admin-status" role="status" aria-live="polite">Selecciona un vendedor para definir sus condiciones.</p>
+<h3>Estimación de pago del mes</h3>
+<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Vendedor</th><th>Ventas del mes</th><th>Comisión progresiva</th><th>Sueldo base</th><th>Pago bruto estimado</th></tr></thead><tbody id="compResults"><tr><td colspan="5">Sin datos configurados.</td></tr></tbody></table></div>
 </section>
 <section class="admin-card">
 <h2>Acceso de vendedores</h2>
@@ -75,6 +89,6 @@
 </section>
 </section>
 </main>
-<script type="module" src="./seller-admin.js?v=zipper-seller-admin-20261029-v5"></script>
+<script type="module" src="./seller-admin.js?v=zipper-seller-admin-20261029-v6"></script>
 </body>
 </html>
