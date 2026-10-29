@@ -96,10 +96,15 @@ async function savePayment(){
  paymentSaving=true;renderDebt();status('Validando saldo y guardando el abono en Firebase…','warn');
  try{
   const result=await runTransaction(db,async tx=>{
-   const [ledgerSnap,balanceSnap]=await Promise.all([tx.get(ledgerRef),tx.get(balanceRef)]);
+   const [ledgerSnap,balanceSnap,movementSnap]=await Promise.all([tx.get(ledgerRef),tx.get(balanceRef),tx.get(movementRef)]);
    if(!ledgerSnap.exists()||ledgerSnap.data().ready!==true)throw new Error('Los saldos están en actualización. Espera y vuelve a consultar.');
    if(!balanceSnap.exists())throw new Error('No hay saldo preparado para este cliente.');
    const current=Math.max(0,Math.round(Number(balanceSnap.data().balance)||0));
+   if(movementSnap.exists()) {
+    const prior=movementSnap.data();
+    if(prior.sellerUid!==profile.uid||prior.clientId!==clientId||Number(prior.amount)!==amount||prior.paymentMethod!==method)throw new Error('Este intento de abono ya existe con otros datos. Consulta al dueño antes de repetirlo.');
+    return {already:true,balance:current};
+   }
    if(balanceSnap.data().lastPaymentId===movementId)return {already:true,balance:current};
    if(amount>current)throw new Error('El saldo cambió. El saldo actual es '+money(current)+'.');
    const next=current-amount;
