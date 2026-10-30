@@ -1,9 +1,17 @@
-const CACHE_NAME = 'zipper-app-pwa-20261026-abonos-v4';
+const CACHE_NAME = 'zipper-app-pwa-20261029-isolated-test-v22';
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=zipper-abonos-teclado-20261026-v1",
-  "./app.js?v=zipper-abonos-teclado-20261026-v1",
+  "./styles.css?v=zipper-sync-status-20261029-v1",
+  "./app.js?v=zipper-cobro-entrega-20261029-v1",
+  "./firebase-cloud.js?v=zipper-firebase-offline-queue-20261029-v9",
+  "./firebase-config.js",
+  "./firebase-test-config.js",
+  "./seller-assignments.js?v=zipper-seller-routes-20261029-v1",
+  "./vendedor.html",
+  "./seller-app.js?v=zipper-seller-revocation-20261029-v3",
+  "./seller-admin.html",
+  "./seller-admin.js?v=zipper-seller-admin-functions-20261029-v14",
   "./route-position-migration.js?v=1.2",
   "./route-position-migration-b.js?v=1.0",
   "./herramientas.js?v=20261012-restauracion-v32",
