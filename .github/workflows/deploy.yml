@@ -49,6 +49,7 @@ jobs:
         run: |
           mkdir -p /tmp/zipper-firebase-build
           cp _site/preview/pr-9/firebase-cloud.js /tmp/zipper-firebase-build/firebase-cloud-entry.js
+          cp _site/preview/pr-9/firebase-config.js /tmp/zipper-firebase-build/firebase-config.js
           npm install --prefix /tmp/zipper-firebase-build --no-save firebase@13.1.0 esbuild@0.25.0
           /tmp/zipper-firebase-build/node_modules/.bin/esbuild /tmp/zipper-firebase-build/firebase-cloud-entry.js --bundle --platform=browser --format=esm --target=es2022 --outfile=_site/preview/pr-9/firebase-cloud.js
 
