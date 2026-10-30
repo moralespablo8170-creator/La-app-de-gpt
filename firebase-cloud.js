@@ -84,7 +84,7 @@ function updateSyncIndicator() {
   const online=navigator.onLine!==false;
   let message='',state='';
   if(lastSyncError) {
-    message='No se pudo confirmar el envío · los cambios siguen guardados en el teléfono y se reintentará.';
+    message='Envío sin confirmar · guardado en el teléfono; reintento pendiente.';
     state='sync-error';
   } else if(!online) {
     message=pending
