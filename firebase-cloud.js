@@ -105,8 +105,13 @@ function updateSyncIndicator() {
   }
   if(indicator) {
     indicator.textContent=message;
-    indicator.classList.remove('hidden','sync-ok','sync-pending','sync-offline','sync-error');
-    indicator.classList.add(state);
+    indicator.classList.remove('sync-ok','sync-pending','sync-offline','sync-error');
+    if(state==='sync-ok') {
+      indicator.classList.add('hidden');
+    } else {
+      indicator.classList.remove('hidden');
+      indicator.classList.add(state);
+    }
   }
   if(status) status.textContent=message+(firestorePersistentCache?'':' · cola local de seguridad activa.');
 }
