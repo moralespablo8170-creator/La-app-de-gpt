@@ -1,0 +1,243 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function memberPath(orgId, uid) {
+      return /databases/$(database)/documents/orgs/$(orgId)/members/$(uid);
+    }
+
+    function isMember(orgId) {
+      return signedIn()
+        && exists(memberPath(orgId, request.auth.uid))
+        && get(memberPath(orgId, request.auth.uid)).data.active == true;
+    }
+
+    function isOwner(orgId) {
+      return isMember(orgId)
+        && get(memberPath(orgId, request.auth.uid)).data.role == 'owner';
+    }
+
+    function sellerModePath(orgId) {
+      return /databases/$(database)/documents/orgs/$(orgId)/settings/sellerMode;
+    }
+
+    function sellerModeEnabled(orgId) {
+      return exists(sellerModePath(orgId))
+        && get(sellerModePath(orgId)).data.enabled == true
+        && get(sellerModePath(orgId)).data.catalogVersion == 1;
+    }
+
+    function isSeller(orgId) {
+      return isMember(orgId)
+        && get(memberPath(orgId, request.auth.uid)).data.role == 'seller'
+        && sellerModeEnabled(orgId);
+    }
+
+    function isActiveMember(orgId) {
+      return isOwner(orgId) || isSeller(orgId);
+    }
+
+    function canReadSale(orgId) {
+      return isOwner(orgId)
+        || (isSeller(orgId) && resource.data.sellerUid == request.auth.uid);
+    }
+
+    function assignedClientForSale(orgId) {
+      let clientId = request.resource.data.clienteId;
+      let clientPath = /databases/$(database)/documents/orgs/$(orgId)/clients/$(clientId);
+      let week = request.resource.data.routeWeek;
+      return clientId is string
+        && exists(clientPath)
+        && request.auth.uid in get(clientPath).data.assignedSellerUids
+        && week in get(clientPath).data.sellerRoutes[request.auth.uid]
+        && get(clientPath).data.sellerRoutes[request.auth.uid][week].day == request.resource.data.routeDay;
+    }
+
+    function assignedClientForVisit(orgId) {
+      let clientId = request.resource.data.clientId;
+      let clientPath = /databases/$(database)/documents/orgs/$(orgId)/clients/$(clientId);
+      let week = request.resource.data.routeWeek;
+      return clientId is string
+        && exists(clientPath)
+        && request.auth.uid in get(clientPath).data.assignedSellerUids
+        && week in get(clientPath).data.sellerRoutes[request.auth.uid]
+        && get(clientPath).data.sellerRoutes[request.auth.uid][week].day == request.resource.data.routeDay;
+    }
+
+    function validSellerSession(sessionId) {
+      return request.resource.data.keys().hasOnly([
+          'id', 'sellerUid', 'routeWeek', 'routeDay', 'status',
+          'openedAt', 'openedAtLocal', 'closedAt', 'closedAtLocal',
+          'firstSaleAt', 'firstSaleAtLocal', 'salesCount',
+          'lastSaleAt', 'lastSaleAtLocal', 'updatedAt'
+        ])
+        && request.resource.data.id == sessionId
+        && request.resource.data.sellerUid == request.auth.uid
+        && request.resource.data.routeWeek in ['A', 'B']
+        && request.resource.data.routeDay in [
+          'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'
+        ]
+        && request.resource.data.status in ['open', 'closed']
+        && request.resource.data.salesCount is int
+        && request.resource.data.salesCount >= 0;
+    }
+
+    function canCreateOwnSale(orgId) {
+      return isOwner(orgId)
+        || (isSeller(orgId)
+          && request.resource.data.sellerUid == request.auth.uid
+          && assignedClientForSale(orgId)
+          && request.resource.data.paymentMethod in ['cash', 'transfer']
+          && request.resource.data.paymentStatus == 'paid'
+          && request.resource.data.collectionStatus == 'awaiting_delivery'
+          && request.resource.data.keys().hasOnly([
+            'id', 'folio', 'fecha', 'date', 'clienteId', 'cliente', 'ruta',
+            'routeWeek', 'routeDay', 'clientZone', 'occurredAt', 'items', 'total', 'paymentMethod',
+            'paymentStatus', 'collectionStatus', 'sellerUid', 'stockDeductions', 'createdAt'
+          ])
+          && !('cost' in request.resource.data)
+          && !('profit' in request.resource.data)
+          && !('pricePurchase' in request.resource.data)
+          && !('purchasePrice' in request.resource.data));
+    }
+
+    function canUpdateOwnSale(orgId) {
+      return isOwner(orgId)
+        || (isSeller(orgId)
+          && resource.data.sellerUid == request.auth.uid
+          && request.resource.data.sellerUid == request.auth.uid);
+    }
+
+    function sellerSalePath(orgId, saleId) {
+      return /databases/$(database)/documents/orgs/$(orgId)/sales/$(saleId);
+    }
+
+    function sellerStockReduction(orgId, productId) {
+      let saleId = request.resource.data.lastSellerSaleId;
+      let salePath = sellerSalePath(orgId, saleId);
+      let sale = getAfter(salePath).data;
+      return request.auth.uid == sale.sellerUid
+        && existsAfter(salePath)
+        && !exists(salePath)
+        && sale.stockDeductions is map
+        && sale.stockDeductions[productId] is number
+        && request.resource.data.stock == resource.data.stock - sale.stockDeductions[productId];
+    }
+
+    match /orgs/{orgId}/members/{uid} {
+      allow get: if signedIn()
+        && (uid == request.auth.uid || isOwner(orgId));
+      allow list: if isOwner(orgId);
+      allow create, update: if isOwner(orgId)
+        && request.resource.data.keys().hasAll(['role', 'active', 'displayName'])
+        && request.resource.data.role in ['owner', 'seller']
+        && request.resource.data.active is bool
+        && request.resource.data.displayName is string;
+      allow delete: if false;
+    }
+
+    match /orgs/{orgId}/productCosts/{productId} {
+      allow read, write: if isOwner(orgId);
+    }
+
+    match /orgs/{orgId}/sellerCompensation/{sellerUid} {
+      allow read, write: if isOwner(orgId);
+    }
+
+    match /orgs/{orgId}/sellerSaleCosts/{saleId} {
+      allow read, write: if isOwner(orgId);
+    }
+
+    match /orgs/{orgId}/products/{productId} {
+      allow read: if isOwner(orgId)
+        || (isSeller(orgId) && resource.data.sellerVisible == true);
+      allow create, delete: if isOwner(orgId);
+      allow update: if isOwner(orgId)
+        || (isSeller(orgId)
+          && resource.data.sellerVisible == true
+          && request.resource.data.sellerVisible == true
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['stock', 'lastSellerSaleId'])
+          && request.resource.data.stock is number
+          && request.resource.data.stock < resource.data.stock
+          && request.resource.data.lastSellerSaleId is string
+          && sellerStockReduction(orgId, productId));
+    }
+
+    function canReadClient(orgId) {
+      return isOwner(orgId)
+        || (isSeller(orgId)
+          && request.auth.uid in resource.data.assignedSellerUids);
+    }
+
+    match /orgs/{orgId}/clients/{clientId} {
+      allow get, list: if canReadClient(orgId);
+      allow create: if isOwner(orgId)
+        || (isSeller(orgId)
+          && request.auth.uid in request.resource.data.assignedSellerUids
+          && request.auth.uid in request.resource.data.sellerRoutes);
+      allow update: if isOwner(orgId)
+        || (isSeller(orgId)
+          && canReadClient(orgId)
+          && request.auth.uid in request.resource.data.assignedSellerUids
+          && request.resource.data.assignedSellerUids == resource.data.assignedSellerUids
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['name', 'rut', 'razonSocial', 'comuna', 'observations',
+              'sendInvoice', 'phone', 'address', 'active', 'sellerRoutes'])
+          && request.resource.data.sellerRoutes.diff(resource.data.sellerRoutes)
+            .affectedKeys().hasOnly([request.auth.uid]));
+      allow delete: if isOwner(orgId);
+    }
+
+    match /orgs/{orgId}/sales/{saleId} {
+      allow read: if canReadSale(orgId);
+      allow create: if canCreateOwnSale(orgId)
+        && (isOwner(orgId)
+          || (request.resource.data.stockDeductions is map
+            && request.resource.data.stockDeductions.size() > 0));
+      allow update: if isOwner(orgId);
+      allow delete: if isOwner(orgId);
+    }
+
+    match /orgs/{orgId}/sessions/{sessionId} {
+      allow read: if isOwner(orgId)
+        || (isSeller(orgId) && resource.data.sellerUid == request.auth.uid);
+      allow create: if isOwner(orgId)
+        || (isSeller(orgId) && validSellerSession(sessionId));
+      allow update: if isOwner(orgId)
+        || (isSeller(orgId)
+          && resource.data.sellerUid == request.auth.uid
+          && validSellerSession(sessionId));
+      allow delete: if isOwner(orgId);
+    }
+
+    match /orgs/{orgId}/cashMovements/{movementId} {
+      allow read: if isOwner(orgId)
+        || (isSeller(orgId) && resource.data.sellerUid == request.auth.uid);
+      allow create, update, delete: if isOwner(orgId);
+    }
+
+    match /orgs/{orgId}/visits/{visitId} {
+      allow read: if isOwner(orgId)
+        || (isSeller(orgId) && resource.data.sellerUid == request.auth.uid);
+      allow create, update: if isOwner(orgId)
+        || (isSeller(orgId)
+          && request.resource.data.sellerUid == request.auth.uid
+          && assignedClientForVisit(orgId));
+      allow delete: if isOwner(orgId);
+    }
+
+    match /orgs/{orgId}/settings/{settingId} {
+      allow read: if isMember(orgId);
+      allow write: if isOwner(orgId);
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
