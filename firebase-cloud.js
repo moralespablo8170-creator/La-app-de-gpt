@@ -3,7 +3,7 @@
 import { initializeApp } from 'firebase/app';
 import { firebaseConfig, ORG_ID } from './firebase-config.js';
 import {
-  getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged,
+  getAuth, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged,
   setPersistence, browserLocalPersistence
 } from 'firebase/auth';
 import {
@@ -205,6 +205,11 @@ async function login(email,password) {
   activeProfile = profile;
   announceProfile(profile);
   return profile;
+}
+async function requestPasswordReset(email) {
+  const address=String(email||'').trim();
+  if(!address) throw new Error('Ingresa el correo de la cuenta propietaria para solicitar el enlace.');
+  await sendPasswordResetEmail(auth,address);
 }
 async function listMembers() {
   if (!activeProfile || activeProfile.role !== 'owner') throw new Error('Solo el dueño puede consultar los vendedores.');
@@ -670,6 +675,24 @@ async function connectUi() {
       }
     } catch(error) {
       if(status)status.textContent=error.message||'No se pudo verificar la cuenta.';
+    } finally {if(button)button.disabled=false}
+  });
+  document.getElementById('cloudResetPassword')?.addEventListener('click',async()=>{
+    const status=document.getElementById('cloudModalStatus');
+    const email=document.getElementById('cloudEmail')?.value||'';
+    const button=document.getElementById('cloudResetPassword');
+    if(!String(email).trim()) {
+      if(status)status.textContent='Escribe el correo de la cuenta propietaria y vuelve a intentarlo.';
+      document.getElementById('cloudEmail')?.focus();
+      return;
+    }
+    if(button)button.disabled=true;
+    if(status)status.textContent='Enviando solicitud de restablecimiento…';
+    try {
+      await requestPasswordReset(email);
+      if(status)status.textContent='Firebase envió el enlace de restablecimiento al correo de la cuenta. Revisa también Spam.';
+    } catch(error) {
+      if(status)status.textContent=error.message||'No se pudo enviar el enlace de restablecimiento.';
     } finally {if(button)button.disabled=false}
   });
   document.getElementById('cloudImport')?.addEventListener('click',async()=>{
