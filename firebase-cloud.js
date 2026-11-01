@@ -455,6 +455,75 @@ async function collectLocalImport(profile) {
   groups.push(['settings',[settings]]);
   return groups;
 }
+function stableCompareValue(value) {
+  if (value === undefined) return {__zipperUndefined:true};
+  if (value === null || typeof value !== 'object') return value;
+  if (typeof value.toDate === 'function') return {__firestoreTimestamp:value.toDate().toISOString()};
+  if (Array.isArray(value)) return value.map(stableCompareValue);
+  const result={};
+  Object.keys(value).sort().forEach(key=>{result[key]=stableCompareValue(value[key])});
+  return result;
+}
+function stableCompareString(value) {
+  return JSON.stringify(stableCompareValue(value));
+}
+function indexCompareRows(rows) {
+  const byId=new Map(), duplicateIds=new Set();
+  let missingIds=0;
+  rows.forEach(row=>{
+    const id=String(row?.id??'').trim();
+    if(!id){missingIds++;return}
+    if(byId.has(id)) duplicateIds.add(id);
+    else byId.set(id,row);
+  });
+  return {byId,duplicateIds,missingIds};
+}
+async function compareLocalWithCloud(profile,onProgress) {
+  if(!profile||profile.role!=='owner') throw new Error('Solo la cuenta propietaria puede comparar los datos.');
+  const localGroups=await collectLocalImport(profile);
+  const results=[];
+  for(const [name,localRowsRaw] of localGroups) {
+    const label={products:'Productos',clients:'Clientes',sales:'Ventas',cashMovements:'Abonos y gastos',visits:'Visitas',settings:'Catálogo'}[name]||name;
+    if(onProgress) onProgress('Comparando '+label+' en modo solo lectura…');
+    const snapshot=await withReadTimeout(getDocs(colRef(name)),20000,label);
+    let localRows=localRowsRaw;
+    let cloudRows=snapshot.docs.map(item=>({...item.data(),id:item.id}));
+    if(name==='settings') {
+      localRows=localRows.filter(row=>row.id==='catalog');
+      cloudRows=cloudRows.filter(row=>row.id==='catalog');
+    }
+    const local=indexCompareRows(localRows), cloud=indexCompareRows(cloudRows);
+    const localOnly=[], cloudOnly=[], different=[], identical=[];
+    local.byId.forEach((row,id)=>{
+      if(!cloud.byId.has(id)) localOnly.push(id);
+      else {
+        const other=cloud.byId.get(id);
+        if(stableCompareString(row)===stableCompareString(other)) identical.push(id);
+        else {
+          const keys=new Set([...Object.keys(row||{}),...Object.keys(other||{})]);
+          const fields=[...keys].filter(key=>stableCompareString(row?.[key])!==stableCompareString(other?.[key]));
+          different.push({id,fields});
+        }
+      }
+    });
+    cloud.byId.forEach((_row,id)=>{if(!local.byId.has(id))cloudOnly.push(id)});
+    results.push({name,label,localCount:localRows.length,cloudCount:cloudRows.length,common:identical.length+different.length,identical:identical.length,different,localOnly,cloudOnly,localDuplicates:[...local.duplicateIds],localMissingIds:local.missingIds,cloudMissingIds:cloud.missingIds});
+  }
+  return results;
+}
+function formatCloudComparison(results) {
+  const lines=['COMPARACIÓN DE SOLO LECTURA · no se modificó ni fusionó ningún dato.'];
+  results.forEach(item=>{
+    lines.push(item.label+': teléfono '+item.localCount+' · Firebase '+item.cloudCount+' · coinciden por ID '+item.common+' ('+item.identical+' iguales, '+item.different.length+' distintos) · solo teléfono '+item.localOnly.length+' · solo Firebase '+item.cloudOnly.length+'.');
+    const sample=(label,values)=>{if(values.length)lines.push('  '+label+': '+values.slice(0,5).join(', ')+(values.length>5?'…':'')+(values.length>5?' ('+values.length+' en total)':''))};
+    sample('Solo teléfono',item.localOnly);
+    sample('Solo Firebase',item.cloudOnly);
+    if(item.different.length) lines.push('  Mismos IDs con campos distintos: '+item.different.slice(0,5).map(row=>row.id+' ['+row.fields.join(', ')+']').join('; ')+(item.different.length>5?'… ('+item.different.length+' en total)':''));
+    sample('IDs repetidos en el teléfono',item.localDuplicates);
+    if(item.localMissingIds||item.cloudMissingIds)lines.push('  Registros sin ID: teléfono '+item.localMissingIds+' · Firebase '+item.cloudMissingIds+'.');
+  });
+  return lines.join('\n');
+}
 async function importFingerprint(groups) {
   const bytes=new TextEncoder().encode(JSON.stringify(groups));
   const digest=await crypto.subtle.digest('SHA-256',bytes);
@@ -630,6 +699,28 @@ async function connectUi() {
     const progress=document.getElementById('cloudImportProgress');
     if(progress&&event.target.checked) progress.textContent='Marcaste que el respaldo ya está guardado. Ahora puedes importar los datos locales.';
   });
+  document.getElementById('cloudCompare')?.addEventListener('click',async()=>{
+    const button=document.getElementById('cloudCompare');
+    const report=document.getElementById('cloudCompareReport');
+    const status=document.getElementById('cloudModalStatus');
+    if(!activeProfile||activeProfile.role!=='owner') {
+      if(status)status.textContent='Vuelve a verificar la cuenta propietaria para comparar los datos.';
+      return;
+    }
+    button.disabled=true;
+    report.classList.remove('hidden');
+    report.textContent='Preparando comparación de solo lectura…';
+    try {
+      const results=await compareLocalWithCloud(activeProfile,message=>{if(status)status.textContent=message;});
+      report.textContent=formatCloudComparison(results);
+      if(status)status.textContent='Comparación terminada. No se escribió ni reemplazó ningún dato.';
+    } catch(error) {
+      report.textContent='No se completó la comparación. No se modificó ningún dato. '+(error.message||'Revisa la conexión y vuelve a intentarlo.');
+      if(status)status.textContent='La comparación no pudo terminar; los datos no se modificaron.';
+    } finally {
+      button.disabled=false;
+    }
+  });
   document.getElementById('cloudSignIn')?.addEventListener('click',async()=>{
     const status=document.getElementById('cloudModalStatus');
     const email=document.getElementById('cloudEmail')?.value||'';
@@ -655,6 +746,10 @@ async function connectUi() {
       document.getElementById('cloudBackup').classList.toggle('hidden',!localData||cloudData);
       importBtn.classList.toggle('hidden',!localData||cloudData);
       importBtn.disabled=localData;
+      const compareButton=document.getElementById('cloudCompare');
+      const compareReport=document.getElementById('cloudCompareReport');
+      if(compareButton) compareButton.classList.toggle('hidden',!(localData&&cloudData&&profile.role==='owner'));
+      if(compareReport){compareReport.classList.add('hidden');compareReport.textContent='';}
       const canUseCloud=cloudData && !localData;
       useBtn.classList.toggle('hidden',!canUseCloud);
       useBtn.disabled=!canUseCloud;

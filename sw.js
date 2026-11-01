@@ -1,10 +1,10 @@
-const CACHE_NAME = 'zipper-app-pwa-20261101-version-firebase-4';
+const CACHE_NAME = 'zipper-app-pwa-20261101-firebase-compare-5';
 const APP_SHELL = [
   "./",
   "./index.html",
   "./styles.css?v=zipper-version-firebase-20261101-2",
   "./app.js?v=zipper-version-firebase-20261101-3",
-  "./firebase-cloud.js?v=zipper-firebase-password-reset-20261101-v12",
+  "./firebase-cloud.js?v=zipper-firebase-compare-20261101-v13",
   "./firebase-config.js",
   "./firebase-test-config.js",
   "./seller-assignments.js?v=zipper-seller-routes-20261029-v1",
