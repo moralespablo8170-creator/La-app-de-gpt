@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<title>Vendedores · Distribuidora Zipper</title>
+<link rel="stylesheet" href="./styles.css?v=zipper-sync-status-20261029-v1">
+<script type="importmap">
+{"imports":{"firebase/app":"https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js","firebase/auth":"https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js","firebase/firestore":"https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js","firebase/functions":"https://www.gstatic.com/firebasejs/13.1.0/firebase-functions.js"}}
+</script>
+<style>
+.admin-shell{max-width:900px;margin:0 auto;padding:16px 16px 80px}.admin-card{background:#fff;border-radius:22px;padding:20px;margin:14px 0;box-shadow:0 8px 24px #0002}.admin-card h1,.admin-card h2{margin:0 0 12px;color:#10233c}.admin-muted{color:#697381}.admin-shell label{display:block;font-weight:700;margin:12px 0}.admin-shell input[type=checkbox]{display:inline;width:auto}.admin-shell input:not([type=checkbox]),.admin-shell select{display:block;width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:12px;padding:13px;font:inherit;margin-top:6px}.admin-btn{display:block;width:100%;border:0;border-radius:14px;padding:14px 16px;font:inherit;font-weight:800;margin:10px 0;background:#1265e8;color:white}.admin-btn.secondary{background:#e5e7eb;color:#111827}.admin-status{padding:12px;border-radius:12px;background:#e8f1ff;color:#174476;font-weight:700}.admin-status.ok{background:#dcfce7;color:#166534}.admin-status.error{background:#fee2e2;color:#991b1b}.admin-hidden{display:none!important}.admin-list{display:grid;gap:10px}.admin-row{border:1px solid #e5e7eb;border-radius:14px;padding:13px}.admin-row strong{display:block;color:#10233c}.admin-row small{display:block;color:#687381;margin-top:5px}.admin-table{width:100%;border-collapse:collapse;min-width:680px}.admin-table th,.admin-table td{padding:10px;border-bottom:1px solid #e5e7eb;text-align:left;white-space:nowrap}.admin-table th{color:#334155;background:#f1f5f9}.admin-table td:last-child{text-align:right;font-weight:800}.admin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.admin-stat{background:#f1f5f9;border-radius:13px;padding:12px}.admin-stat strong{display:block;font-size:19px;color:#10233c}.admin-stat span{font-size:12px;color:#64748b}.admin-toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between}.admin-toolbar button{width:auto}@media(max-width:600px){.admin-grid{grid-template-columns:1fr 1fr}.admin-shell{padding:12px 12px 80px}.admin-card{padding:16px}.admin-toolbar{display:block}}
+</style>
+</head>
+<body>
+<main class="admin-shell">
+<section class="admin-card">
+<a href="./index.html">← Volver a la aplicación principal</a>
+<h1>Control de vendedores</h1>
+<p class="admin-muted">Panel de consulta de jornadas, ventas, visitas y caja. La preparación del catálogo es una acción separada del dueño.</p>
+<div id="adminStatus" class="admin-status" role="status" aria-live="polite">Verificando cuenta propietaria…</div>
+</section>
+<section id="adminLogin" class="admin-card admin-hidden">
+<h2>Acceso del dueño</h2>
+<label>Correo electrónico<input id="adminEmail" type="email" autocomplete="username"></label>
+<label>Contraseña<input id="adminPassword" type="password" autocomplete="current-password"></label>
+<button id="adminLoginButton" class="admin-btn" type="button">Ingresar</button>
+</section>
+<section id="adminApp" class="admin-hidden">
+<section class="admin-card" id="adminCatalogPrep">
+<h2>Preparar inventario para vendedores</h2>
+<p class="admin-muted">Esta acción mueve los precios de compra a una zona privada del dueño y deja el catálogo visible sin esos costos. No crea cuentas ni activa el acceso vendedor.</p>
+<label><input id="catalogBackupConfirm" type="checkbox"> Confirmo que guardé y revisé un respaldo local antes de preparar el catálogo.</label>
+<button id="catalogPrepareButton" class="admin-btn" type="button" disabled>Preparar catálogo seguro</button>
+<p id="catalogPrepStatus" class="admin-status" role="status" aria-live="polite"></p>
+</section>
+<section class="admin-card">
+<div class="admin-toolbar"><div><h2 id="adminOwnerName">Propietario</h2><p id="adminCount" class="admin-muted"></p></div><button id="adminLogout" class="admin-btn secondary" type="button">Salir</button></div>
+<div class="admin-grid">
+<div class="admin-stat"><strong id="statSales">0</strong><span>Ventas del día</span></div>
+<div class="admin-stat"><strong id="statTotal">$0</strong><span>Total vendido</span></div>
+<div class="admin-stat"><strong id="statCash">$0</strong><span>Pagos recibidos</span></div>
+<div class="admin-stat"><strong id="statVisits">0</strong><span>Visitas registradas</span></div>
+</div>
+<label>Fecha<input id="adminDate" type="date"></label>
+</section>
+<section class="admin-card">
+<h2>Historial de ventas por período, zona y ruta</h2>
+<label>Período<select id="reportPeriod"><option value="week">Semana</option><option value="month" selected>Mes</option><option value="semester">Semestre</option><option value="year">Año</option></select></label>
+<label>Fecha de referencia<input id="reportReference" type="date"></label>
+<p id="reportPeriodLabel" class="admin-muted"></p>
+<p class="admin-muted">La participación indica qué parte del total vendido en una zona corresponde a cada vendedor. Las ventas antiguas sin zona guardada usan la comuna actual del cliente y se marcan como estimadas.</p>
+<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Vendedor</th><th>Zona</th><th>Ruta</th><th>Ventas</th><th>Total vendido</th><th>Participación zona</th></tr></thead><tbody id="periodSellerRows"><tr><td colspan="6">Sin datos del período.</td></tr></tbody></table></div>
+</section>
+<section class="admin-card">
+<h2>Remuneración mensual estimada</h2>
+<p class="admin-muted">Configura sueldo base y metas para cada vendedor. Se suman las ventas que registró en el mes, aunque su pago esté pendiente. Cada tasa progresiva se aplica solo al monto que supera su meta; luego se suma el sueldo base. La estimación es bruta, antes de descuentos u otros pagos.</p>
+<label>Mes de cálculo<input id="commissionMonth" type="month"></label>
+<label>Vendedor a configurar<select id="compSeller"><option value="">Seleccionar vendedor</option></select></label>
+<label>Sueldo base mensual (CLP)<input id="compBaseSalary" type="number" min="0" step="1000" inputmode="numeric"></label>
+<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Desde esta meta mensual (CLP)</th><th>Porcentaje de este tramo</th><th></th></tr></thead><tbody id="compTiers"></tbody></table></div>
+<div class="admin-toolbar"><button id="compAddTier" class="admin-btn secondary" type="button">Añadir meta / tramo</button><button id="compSave" class="admin-btn" type="button">Guardar remuneración</button></div>
+<p id="compStatus" class="admin-status" role="status" aria-live="polite">Selecciona un vendedor para definir sus condiciones.</p>
+<h3>Estimación de pago del mes</h3>
+<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Vendedor</th><th>Ventas generadas</th><th>Meta / tasa del siguiente tramo</th><th>Tasa efectiva</th><th>Comisión</th><th>Sueldo base</th><th>Pago bruto estimado</th></tr></thead><tbody id="compResults"><tr><td colspan="7">Sin datos configurados.</td></tr></tbody></table></div>
+</section>
+<section class="admin-card">
+<h2>Acceso de vendedores</h2>
+<p class="admin-muted">Aquí podrás crear una cuenta personal para cada vendedor con su nombre, correo de acceso y clave inicial. La clave no se guarda en la app ni en Firestore. La creación queda deshabilitada hasta instalar el servicio seguro del servidor.</p>
+<label>Nombre del vendedor<input id="sellerDisplayName" type="text" autocomplete="name" maxlength="80" placeholder="Nombre visible"></label>
+<label>Correo de acceso<input id="sellerEmail" type="email" autocomplete="email" maxlength="254" placeholder="correo@ejemplo.cl"></label>
+<label>Clave inicial (mínimo 8 caracteres)<input id="sellerPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="Clave temporal para entregar al vendedor"></label>
+<button id="sellerCreateAccount" class="admin-btn" type="button" disabled>Crear cuenta de vendedor</button>
+<p id="sellerProfileStatus" class="admin-status" role="status" aria-live="polite">La pantalla está preparada. Se habilitará cuando el propietario autorice el despliegue del servicio seguro.</p>
+<h2>Vendedores registrados</h2>
+<div id="adminSellers" class="admin-list"></div>
+</section>
+<section class="admin-card">
+<h2 id="adminDetailTitle">Detalle diario</h2>
+<div class="admin-grid">
+<div class="admin-stat"><strong id="detailOpened">—</strong><span>Inicio jornada</span></div>
+<div class="admin-stat"><strong id="detailFirstSale">—</strong><span>Primera venta</span></div>
+<div class="admin-stat"><strong id="detailClosed">—</strong><span>Cierre jornada</span></div>
+<div class="admin-stat"><strong id="detailSales">0</strong><span>Ventas</span></div>
+</div>
+<h3>Movimientos de caja</h3><div id="adminCash" class="admin-list"></div>
+<h3>Ventas</h3><div id="adminSales" class="admin-list"></div>
+<h3>Visitas</h3><div id="adminVisits" class="admin-list"></div>
+</section>
+</section>
+</main>
+<script type="module" src="./seller-admin.js?v=zipper-seller-admin-functions-20261029-v14"></script>
+</body>
+</html>
