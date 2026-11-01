@@ -47,14 +47,18 @@ jobs:
           test -f _site/preview/pr-9/index.html
           test -f _site/firebase/index.html
 
-      - name: Bundle Firebase SDK for preview and production Firebase app
+      - name: Bundle Firebase SDK for the main app, preview, and production Firebase app
         run: |
-          mkdir -p /tmp/zipper-firebase-build
-          cp _site/preview/pr-9/firebase-cloud.js /tmp/zipper-firebase-build/firebase-cloud-entry.js
-          cp _site/preview/pr-9/firebase-config.js /tmp/zipper-firebase-build/firebase-config.js
-          cp _site/preview/pr-9/firebase-test-config.js /tmp/zipper-firebase-build/firebase-test-config.js
+          mkdir -p /tmp/zipper-firebase-build/main /tmp/zipper-firebase-build/preview
+          cp _site/firebase-cloud.js /tmp/zipper-firebase-build/main/firebase-cloud-entry.js
+          cp _site/firebase-config.js /tmp/zipper-firebase-build/main/firebase-config.js
+          cp _site/firebase-test-config.js /tmp/zipper-firebase-build/main/firebase-test-config.js
+          cp _site/preview/pr-9/firebase-cloud.js /tmp/zipper-firebase-build/preview/firebase-cloud-entry.js
+          cp _site/preview/pr-9/firebase-config.js /tmp/zipper-firebase-build/preview/firebase-config.js
+          cp _site/preview/pr-9/firebase-test-config.js /tmp/zipper-firebase-build/preview/firebase-test-config.js
           npm install --prefix /tmp/zipper-firebase-build --no-save firebase@13.1.0 esbuild@0.25.0
-          /tmp/zipper-firebase-build/node_modules/.bin/esbuild /tmp/zipper-firebase-build/firebase-cloud-entry.js --bundle --platform=browser --format=esm --target=es2022 --outfile=_site/preview/pr-9/firebase-cloud.js
+          /tmp/zipper-firebase-build/node_modules/.bin/esbuild /tmp/zipper-firebase-build/main/firebase-cloud-entry.js --bundle --platform=browser --format=esm --target=es2022 --outfile=_site/firebase-cloud.js
+          /tmp/zipper-firebase-build/node_modules/.bin/esbuild /tmp/zipper-firebase-build/preview/firebase-cloud-entry.js --bundle --platform=browser --format=esm --target=es2022 --outfile=_site/preview/pr-9/firebase-cloud.js
           cp _site/preview/pr-9/firebase-cloud.js _site/firebase/firebase-cloud.js
           cp _site/preview/pr-9/firebase-cloud.js _site/firebase-cloud.js
 
