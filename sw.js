@@ -9,7 +9,7 @@ const APP_SHELL = [
   "./firebase-test-config.js",
   "./seller-assignments.js?v=zipper-seller-routes-20261029-v1",
   "./vendedor.html",
-  "./seller-app.js?v=zipper-version-firebase-20261101-2",
+  "./seller-app.js?v=zipper-seller-revocation-20261029-v3",
   "./seller-admin.html",
   "./seller-admin.js?v=zipper-seller-admin-functions-20261029-v14",
   "./route-position-migration.js?v=1.2",
