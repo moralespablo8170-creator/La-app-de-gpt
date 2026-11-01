@@ -56,6 +56,7 @@ jobs:
           npm install --prefix /tmp/zipper-firebase-build --no-save firebase@13.1.0 esbuild@0.25.0
           /tmp/zipper-firebase-build/node_modules/.bin/esbuild /tmp/zipper-firebase-build/firebase-cloud-entry.js --bundle --platform=browser --format=esm --target=es2022 --outfile=_site/preview/pr-9/firebase-cloud.js
           cp _site/preview/pr-9/firebase-cloud.js _site/firebase/firebase-cloud.js
+          cp _site/preview/pr-9/firebase-cloud.js _site/firebase-cloud.js
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
