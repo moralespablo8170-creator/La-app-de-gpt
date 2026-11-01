@@ -27,25 +27,28 @@ jobs:
           ref: main
           path: main-src
 
-      # Always package the latest Firebase preview branch with the unchanged main app, including the durable compact queue and sync status.
-      - name: Checkout Firebase preview
+      # Keep the local main app, an isolated test preview, and a production Firebase app route.
+      - name: Checkout Firebase app
         uses: actions/checkout@v6
         with:
           ref: firebase/secure-foundation-zipper
           path: preview-src
 
-      - name: Assemble production app and isolated preview
+      - name: Assemble main app, isolated preview, and Firebase app
         run: |
-          mkdir -p _site/preview/pr-9
+          mkdir -p _site/preview/pr-9 _site/firebase
           cp -a main-src/. _site/
           rm -rf _site/.git
           cp -a preview-src/. _site/preview/pr-9/
           rm -rf _site/preview/pr-9/.git
+          cp -a preview-src/. _site/firebase/
+          rm -rf _site/firebase/.git
           touch _site/.nojekyll
           test -f _site/index.html
           test -f _site/preview/pr-9/index.html
+          test -f _site/firebase/index.html
 
-      - name: Bundle Firebase SDK into isolated preview
+      - name: Bundle Firebase SDK for preview and production Firebase app
         run: |
           mkdir -p /tmp/zipper-firebase-build
           cp _site/preview/pr-9/firebase-cloud.js /tmp/zipper-firebase-build/firebase-cloud-entry.js
@@ -53,6 +56,7 @@ jobs:
           cp _site/preview/pr-9/firebase-test-config.js /tmp/zipper-firebase-build/firebase-test-config.js
           npm install --prefix /tmp/zipper-firebase-build --no-save firebase@13.1.0 esbuild@0.25.0
           /tmp/zipper-firebase-build/node_modules/.bin/esbuild /tmp/zipper-firebase-build/firebase-cloud-entry.js --bundle --platform=browser --format=esm --target=es2022 --outfile=_site/preview/pr-9/firebase-cloud.js
+          cp _site/preview/pr-9/firebase-cloud.js _site/firebase/firebase-cloud.js
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
