@@ -274,3 +274,6 @@
 #debtPaymentDialog .zipper-modal-panel{max-height:calc(100dvh - 20px);overflow-y:auto;overscroll-behavior:contain}
 #debtPaymentAmount{min-height:56px;font-size:20px;touch-action:manipulation}
 #debtPaymentAmount:focus{outline:3px solid #2563eb;outline-offset:2px}
+/* Indicador compacto de versión para confirmar la compilación instalada. */
+.brand-header{position:relative}
+.app-version-badge{position:absolute;right:8px;bottom:8px;z-index:2;padding:5px 8px;border:1px solid rgba(255,255,255,.72);border-radius:999px;background:rgba(17,24,39,.94);box-shadow:0 1px 4px rgba(0,0,0,.25);color:#fff;font:800 11px/1.2 system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:.02em;white-space:nowrap}
