@@ -747,7 +747,7 @@ async function connectUi() {
       importBtn.classList.toggle('hidden',!localData||cloudData);
       importBtn.disabled=!localData||cloudData;
       const loadCloudButton=document.getElementById('cloudLoadExisting');
-      const canLoadCloud=cloudData&&profile.role==='owner';
+      const canLoadCloud=localData&&cloudData&&profile.role==='owner';
       if(loadCloudButton) {
         loadCloudButton.classList.toggle('hidden',!canLoadCloud);
         loadCloudButton.disabled=true;
