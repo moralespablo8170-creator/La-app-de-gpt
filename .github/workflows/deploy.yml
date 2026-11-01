@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - firebase/secure-foundation-zipper
   workflow_dispatch:
 
 concurrency:
