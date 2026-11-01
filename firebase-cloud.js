@@ -584,9 +584,10 @@ async function importLocalData(onProgress) {
     throw new Error('La importación se pausó y quedó lista para reanudarse. Los datos locales no se cambiaron.');
   }
 }
-async function useExistingCloudData() {
+async function useExistingCloudData({allowLocalWithBackup=false}={}) {
   if (!activeProfile || activeProfile.role!=='owner') throw new Error('Solo el dueño puede activar esta opción.');
-  if(localCount()>0) throw new Error('Hay datos locales. No se reemplazaron; exporta y revisa la copia antes de cambiar a los datos de la nube.');
+  if(localCount()>0&&!allowLocalWithBackup) throw new Error('Hay datos locales. Guarda primero un respaldo antes de cargar Firebase.');
+  if(allowLocalWithBackup&&Object.keys(readOutbox()).length) throw new Error('Hay cambios locales pendientes de sincronizar. No se cargó Firebase para conservarlos.');
   localStorage.setItem('zipperStorageMode','cloud');
   await startSync(activeProfile);
 }
@@ -686,18 +687,17 @@ async function connectUi() {
   document.getElementById('cloudClose')?.addEventListener('click',close);
   document.getElementById('cloudBackup')?.addEventListener('click',()=>{
     if(backupLocal()) {
-      const confirmation=document.getElementById('cloudBackupConfirm');
-      if(confirmation) confirmation.checked=true;
-      document.getElementById('cloudImport')?.removeAttribute('disabled');
       const progress=document.getElementById('cloudImportProgress');
-      if(progress) progress.textContent='Respaldo generado. Comprueba que esté en Descargas; luego pulsa Importar mis datos a Firebase.';
+      if(progress) progress.textContent='Respaldo generado. Comprueba que esté en Descargas y marca la casilla de confirmación para continuar.';
     }
   });
   document.getElementById('cloudBackupConfirm')?.addEventListener('change',event=>{
     const importButton=document.getElementById('cloudImport');
     if(importButton) importButton.disabled=!event.target.checked;
+    const loadButton=document.getElementById('cloudLoadExisting');
+    if(loadButton) loadButton.disabled=!event.target.checked;
     const progress=document.getElementById('cloudImportProgress');
-    if(progress&&event.target.checked) progress.textContent='Marcaste que el respaldo ya está guardado. Ahora puedes importar los datos locales.';
+    if(progress&&event.target.checked) progress.textContent='Respaldo confirmado. Ya puedes cargar Firebase en este teléfono.';
   });
   document.getElementById('cloudCompare')?.addEventListener('click',async()=>{
     const button=document.getElementById('cloudCompare');
@@ -741,15 +741,17 @@ async function connectUi() {
       const useBtn=document.getElementById('cloudUseExisting');
       const backupConfirmRow=document.getElementById('cloudBackupConfirmRow');
       const backupConfirm=document.getElementById('cloudBackupConfirm');
-      if(backupConfirmRow) backupConfirmRow.classList.toggle('hidden',!localData||cloudData);
+      if(backupConfirmRow) backupConfirmRow.classList.toggle('hidden',!localData);
       if(backupConfirm) backupConfirm.checked=false;
-      document.getElementById('cloudBackup').classList.toggle('hidden',!localData||cloudData);
+      document.getElementById('cloudBackup').classList.toggle('hidden',!localData);
       importBtn.classList.toggle('hidden',!localData||cloudData);
-      importBtn.disabled=localData;
-      const compareButton=document.getElementById('cloudCompare');
-      const compareReport=document.getElementById('cloudCompareReport');
-      if(compareButton) compareButton.classList.toggle('hidden',!(localData&&cloudData&&profile.role==='owner'));
-      if(compareReport){compareReport.classList.add('hidden');compareReport.textContent='';}
+      importBtn.disabled=!localData||cloudData;
+      const loadCloudButton=document.getElementById('cloudLoadExisting');
+      const canLoadCloud=cloudData&&profile.role==='owner';
+      if(loadCloudButton) {
+        loadCloudButton.classList.toggle('hidden',!canLoadCloud);
+        loadCloudButton.disabled=true;
+      }
       const canUseCloud=cloudData && !localData;
       useBtn.classList.toggle('hidden',!canUseCloud);
       useBtn.disabled=!canUseCloud;
@@ -758,7 +760,7 @@ async function connectUi() {
         document.getElementById('cloudImport').classList.add('hidden');
         document.getElementById('cloudUseExisting').classList.add('hidden');
       } else if(localData&&cloudData) {
-        if(status)status.textContent='Hay datos en el teléfono y en Firebase. No se reemplazó ni fusionó nada.';
+        if(status)status.textContent='Los datos de ambos lados están disponibles. Guarda un respaldo del teléfono y luego pulsa “Cargar datos de Firebase en este teléfono”.';
       } else if(localData) {
         if(status)status.textContent='Cuenta de dueño verificada. Primero guarda un respaldo y luego podrás importar estos registros.';
       } else if(cloudData) {
@@ -815,6 +817,26 @@ async function connectUi() {
       button.disabled=false;
       button.textContent=originalLabel;
       alert('No se pudo completar la importación: '+message);
+    }
+  });
+  document.getElementById('cloudLoadExisting')?.addEventListener('click',async()=>{
+    const status=document.getElementById('cloudModalStatus');
+    const progress=document.getElementById('cloudImportProgress');
+    const button=document.getElementById('cloudLoadExisting');
+    if(!document.getElementById('cloudBackupConfirm')?.checked) {
+      if(status)status.textContent='Primero guarda y confirma el respaldo del teléfono.';
+      return;
+    }
+    if(button)button.disabled=true;
+    if(status)status.textContent='Activando Firebase y cargando los datos en este teléfono…';
+    try {
+      await useExistingCloudData({allowLocalWithBackup:true});
+      if(status)status.textContent='Firebase quedó activo. Los datos de la nube se están cargando en Zipper.';
+      if(progress)progress.textContent='Carga iniciada. Mantén la app abierta hasta que aparezcan tus productos, clientes y movimientos.';
+      cloudLabel();
+    } catch(error) {
+      if(status)status.textContent=error.message||'No se pudo cargar Firebase.';
+      if(button)button.disabled=false;
     }
   });
   document.getElementById('cloudUseExisting')?.addEventListener('click',async()=>{
