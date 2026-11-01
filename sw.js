@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zipper-app-pwa-20261101-firebase-bundled-9';
+const CACHE_NAME = 'zipper-app-pwa-20261101-firebase-bundled-10';
 const APP_SHELL = [
   "./",
   "./index.html",
