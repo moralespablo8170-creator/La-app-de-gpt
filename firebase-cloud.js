@@ -1,15 +1,15 @@
 // Firebase connection and owner-only first migration for Distribuidora Zipper.
 // The local phone database remains the default. Cloud mode is enabled only after an explicit backup and import.
-import { initializeApp } from 'firebase/app';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js';
 import { firebaseConfig, ORG_ID } from './firebase-config.js';
 import {
   getAuth, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged,
   setPersistence, browserLocalPersistence
-} from 'firebase/auth';
+} from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js';
 import {
   getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
   doc, getDoc, collection, getDocs, onSnapshot, writeBatch, setDoc, deleteDoc, runTransaction
-} from 'firebase/firestore';
+} from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js';
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
