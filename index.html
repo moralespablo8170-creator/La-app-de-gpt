@@ -148,6 +148,22 @@ if('serviceWorker' in navigator){
 <div id="invoiceDetailDialog" class="zipper-modal hidden" role="dialog" aria-modal="true"><div class="zipper-modal-panel invoice-modal-panel"><div id="invoiceDetailBody"></div><div class="actions"><button class="secondary" type="button" onclick="closeInvoiceDetail()">Cerrar</button><button id="invoiceDetailSave" class="primary" type="button">Guardar indicación</button></div></div></div><div id="cloudModal" class="zipper-modal hidden" role="dialog" aria-modal="true" aria-labelledby="cloudModalTitle"><div class="zipper-modal-panel"><h2 id="cloudModalTitle">Conectar con Firebase</h2><p class="muted">Ingresa el correo y la contraseña de la cuenta propietaria. La clave de Firebase Authentication puede ser distinta de la clave de Google. La contraseña solo se usa para iniciar sesión y no se guarda en Firestore.</p><label>Correo electrónico<input id="cloudEmail" type="email" autocomplete="username"></label><label style="margin-top:12px">Contraseña<input id="cloudPassword" type="password" autocomplete="current-password"></label><div class="actions" style="margin-top:14px"><button id="cloudSignIn" class="primary" type="button">Verificar cuenta</button><button id="cloudClose" class="secondary" type="button">Cerrar</button><button id="cloudResetPassword" class="secondary" style="width:100%;margin-top:8px" type="button">Enviar enlace para restablecer la clave de Firebase</button></div><p id="cloudModalStatus" class="status" aria-live="polite"></p><div id="cloudAfterLogin" class="hidden"><p id="cloudAccount" class="status"></p><p id="cloudCounts" class="muted"></p><label id="cloudBackupConfirmRow" class="muted hidden"><input id="cloudBackupConfirm" type="checkbox"> Confirmo que el respaldo nuevo está guardado en Descargas.</label><p id="cloudImportProgress" class="status" aria-live="polite"></p><div class="actions"><button id="cloudBackup" class="secondary hidden" type="button">Guardar respaldo local</button><button id="cloudImport" class="primary hidden" type="button" disabled>Importar mis datos a Firebase</button><button id="cloudLoadExisting" class="primary hidden" type="button" disabled>Cargar datos de Firebase en este teléfono</button><button id="cloudUseExisting" class="primary hidden" type="button">Usar los datos de Firebase</button></div><p class="muted">Al cargar Firebase, los datos actuales del teléfono se reemplazan por los de la nube. Guarda primero el respaldo nuevo para poder restaurarlos.</p></div></div></div><script>
 (function(){
  window.zipperFirebaseUiReady=false;
+ window.zipperFirebaseLoadError='';
+ const reportFirebaseFailure=function(detail){
+  const message=String(detail||'Error desconocido').slice(0,240);
+  window.zipperFirebaseLoadError=message;
+  const status=document.getElementById('cloudModalStatus');
+  if(status)status.textContent='Firebase no pudo iniciarse: '+message+'. Los datos locales siguen guardados.';
+ };
+ window.addEventListener('error',function(event){
+  const source=String(event.filename||'');
+  const message=String(event.message||'');
+  if(source.includes('firebase')||message.includes('Firebase')||message.includes('module')||message.includes('import'))reportFirebaseFailure(message+(source?' ('+source.split('/').pop()+')':''));
+ },true);
+ window.addEventListener('unhandledrejection',function(event){
+  const message=String(event.reason?.message||event.reason||'');
+  if(/firebase|module|import|network/i.test(message))reportFirebaseFailure(message);
+ });
  const button=document.getElementById('cloudOpen');
  const modal=document.getElementById('cloudModal');
  const status=document.getElementById('cloudModalStatus');
@@ -169,17 +185,17 @@ if('serviceWorker' in navigator){
     if(verify)verify.disabled=false;
    }else if(Date.now()-started>=8000){
     clearInterval(timer);
-    if(status)status.textContent='No se cargó el componente de Firebase. No se verificó ni cambió ningún dato. Cierra esta ventana y avísame; no ingreses la clave.';
+    if(status)status.textContent=window.zipperFirebaseLoadError?'Firebase no pudo iniciarse: '+window.zipperFirebaseLoadError:'Firebase no respondió en 8 segundos. Los datos locales siguen guardados.';
     if(verify)verify.disabled=true;
    }
   },300);
  });
  const moduleScript=document.querySelector('script[type="module"][src*="firebase-cloud.js"]');
  if(moduleScript)moduleScript.addEventListener('error',function(){
-  if(status)status.textContent='No se cargó el componente de Firebase. No se verificó ni cambió ningún dato. Cierra esta ventana y avísame; no ingreses la clave.';
+  reportFirebaseFailure('Error al descargar firebase-cloud.js');
   if(verify)verify.disabled=true;
  });
 })();
 </script>
 <script type="importmap">{"imports":{"firebase/app":"https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js","firebase/auth":"https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js","firebase/firestore":"https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js"}}</script>
-<script type="module" src="./firebase-cloud.js?v=zipper-firebase-importmap-20261101-v18"></script></body></html>
+<script type="module" src="./firebase-cloud.js?v=zipper-firebase-diagnostics-20261101-v19"></script></body></html>
