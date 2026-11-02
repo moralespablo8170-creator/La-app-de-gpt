@@ -167,22 +167,28 @@ function render(){
 async function refresh(){
  if(!owner||loading)return;loading=true;status('Actualizando información de vendedores…');
  try{
-  const [ms,ss,vs,cs,ks,cl,comp]=await Promise.all([
-   getDocs(collection(db,'orgs',ORG,'members')),
-   getDocs(collection(db,'orgs',ORG,'sessions')),
-   getDocs(collection(db,'orgs',ORG,'sales')),
-   getDocs(collection(db,'orgs',ORG,'visits')),
-   getDocs(collection(db,'orgs',ORG,'cashMovements')),
-   getDocs(collection(db,'orgs',ORG,'clients')),
-   getDocs(collection(db,'orgs',ORG,'sellerCompensation'))
-  ]);
-  sellers=ms.docs.map(d=>({uid:d.id,...d.data()})).filter(x=>x.role==='seller');
-  compensationBySeller=Object.fromEntries(comp.docs.map(d=>[d.id,d.data()]));
-  sessions=ss.docs.map(d=>({id:d.id,...d.data()}));sales=vs.docs.map(d=>({id:d.id,...d.data()}));visits=cs.docs.map(d=>({id:d.id,...d.data()}));cash=ks.docs.map(d=>({id:d.id,...d.data()}));clients=cl.docs.map(d=>({id:d.id,...d.data()}));
+  // A single denied collection must not hide the other owner reports.
+  const names=['members','sessions','sales','visits','cashMovements','clients','sellerCompensation'];
+  const results=await Promise.allSettled(names.map(name=>getDocs(collection(db,'orgs',ORG,name))));
+  const failures=[];
+  const docs=Object.fromEntries(results.map((result,index)=>{
+   const name=names[index];
+   if(result.status==='fulfilled')return [name,result.value.docs];
+   failures.push(name);
+   console.warn('Control de vendedores: lectura fallida en '+name,result.reason);
+   return [name,null];
+  }));
+  if(docs.members!==null)sellers=docs.members.map(d=>({uid:d.id,...d.data()})).filter(x=>x.role==='seller');
+  if(docs.sellerCompensation!==null)compensationBySeller=Object.fromEntries(docs.sellerCompensation.map(d=>[d.id,d.data()]));
+  if(docs.sessions!==null)sessions=docs.sessions.map(d=>({id:d.id,...d.data()}));
+  if(docs.sales!==null)sales=docs.sales.map(d=>({id:d.id,...d.data()}));
+  if(docs.visits!==null)visits=docs.visits.map(d=>({id:d.id,...d.data()}));
+  if(docs.cashMovements!==null)cash=docs.cashMovements.map(d=>({id:d.id,...d.data()}));
+  if(docs.clients!==null)clients=docs.clients.map(d=>({id:d.id,...d.data()}));
   if(selectedSellerId&&!sellers.some(s=>s.uid===selectedSellerId))selectedSellerId=null;
   if(!selectedSellerId&&sellers.length)selectedSellerId=sellers[0].uid;
   $('adminOwnerName').textContent=owner.displayName||owner.email||'Propietario';
-  render();status('Datos de vendedores actualizados.','ok');
+  render();status(failures.length?'Lectura parcial: Firebase rechazó '+failures.join(', ')+'. Revisa permisos de propietario y reglas publicadas.':'Datos de vendedores actualizados.',failures.length?'error':'ok');
  }catch(error){console.error(error);status(error.message||'No se pudieron consultar los movimientos.','error')}
  finally{loading=false}
 }
