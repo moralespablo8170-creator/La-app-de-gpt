@@ -60,7 +60,7 @@ jobs:
           /tmp/zipper-firebase-build/node_modules/.bin/esbuild /tmp/zipper-firebase-build/main/firebase-cloud-entry.js --bundle --platform=browser --format=esm --target=es2022 --outfile=_site/firebase-cloud.js
           /tmp/zipper-firebase-build/node_modules/.bin/esbuild /tmp/zipper-firebase-build/preview/firebase-cloud-entry.js --bundle --platform=browser --format=esm --target=es2022 --outfile=_site/preview/pr-9/firebase-cloud.js
           cp _site/preview/pr-9/firebase-cloud.js _site/firebase/firebase-cloud.js
-          cp _site/preview/pr-9/firebase-cloud.js _site/firebase-cloud.js
+          # Preserve the main app's own Firebase bundle; do not overwrite it with preview.
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
