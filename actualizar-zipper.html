@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Actualizar Zipper</title><style>body{font:18px system-ui,sans-serif;background:#081c30;color:#fff;margin:0;padding:24px}main{max-width:540px;margin:auto}button{font:700 19px system-ui;padding:18px;border:0;border-radius:12px;background:#e7efff;color:#10233a;width:100%}p{line-height:1.5}#status{white-space:pre-wrap}</style></head><body><main><h1>Actualizar Zipper instalada</h1><p>Esta reparación actualiza los archivos de la aplicación sin borrar clientes, productos, ventas, abonos ni el almacenamiento local.</p><p>Ábrela desde el mismo navegador con el que instalaste Zipper.</p><button id="repair">Reparar actualización</button><p id="status" role="status"></p></main><script>
+document.getElementById('repair').addEventListener('click',async()=>{
+ const button=document.getElementById('repair'),status=document.getElementById('status');button.disabled=true;status.textContent='Preparando actualización…';
+ try{
+  const scope=new URL('./',location.href).href;
+  if('serviceWorker' in navigator){
+   const registrations=await navigator.serviceWorker.getRegistrations();
+   for(const registration of registrations){if(registration.scope===scope)await registration.unregister();}
+  }
+  if('caches' in window){
+   const names=await caches.keys();
+   await Promise.all(names.filter(name=>name.startsWith('zipper-app-')).map(name=>caches.delete(name)));
+  }
+  status.textContent='Archivos anteriores retirados. Abriendo Zipper actualizada…';
+  location.replace('./?zipper-reparacion=20261102-v21');
+ }catch(error){status.textContent='No se pudo completar: '+String(error?.message||error);button.disabled=false;}
+});
+</script></body></html>
