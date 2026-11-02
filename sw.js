@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zipper-app-pwa-20261101-firebase-diagnostics-19';
+const CACHE_NAME = 'zipper-app-pwa-20261101-chrome-update-20';
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -15,7 +15,7 @@ const APP_SHELL = [
   "./route-position-migration.js?v=1.2",
   "./route-position-migration-b.js?v=1.0",
   "./herramientas.js?v=20261012-restauracion-v32",
-  "./pwa.js?v=20261007-2",
+  "./pwa.js?v=20261101-chrome-update-v20",
   "./manifest.json?v=20261015-icono-exterior-v2",
   "./data/zipper-seed.json",
   "./assets/zipper-compact.webp",
