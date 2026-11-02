@@ -62,6 +62,28 @@ jobs:
           cp _site/preview/pr-9/firebase-cloud.js _site/firebase/firebase-cloud.js
           # Preserve the main app's own Firebase bundle; do not overwrite it with preview.
 
+      - name: Prepare independent Zipper installation
+        run: |
+          mkdir -p _site/zipper-nueva
+          cp _site/index.html _site/styles.css _site/app.js _site/pwa.js _site/sw.js _site/firebase-cloud.js _site/firebase-config.js _site/firebase-test-config.js _site/seller-assignments.js _site/seller-app.js _site/seller-admin.js _site/seller-admin.html _site/vendedor.html _site/route-position-migration.js _site/route-position-migration-b.js _site/herramientas.js _site/manifest.json _site/zipper-nueva/
+          cp -a _site/assets _site/data _site/zipper-nueva/
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          path=Path('_site/zipper-nueva/manifest.json')
+          manifest=json.loads(path.read_text())
+          manifest.update({'id':'./zipper-nueva-20261102','name':'Zipper Nueva','short_name':'Zipper Nueva','start_url':'./?instalacion=zipper-nueva-20261102','scope':'./'})
+          path.write_text(json.dumps(manifest,ensure_ascii=False,indent=2))
+          html=Path('_site/zipper-nueva/index.html')
+          content=html.read_text().replace('Versión 01-11-2026 · Firebase integrado','Versión 02-11-2026 · instalación nueva')
+          content=content.replace('./manifest.json?v=20261015-icono-exterior-v2','./manifest.json?v=zipper-nueva-20261102')
+          html.write_text(content)
+          sw=Path('_site/zipper-nueva/sw.js')
+          sw.write_text(sw.read_text().replace('zipper-app-pwa-20261101-chrome-update-20','zipper-new-pwa-20261102-1').replace("key.startsWith('zipper-app-')","key.startsWith('zipper-new-')"))
+          PY
+          test -f _site/zipper-nueva/index.html
+          test -f _site/zipper-nueva/firebase-cloud.js
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
