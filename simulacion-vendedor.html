@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Vendedor de prueba · Zipper</title>
+<style>body{font:16px system-ui;background:#09243b;margin:0;padding:12px}main{max-width:640px;margin:auto}section{background:#fff;border-radius:18px;padding:18px;margin:12px 0}button,select,input{font:inherit;padding:10px;margin:5px;border-radius:8px}button{background:#1465e8;color:white;border:0}button:disabled{opacity:.4}label{display:block;margin:10px 0}.note{background:#dbeafe;padding:12px;border-radius:8px}</style></head><body><main>
+<section><h1>Zipper · Vendedor de prueba</h1><p class="note">SIMULACIÓN LOCAL · SIN FIREBASE. Todos los clientes y productos son ficticios.</p><a href="./seller-admin.html">Volver a Control de vendedores</a></section>
+<section><h2>Jornada</h2><p id="status">Sin iniciar</p><button id="start">Iniciar jornada</button><button id="end" disabled>Cerrar jornada</button></section>
+<section><h2>Ruta asignada</h2><label>Semana<select><option>A</option><option>B</option></select></label><label>Día<select><option>Lunes</option><option>Martes</option><option>Miércoles</option><option>Jueves</option><option>Viernes</option></select></label><div id="clients"></div></section>
+<section><h2>Venta de prueba</h2><p id="chosen">Selecciona un cliente</p><label>Producto<select id="product"><option value="1800">Papelillos de prueba · $1.800</option><option value="2500">Encendedor de prueba · $2.500</option></select></label><label>Cantidad<input id="qty" type="number" min="1" value="1"></label><label>Forma de pago<select id="pay"><option>Efectivo</option><option>Transferencia</option></select></label><button id="sell" disabled>Registrar venta simulada</button></section>
+<section><h2>Caja diaria simulada</h2><p id="totals">Efectivo $0 · Transferencia $0</p><h2>Movimientos</h2><div id="log">Sin movimientos</div><button id="reset">Reiniciar simulación</button></section>
+</main><script>
+let active=false,selected='',cash=0,transfer=0,logs=[];const $=id=>document.getElementById(id),names=['Almacén Ficticio','Kiosco de Prueba','Minimarket Ejemplo'],money=n=>'$'+n.toLocaleString('es-CL');
+function render(){ $('clients').innerHTML=names.map((n,i)=>'<p>'+n+' <button data-id="'+i+'" '+(!active?'disabled':'')+'>Vender</button><button data-visit="'+i+'" '+(!active?'disabled':'')+'>Visitado</button></p>').join('');$('chosen').textContent=selected||'Selecciona un cliente';$('sell').disabled=!active||!selected;$('totals').textContent='Efectivo '+money(cash)+' · Transferencia '+money(transfer);$('log').textContent=logs.join(' | ')||'Sin movimientos'}
+$('start').onclick=()=>{active=true;$('status').textContent='Jornada abierta';$('start').disabled=true;$('end').disabled=false;logs.unshift('Inicio de jornada');render()};
+$('end').onclick=()=>{active=false;$('status').textContent='Jornada cerrada';$('end').disabled=true;logs.unshift('Cierre de jornada');render()};
+$('clients').onclick=e=>{if(e.target.dataset.id!==undefined)selected=names[Number(e.target.dataset.id)];if(e.target.dataset.visit!==undefined)logs.unshift('Visitado: '+names[Number(e.target.dataset.visit)]);render()};
+$('sell').onclick=()=>{if(!active||!selected)return;const total=Number($('product').value)*Math.max(1,Number($('qty').value)||1);if($('pay').value==='Efectivo')cash+=total;else transfer+=total;logs.unshift('Venta '+selected+' '+money(total));selected='';render()};
+$('reset').onclick=()=>location.reload();render();
+</script></body></html>
