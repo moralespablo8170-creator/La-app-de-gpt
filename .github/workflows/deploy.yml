@@ -79,7 +79,7 @@ jobs:
           content=content.replace('./manifest.json?v=20261015-icono-exterior-v2','./manifest.json?v=zipper-nueva-20261102')
           html.write_text(content)
           sw=Path('_site/zipper-nueva/sw.js')
-          sw.write_text(sw.read_text().replace('zipper-app-pwa-20261101-chrome-update-20','zipper-app-pwa-nueva-20261102-1'))
+          sw.write_text(sw.read_text().replace('zipper-app-pwa-20261101-chrome-update-20','zipper-new-pwa-20261102-1').replace("key.startsWith('zipper-app-')","key.startsWith('zipper-new-')"))
           PY
           test -f _site/zipper-nueva/index.html
           test -f _site/zipper-nueva/firebase-cloud.js
