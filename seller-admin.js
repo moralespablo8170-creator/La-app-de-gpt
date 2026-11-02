@@ -291,18 +291,14 @@ async function createSellerAccount(){
 }
 async function toggleSeller(uid){
  if(!owner||navigator.onLine===false){status('Necesitas la cuenta propietaria y conexión para cambiar el acceso.','error');return}
+ if(!SELLER_ACCESS_SERVER_READY){status('El bloqueo remoto todavía no está habilitado. Primero debemos desplegar el servicio seguro en Firebase. No se modificó ningún acceso.','error');return}
  const seller=sellers.find(item=>item.uid===uid);if(!seller)return;
  const nextActive=seller.active!==true;
  if(!nextActive&&!window.confirm('¿Desactivar el acceso de '+(seller.displayName||seller.email||uid)+'?'))return;
  try{
-  if(SELLER_ACCESS_SERVER_READY){
-   const result=await setSellerAccessCall({uid,active:nextActive});
-   const authDisabled=result.data?.authDisabled;
-   status(!nextActive&&authDisabled===false?'Perfil bloqueado en Firestore; revisa manualmente el estado de Authentication.':(nextActive?'Perfil vendedor activado.':'Acceso vendedor desactivado y sesiones revocadas.'),authDisabled===false?'error':'ok');
-  }else{
-   await updateDoc(doc(db,'orgs',ORG,'members',uid),{active:nextActive,updatedAt:new Date().toISOString()});
-   status(nextActive?'Perfil vendedor activado.':'Acceso bloqueado en Firestore. Al instalar el servidor seguro también se deshabilitará Authentication.','ok');
-  }
+  const result=await setSellerAccessCall({uid,active:nextActive});
+  const authDisabled=result.data?.authDisabled;
+  status(!nextActive&&authDisabled===false?'Perfil bloqueado en Firestore; revisa manualmente Authentication.':(nextActive?'Perfil vendedor activado.':'Acceso vendedor desactivado y sesiones revocadas.'),authDisabled===false?'error':'ok');
   await refresh();
  }catch(error){console.error(error);status(error.message||'No se pudo cambiar el acceso.','error')}
 }
