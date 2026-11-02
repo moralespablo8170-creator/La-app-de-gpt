@@ -1,10 +1,10 @@
-const CACHE_NAME = 'zipper-app-pwa-20261101-firebase-importmap-18';
+const CACHE_NAME = 'zipper-app-pwa-20261101-firebase-diagnostics-19';
 const APP_SHELL = [
   "./",
   "./index.html",
   "./styles.css?v=zipper-version-firebase-20261101-2",
   "./app.js?v=zipper-version-firebase-20261101-3",
-  "./firebase-cloud.js?v=zipper-firebase-importmap-20261101-v18",
+  "./firebase-cloud.js?v=zipper-firebase-diagnostics-20261101-v19",
   "./firebase-config.js",
   "./firebase-test-config.js",
   "./seller-assignments.js?v=zipper-seller-routes-20261029-v1",
@@ -23,7 +23,7 @@ const APP_SHELL = [
   "./assets/icono-512.png?v=20261015-icono-exterior-v2"
 ];
 self.addEventListener('install', event => {
-  event.waitUntil((async () => { await caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)); await self.skipWaiting(); })());
+  event.waitUntil((async () => { const cache=await caches.open(CACHE_NAME); await cache.add('./index.html'); await Promise.allSettled(APP_SHELL.filter(url=>url!=='./index.html').map(url=>cache.add(url))); await self.skipWaiting(); })());
 });
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
