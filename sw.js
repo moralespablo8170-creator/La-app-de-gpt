@@ -1,9 +1,9 @@
-const CACHE_NAME = 'zipper-app-pwa-20261102-stock-categorias-21';
+const CACHE_NAME = 'zipper-app-pwa-20261103-categorias-completas-22';
 const APP_SHELL = [
   "./",
   "./index.html",
   "./styles.css?v=zipper-version-firebase-20261101-2",
-  "./app.js?v=zipper-stock-categorias-20261102-1",
+  "./app.js?v=zipper-categorias-completas-20261103-1",
   "./firebase-cloud.js?v=zipper-firebase-diagnostics-20261101-v19",
   "./firebase-config.js",
   "./firebase-test-config.js",
