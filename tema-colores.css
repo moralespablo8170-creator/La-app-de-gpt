@@ -204,3 +204,31 @@ button,.tab,select,input[type=date]{min-height:44px;touch-action:manipulation}
 .zipper-toast{position:fixed;left:16px;right:16px;bottom:96px;z-index:10050;background:#0f172a;color:#fff;font-weight:800;padding:14px 16px;border-radius:14px;box-shadow:0 8px 24px #0006;text-align:center;opacity:0;transform:translateY(10px);pointer-events:none;transition:opacity .2s,transform .2s}
 .zipper-toast.show{opacity:1;transform:none}
 .cart-banner .banner-text{flex:1 1 0;min-width:0}
+
+/* ---------- Productos: fila legible y botones destacados ---------- */
+.product-card-row{grid-template-columns:minmax(0,1fr)!important;gap:8px!important}
+.product-card-row .stock-badge{justify-self:start;font-size:13px!important;padding:6px 12px}
+.product-card-row .product-ident strong{font-size:17px!important;overflow-wrap:normal;word-break:normal}
+.product-card-row .product-ident span{font-size:13px}
+.product-card-row .color-dot{width:10px!important;height:auto!important;min-height:44px;align-self:stretch;border-radius:8px!important;border:0!important;box-shadow:none!important;margin-top:0!important}
+.inventory-actions{display:grid!important;grid-template-columns:1fr 1fr;gap:8px;width:100%}
+.inventory-actions button{min-height:46px!important;font-size:15px!important;font-weight:900!important;border:0!important;border-radius:14px!important;color:#fff!important;box-shadow:0 3px 8px #0002}
+.inventory-actions .edit-product{background:linear-gradient(135deg,#2563eb,#3b82f6)!important}
+.inventory-actions .adjust-stock{background:linear-gradient(135deg,#ea580c,#f59e0b)!important}
+
+/* Selector de color de la barra del producto */
+.bar-color-field{margin:12px 0}
+.bar-color-field > strong{display:block;margin-bottom:6px}
+.bar-color-options{display:flex;flex-wrap:wrap;gap:8px}
+.bar-color-options button{width:44px;height:44px;min-height:44px;border-radius:12px;border:3px solid #fff;box-shadow:0 0 0 1px #cbd5e1;padding:0;font-size:11px;font-weight:900}
+.bar-color-options button.auto{width:auto;padding:0 12px;background:#f1f5f9;color:#334155}
+.bar-color-options button.selected{box-shadow:0 0 0 3px #0f172a;transform:scale(1.08)}
+.bar-color-preview{font-size:13px;color:#475569;margin-top:6px}
+
+/* ---------- Inicio: visitados ---------- */
+.visited-back{background:linear-gradient(135deg,#0891b2,#22d3ee)!important;padding:10px 12px!important;border-radius:16px!important;box-shadow:0 6px 14px #0891b244}
+.visited-back button{background:#fff!important;color:#0e7490!important;font-size:17px!important;font-weight:900!important;border:0!important;border-radius:12px!important;min-height:52px;padding:8px 16px!important;box-shadow:0 3px 8px #0003;flex-shrink:0}
+.visited-back span{color:#fff!important;font-size:15px;font-weight:900!important}
+.visited-row .actions-small{display:grid!important;grid-template-columns:1fr 1fr;gap:8px!important;align-items:stretch}
+.visited-row .actions-small .sale-status-badge{grid-column:1/-1;height:auto!important;min-height:0!important;align-self:start;text-align:center;padding:10px!important}
+.visited-row .actions-small button{width:100%!important;flex:none!important;min-height:46px;white-space:normal;word-break:normal!important;overflow-wrap:normal!important;hyphens:none;font-size:14px!important;line-height:1.2;padding:8px 10px!important}
