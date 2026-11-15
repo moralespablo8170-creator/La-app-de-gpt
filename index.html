@@ -9,7 +9,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="./assets/icono-512.png?v=20261015-icono-exterior-v2">
 <link rel="apple-touch-icon" href="./assets/icono-512.png?v=20261015-icono-exterior-v2">
 <link rel="stylesheet" href="styles.css?v=zipper-version-firebase-20261101-2">
-<link rel="stylesheet" href="tema-colores.css?v=20261115-7">
+<link rel="stylesheet" href="tema-colores.css?v=20261115-8">
 <style>
 .sale-status-badge{display:inline-flex;align-items:center;justify-content:center;padding:7px 12px;border-radius:8px;background:#111;color:#fff;font-weight:900;font-size:13px;letter-spacing:.3px;border:2px solid #111;box-shadow:0 2px 5px rgba(0,0,0,.18)}
 </style>
@@ -45,6 +45,12 @@
 
 <section id="cashView" class="view hidden"><div class="page-banner banner-cash"><img class="page-art" src="assets/ilustraciones/caja.svg" alt="" width="96" height="77"><div class="banner-text"><h2>Caja diaria</h2><p id="cashDayTitle">Resumen de hoy</p></div></div>
 <section class="card"><div class="cash-date-tools"><label>Calendario de caja<input id="cashDate" type="date"></label><p class="muted">Elige cualquier fecha como referencia para tu caja.</p><div id="cashRange" class="segmented periods"><button class="active" data-range="day" type="button">Día</button><button data-range="week" type="button">Semana</button><button data-range="fortnight" type="button">Quincena</button><button data-range="month" type="button">Mes</button></div></div><div class="summary-grid three"><div><span>Vendido</span><strong id="cashSales">$0</strong></div><div><span>Invertido</span><strong id="cashCost">$0</strong></div><div><span>Gastos</span><strong id="cashExpensesTop">$0</strong></div><div style="grid-column:1/-1"><span>Ganancia neta (después de gastos)</span><strong id="cashProfit">$0</strong><small id="cashProfitBreakdown" style="display:block;margin-top:5px">Vendido − invertido − gastos</small></div></div><div class="kicker" style="margin-top:18px">FORMA DE PAGO DE ESTA CAJA</div><div id="cashPaymentSummary" class="summary-grid three"></div><div class="section-title" style="margin-top:18px"><div><div class="kicker"><span class="section-icon" aria-hidden="true">💸</span><span>GASTOS DEL DÍA</span></div><h3>Salidas de efectivo</h3><p class="muted">Cada gasto se descuenta del efectivo esperado, sin alterar las ventas ni la ganancia comercial.</p></div></div><div class="grid two"><label>Monto del gasto ($)<input id="cashExpenseAmount" type="number" min="1" step="1" inputmode="numeric" placeholder="Ej. 5000"></label><label>Motivo del gasto<input id="cashExpenseReason" type="text" maxlength="120" placeholder="Benzina, comida, emergencia..."></label></div><div class="actions"><button id="cashExpenseSave" class="primary" type="button">Registrar gasto</button></div><p class="muted">Los gastos nuevos se registran con la fecha de hoy, aunque estés consultando una caja anterior.</p><div class="summary-grid"><div><span>Total de gastos del período</span><strong id="cashExpenseTotal">$0</strong></div></div><div id="cashExpenseList" class="history-list"></div><div class="section-title" style="margin-top:18px"><div><div class="kicker"><span class="section-icon" aria-hidden="true">🏦</span><span>CUENTAS PENDIENTES</span></div><h3>Saldo actual por cliente</h3><p class="muted">La deuda se acumula entre ventas y disminuye con cada abono.</p></div></div><div id="cashPendingList" class="history-list"></div><div class="section-title" style="margin-top:18px"><div><div class="kicker">ABONOS DE LA FECHA</div><h3>Dinero recibido por deudas</h3></div></div><div id="cashPaymentsToday" class="history-list"></div></section>
+<section class="card pj-card"><div class="pj-title"><img src="assets/ilustraciones/productos.svg" alt="" width="72" height="58"><div><h2>¿Cuánto debo comprar?</h2><p>Proyección por producto para no quedar corto de mercadería</p></div></div>
+<div class="grid two"><label>Período<select id="projectionHorizon"><option value="7">Próxima semana</option><option value="30">Próximo mes</option></select></label><label>Margen de seguridad<select id="projectionMargin"><option value="0">Sin margen</option><option value="10">+10%</option><option value="20" selected>+20%</option><option value="30">+30%</option></select></label></div>
+<label class="search-field">🔍 Buscar producto<input id="projectionSearch" type="search" placeholder="Nombre del producto"></label>
+<label class="check-row"><input id="projectionOnlyBuy" type="checkbox" checked> Mostrar solo lo que debo comprar</label>
+<div id="projectionOutput"></div></section>
+<section class="card pj-card"><div class="pj-title"><img src="assets/ilustraciones/historial.svg" alt="" width="72" height="58"><div><h2>¿Cómo voy comparado?</h2><p>Este mes frente al mes anterior y al mismo mes del año pasado</p></div></div><div id="comparisonOutput"></div></section>
 <section class="card"><div class="section-title"><div><div class="kicker"><span class="section-icon" aria-hidden="true">📊</span><span>ANÁLISIS</span></div><h2>Panel de ventas</h2><p class="muted">Primero eliges el período que quieres estudiar. Después eliges qué quieres comparar. Así “Hoy” significa fecha y “Día de reparto” significa agrupación.</p></div></div>
 <div class="stats-subtitle">1. PERÍODO</div>
 <div class="segmented periods" id="statPeriod"><button class="active" data-period="day" type="button">Hoy</button><button data-period="week" type="button">Esta semana</button><button data-period="month" type="button">Este mes</button><button data-period="year" type="button">Este año</button></div>
@@ -95,6 +101,7 @@ window.zipperBackupDirect=function(){
 };
 </script>
 <script src="app.js?v=20261115-color-6"></script>
+<script src="proyecciones.js?v=20261115-1"></script>
 <script src="rutas-clientes.js?v=20261115-2"></script>
 <script src="seller-assignments.js?v=zipper-seller-routes-20261029-v1"></script>
 <script src="route-position-migration.js?v=1.2"></script>
