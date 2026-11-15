@@ -68,24 +68,9 @@
     actions.insertBefore(b,document.getElementById('receiptPrintNow'));
   }
 
-  // Botón "Recordar pago" en Historial → Pendientes.
-  function decoratePending(){
-    if(typeof historyType==='undefined'||historyType!=='pending')return;
-    document.querySelectorAll('#historyOutput .pending-row').forEach(row=>{
-      if(row.querySelector('.wa-remind'))return;
-      const id=row.querySelector('.mark-paid')?.dataset.id;const sale=getSales().find(s=>String(s.id)===String(id));if(!sale)return;
-      const client=clientById(sale.clienteId),debt=debtOf(client);if(!client||debt<=0)return;
-      const b=document.createElement('button');b.type='button';b.className='wa-btn wa-remind';b.textContent='📲 Recordar pago';
-      b.onclick=()=>open(waPhone(client),reminderText(client,debt));
-      row.querySelector('.actions-small')?.appendChild(b);
-    });
-  }
-
   window.zipperWhatsApp={waPhone,saleText,sendSale};
   function bind(){
     addReceiptButton();
-    const original=window.renderHistory;
-    if(typeof original==='function'&&!original.__withWhatsApp){window.renderHistory=function(){const r=original.apply(this,arguments);try{decoratePending()}catch(e){console.error('WhatsApp:',e)}return r};window.renderHistory.__withWhatsApp=true}
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
 })();

@@ -9,7 +9,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="./assets/icono-512.png?v=20261015-icono-exterior-v2">
 <link rel="apple-touch-icon" href="./assets/icono-512.png?v=20261015-icono-exterior-v2">
 <link rel="stylesheet" href="styles.css?v=zipper-version-firebase-20261101-2">
-<link rel="stylesheet" href="tema-colores.css?v=20261115-12">
+<link rel="stylesheet" href="tema-colores.css?v=20261115-13">
 <style>
 .sale-status-badge{display:inline-flex;align-items:center;justify-content:center;padding:7px 12px;border-radius:8px;background:#111;color:#fff;font-weight:900;font-size:13px;letter-spacing:.3px;border:2px solid #111;box-shadow:0 2px 5px rgba(0,0,0,.18)}
 </style>
@@ -23,7 +23,7 @@
 </nav>
 
 <section id="homeView" class="view">
-<button id="resetRoute" class="primary wide" style="margin:0 0 14px" type="button">← Volver al inicio · elegir ruta</button>
+<button id="resetRoute" class="primary wide" style="margin:0 0 14px" type="button">← Volver al inicio · elegir ruta</button><div id="homeAlerts" class="home-alerts"></div>
 
 
 <div class="page-banner banner-home"><img class="page-art" src="assets/ilustraciones/ruta.svg" alt="" width="96" height="77"><div class="banner-text"><h2>Ruta de hoy</h2><p>Elige semana y día · queda activa todo el día</p></div></div>
@@ -96,13 +96,14 @@ window.zipperBackupDirect=function(){
 };
 </script>
 <script src="app.js?v=20261115-cancelar-12"></script>
-<script src="whatsapp.js?v=20261115-3"></script>
+<script src="whatsapp.js?v=20261115-4"></script>
 <script src="proyecciones.js?v=20261115-3"></script>
 <script src="rutas-clientes.js?v=20261115-2"></script>
 <script src="seller-assignments.js?v=zipper-seller-routes-20261029-v1"></script>
 <script src="route-position-migration.js?v=1.2"></script>
 <script src="route-position-migration-b.js?v=1.0"></script>
 <script src="herramientas.js?v=20261115-restauracion-v33"></script>
+<script src="cobranza.js?v=20261115-1"></script>
 <script>
 (function(){
  const btn=document.getElementById('restoreBackupButton');
