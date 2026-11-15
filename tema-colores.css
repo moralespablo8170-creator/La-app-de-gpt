@@ -197,3 +197,10 @@ button,.tab,select,input[type=date]{min-height:44px;touch-action:manipulation}
 .cart-banner h2{margin:2px 0;color:#fff!important;font-size:24px;font-weight:900;line-height:1.15;text-shadow:0 2px 6px #0003;overflow-wrap:anywhere}
 .cart-banner .muted-inline{color:#fffbeb!important;font-size:13px;font-weight:700}
 .cart-banner .banner-action{color:#b45309}
+/* Carrito: acciones del encabezado */
+.cart-banner-actions{flex:1 1 100%;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cart-banner .visited-action{background:#fffbeb;color:#92400e;border:2px solid #fde68a}
+@media (max-width:340px){.cart-banner-actions{grid-template-columns:1fr}}
+.zipper-toast{position:fixed;left:16px;right:16px;bottom:96px;z-index:10050;background:#0f172a;color:#fff;font-weight:800;padding:14px 16px;border-radius:14px;box-shadow:0 8px 24px #0006;text-align:center;opacity:0;transform:translateY(10px);pointer-events:none;transition:opacity .2s,transform .2s}
+.zipper-toast.show{opacity:1;transform:none}
+.cart-banner .banner-text{flex:1 1 0;min-width:0}
