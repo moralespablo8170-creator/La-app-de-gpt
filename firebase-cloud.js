@@ -56,7 +56,13 @@ function readOutbox() {
   } catch (_) { return {}; }
 }
 function saveOutbox(outbox) {
-  try { localStorage.setItem(OUTBOX_KEY,JSON.stringify(outbox)); }
+  try { localStorage.setItem(OUTBOX_KEY,JSON.stringify(outbox)); return; }
+  catch(error) { console.warn('Firebase: cola pendiente demasiado grande; se guarda sin huellas de contenido.',error); }
+  // Out of space: drop the optional fingerprints (rows are then resent in full)
+  // but never lose the pending change itself.
+  const slim={};
+  Object.entries(outbox).forEach(([key,item])=>{const {previousHashes,...rest}=item||{};slim[key]=rest});
+  try { localStorage.setItem(OUTBOX_KEY,JSON.stringify(slim)); }
   catch(error) { console.error('Firebase: no se pudo guardar la cola pendiente local.',error); }
 }
 function pendingCloudCollection(name) {
@@ -123,15 +129,40 @@ function schedulePendingFlush(delay=0) {
     flushPendingChanges();
   },delay);
 }
+// Compact fingerprint (cyrb53) of a row's content. The outbox stores one per row so
+// a later flush can tell which rows really changed without keeping a full copy.
+function rowFingerprint(row) {
+  const text=stableCompareString(row);
+  let h1=0xdeadbeef, h2=0x41c6ce57;
+  for(let i=0;i<text.length;i++) {
+    const ch=text.charCodeAt(i);
+    h1=Math.imul(h1^ch,2654435761);
+    h2=Math.imul(h2^ch,1597334677);
+  }
+  h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);
+  h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);
+  return (4294967296*(2097151&h2)+(h1>>>0)).toString(36);
+}
+function rowFingerprints(rows) {
+  const result={};
+  rows.forEach(row=>{if(row&&typeof row==='object'&&row.id!=null)result[String(row.id)]=rowFingerprint(row)});
+  return result;
+}
 function enqueueLocalChange(key, previousRaw, currentRaw) {
   if(localStorage.getItem('zipperStorageMode')!=='cloud'||applyingCloud) return;
   const outbox=readOutbox();
   const existing=outbox[key];
-  outbox[key]={
-    previousIds:existing?.previousIds||parseArray(previousRaw).map(row=>typeof row==='object'&&row?row.id:row),
-    ...(key==='zipperProductos'?{previousRows:existing?.previousRows||parseArray(previousRaw)}:{}),
-    revision:String(Date.now())+'-'+Math.random().toString(36).slice(2)
-  };
+  // The baseline is the state before the first unsent change; later edits keep it.
+  let entry;
+  if(existing) entry={...existing};
+  else {
+    const previous=parseArray(previousRaw);
+    entry={previousIds:previous.map(row=>typeof row==='object'&&row?row.id:row)};
+    if(key==='zipperProductos') entry.previousRows=previous;
+    else if(!key.startsWith('zipperVisitados-')&&key!=='zipperCategorias'&&key!=='zipperCategoriasEliminadas') entry.previousHashes=rowFingerprints(previous);
+  }
+  entry.revision=String(Date.now())+'-'+Math.random().toString(36).slice(2);
+  outbox[key]=entry;
   saveOutbox(outbox);
   lastSyncError='';
   updateSyncIndicator();
@@ -385,7 +416,7 @@ async function writeSellerProductRows(rows,previousRows=[]) {
     await batch.commit();
   }
 }
-async function writeLocalArrayToCloud(key, rows, previousRows=[]) {
+async function writeLocalArrayToCloud(key, rows, previousRows=[], previousHashes=null) {
   if(!activeProfile||activeProfile.role!=='owner') throw new Error('Conecta la cuenta propietaria para sincronizar los cambios pendientes.');
   if(key==='zipperCategorias'||key==='zipperCategoriasEliminadas') {
     const catalog={id:'catalog',categories:localArray('zipperCategorias'),deletedCategories:localArray('zipperCategoriasEliminadas')};
@@ -395,6 +426,19 @@ async function writeLocalArrayToCloud(key, rows, previousRows=[]) {
   if(key==='zipperProductos'&&sellerCatalogVersion>=1) {
     await writeSellerProductRows(rows,previousRows);
     return;
+  }
+  if(previousHashes&&typeof previousHashes==='object') {
+    // Send only rows that are new or whose content changed since the baseline;
+    // previous rows are reduced to the ids that disappeared (to delete them).
+    const currentIds=new Set(rows.map(row=>String(row?.id)));
+    rows=rows.filter(row=>!(row&&row.id!=null&&previousHashes[String(row.id)]===rowFingerprint(row)));
+    previousRows=previousRows.filter(row=>!currentIds.has(String(row?.id)));
+  }
+  if(key.startsWith('zipperVisitados-')) {
+    // Visit rows are fully determined by the client id: only additions and removals matter.
+    const before=new Set(previousRows.map(String)), after=new Set(rows.map(String));
+    rows=rows.filter(id=>!before.has(String(id)));
+    previousRows=previousRows.filter(id=>!after.has(String(id)));
   }
   const mapped=toCloudRows(key,rows,activeProfile);
   if(!mapped) return;
@@ -427,7 +471,7 @@ async function flushPendingChanges() {
         :key==='zipperProductos'&&Array.isArray(item.previousRows)
           ?item.previousRows
           :(item.previousIds||[]).map(id=>({id}));
-      await writeLocalArrayToCloud(key,localArray(key),previousRows);
+      await writeLocalArrayToCloud(key,localArray(key),previousRows,item.previousHashes||null);
       const latest=readOutbox();
       if(latest[key]?.revision===item.revision) {
         delete latest[key];
