@@ -10,7 +10,7 @@ function between(source, start, end) {
   assert.ok(a >= 0 && b > a, 'source boundaries exist');
   return source.slice(a, b);
 }
-const saleFunction = between(appSource, 'function finalizeSale(printAfter){', 'function saveSale(){');
+const saleFunction = between(appSource, 'function finalizeSale(', 'function saveSale(){');
 const restoreFunctions = between(toolsSource, 'function zipperDataKeys(storage){', 'function previewExampleReceipt(){');
 
 class Storage {
