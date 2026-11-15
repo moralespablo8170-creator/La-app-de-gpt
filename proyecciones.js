@@ -41,46 +41,65 @@
     return {recent,lastYear,growth,value};
   }
 
-  function renderProjection(){
-    const box=$('projectionOutput');if(!box)return;
-    const horizon=Number($('projectionHorizon').value)||7,margin=Number($('projectionMargin').value)||0,onlyBuy=$('projectionOnlyBuy').checked;
-    const q=norm($('projectionSearch').value||'');
-    const start=parse(localDate());
-    const {units,first}=salesByProduct();
-    const rows=[];
-    units.forEach(u=>{
-      if(!u.p)return;
-      if(q&&!norm(u.name).includes(q))return;
-      const f=forecast(u.days,start,horizon,first);
-      if(f.value<=0&&!sumRange(u.days,start-90*DAY,start))return;
-      const need=Math.ceil(f.value*(1+margin/100));
-      const stock=Math.max(0,Number(u.p.stock)||0);
-      const buy=Math.max(0,need-stock);
-      const cost=buy*(Number(u.p.pricePurchase)||0);
-      const lastPeriod=sumRange(u.days,start-horizon*DAY,start);
-      rows.push({u,f,need,stock,buy,cost,lastPeriod,days:f.value>0?Math.floor(stock/(f.value/horizon)):null});
-    });
-    rows.sort((a,b)=>b.buy-a.buy||b.need-a.need);
-    const shown=onlyBuy?rows.filter(r=>r.buy>0):rows;
-    const totalCost=shown.reduce((a,r)=>a+r.cost,0),totalBuy=shown.reduce((a,r)=>a+r.buy,0);
-    const period=horizon<=7?'la próxima semana':'el próximo mes';
-    const yearNote=Number.isFinite(first)&&first<=start-393*DAY?'Combina las ventas recientes con el mismo período del año pasado (ajustado según cómo vas este año).':'Basado en tus ventas recientes. Cuando tengas un año de datos también se usará el mismo período del año anterior.';
-    box.innerHTML='<div class="pj-summary"><div class="summary-tile tile-blue"><strong>'+shown.filter(r=>r.buy>0).length+'</strong><span>Productos por comprar</span></div><div class="summary-tile tile-amber"><strong>'+totalBuy+'</strong><span>Unidades sugeridas</span></div><div class="summary-tile tile-green"><strong>'+money(totalCost)+'</strong><span>Costo estimado de compra</span></div></div>'+
-      '<p class="pj-note">Para '+period+' · margen de seguridad '+margin+'%. '+yearNote+'</p>'+
-      (shown.length?'<div class="pj-list">'+shown.map(r=>{
-        const lvl=r.buy>0?(r.stock===0?'pj-critical':'pj-buy'):'pj-ok';
-        return '<article class="pj-row '+lvl+'"><div class="pj-head"><strong>'+esc(r.u.name)+'</strong>'+(r.buy>0?'<span class="pj-buy-badge">Comprar '+r.buy+'</span>':'<span class="pj-ok-badge">Stock suficiente</span>')+'</div>'+
-          '<div class="pj-grid"><span><b>'+r.stock+'</b>Stock hoy</span><span><b>'+Math.round(r.f.value)+'</b>Venta proyectada</span><span><b>'+r.lastPeriod+'</b>'+(horizon<=7?'Últimos 7 días':'Últimos 30 días')+'</span><span><b>'+(r.f.lastYear===null?'—':r.f.lastYear)+'</b>Mismo período año pasado</span></div>'+
-          '<small>'+(r.days===null?'Sin ventas recientes.':r.days<=0?'⚠️ Sin stock: puedes quedar corto hoy mismo.':'El stock actual alcanza para unos '+r.days+' días.')+(r.cost?' · Costo de la compra sugerida: '+money(r.cost):'')+'</small></article>';
-      }).join('')+'</div><div class="actions"><button id="projectionCopy" class="secondary wide" type="button">📋 Copiar lista de compras</button></div>':'<p class="muted empty-state">📦 No hay ventas suficientes para proyectar.</p>');
-    const copy=$('projectionCopy');
-    if(copy)copy.onclick=()=>{
-      const list=shown.filter(r=>r.buy>0);
-      const text='Lista de compras · '+period+' ('+localDate()+')\n\n'+list.map(r=>'• '+r.u.name+': comprar '+r.buy+' (stock '+r.stock+', proyección '+Math.round(r.f.value)+')').join('\n')+'\n\nTotal estimado: '+money(list.reduce((a,r)=>a+r.cost,0));
-      const done=()=>alert('Lista copiada. Puedes pegarla en WhatsApp o enviarla al proveedor.');
-      if(navigator.clipboard?.writeText)navigator.clipboard.writeText(text).then(done).catch(()=>prompt('Copia la lista:',text));else prompt('Copia la lista:',text);
-    };
+  // ===== Pedido de compra dentro de Productos =====
+  const ORDER_KEY='zipperPedidoCompraV1';
+  function readOrder(){try{const o=JSON.parse(localStorage.getItem(ORDER_KEY)||'{}');return {horizon:Number(o.horizon)||7,margin:o.margin==null?20:Number(o.margin),qty:o.qty&&typeof o.qty==='object'?o.qty:{}}}catch(_){return {horizon:7,margin:20,qty:{}}}}
+  function saveOrder(o){try{localStorage.setItem(ORDER_KEY,JSON.stringify(o))}catch(e){console.warn('No se pudo guardar el pedido',e)}}
+  // Sugerido por producto: proyección de venta del período + margen − stock actual.
+  function suggestions(order){
+    const start=parse(localDate()),{units,first}=salesByProduct(),out=new Map();
+    units.forEach(u=>{if(!u.p)return;const f=forecast(u.days,start,order.horizon,first);const need=Math.ceil(f.value*(1+order.margin/100));const stock=Math.max(0,Number(u.p.stock)||0);out.set(String(u.p.id),{suggest:Math.max(0,need-stock),forecast:Math.round(f.value),lastYear:f.lastYear,stock})});
+    return {map:out,hasYear:Number.isFinite(first)&&first<=start-393*DAY};
   }
+  let lastSug=null;
+  const orderQty=(order,id)=>{const v=order.qty[id];return v==null?(lastSug?.map.get(id)?.suggest||0):Math.max(0,Number(v)||0)};
+  function purchaseStrip(id,order){
+    const info=lastSug.map.get(id),q=orderQty(order,id),edited=order.qty[id]!=null;
+    const detail=info?('Proyección '+info.forecast+(info.lastYear!=null?' · año pasado '+info.lastYear:'')+(edited&&info.suggest!==q?' · sugerido '+info.suggest:'')):'Sin ventas recientes';
+    return '<div class="buy-strip'+(q>0?' has-qty':'')+'" data-buy-id="'+esc(id)+'"><div class="buy-info"><strong>🛒 Comprar</strong><small>'+esc(detail)+'</small></div><div class="buy-stepper"><button type="button" class="buy-minus" aria-label="Restar">−</button><input class="buy-qty" type="number" min="0" step="1" inputmode="numeric" value="'+q+'" aria-label="Unidades a comprar"><button type="button" class="buy-plus" aria-label="Sumar">+</button></div></div>';
+  }
+  function orderRows(order){
+    const cat=$('lowStockCategory')?.value||'';
+    return getProducts().filter(p=>!cat||String(p.category||'Otros').trim()===cat).map(p=>({p,q:orderQty(order,String(p.id))})).filter(x=>x.q>0).sort((a,b)=>String(a.p.name).localeCompare(String(b.p.name),'es'));
+  }
+  function renderOrderSummary(order){
+    const box=$('buySummary');if(!box)return;
+    const rows=orderRows(order),units=rows.reduce((a,x)=>a+x.q,0),cost=rows.reduce((a,x)=>a+x.q*(Number(x.p.pricePurchase)||0),0),cat=$('lowStockCategory')?.value||'';
+    box.innerHTML='<div class="buy-totals"><span><b>'+rows.length+'</b>'+(rows.length===1?'producto':'productos')+'</span><span><b>'+units+'</b>unidades</span><span><b>'+money(cost)+'</b>costo aprox.</span></div><p class="buy-scope">'+(cat?'Pedido de <b>'+esc(cat)+'</b>':'Pedido de <b>todas las categorías</b> · elige una categoría arriba para el pedido de un proveedor')+'</p>';
+    const send=$('buySend');if(send){send.disabled=!rows.length;send.textContent=cat?'📤 Enviar pedido a '+cat:'📤 Enviar pedido'}
+  }
+  function decorateInventory(){
+    const list=$('inventoryList');if(!list)return;
+    const order=readOrder();
+    if($('buyHorizon'))$('buyHorizon').value=String(order.horizon);
+    if($('buyMargin'))$('buyMargin').value=String(order.margin);
+    const enabled=$('buyMode')?.checked;
+    document.body.classList.toggle('buy-mode',!!enabled);
+    if(!enabled){renderOrderSummary(order);return}
+    lastSug=suggestions(order);
+    const onlyBuy=$('buyOnly')?.checked;
+    list.querySelectorAll('.product-card-row').forEach(row=>{
+      const id=row.querySelector('.edit-product')?.dataset.id;if(!id)return;
+      row.querySelector('.buy-strip')?.remove();
+      row.querySelector('.inventory-actions')?.insertAdjacentHTML('beforebegin',purchaseStrip(id,order));
+      row.classList.toggle('buy-hidden',!!onlyBuy&&orderQty(order,id)<=0);
+    });
+    renderOrderSummary(order);
+  }
+  function setQty(id,value){
+    const order=readOrder();order.qty[id]=Math.max(0,Math.round(Number(value)||0));saveOrder(order);
+    const strip=document.querySelector('.buy-strip[data-buy-id="'+CSS.escape(id)+'"]');
+    if(strip){strip.outerHTML=purchaseStrip(id,order)}
+    renderOrderSummary(order);
+  }
+  function sendOrder(){
+    const order=readOrder(),rows=orderRows(order),cat=$('lowStockCategory')?.value||'';
+    if(!rows.length)return;
+    const text='Pedido Distribuidora Zipper'+(cat?' · '+cat:'')+'\n'+localDate()+'\n\n'+rows.map(x=>'• '+x.p.name+': '+x.q).join('\n')+'\n\nTotal: '+rows.reduce((a,x)=>a+x.q,0)+' unidades';
+    const done=()=>{if(typeof zipperToast==='function')zipperToast('📋 Pedido copiado. Pégalo en WhatsApp al proveedor.')};
+    if(navigator.share){navigator.share({text}).catch(err=>{if(err?.name!=='AbortError')copyText(text,done)})}else copyText(text,done);
+  }
+  function copyText(text,done){if(navigator.clipboard?.writeText)navigator.clipboard.writeText(text).then(done).catch(()=>prompt('Copia el pedido:',text));else prompt('Copia el pedido:',text)}
 
   // Comparación mes a mes y con el mismo mes del año anterior.
   function renderComparison(){
@@ -103,13 +122,28 @@
       '<h3 class="pj-sub">Últimos 12 meses <span class="pj-legend"><i class="lg-now"></i>Este año <i class="lg-prev"></i>Año anterior</span></h3><div class="pj-bars">'+months.map(x=>'<div class="pj-bar-row"><span class="pj-bar-label">'+x.label+'</span><div class="pj-bar-track"><div class="pj-bar now" style="width:'+(x.a.total/max*100).toFixed(1)+'%"></div><div class="pj-bar prev" style="width:'+(x.b.total/max*100).toFixed(1)+'%"></div></div><span class="pj-bar-value">'+money(x.a.total)+'</span></div>').join('')+'</div>';
   }
 
-  function renderProjections(){try{renderProjection();renderComparison()}catch(error){console.error('Proyecciones:',error)}}
+  function updateTrendCard(){const card=$('trendCard');if(card)card.hidden=typeof statPeriod!=='undefined'&&statPeriod==='day'}
+  function renderProjections(){try{renderComparison();updateTrendCard()}catch(error){console.error('Proyecciones:',error)}}
   window.renderProjections=renderProjections;
   function bind(){
-    ['projectionHorizon','projectionMargin','projectionOnlyBuy'].forEach(id=>$(id)?.addEventListener('change',renderProjection));
-    $('projectionSearch')?.addEventListener('input',renderProjection);
     const original=window.renderCash;
     if(typeof original==='function'&&!original.__withProjections){window.renderCash=function(){const r=original.apply(this,arguments);renderProjections();return r};window.renderCash.__withProjections=true}
+    document.addEventListener('click',e=>{if(e.target.closest('#cashView [data-period]'))setTimeout(updateTrendCard,0)});
+    const inv=window.renderInventory;
+    if(typeof inv==='function'&&!inv.__withOrder){window.renderInventory=function(){const r=inv.apply(this,arguments);try{decorateInventory()}catch(e){console.error('Pedido:',e)}return r};window.renderInventory.__withOrder=true}
+    const list=$('inventoryList');
+    list?.addEventListener('click',e=>{const strip=e.target.closest('.buy-strip');if(!strip)return;const id=strip.dataset.buyId,input=strip.querySelector('.buy-qty'),v=Number(input.value)||0;if(e.target.closest('.buy-plus'))setQty(id,v+1);else if(e.target.closest('.buy-minus'))setQty(id,Math.max(0,v-1))});
+    list?.addEventListener('change',e=>{const input=e.target.closest('.buy-qty');if(input)setQty(input.closest('.buy-strip').dataset.buyId,input.value)});
+    $('buyMode')?.addEventListener('change',()=>{localStorage.setItem('zipperPedidoVisible',$('buyMode').checked?'1':'0');renderInventory()});
+    if($('buyMode'))$('buyMode').checked=localStorage.getItem('zipperPedidoVisible')==='1';
+    // El buscador y el filtro de categoría llaman a la lista original: después se agrega el pedido.
+    $('lowStockCategory')?.addEventListener('change',()=>setTimeout(decorateInventory,0));
+    $('productSearch')?.addEventListener('input',()=>setTimeout(decorateInventory,0));
+    $('buyOnly')?.addEventListener('change',decorateInventory);
+    $('buyHorizon')?.addEventListener('change',()=>{const o=readOrder();o.horizon=Number($('buyHorizon').value)||7;saveOrder(o);decorateInventory()});
+    $('buyMargin')?.addEventListener('change',()=>{const o=readOrder();o.margin=Number($('buyMargin').value)||0;saveOrder(o);decorateInventory()});
+    $('buyReset')?.addEventListener('click',()=>{if(!confirm('¿Volver a las cantidades sugeridas? Se borran los cambios que hiciste a mano.'))return;const o=readOrder();o.qty={};saveOrder(o);decorateInventory()});
+    $('buySend')?.addEventListener('click',sendOrder);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
 })();

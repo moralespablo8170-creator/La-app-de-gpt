@@ -1012,24 +1012,56 @@ function closeReceiptPreview(){$('receiptPrintModal').classList.add('hidden')}
 async function createReceiptPdfFile(){
  if(!preparedReceipt){alert('Primero selecciona un comprobante.');return}
  {
-  const sale=preparedReceipt, width=58, margin=3, usable=52, rows=[];
-  const wrap=(value,size=13,bold=false)=>{const text=String(value??'');const limit=size===15?17:20;const words=text.split(/\s+/);let line='';for(const word of words){if((line+' '+word).trim().length>limit){if(line)rows.push({text:line,size,bold});line=word;while(line.length>limit){rows.push({text:line.slice(0,limit),size,bold});line=line.slice(limit)}}else line=(line+' '+word).trim()}if(line)rows.push({text:line,size,bold})};
-  wrap('DISTRIBUIDORA ZIPPER',14,true);
-  wrap('Comprobante #'+sale.folio+' - '+sale.fecha,13,true);
-  wrap(sale.cliente,13,true);
-  rows.push({spacer:true});
-  (sale.items||[]).forEach(item=>{wrap(item.desc+(item.promotion?' · OFERTA':''),13,true);wrap(item.qty+' x '+money(item.price)+' = '+money(Math.round(Number(item.qty)*Number(item.price))),13,true)});
-  rows.push({spacer:true});wrap('TOTAL: '+money(saleTotal(sale)),14,true);
-  const height=Math.max(25,3+rows.reduce((sum,r)=>sum+(r.spacer?1: r.size===15?7.4:6.6),0)+3);
-  // Generador PDF local: sin CDN, sin conexión y sin dependencias externas.
-  const pt=72/25.4, pageW=width*pt, pageH=height*pt;
-  const clean=t=>String(t??'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^\x20-\x7e]/g,'-').replace(/([\\()])/g,'\\$1');
-  let y=3, commands=[];
+  const sale=preparedReceipt, pt=72/25.4, width=58, pageW=width*pt, margin=3*pt, usable=pageW-2*margin;
+  // Anchos reales de Helvetica-Bold (1/1000 em) para que ninguna línea se salga del papel.
+  const HB=[278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584];
+  const clean=t=>String(t??'').replace(/[×]/g,'x').replace(/[·•]/g,'-').normalize('NFKD').replace(/[̀-ͯ]/g,'').replace(/[^\x20-\x7e]/g,'-');
+  const esc=t=>t.replace(/([\\()])/g,'\\$1');
+  const textWidth=(t,size)=>[...t].reduce((sum,ch)=>sum+(HB[ch.charCodeAt(0)-32]||556),0)/1000*size*1.03;
+  const rows=[];
+  const fit=(text,max,min)=>{let size=max;while(size>min&&textWidth(text,size)>usable)size-=.5;return size};
+  const wrap=(value,size,align='left')=>{
+   const words=clean(value).split(/\s+/).filter(Boolean);let line='';
+   const push=t=>rows.push({text:t,size,align});
+   for(const word of words){
+    const next=line?line+' '+word:word;
+    if(textWidth(next,size)<=usable){line=next;continue}
+    if(line)push(line);
+    line=word;
+    while(textWidth(line,size)>usable){let cut=line.length;while(cut>1&&textWidth(line.slice(0,cut),size)>usable)cut--;push(line.slice(0,cut));line=line.slice(cut)}
+   }
+   if(line)push(line);
+  };
+  const title='DISTRIBUIDORA ZIPPER';
+  rows.push({text:title,size:fit(title,15,9),align:'center'});
+  wrap('Comprobante #'+sale.folio+' - '+sale.fecha,11);
+  wrap(sale.cliente,12);
+  rows.push({rule:'solid'});
+  (sale.items||[]).forEach(item=>{
+   wrap(item.desc+(item.promotion?' - OFERTA':''),12);
+   const calc=clean(item.qty+' x '+money(item.price)+' = '+money(Math.round(Number(item.qty)*Number(item.price))));
+   rows.push({text:calc,size:fit(calc,12,8),align:'right'});
+   rows.push({rule:'dotted'});
+  });
+  const totalText=clean(money(saleTotal(sale)));
+  rows.push({total:true,label:'TOTAL',text:totalText,size:fit('TOTAL  '+totalText,14,9)});
+  const lineH=r=>r.rule?4.5:r.size*1.32;
+  const pageH=margin+rows.reduce((sum,r)=>sum+lineH(r),0)+margin;
+  let y=margin, commands=['0.35 w'];
+  const draw=(t,size,x)=>commands.push('BT /F2 '+size.toFixed(2)+' Tf 2 Tr 1 0 0 1 '+x.toFixed(2)+' '+(pageH-y-size).toFixed(2)+' Tm ('+esc(t)+') Tj ET');
   for(const row of rows){
-   if(row.spacer){y+=1;continue}
-   const font=row.bold?'F2':'F1', yy=(pageH-y*pt).toFixed(2);
-   commands.push('BT /'+font+' '+row.size+' Tf 2 Tr 0.35 w 1 0 0 1 '+(margin*pt).toFixed(2)+' '+yy+' Tm ('+clean(row.text)+') Tj ET');
-   y+=row.size===15?7.4:6.6;
+   if(row.rule){
+    const yy=(pageH-y-2.2).toFixed(2);
+    commands.push((row.rule==='dotted'?'0.7 w [1 1.8] 0 d ':'0.9 w [] 0 d ')+margin.toFixed(2)+' '+yy+' m '+(margin+usable).toFixed(2)+' '+yy+' l S [] 0 d 0.35 w');
+   }else if(row.total){
+    draw(row.label,row.size,margin);
+    draw(row.text,row.size,margin+usable-textWidth(row.text,row.size));
+   }else{
+    const w=textWidth(row.text,row.size);
+    const x=row.align==='right'?margin+usable-w:row.align==='center'?margin+(usable-w)/2:margin;
+    draw(row.text,row.size,Math.max(margin,x));
+   }
+   y+=lineH(row);
   }
   const stream=commands.join('\n')+'\n';
   const objects=[
@@ -1056,9 +1088,10 @@ async function saveReceiptPdf(){
   const file=await createReceiptPdfFile();
   const url=URL.createObjectURL(file),link=document.createElement('a');
   link.href=url;link.download=file.name;document.body.appendChild(link);link.click();link.remove();
+  if(typeof zipperToast==='function')zipperToast('📥 Ticket guardado: '+file.name+' (Archivos → Descargas)');
   setTimeout(()=>URL.revokeObjectURL(url),60000);
  }catch(error){alert('No se pudo generar el PDF: '+(error?.message||error))}
- finally{if(button){button.disabled=false;button.textContent='Guardar PDF para Fun Print'}}
+ finally{if(button){button.disabled=false;button.textContent='📥 Guardar en Descargas'}}
 }
 async function sendReceiptToSystem(){
  if(!preparedReceipt){alert('Primero selecciona un comprobante.');return}

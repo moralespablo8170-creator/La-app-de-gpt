@@ -15,7 +15,7 @@
 }
 
 /* ---------- Ajustes generales para pantallas de teléfono ---------- */
-html,body{overflow-x:hidden;-webkit-text-size-adjust:100%}
+html,body{overflow-x:clip;-webkit-text-size-adjust:100%}
 img,svg,table{max-width:100%}
 input,select,textarea{font-size:16px!important} /* evita el zoom automático del teléfono */
 button,.tab,select,input[type=date]{min-height:44px;touch-action:manipulation}
@@ -277,3 +277,32 @@ button,.tab,select,input[type=date]{min-height:44px;touch-action:manipulation}
 #routeClients .route-client{scroll-margin-top:12px}
 .flash-target{animation:zflash 1.4s ease}
 @keyframes zflash{0%,60%{box-shadow:0 0 0 4px #f97316}100%{box-shadow:0 0 0 0 transparent}}
+
+/* ---------- Pedido de compra dentro de Productos ---------- */
+.buy-panel{margin:12px 0;border-radius:16px;background:#ecfdf5;border:2px solid #86efac;padding:10px 12px}
+.buy-toggle{display:flex!important;align-items:center;gap:12px;margin:0!important;cursor:pointer}
+.buy-toggle input{width:26px!important;height:26px!important;min-height:0;accent-color:#16a34a;flex-shrink:0;margin:0}
+.buy-toggle span{display:flex;flex-direction:column;color:#14532d;font-size:16px}
+.buy-toggle small{font-size:12px;color:#166534;font-weight:600}
+.buy-controls,.buy-dock{display:none}
+body.buy-mode .buy-controls{display:block;margin-top:8px}
+body.buy-mode .buy-dock{display:block;position:sticky;bottom:92px;z-index:5;margin-top:10px;background:#14532d;color:#fff;border-radius:18px;padding:10px 12px;box-shadow:0 8px 20px #0005}
+.buy-totals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;text-align:center}
+.buy-totals span{display:flex;flex-direction:column;font-size:11px;font-weight:700;opacity:.9}
+.buy-totals b{font-size:17px;font-weight:900}
+.buy-scope{margin:6px 0;font-size:12px;text-align:center;color:#dcfce7}
+.buy-actions{display:grid;grid-template-columns:1.4fr 1fr;gap:8px}
+.buy-actions button{min-height:46px;border-radius:12px;font-weight:900;font-size:14px}
+.buy-actions .primary{background:#22c55e!important;color:#052e16!important;border:0}
+.buy-actions .secondary{background:#ffffff22!important;color:#fff!important;border:1px solid #ffffff55}
+.buy-actions button:disabled{opacity:.5}
+.buy-strip{display:flex;align-items:center;justify-content:space-between;gap:10px;border-radius:14px;padding:8px 10px;background:#f1f5f9;border:2px dashed #cbd5e1}
+.buy-strip.has-qty{background:#dcfce7;border:2px solid #22c55e}
+.buy-info{display:flex;flex-direction:column;min-width:0}
+.buy-info strong{font-size:15px;color:#14532d}
+.buy-info small{font-size:11px;color:#475569}
+.buy-stepper{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.buy-stepper button{width:42px;min-height:42px;border-radius:12px;border:0;background:#16a34a;color:#fff;font-size:22px;font-weight:900;line-height:1;padding:0}
+.buy-stepper .buy-minus{background:#94a3b8}
+.buy-qty{width:58px!important;min-height:42px;text-align:center;font-weight:900;font-size:18px!important;border-radius:10px;border:2px solid #86efac;padding:0 2px}
+.product-card-row.buy-hidden{display:none!important}
