@@ -858,12 +858,22 @@ function closeInvoiceDetail(){
 function annulSale(saleId){
  const sale=getSales().find(x=>String(x.id)===String(saleId));
  if(!sale){alert('No se encontró la venta.');return}
- if(getPayments().some(p=>String(p.saleId||'')===String(sale.id)||(!p.saleId&&String(p.clienteId||'')===String(sale.clienteId)))){
-  alert('No se puede anular: hay abonos del cliente que deben revisarse antes.');return;
+ // Solo bloquea si hay un abono ligado a ESTA venta, o si la venta era fiada y al quitarla
+ // los abonos generales del cliente quedarían mayores que su deuda.
+ const payments=getPayments();
+ if(payments.some(p=>String(p.saleId||'')===String(sale.id))){
+  alert('No se puede anular la venta #'+sale.folio+': tiene un abono registrado. Primero elimina ese abono en Caja diaria.');return;
+ }
+ const onCredit=paymentMethodOf(sale)==='pending'||sale.paymentStatus==='pending';
+ if(onCredit){
+  const sameClient=x=>String(x.clienteId||'')===String(sale.clienteId);
+  const creditAfter=getSales().filter(x=>sameClient(x)&&String(x.id)!==String(sale.id)&&(paymentMethodOf(x)==='pending'||x.paymentStatus==='pending')).reduce((a,x)=>a+saleTotal(x),0);
+  const paidGeneral=payments.filter(p=>sameClient(p)).reduce((a,p)=>a+Number(p.amount||0),0);
+  if(paidGeneral>creditAfter){alert('No se puede anular la venta #'+sale.folio+': el cliente ya abonó '+money(paidGeneral)+' a su deuda y sin esta venta los abonos superarían lo que debe. Revisa los abonos en Caja diaria.');return}
  }
  const products=getRawProducts();
  if((sale.items||[]).some(i=>!products.some(p=>String(p.id)===String(saleItemStockId(i))))){
-  alert('No se puede anular: falta un producto original en inventario.');return;
+  alert('No se puede anular: un producto de esta venta ya no está en Productos ('+(sale.items||[]).filter(i=>!products.some(p=>String(p.id)===String(saleItemStockId(i)))).map(i=>i.desc).join(', ')+'). Vuelve a crearlo para devolverle el stock.');return;
  }
  confirmDelete('Anular venta','¿Anular completamente la venta #'+sale.folio+' por '+money(saleTotal(sale))+'? Se devolverá el stock y se descontará de caja.',()=>{
   const previousProducts=readArray('zipperProductos');
