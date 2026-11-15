@@ -149,7 +149,8 @@ function rowFingerprints(rows) {
   return result;
 }
 function enqueueLocalChange(key, previousRaw, currentRaw) {
-  if(localStorage.getItem('zipperStorageMode')!=='cloud'||applyingCloud) return;
+  // While a backup is being restored the file already carries its own pending queue.
+  if(localStorage.getItem('zipperStorageMode')!=='cloud'||applyingCloud||window.zipperRestoringBackup) return;
   const outbox=readOutbox();
   const existing=outbox[key];
   // The baseline is the state before the first unsent change; later edits keep it.

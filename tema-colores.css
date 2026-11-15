@@ -178,3 +178,22 @@ button,.tab,select,input[type=date]{min-height:44px;touch-action:manipulation}
 .rw-badge{display:inline-block;border-radius:999px;padding:4px 12px;color:#fff;font-weight:900;font-size:14px}
 .week-A .rw-badge{background:#2563eb}.week-B .rw-badge{background:#ea580c}
 .route-week-block .client-route-preview{margin:6px 0 0;background:#fff}
+
+/* ---------- Encabezados únicos (sin títulos duplicados) ---------- */
+.page-banner .banner-text{flex:1;min-width:0}
+.page-banner{flex-wrap:wrap}
+.banner-action{flex:1 1 100%;border:0;border-radius:14px;background:#fff;color:var(--z-ink);font-weight:900;font-size:16px;padding:10px 14px;box-shadow:0 3px 10px #0003}
+.banner-clients .banner-action{color:#6d28d9}
+.banner-products .banner-action{color:#c2410c}
+.banner-home{background:linear-gradient(135deg,#1d4ed8,#38bdf8)}
+#cashDayTitle{font-size:15px!important;font-weight:800!important;color:#fff!important}
+#activeRouteLabel{font-size:24px;font-weight:900;color:#1d4ed8}
+
+/* Carrito destacado */
+.cart-banner{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:-4px -4px 14px;padding:12px;border-radius:18px;
+  background:linear-gradient(135deg,#b45309,#f59e0b);color:#fff;box-shadow:0 6px 16px #b4530955}
+.cart-banner .page-art{width:76px;height:auto;border-radius:14px;background:#fff3;padding:3px;flex-shrink:0}
+.cart-banner .cart-label{display:block;font-size:12px;font-weight:900;letter-spacing:.06em;opacity:.95}
+.cart-banner h2{margin:2px 0;color:#fff!important;font-size:24px;font-weight:900;line-height:1.15;text-shadow:0 2px 6px #0003;overflow-wrap:anywhere}
+.cart-banner .muted-inline{color:#fffbeb!important;font-size:13px;font-weight:700}
+.cart-banner .banner-action{color:#b45309}

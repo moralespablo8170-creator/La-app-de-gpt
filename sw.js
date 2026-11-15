@@ -1,9 +1,9 @@
-const CACHE_NAME = 'zipper-app-pwa-20261115-rutas-28';
+const CACHE_NAME = 'zipper-app-pwa-20261115-titulos-29';
 const APP_SHELL = [
   "./",
   "./index.html",
   "./styles.css?v=zipper-version-firebase-20261101-2",
-  "./tema-colores.css?v=20261115-4",
+  "./tema-colores.css?v=20261115-5",
   "./assets/ilustraciones/ruta.svg",
   "./assets/ilustraciones/clientes.svg",
   "./assets/ilustraciones/productos.svg",
@@ -12,9 +12,10 @@ const APP_SHELL = [
   "./assets/ilustraciones/factura.svg",
   "./assets/ilustraciones/vendedores.svg",
   "./assets/ilustraciones/nube.svg",
+  "./assets/ilustraciones/carrito.svg",
   "./app.js?v=20261115-rutas-4",
   "./rutas-clientes.js?v=20261115-2",
-  "./firebase-cloud.js?v=20261115-facturacion-1",
+  "./firebase-cloud.js?v=20261115-restauracion-2",
   "./firebase-config.js",
   "./firebase-test-config.js",
   "./seller-assignments.js?v=zipper-seller-routes-20261029-v1",
@@ -24,7 +25,7 @@ const APP_SHELL = [
   "./seller-admin.js?v=zipper-seller-admin-spark-20261115-v1",
   "./route-position-migration.js?v=1.2",
   "./route-position-migration-b.js?v=1.0",
-  "./herramientas.js?v=20261012-restauracion-v32",
+  "./herramientas.js?v=20261115-restauracion-v33",
   "./pwa.js?v=20261101-chrome-update-v20",
   "./manifest.json?v=20261015-icono-exterior-v2",
   "./data/zipper-seed.json",
