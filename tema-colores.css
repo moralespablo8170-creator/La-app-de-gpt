@@ -273,3 +273,7 @@ button,.tab,select,input[type=date]{min-height:44px;touch-action:manipulation}
 .pj-bar-track{display:flex;flex-direction:column;gap:2px}
 .pj-bar{height:8px;border-radius:4px;min-width:2px}
 .pj-bar-value{font-size:12px;font-weight:800;color:#0f172a}
+/* Al cambiar entre visitados y pendientes se marca el primer cliente */
+#routeClients .route-client{scroll-margin-top:12px}
+.flash-target{animation:zflash 1.4s ease}
+@keyframes zflash{0%,60%{box-shadow:0 0 0 4px #f97316}100%{box-shadow:0 0 0 0 transparent}}
