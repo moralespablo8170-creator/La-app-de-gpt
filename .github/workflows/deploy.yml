@@ -85,6 +85,25 @@ jobs:
           test -f _site/zipper-nueva/firebase-cloud.js
           test -f _site/zipper-nueva/simulacion-vendedor.html
 
+      # Vista de revisión aislada de la rama de cambios en curso: usa una copia de los datos y no se conecta a Firebase.
+      - name: Checkout revision branch
+        id: revision
+        continue-on-error: true
+        uses: actions/checkout@v6
+        with:
+          ref: claude/firebase-incremental-sync-ot7fzg
+          path: revision-src
+
+      - name: Prepare isolated revision preview
+        if: steps.revision.outcome == 'success'
+        run: |
+          mkdir -p _site/revision
+          cp -a revision-src/. _site/revision/
+          rm -rf _site/revision/.git _site/revision/.github
+          python3 main-src/.github/revision-preparar.py _site/revision
+          test -f _site/revision/index.html
+          test -f _site/revision/revision-aislamiento.js
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
