@@ -162,3 +162,8 @@ button,.tab,select,input[type=date]{min-height:44px;touch-action:manipulation}
 .route-preview li.self{background:#7c3aed;color:#fff;font-weight:900}
 .route-preview li.self b{color:#fff}
 .route-preview li.gap{background:transparent;text-align:center;color:#94a3b8;padding:0}
+/* Fila de cliente sin número de orden (lista general): el texto usa todo el ancho */
+.client-row.no-number{grid-template-columns:minmax(0,1fr)!important}
+.client-row.no-number .actions-small{grid-column:1!important}
+.client-details{min-width:0}
+.route-chip{white-space:nowrap}
