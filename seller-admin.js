@@ -1,12 +1,16 @@
 import { initializeApp } from 'firebase/app';
 import { firebaseConfig, ORG_ID } from './firebase-config.js';
-import { getAuth, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
+import { getAuth, setPersistence, browserLocalPersistence, inMemoryPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, deleteUser, onAuthStateChanged, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc, collection, getDocs, writeBatch, setDoc, updateDoc } from 'firebase/firestore';
-import { getFunctions, httpsCallable } from 'firebase/functions';
 
-const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),functions=getFunctions(app,'southamerica-west1'),createSellerAccountCall=httpsCallable(functions,'createSellerAccount'),setSellerAccessCall=httpsCallable(functions,'setSellerAccess'),ORG=ORG_ID;
-const SELLER_ACCOUNT_CREATION_READY=false;
-const SELLER_ACCESS_SERVER_READY=false;
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),ORG=ORG_ID;
+// Plan Spark (gratuito): las cuentas se crean desde el navegador con una segunda
+// instancia de Firebase, así la sesión del dueño no se cierra. El acceso se
+// controla con el perfil members/{uid}: las reglas de Firestore niegan todo a un
+// perfil desactivado. No se necesitan Cloud Functions ni el plan Blaze.
+const provisioningApp=initializeApp(firebaseConfig,'zipper-seller-provisioning'),provisioningAuth=getAuth(provisioningApp);
+const SELLER_ACCOUNT_CREATION_READY=true;
+const SELLER_ACCESS_SERVER_READY=true;
 const $=id=>document.getElementById(id);
 let owner=null,sellers=[],sessions=[],sales=[],visits=[],cash=[],clients=[],compensationBySeller={},selectedSellerId=null,loading=false;
 const localDate=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
@@ -149,7 +153,7 @@ function render(){
  $('adminSellers').innerHTML=sellers.length?sellers.map(s=>{
   const selected=s.uid===selectedSellerId,active=s.active===true;
   const daySales=sales.filter(x=>x.sellerUid===s.uid&&rowDate(x,'sales')===date),session=sessionFor(s.uid);
-  return '<article class="admin-row" style="background:'+(selected?'#e8f1ff':'white')+'"><button type="button" style="text-align:left;background:transparent;border:0;padding:0;width:100%;font:inherit" data-seller="'+safe(s.uid)+'"><strong>'+safe(s.displayName||s.email||s.uid)+(active?'':' · desactivado')+'</strong><small>'+daySales.length+' ventas · '+money(daySales.reduce((n,x)=>n+Number(x.total||0),0))+' · '+(session?.status==='open'?'Jornada abierta':session?.status==='closed'?'Jornada cerrada':'Sin jornada registrada')+'</small></button><button type="button" class="admin-btn secondary" style="margin-bottom:0" data-seller-toggle="'+safe(s.uid)+'" '+(!SELLER_ACCESS_SERVER_READY?'disabled title="Requiere servicio seguro de Firebase"':'')+'>'+(active?'Desactivar acceso':'Activar perfil')+'</button></article>'
+  return '<article class="admin-row" style="background:'+(selected?'#e8f1ff':'white')+'"><button type="button" style="text-align:left;background:transparent;border:0;padding:0;width:100%;font:inherit" data-seller="'+safe(s.uid)+'"><strong>'+safe(s.displayName||s.email||s.uid)+(active?'':' · desactivado')+'</strong><small>'+daySales.length+' ventas · '+money(daySales.reduce((n,x)=>n+Number(x.total||0),0))+' · '+(session?.status==='open'?'Jornada abierta':session?.status==='closed'?'Jornada cerrada':'Sin jornada registrada')+'</small></button><button type="button" class="admin-btn secondary" style="margin-bottom:0" data-seller-toggle="'+safe(s.uid)+'" '+''+'>'+(active?'Desactivar acceso':'Activar perfil')+'</button></article>'
  }).join(''):'<p class="admin-muted">Aún no hay perfiles de vendedor registrados.</p>';
  document.querySelectorAll('[data-seller]').forEach(b=>b.onclick=()=>{selectedSellerId=b.dataset.seller;render()});
  document.querySelectorAll('[data-seller-toggle]').forEach(b=>b.onclick=()=>toggleSeller(b.dataset.seller));
@@ -196,7 +200,7 @@ async function verify(user){
  if(!user){owner=null;updateSellerCreationState();$('adminApp').classList.add('admin-hidden');$('adminLogin').classList.remove('admin-hidden');status('Ingresa con la cuenta propietaria.');return}
  const snap=await getDoc(doc(db,'orgs',ORG,'members',user.uid)),data=snap.exists()?snap.data():null;
  if(!data||data.active!==true||data.role!=='owner'){owner=null;await signOut(auth);$('adminApp').classList.add('admin-hidden');$('adminLogin').classList.remove('admin-hidden');status('Esta cuenta no tiene permisos de propietario.','error');return}
- owner={uid:user.uid,email:user.email||'',...data};updateSellerCreationState();$('adminLogin').classList.add('admin-hidden');$('adminApp').classList.remove('admin-hidden');$('adminDate').value=localDate();$('reportReference').value=localDate();$('commissionMonth').value=localDate().slice(0,7);await refresh();await refreshCatalogPrepState();
+ owner={uid:user.uid,email:user.email||'',...data};updateSellerCreationState();$('adminLogin').classList.add('admin-hidden');$('adminApp').classList.remove('admin-hidden');$('adminDate').value=localDate();$('reportReference').value=localDate();$('commissionMonth').value=localDate().slice(0,7);await refresh();await refreshCatalogPrepState();await refreshSellerModeState();
 }
 async function login(){
  const b=$('adminLoginButton');b.disabled=true;status('Verificando cuenta propietaria…');
@@ -253,7 +257,7 @@ async function prepareCatalog(){
   await setDoc(settingRef,{id:'sellerMode',enabled:false,catalogVersion:1,preparedAt:new Date().toISOString(),preparedBy:owner.uid});
   localStorage.setItem('zipperSellerCatalogVersion','1');
   label.textContent='Catálogo preparado: '+productSnap.size+' productos. Los costos quedaron privados; el acceso de vendedores sigue desactivado.';
-  await refreshCatalogPrepState();
+  await refreshCatalogPrepState();await refreshSellerModeState();
  }catch(error){
   console.error(error);label.textContent=error.message||'No se pudo preparar el catálogo.';
   button.disabled=!$('catalogBackupConfirm').checked;button.textContent='Reintentar preparación';
@@ -263,47 +267,85 @@ function updateSellerCreationState(){
  const button=$('sellerCreateAccount');
  if(button)button.disabled=!owner||!SELLER_ACCOUNT_CREATION_READY;
  if(!owner)$('sellerProfileStatus').textContent='Inicia sesión como propietario.';
- else if(!SELLER_ACCOUNT_CREATION_READY)$('sellerProfileStatus').textContent='Formulario preparado. Se habilitará después de desplegar el servicio seguro del servidor.';
+ else $('sellerProfileStatus').textContent='Completa los datos para crear la cuenta del vendedor.';
 }
 async function createSellerAccount(){
  const button=$('sellerCreateAccount'),label=$('sellerProfileStatus');
- const displayName=$('sellerDisplayName').value.trim(),email=$('sellerEmail').value.trim(),password=$('sellerPassword').value;
+ const displayName=$('sellerDisplayName').value.trim(),email=$('sellerEmail').value.trim().toLowerCase(),password=$('sellerPassword').value;
  if(!owner){label.textContent='Inicia sesión como propietario.';return}
- if(!SELLER_ACCOUNT_CREATION_READY){label.textContent='El servicio seguro aún no está desplegado. No se creó ninguna cuenta.';return}
  if(navigator.onLine===false){label.textContent='Conéctate a internet para crear la cuenta.';return}
- if(displayName.length<2||!email||password.length<8){label.textContent='Completa el nombre, correo y una clave inicial de al menos 8 caracteres.';return}
- button.disabled=true;label.textContent='Creando la cuenta segura…';
+ if(displayName.length<2||displayName.length>80){label.textContent='Escribe el nombre del vendedor (2 a 80 caracteres).';return}
+ if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){label.textContent='Escribe un correo electrónico válido.';return}
+ if(email===String(owner.email||'').toLowerCase()){label.textContent='Usa un correo distinto al de la cuenta propietaria.';return}
+ if(password.length<8){label.textContent='La clave inicial debe tener al menos 8 caracteres.';return}
+ button.disabled=true;label.textContent='Creando la cuenta del vendedor…';
+ let created=null;
  try{
-  const response=await createSellerAccountCall({displayName,email,password});
-  const created=response.data||{};
+  await setPersistence(provisioningAuth,inMemoryPersistence);
+  const credential=await createUserWithEmailAndPassword(provisioningAuth,email,password);
+  created=credential.user;
+  await updateProfile(created,{displayName}).catch(()=>{});
+  const now=new Date().toISOString();
+  await setDoc(doc(db,'orgs',ORG,'members',created.uid),{role:'seller',active:true,displayName,email,provisionedBy:owner.uid,createdAt:now,updatedAt:now});
   $('sellerDisplayName').value='';$('sellerEmail').value='';
-  selectedSellerId=created.uid||null;
-  label.textContent='Cuenta creada para '+(created.displayName||displayName)+' · '+(created.email||email)+'. La clave no se guarda en Firestore; entrégala directamente al vendedor.';
+  selectedSellerId=created.uid;
+  label.textContent='Cuenta creada para '+displayName+' · '+email+'. Entrega la clave directamente al vendedor; no se guarda en la app.';
   await refresh();
  }catch(error){
   console.error('No se pudo crear la cuenta del vendedor.',error.code||error.message);
+  // Si la cuenta de acceso se creó pero el perfil no, se retira para no dejarla a medias.
+  if(created)await deleteUser(created).catch(()=>{});
   const code=String(error.code||'');
-  label.textContent=code.includes('already-exists')?'Ese correo ya tiene una cuenta Firebase.':code.includes('not-found')?'El servidor seguro todavía no está desplegado; no se creó ninguna cuenta.':(error.message||'No se pudo crear la cuenta.');
+  label.textContent=code.includes('email-already-in-use')?'Ese correo ya tiene una cuenta. Usa otro correo o reactiva el vendedor desde la lista.'
+   :code.includes('operation-not-allowed')?'Activa el acceso por correo y contraseña en Firebase Console → Authentication → Sign-in method.'
+   :code.includes('weak-password')?'La clave es demasiado débil. Usa al menos 8 caracteres combinando letras y números.'
+   :code.includes('invalid-email')?'El correo no es válido.'
+   :code.includes('permission-denied')?'Firebase rechazó el perfil. Revisa que las reglas de Firestore estén publicadas.'
+   :(error.message||'No se pudo crear la cuenta.');
  }finally{
+  await signOut(provisioningAuth).catch(()=>{});
   $('sellerPassword').value='';
-  button.disabled=!owner||!SELLER_ACCOUNT_CREATION_READY;
+  button.disabled=!owner;
  }
 }
 async function toggleSeller(uid){
  if(!owner||navigator.onLine===false){status('Necesitas la cuenta propietaria y conexión para cambiar el acceso.','error');return}
- if(!SELLER_ACCESS_SERVER_READY){status('El bloqueo remoto todavía no está habilitado. Primero debemos desplegar el servicio seguro en Firebase. No se modificó ningún acceso.','error');return}
  const seller=sellers.find(item=>item.uid===uid);if(!seller)return;
  const nextActive=seller.active!==true;
  if(!nextActive&&!window.confirm('¿Desactivar el acceso de '+(seller.displayName||seller.email||uid)+'?'))return;
  try{
-  const result=await setSellerAccessCall({uid,active:nextActive});
-  const authDisabled=result.data?.authDisabled;
-  status(!nextActive&&authDisabled===false?'Perfil bloqueado en Firestore; revisa manualmente Authentication.':(nextActive?'Perfil vendedor activado.':'Acceso vendedor desactivado y sesiones revocadas.'),authDisabled===false?'error':'ok');
+  await updateDoc(doc(db,'orgs',ORG,'members',uid),{active:nextActive,updatedAt:new Date().toISOString()});
+  status(nextActive?'Vendedor activado. Ya puede ingresar con su correo y clave.':'Acceso desactivado. El vendedor ya no puede ver ni registrar datos; su app se cierra al recibir el cambio.','ok');
   await refresh();
  }catch(error){console.error(error);status(error.message||'No se pudo cambiar el acceso.','error')}
+}
+async function refreshSellerModeState(){
+ const button=$('sellerModeToggle'),label=$('sellerModeStatus');
+ if(!button||!owner)return;
+ try{
+  const snap=await getDoc(doc(db,'orgs',ORG,'settings','sellerMode')),data=snap.exists()?snap.data():null;
+  if(!data||Number(data.catalogVersion)<1){button.disabled=true;button.textContent='Activar acceso de vendedores';label.textContent='Primero prepara el catálogo seguro (paso anterior).';return}
+  const enabled=data.enabled===true;
+  button.disabled=false;
+  button.textContent=enabled?'Pausar acceso de todos los vendedores':'Activar acceso de vendedores';
+  button.dataset.enabled=enabled?'1':'0';
+  label.textContent=enabled?'Acceso de vendedores ACTIVO. Cada vendedor entra con su cuenta en vendedor.html.':'Acceso de vendedores en pausa: ningún vendedor puede ver ni registrar datos.';
+ }catch(error){label.textContent=error.message||'No se pudo revisar el acceso de vendedores.';button.disabled=true}
+}
+async function toggleSellerMode(){
+ const button=$('sellerModeToggle');if(!owner||!button)return;
+ const enable=button.dataset.enabled!=='1';
+ if(!enable&&!window.confirm('¿Pausar el acceso de todos los vendedores?'))return;
+ button.disabled=true;
+ try{
+  await setDoc(doc(db,'orgs',ORG,'settings','sellerMode'),{enabled:enable,updatedAt:new Date().toISOString(),updatedBy:owner.uid},{merge:true});
+  status(enable?'Acceso de vendedores activado.':'Acceso de vendedores en pausa.','ok');
+ }catch(error){console.error(error);status(error.message||'No se pudo cambiar el acceso de vendedores.','error')}
+ await refreshSellerModeState();
 }
 async function logout(){await signOut(auth);owner=null;sellers=[];sessions=[];sales=[];visits=[];cash=[]}
 $('adminLoginButton').onclick=login;$('adminLogout').onclick=logout;$('adminDate').onchange=render;$('reportPeriod').onchange=render;$('reportReference').onchange=render;$('commissionMonth').onchange=()=>{renderCompForm();renderCompResults()};$('compSeller').onchange=renderCompForm;$('compAddTier').onclick=()=>{const tiers=readCompTiers();tiers.push({threshold:'',ratePct:''});renderCompTiers(tiers)};$('compSave').onclick=saveCompensation;$('sellerCreateAccount').onclick=createSellerAccount;updateSellerCreationState();
 $('catalogBackupConfirm').onchange=refreshCatalogPrepState;
 $('catalogPrepareButton').onclick=prepareCatalog;
+if($('sellerModeToggle'))$('sellerModeToggle').onclick=toggleSellerMode;
 onAuthStateChanged(auth,user=>verify(user).catch(error=>{console.error(error);status('No se pudo verificar la cuenta.','error')}));

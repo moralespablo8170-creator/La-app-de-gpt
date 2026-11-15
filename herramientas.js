@@ -78,6 +78,7 @@ async function restoreZipperBackup(input){
     transactionStarted=true;
     sessionStorage.setItem('zipperStorageRecoveryFailed','1');
     window.zipperStorageRecoveryFailed=true;document.body.dataset.storageRecoveryFailed='true';
+    window.zipperRestoringBackup=true;
     for(const [k,v] of Object.entries(file.data))localStorage.setItem(k,v);
     for(const [k,v] of Object.entries(file.data))if(localStorage.getItem(k)!==v)throw Error('Falló la restauración de '+k);
     for(const [k,n] of Object.entries(expected)){
@@ -87,12 +88,14 @@ async function restoreZipperBackup(input){
     for(const k of zipperDataKeys(localStorage))if(!Object.prototype.hasOwnProperty.call(file.data,k))localStorage.removeItem(k);
     for(const [k,v] of Object.entries(file.data))if(localStorage.getItem(k)!==v)throw Error('Verificación final fallida: '+k);
     for(const k of zipperDataKeys(localStorage))if(!Object.prototype.hasOwnProperty.call(file.data,k))throw Error('Quedó una clave ajena al respaldo: '+k);
+    window.zipperRestoringBackup=false;
     localStorage.removeItem('zipperStorageRecoveryFailed');sessionStorage.removeItem('zipperStorageRecoveryFailed');
     window.zipperStorageRecoveryFailed=false;delete document.body.dataset.storageRecoveryFailed;
     $('backupStatus').textContent='RESTAURACIÓN VERIFICADA: '+sales.length+' ventas, '+expected.zipperPagos+' abonos y '+expected.zipperGastosCaja+' gastos. Recargando…';
     alert('Restauración completa verificada, incluidos abonos y gastos de caja.');
     setTimeout(()=>window.location.reload(),500);
    }catch(e){
+    window.zipperRestoringBackup=false;
     let rollbackOk=!transactionStarted;
     if(transactionStarted){
      rollbackOk=true;

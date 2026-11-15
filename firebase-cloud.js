@@ -56,7 +56,13 @@ function readOutbox() {
   } catch (_) { return {}; }
 }
 function saveOutbox(outbox) {
-  try { localStorage.setItem(OUTBOX_KEY,JSON.stringify(outbox)); }
+  try { localStorage.setItem(OUTBOX_KEY,JSON.stringify(outbox)); return; }
+  catch(error) { console.warn('Firebase: cola pendiente demasiado grande; se guarda sin huellas de contenido.',error); }
+  // Out of space: drop the optional fingerprints (rows are then resent in full)
+  // but never lose the pending change itself.
+  const slim={};
+  Object.entries(outbox).forEach(([key,item])=>{const {previousHashes,...rest}=item||{};slim[key]=rest});
+  try { localStorage.setItem(OUTBOX_KEY,JSON.stringify(slim)); }
   catch(error) { console.error('Firebase: no se pudo guardar la cola pendiente local.',error); }
 }
 function pendingCloudCollection(name) {
@@ -123,15 +129,41 @@ function schedulePendingFlush(delay=0) {
     flushPendingChanges();
   },delay);
 }
+// Compact fingerprint (cyrb53) of a row's content. The outbox stores one per row so
+// a later flush can tell which rows really changed without keeping a full copy.
+function rowFingerprint(row) {
+  const text=stableCompareString(row);
+  let h1=0xdeadbeef, h2=0x41c6ce57;
+  for(let i=0;i<text.length;i++) {
+    const ch=text.charCodeAt(i);
+    h1=Math.imul(h1^ch,2654435761);
+    h2=Math.imul(h2^ch,1597334677);
+  }
+  h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);
+  h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);
+  return (4294967296*(2097151&h2)+(h1>>>0)).toString(36);
+}
+function rowFingerprints(rows) {
+  const result={};
+  rows.forEach(row=>{if(row&&typeof row==='object'&&row.id!=null)result[String(row.id)]=rowFingerprint(row)});
+  return result;
+}
 function enqueueLocalChange(key, previousRaw, currentRaw) {
-  if(localStorage.getItem('zipperStorageMode')!=='cloud'||applyingCloud) return;
+  // While a backup is being restored the file already carries its own pending queue.
+  if(localStorage.getItem('zipperStorageMode')!=='cloud'||applyingCloud||window.zipperRestoringBackup) return;
   const outbox=readOutbox();
   const existing=outbox[key];
-  outbox[key]={
-    previousIds:existing?.previousIds||parseArray(previousRaw).map(row=>typeof row==='object'&&row?row.id:row),
-    ...(key==='zipperProductos'?{previousRows:existing?.previousRows||parseArray(previousRaw)}:{}),
-    revision:String(Date.now())+'-'+Math.random().toString(36).slice(2)
-  };
+  // The baseline is the state before the first unsent change; later edits keep it.
+  let entry;
+  if(existing) entry={...existing};
+  else {
+    const previous=parseArray(previousRaw);
+    entry={previousIds:previous.map(row=>typeof row==='object'&&row?row.id:row)};
+    if(key==='zipperProductos') entry.previousRows=previous;
+    else if(!key.startsWith('zipperVisitados-')&&key!=='zipperCategorias'&&key!=='zipperCategoriasEliminadas') entry.previousHashes=rowFingerprints(previous);
+  }
+  entry.revision=String(Date.now())+'-'+Math.random().toString(36).slice(2);
+  outbox[key]=entry;
   saveOutbox(outbox);
   lastSyncError='';
   updateSyncIndicator();
@@ -200,7 +232,8 @@ async function login(email,password) {
   }
   if (profile.role !== 'owner') {
     await signOut(auth);
-    throw new Error('El acceso vendedor todavía no se activa en esta versión. La app seguirá usando el modo local mientras se termina la vista protegida por vendedor.');
+    setTimeout(()=>{location.href='./vendedor.html'},1500);
+    throw new Error('Esta es una cuenta de vendedor. Te llevamos a la app de ruta del vendedor…');
   }
   activeProfile = profile;
   announceProfile(profile);
@@ -272,15 +305,27 @@ function toCloudRows(key, rows, profile) {
   }
   return null;
 }
+// Incremental write: only new or modified rows are uploaded and only rows that
+// disappeared since previousRows are deleted. A previous row that carries just
+// its id (no other fields) has unknown content, so it is rewritten to be safe.
 async function writeRows(collectionName, rows, previousRows=[]) {
-  const previousIds=new Set(previousRows.map(row=>String(row.id)));
-  const nextIds=new Set(rows.map(row=>String(row.id)));
+  const previousById=new Map();
+  for (const row of previousRows) {
+    if (row==null || row.id==null) continue;
+    previousById.set(String(row.id),row);
+  }
+  const nextIds=new Set();
   const operations=[];
   for (const row of rows) {
     const id=safeId(row.id);
+    nextIds.add(id);
+    const previous=previousById.get(id);
+    const previousHasData=!!previous && Object.keys(previous).some(key=>key!=='id');
+    if (previousHasData && stableCompareString({...previous,id})===stableCompareString({...row,id})) continue;
     operations.push({type:'set',ref:doc(colRef(collectionName),id),data:row});
   }
-  for (const id of previousIds) if (!nextIds.has(id)) operations.push({type:'delete',ref:doc(colRef(collectionName),safeId(id))});
+  for (const id of previousById.keys()) if (!nextIds.has(id)) operations.push({type:'delete',ref:doc(colRef(collectionName),safeId(id))});
+  if (!operations.length) return;
   for (let start=0; start<operations.length; start+=450) {
     const batch=writeBatch(db);
     operations.slice(start,start+450).forEach(op=>op.type==='set'?batch.set(op.ref,op.data):batch.delete(op.ref));
@@ -373,7 +418,7 @@ async function writeSellerProductRows(rows,previousRows=[]) {
     await batch.commit();
   }
 }
-async function writeLocalArrayToCloud(key, rows, previousRows=[]) {
+async function writeLocalArrayToCloud(key, rows, previousRows=[], previousHashes=null) {
   if(!activeProfile||activeProfile.role!=='owner') throw new Error('Conecta la cuenta propietaria para sincronizar los cambios pendientes.');
   if(key==='zipperCategorias'||key==='zipperCategoriasEliminadas') {
     const catalog={id:'catalog',categories:localArray('zipperCategorias'),deletedCategories:localArray('zipperCategoriasEliminadas')};
@@ -383,6 +428,19 @@ async function writeLocalArrayToCloud(key, rows, previousRows=[]) {
   if(key==='zipperProductos'&&sellerCatalogVersion>=1) {
     await writeSellerProductRows(rows,previousRows);
     return;
+  }
+  if(previousHashes&&typeof previousHashes==='object') {
+    // Send only rows that are new or whose content changed since the baseline;
+    // previous rows are reduced to the ids that disappeared (to delete them).
+    const currentIds=new Set(rows.map(row=>String(row?.id)));
+    rows=rows.filter(row=>!(row&&row.id!=null&&previousHashes[String(row.id)]===rowFingerprint(row)));
+    previousRows=previousRows.filter(row=>!currentIds.has(String(row?.id)));
+  }
+  if(key.startsWith('zipperVisitados-')) {
+    // Visit rows are fully determined by the client id: only additions and removals matter.
+    const before=new Set(previousRows.map(String)), after=new Set(rows.map(String));
+    rows=rows.filter(id=>!before.has(String(id)));
+    previousRows=previousRows.filter(id=>!after.has(String(id)));
   }
   const mapped=toCloudRows(key,rows,activeProfile);
   if(!mapped) return;
@@ -415,7 +473,7 @@ async function flushPendingChanges() {
         :key==='zipperProductos'&&Array.isArray(item.previousRows)
           ?item.previousRows
           :(item.previousIds||[]).map(id=>({id}));
-      await writeLocalArrayToCloud(key,localArray(key),previousRows);
+      await writeLocalArrayToCloud(key,localArray(key),previousRows,item.previousHashes||null);
       const latest=readOutbox();
       if(latest[key]?.revision===item.revision) {
         delete latest[key];
@@ -622,8 +680,12 @@ async function startSync(profile) {
     if(pendingCloudCollection('visits')) return;
     const byDate={};
     rows.forEach(row=>{if(row.sellerUid!==profile.uid)return;const date=String(row.date||'');if(!date)return;(byDate[date]||= []).push(String(row.clientId))});
-    Object.keys(localStorage).filter(key=>key.startsWith('zipperVisitados-')).forEach(key=>localStorage.removeItem(key));
-    Object.entries(byDate).forEach(([date,ids])=>writeLocal('zipperVisitados-'+date,[...new Set(ids)]));
+    // Cloud-originated: must not be queued again as local changes.
+    const wasApplying=applyingCloud;applyingCloud=true;
+    try {
+      Object.keys(localStorage).filter(key=>key.startsWith('zipperVisitados-')&&!byDate[key.slice('zipperVisitados-'.length)]).forEach(key=>localStorage.removeItem(key));
+      Object.entries(byDate).forEach(([date,ids])=>writeLocal('zipperVisitados-'+date,[...new Set(ids)]));
+    } finally { applyingCloud=wasApplying; }
     scheduleRefresh();
   });
   watch('productCosts',rows=>{

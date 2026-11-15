@@ -7,7 +7,7 @@
 <title>Vendedores · Distribuidora Zipper</title>
 <link rel="stylesheet" href="./styles.css?v=zipper-sync-status-20261029-v1">
 <script type="importmap">
-{"imports":{"firebase/app":"https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js","firebase/auth":"https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js","firebase/firestore":"https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js","firebase/functions":"https://www.gstatic.com/firebasejs/13.1.0/firebase-functions.js"}}
+{"imports":{"firebase/app":"https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js","firebase/auth":"https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js","firebase/firestore":"https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js"}}
 </script>
 <style>
 .admin-shell{max-width:900px;margin:0 auto;padding:16px 16px 80px}.admin-card{background:#fff;border-radius:22px;padding:20px;margin:14px 0;box-shadow:0 8px 24px #0002}.admin-card h1,.admin-card h2{margin:0 0 12px;color:#10233c}.admin-muted{color:#697381}.admin-shell label{display:block;font-weight:700;margin:12px 0}.admin-shell input[type=checkbox]{display:inline;width:auto}.admin-shell input:not([type=checkbox]),.admin-shell select{display:block;width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:12px;padding:13px;font:inherit;margin-top:6px}.admin-btn{display:block;width:100%;border:0;border-radius:14px;padding:14px 16px;font:inherit;font-weight:800;margin:10px 0;background:#1265e8;color:white}.admin-btn.secondary{background:#e5e7eb;color:#111827}.admin-status{padding:12px;border-radius:12px;background:#e8f1ff;color:#174476;font-weight:700}.admin-status.ok{background:#dcfce7;color:#166534}.admin-status.error{background:#fee2e2;color:#991b1b}.admin-hidden{display:none!important}.admin-list{display:grid;gap:10px}.admin-row{border:1px solid #e5e7eb;border-radius:14px;padding:13px}.admin-row strong{display:block;color:#10233c}.admin-row small{display:block;color:#687381;margin-top:5px}.admin-table{width:100%;border-collapse:collapse;min-width:680px}.admin-table th,.admin-table td{padding:10px;border-bottom:1px solid #e5e7eb;text-align:left;white-space:nowrap}.admin-table th{color:#334155;background:#f1f5f9}.admin-table td:last-child{text-align:right;font-weight:800}.admin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.admin-stat{background:#f1f5f9;border-radius:13px;padding:12px}.admin-stat strong{display:block;font-size:19px;color:#10233c}.admin-stat span{font-size:12px;color:#64748b}.admin-toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between}.admin-toolbar button{width:auto}@media(max-width:600px){.admin-grid{grid-template-columns:1fr 1fr}.admin-shell{padding:12px 12px 80px}.admin-card{padding:16px}.admin-toolbar{display:block}}
@@ -16,8 +16,8 @@
 <body>
 <main class="admin-shell">
 <section class="admin-card">
-<a href="./index.html">← Volver a la aplicación principal</a>
-<h1>Control de vendedores</h1>
+<a href="./index.html" style="font-weight:800">← Volver a la aplicación principal</a>
+<div style="display:flex;align-items:center;gap:12px;margin:12px 0;padding:12px;border-radius:18px;background:linear-gradient(135deg,#0e7490,#22d3ee)"><img src="assets/ilustraciones/vendedores.svg" alt="" width="84" height="67" style="border-radius:12px;background:#fff3;padding:3px"><h1 style="color:#fff;margin:0;font-size:24px">Control de vendedores</h1></div>
 <p class="admin-muted">Panel de consulta de jornadas, ventas, visitas y caja. La preparación del catálogo es una acción separada del dueño.</p>
 <div id="adminStatus" class="admin-status" role="status" aria-live="polite">Verificando cuenta propietaria…</div>
 </section>
@@ -34,6 +34,10 @@
 <label><input id="catalogBackupConfirm" type="checkbox"> Confirmo que guardé y revisé un respaldo local antes de preparar el catálogo.</label>
 <button id="catalogPrepareButton" class="admin-btn" type="button" disabled>Preparar catálogo seguro</button>
 <p id="catalogPrepStatus" class="admin-status" role="status" aria-live="polite"></p>
+<h2>Activar acceso de vendedores</h2>
+<p class="admin-muted">Interruptor general: con el acceso activo, cada vendedor con perfil activo puede entrar a su ruta. Al pausarlo, ningún vendedor ve ni registra datos.</p>
+<button id="sellerModeToggle" class="admin-btn" type="button" disabled>Activar acceso de vendedores</button>
+<p id="sellerModeStatus" class="admin-status" role="status" aria-live="polite"></p>
 </section>
 <section class="admin-card">
 <div class="admin-toolbar"><div><h2 id="adminOwnerName">Propietario</h2><p id="adminCount" class="admin-muted"></p></div><button id="adminLogout" class="admin-btn secondary" type="button">Salir</button></div>
@@ -69,13 +73,13 @@
 <h2>Acceso de vendedores</h2>
 <p><a class="admin-btn" style="text-align:center;text-decoration:none" href="./simulacion-vendedor.html">Abrir simulación de vendedor (Spark)</a></p>
 <p class="admin-muted">Esta prueba utiliza datos ficticios y no accede a Firebase.</p>
-<p class="admin-status" role="status"><strong>Preparación en plan Spark:</strong> el catálogo y los reportes pueden prepararse ahora. Crear cuentas y bloquear o reactivar accesos requieren publicar las funciones seguras en Firebase cuando se habilite Blaze. Mientras tanto, ningún vendedor puede ingresar.</p>
-<p class="admin-muted">Aquí podrás crear una cuenta personal para cada vendedor con su nombre, correo de acceso y clave inicial. La clave no se guarda en la app ni en Firestore. La creación queda deshabilitada hasta instalar el servicio seguro del servidor.</p>
+<p class="admin-status ok" role="status"><strong>Funciona en el plan gratuito (Spark):</strong> crear cuentas, activar y desactivar vendedores no requiere Blaze ni Cloud Functions.</p>
+<p class="admin-muted">Crea una cuenta personal para cada vendedor con su nombre, correo de acceso y clave inicial. La clave no se guarda en la app ni en Firestore: entrégala directamente al vendedor.</p>
 <label>Nombre del vendedor<input id="sellerDisplayName" type="text" autocomplete="name" maxlength="80" placeholder="Nombre visible"></label>
 <label>Correo de acceso<input id="sellerEmail" type="email" autocomplete="email" maxlength="254" placeholder="correo@ejemplo.cl"></label>
 <label>Clave inicial (mínimo 8 caracteres)<input id="sellerPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="Clave temporal para entregar al vendedor"></label>
 <button id="sellerCreateAccount" class="admin-btn" type="button" disabled>Crear cuenta de vendedor</button>
-<p id="sellerProfileStatus" class="admin-status" role="status" aria-live="polite">La pantalla está preparada. Se habilitará cuando el propietario autorice el despliegue del servicio seguro.</p>
+<p id="sellerProfileStatus" class="admin-status" role="status" aria-live="polite">Inicia sesión como propietario.</p>
 <h2>Vendedores registrados</h2>
 <div id="adminSellers" class="admin-list"></div>
 </section>
@@ -93,6 +97,6 @@
 </section>
 </section>
 </main>
-<script type="module" src="./seller-admin.js?v=zipper-seller-admin-functions-20261029-v14"></script>
+<script type="module" src="./seller-admin.js?v=zipper-seller-admin-spark-20261115-v1"></script>
 </body>
 </html>
