@@ -167,3 +167,14 @@ button,.tab,select,input[type=date]{min-height:44px;touch-action:manipulation}
 .client-row.no-number .actions-small{grid-column:1!important}
 .client-details{min-width:0}
 .route-chip{white-space:nowrap}
+/* Editor de rutas: Semana A y Semana B juntas */
+.route-editor{margin:14px 0 6px}
+.route-editor h3{margin:0 0 4px;color:#4c1d95;font-size:18px;font-weight:900}
+.route-week-block{border-radius:16px;padding:10px 12px;margin:10px 0;border:2px solid}
+.route-week-block.week-A{border-color:#93c5fd;background:#eff6ff}
+.route-week-block.week-B{border-color:#fdba74;background:#fff7ed}
+.route-week-block.inactive{opacity:.75;border-style:dashed}
+.rw-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}
+.rw-badge{display:inline-block;border-radius:999px;padding:4px 12px;color:#fff;font-weight:900;font-size:14px}
+.week-A .rw-badge{background:#2563eb}.week-B .rw-badge{background:#ea580c}
+.route-week-block .client-route-preview{margin:6px 0 0;background:#fff}

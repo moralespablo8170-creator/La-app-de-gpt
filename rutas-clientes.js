@@ -56,29 +56,53 @@
     });
     const clear=$('routeCountsClear');if(clear)clear.onclick=()=>{$('filterWeek').value='';$('filterDay').value='';renderClients()};
   }
-  // Vista previa: cómo quedará la ruta del día con este cliente en la posición elegida.
-  function renderClientRoutePreview(){
-    const box=$('clientRoutePreview');if(!box)return;
-    const week=$('clientWeek').value,day=$('clientDay').value;
-    if(!day){box.innerHTML='<p class="muted">Elige semana y día para ubicar al cliente en la ruta.</p>';return}
-    const all=getClients();
-    const group=all.filter(c=>c.active!==false&&String(c.id)!==String(editingClientId||'')&&clientRoute(c,week)&&norm(clientRoute(c,week).day)===norm(day));
+  // Vista previa por semana: cómo quedará la ruta del día con este cliente en el lugar elegido.
+  function previewWeek(week){
+    const box=$('clientRoutePreview'+week),daySel=$('clientDay'+week),posInput=$('clientPos'+week);
+    if(!box||!daySel)return;
+    const day=daySel.value;
+    box.closest('.route-week-block')?.classList.toggle('inactive',!day);
+    if(!day){box.innerHTML='<p class="muted">Sin visita en la Semana '+week+'.</p>';return}
+    const all=getClients(),selfId=String(editingClientId||'');
+    const group=all.filter(c=>c.active!==false&&String(c.id)!==selfId&&clientRoute(c,week)&&norm(clientRoute(c,week).day)===norm(day));
     group.sort((a,b)=>clientRoute(a,week).position-clientRoute(b,week).position||all.indexOf(a)-all.indexOf(b));
-    const raw=String($('clientPosition').value||'').trim(),wanted=raw?Math.max(1,parseInt(raw,10)||1):null;
+    const raw=String(posInput.value||'').trim();let wanted=raw?Math.max(1,parseInt(raw,10)||1):null;
+    if(wanted===null&&selfId){const cur=clientById(selfId),r=cur&&clientRoute(cur,week);if(r&&norm(r.day)===norm(day)){buildRouteIndex();wanted=routeRankOf(cur,week)||null}}
     const insertAt=Math.min(group.length,Math.max(0,(wanted??group.length+1)-1));
-    const name=$('clientName').value.trim()||(editingClientId?'Este cliente':'Cliente nuevo');
+    const name=$('clientName').value.trim()||(selfId?'Este cliente':'Cliente nuevo');
     const list=group.map(c=>({name:c.name,self:false}));list.splice(insertAt,0,{name,self:true});
-    $('clientPosition').max=String(group.length+1);
-    const around=list.map((x,i)=>({...x,n:i+1})).filter((x,i)=>Math.abs(i-insertAt)<=3||i===0||i===list.length-1);
+    posInput.max=String(group.length+1);
+    const around=list.map((x,i)=>({...x,n:i+1})).filter((x,i)=>Math.abs(i-insertAt)<=2||i===0||i===list.length-1);
     let last=0;
-    box.innerHTML='<p class="route-preview-title">📍 Semana '+esc(week)+' · '+esc(day)+': '+group.length+' clientes'+(editingClientId?' además de este':'')+'. Quedará en el <b>N° '+(insertAt+1)+' de '+list.length+'</b>'+(wanted?'':' (al final; escribe otro número para cambiarlo)')+'.</p><ol class="route-preview">'+around.map(x=>{const gap=x.n-last>1?'<li class="gap">…</li>':'';last=x.n;return gap+'<li class="'+(x.self?'self':'')+'"><b>'+x.n+'</b> '+esc(x.name)+(x.self?' ⬅':'')+'</li>'}).join('')+'</ol>';
+    box.innerHTML='<p class="route-preview-title">📍 '+esc(day)+': quedará en el <b>N° '+(insertAt+1)+' de '+list.length+'</b>'+(wanted?'':' (al final)')+'.</p><ol class="route-preview">'+around.map(x=>{const gap=x.n-last>1?'<li class="gap">…</li>':'';last=x.n;return gap+'<li class="'+(x.self?'self':'')+'"><b>'+x.n+'</b> '+esc(x.name)+(x.self?' ⬅':'')+'</li>'}).join('')+'</ol>';
+  }
+  function renderClientRoutePreview(){WEEKS.forEach(previewWeek)}
+  // Carga en el formulario las dos semanas del cliente (o lo deja vacío para uno nuevo).
+  function fillClientRouteEditor(c){
+    buildRouteIndex();
+    WEEKS.forEach(week=>{
+      const sel=$('clientDay'+week),pos=$('clientPos'+week);if(!sel||!pos)return;
+      const r=c?clientRoute(c,week):null;
+      let value='';
+      if(r&&r.day){
+        const match=[...sel.options].find(o=>o.value&&norm(o.value)===norm(r.day));
+        if(match)value=match.value;else{const o=document.createElement('option');o.value=o.textContent=r.day;sel.appendChild(o);value=r.day}
+      }
+      sel.value=value;
+      pos.value=r&&r.day?(routeRankOf(c,week)||''):'';
+    });
+    renderClientRoutePreview();
   }
   window.buildRouteIndex=buildRouteIndex;window.routeRankOf=routeRankOf;window.routeChips=routeChips;
-  window.renderRouteCounts=renderRouteCounts;window.renderClientRoutePreview=renderClientRoutePreview;
+  window.renderRouteCounts=renderRouteCounts;window.renderClientRoutePreview=renderClientRoutePreview;window.fillClientRouteEditor=fillClientRouteEditor;
   function bind(){
-    ['clientWeek','clientDay'].forEach(id=>$(id)?.addEventListener('change',()=>setTimeout(renderClientRoutePreview,0)));
-    ['clientPosition','clientName'].forEach(id=>$(id)?.addEventListener('input',renderClientRoutePreview));
-    $('newClient')?.addEventListener('click',()=>setTimeout(renderClientRoutePreview,0));
+    WEEKS.forEach(week=>{
+      $('clientDay'+week)?.addEventListener('change',()=>{if(!$('clientDay'+week).value)$('clientPos'+week).value='';previewWeek(week)});
+      $('clientPos'+week)?.addEventListener('input',()=>previewWeek(week));
+    });
+    $('clientName')?.addEventListener('input',renderClientRoutePreview);
+    document.querySelectorAll('.rw-clear').forEach(b=>b.addEventListener('click',()=>{const w=b.dataset.week;$('clientDay'+w).value='';$('clientPos'+w).value='';previewWeek(w)}));
+    $('newClient')?.addEventListener('click',()=>setTimeout(()=>fillClientRouteEditor(null),0));
     renderClientRoutePreview();
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
