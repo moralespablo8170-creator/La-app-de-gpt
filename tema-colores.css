@@ -308,14 +308,7 @@ body.buy-mode .buy-dock{display:block;position:sticky;bottom:92px;z-index:5;marg
 .product-card-row.buy-hidden{display:none!important}
 /* WhatsApp */
 .wa-btn{background:#25d366!important;color:#053b1d!important;border:0!important;font-weight:900;border-radius:12px;min-height:46px;padding:0 14px}
-.wa-saved{position:fixed;inset:0;z-index:20500;background:#041a2cb3;display:grid;place-items:center;padding:16px}
-.wa-saved.hidden{display:none}
-.wa-saved-card{width:min(420px,100%);background:#fff;border-radius:20px;padding:20px;text-align:center;display:flex;flex-direction:column;gap:10px}
-.wa-saved-card h3{margin:0;font-size:22px;color:#14532d}
-.wa-saved-card p{margin:0;color:#334155}
-.wa-saved-check{font-size:40px;line-height:1}
-.wa-saved-note{font-size:12px;color:#92400e!important;background:#fef3c7;border-radius:10px;padding:8px}
-.wa-saved-card button{min-height:52px;font-size:16px}
+#saveAndWhatsApp{display:block;width:100%;margin-top:10px;min-height:54px;font-size:16px}
 .history-row-focus{outline:3px solid #f59e0b;outline-offset:2px;transition:outline-color .4s}
 /* Pedido de compra: unidades y recepción */
 .buy-help{margin:6px 0 0;font-size:12px;color:#166534}

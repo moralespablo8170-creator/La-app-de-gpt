@@ -37,22 +37,6 @@
     const client=typeof clientById==='function'?clientById(sale.clienteId):null;
     open(waPhone(client),saleText(sale));
   }
-  function buttonLabel(client){const p=waPhone(client);return p?'📲 Enviar por WhatsApp a '+p.slice(3,7)+' '+p.slice(7):'📲 Enviar por WhatsApp (elegir contacto)'}
-
-  // Aviso después de guardar la venta.
-  function showSaved(sale){
-    if(!sale)return;
-    const client=typeof clientById==='function'?clientById(sale.clienteId):null;
-    let box=document.getElementById('saleSavedWhatsApp');
-    if(!box){box=document.createElement('div');box.id='saleSavedWhatsApp';box.className='wa-saved hidden';box.setAttribute('role','dialog');box.setAttribute('aria-modal','true');document.body.appendChild(box)}
-    box.innerHTML='<div class="wa-saved-card"><div class="wa-saved-check">✅</div><h3>Venta guardada</h3><p><strong>'+esc(sale.cliente||'')+'</strong><br>Folio #'+esc(sale.folio)+' · '+esc(pesos(saleTotal(sale)))+' · '+esc(payText(sale))+'</p>'+
-      (waPhone(client)?'':'<p class="wa-saved-note">Este cliente no tiene teléfono guardado: WhatsApp te pedirá elegir el contacto.</p>')+
-      '<button id="waSavedSend" class="wa-btn wide" type="button">'+esc(buttonLabel(client))+'</button><button id="waSavedClose" class="secondary wide" type="button">Listo</button></div>';
-    box.classList.remove('hidden');
-    const close=()=>box.classList.add('hidden');
-    box.querySelector('#waSavedSend').onclick=()=>{sendSale(sale);close()};
-    box.querySelector('#waSavedClose').onclick=close;
-  }
 
   // Botón WhatsApp dentro de "Ver ticket".
   function addReceiptButton(){
@@ -76,7 +60,7 @@
     });
   }
 
-  window.zipperWhatsApp={waPhone,saleText,sendSale,showSaved};
+  window.zipperWhatsApp={waPhone,saleText,sendSale};
   function bind(){
     addReceiptButton();
     const original=window.renderHistory;
