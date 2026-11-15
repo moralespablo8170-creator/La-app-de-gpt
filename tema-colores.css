@@ -306,3 +306,46 @@ body.buy-mode .buy-dock{display:block;position:sticky;bottom:92px;z-index:5;marg
 .buy-stepper .buy-minus{background:#94a3b8}
 .buy-qty{width:58px!important;min-height:42px;text-align:center;font-weight:900;font-size:18px!important;border-radius:10px;border:2px solid #86efac;padding:0 2px}
 .product-card-row.buy-hidden{display:none!important}
+/* WhatsApp */
+.wa-btn{background:#25d366!important;color:#053b1d!important;border:0!important;font-weight:900;border-radius:12px;min-height:46px;padding:0 14px}
+.wa-saved{position:fixed;inset:0;z-index:20500;background:#041a2cb3;display:grid;place-items:center;padding:16px}
+.wa-saved.hidden{display:none}
+.wa-saved-card{width:min(420px,100%);background:#fff;border-radius:20px;padding:20px;text-align:center;display:flex;flex-direction:column;gap:10px}
+.wa-saved-card h3{margin:0;font-size:22px;color:#14532d}
+.wa-saved-card p{margin:0;color:#334155}
+.wa-saved-check{font-size:40px;line-height:1}
+.wa-saved-note{font-size:12px;color:#92400e!important;background:#fef3c7;border-radius:10px;padding:8px}
+.wa-saved-card button{min-height:52px;font-size:16px}
+.history-row-focus{outline:3px solid #f59e0b;outline-offset:2px;transition:outline-color .4s}
+/* Pedido de compra: unidades y recepción */
+.buy-help{margin:6px 0 0;font-size:12px;color:#166534}
+.buy-unit{align-self:flex-start;margin-top:4px;background:#fff!important;border:1px solid #86efac!important;color:#14532d!important;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:800;min-height:0}
+.buy-stepper-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0}
+.buy-unit-label{font-size:11px;font-weight:800;color:#14532d}
+.po-panel{margin:12px 0;border-radius:16px;background:#eff6ff;border:2px solid #93c5fd;padding:10px 12px}
+.po-panel h3{margin:0 0 8px;font-size:17px;color:#1e3a8a;display:flex;align-items:center;gap:8px}
+.po-count{background:#2563eb;color:#fff;border-radius:999px;padding:2px 9px;font-size:13px}
+.po-row{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#fff;border-radius:12px;padding:10px;margin-bottom:8px;border:1px solid #bfdbfe}
+.po-row>div:first-child{display:flex;flex-direction:column;min-width:0}
+.po-row small{font-size:12px;color:#475569}
+.po-row-actions{display:flex;gap:6px;flex-shrink:0}
+.po-row-actions .primary{background:#2563eb!important;border-color:#1d4ed8!important;color:#fff!important;font-weight:900;min-height:44px}
+.po-done{font-size:13px;margin-top:4px}
+.po-done summary{cursor:pointer;font-weight:800;color:#1e3a8a}
+.po-done-row{padding:6px 0;border-bottom:1px dashed #bfdbfe}
+.po-miss{color:#b91c1c;font-weight:800}
+.po-ok{color:#15803d;font-weight:800}
+.po-modal{position:fixed;inset:0;z-index:20000;background:#041a2cb3;display:grid;place-items:center;padding:14px}
+.po-card{width:min(480px,100%);max-height:92dvh;overflow:auto;background:#fff;border-radius:18px;padding:18px;color:#111827}
+.po-card h3{margin:0 0 8px}
+.po-lines{display:flex;flex-direction:column;gap:8px;margin:10px 0}
+.po-line{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid #e5e7eb;border-radius:12px;padding:8px 10px;background:#f9fafb}
+.po-line>div:first-child{display:flex;flex-direction:column;min-width:0}
+.po-line small{font-size:12px;color:#475569}
+.po-line .buy-stepper button{width:40px;min-height:40px;border-radius:12px;border:0;background:#16a34a;color:#fff;font-size:22px;font-weight:900;padding:0}
+.po-line .buy-stepper .po-minus{background:#94a3b8}
+.po-got{width:56px!important;min-height:40px;text-align:center;font-weight:900;font-size:18px!important;border-radius:10px;border:2px solid #86efac;padding:0 2px}
+.po-info{font-weight:800;color:#15803d;margin:4px 0 10px}
+.po-info.po-miss{color:#b91c1c}
+.po-receive-actions{display:flex;flex-direction:column;gap:8px}
+.po-receive-actions button{min-height:50px;font-size:16px}
