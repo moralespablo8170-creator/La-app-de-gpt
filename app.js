@@ -853,7 +853,140 @@ function annulSale(saleId){
  });
 }
 function annulCurrentCartSale(){if(!editingSaleId)return;annulSale(editingSaleId)}
-function renderHistory(){const from=$('historyFrom').value,to=$('historyTo').value;if(historyType==='sales'){const rows=getSales().filter(s=>(!from||saleDate(s)>=from)&&(!to||saleDate(s)<=to)).sort((a,b)=>saleDate(b).localeCompare(saleDate(a)));$('historyOutput').innerHTML=rows.length?rows.map(s=>'<article class="history-row"><div><strong>#'+esc(s.folio)+' · '+esc(s.cliente)+'</strong><span>'+esc(s.fecha)+' · '+esc(s.ruta||'Sin ruta')+' · '+(s.items||[]).length+' líneas · '+esc(paymentLabel(s))+'</span></div><div class="actions-small"><strong>'+money(saleTotal(s))+'</strong><button class="secondary history-reprint" data-sale-id="'+esc(s.id)+'" type="button">Ver ticket / Reimprimir</button><button class="secondary invoice-detail" data-sale-id="'+esc(s.id)+'" type="button">Datos para facturar'+((s.invoiceState||(clientById(s.clienteId)?.sendInvoice?'send':'normal'))==='send'?' 🔴':'')+'</button></div></article>').join(''):'<p class="muted">No hay ventas en este período.</p>';document.querySelectorAll('.invoice-detail').forEach(b=>b.onclick=()=>openInvoiceDetail(b.dataset.saleId));document.querySelectorAll('.history-reprint').forEach(b=>b.onclick=()=>{const sale=getSales().find(x=>String(x.id)===String(b.dataset.saleId));if(!sale){alert('No se encontró esta venta.');return}renderPrint(sale);openReceiptPreview()})}else if(historyType==='clients'){const sums={};getSales().forEach(s=>{if((!from||saleDate(s)>=from)&&(!to||saleDate(s)<=to)){const k=s.cliente||'Sin cliente';sums[k]=(sums[k]||0)+saleTotal(s)}});const rows=Object.entries(sums).sort((a,b)=>b[1]-a[1]);$('historyOutput').innerHTML=rows.length?rows.map(x=>'<article class="history-row"><div><strong>'+esc(x[0])+'</strong><span>Total acumulado del período</span></div><strong>'+money(x[1])+'</strong></article>').join(''):'<p class="muted">No hay movimientos.</p>'}else if(historyType==='pending'){const rows=getSales().filter(s=>s.paymentStatus==='pending'||s.paymentMethod==='pending').filter(s=>(!from||saleDate(s)>=from)&&(!to||saleDate(s)<=to)).sort((a,b)=>saleDate(a).localeCompare(saleDate(b)));const total=debtClients().reduce((a,s)=>a+s.debt,0);$('historyOutput').innerHTML=(rows.length?'<div class="pending-total">Total pendiente: <strong>'+money(total)+'</strong></div>'+rows.map(s=>'<article class="history-row pending-row"><div><strong>'+esc(s.cliente)+'</strong><span>Venta #'+esc(s.folio)+' · '+esc(s.fecha)+'</span></div><div class="actions-small"><strong>'+money(clientDebt(s.clienteId))+'</strong><button class="secondary history-reprint" data-sale-id="'+esc(s.id)+'" type="button">Ver ticket / Reimprimir</button><button class="primary mark-paid" data-id="'+esc(s.id)+'" type="button">Marcar pagado</button></div></article>').join(''):'<p class="muted">No hay pagos pendientes.</p>');document.querySelectorAll('.mark-paid').forEach(b=>b.onclick=()=>markPendingPaid(b.dataset.id));document.querySelectorAll('.history-reprint').forEach(b=>b.onclick=()=>{const sale=getSales().find(x=>String(x.id)===String(b.dataset.saleId));if(!sale){alert('No se encontró esta venta.');return}renderPrint(sale);openReceiptPreview()})}else{const sums={};getSales().forEach(s=>{if((!from||saleDate(s)>=from)&&(!to||saleDate(s)<=to))(s.items||[]).forEach(i=>{const k=i.desc||'Producto';if(!sums[k])sums[k]={qty:0,total:0,profit:0};sums[k].qty+=Number(i.qty||0);sums[k].total+=Number(i.qty||0)*Number(i.price||0);sums[k].profit+=Number(i.qty||0)*(Number(i.price||0)-Number(i.purchasePrice||0))})});const rows=Object.entries(sums).sort((a,b)=>b[1].qty-a[1].qty);$('historyOutput').innerHTML=rows.length?rows.map(x=>'<article class="history-row"><div><strong>'+esc(x[0])+'</strong><span>'+x[1].qty+' unidades · Ganancia '+money(x[1].profit)+'</span></div><strong>'+money(x[1].total)+'</strong></article>').join(''):'<p class="muted">No hay movimientos de productos.</p>'}}
+// ===== Historial para facturar: filtros por día/semana, búsqueda y clientes atendidos =====
+let historyQuick='week';
+const HISTORY_DAYS=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+function plural(n,one,many){return n+' '+(n===1?one:many)}
+function historyParse(value){const [y,m,d]=String(value||'').split('-').map(Number);return y?new Date(y,(m||1)-1,d||1,12):null}
+function historyIso(date){return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0')}
+function historyAddDays(value,days){const d=historyParse(value);d.setDate(d.getDate()+days);return historyIso(d)}
+function historyWeekStart(value){const d=historyParse(value);const offset=(d.getDay()+6)%7;d.setDate(d.getDate()-offset);return historyIso(d)}
+function historyNiceDate(value,withYear){const d=historyParse(value);if(!d)return value||'';return HISTORY_DAYS[d.getDay()]+' '+d.getDate()+' '+d.toLocaleDateString('es-CL',{month:'short'}).replace('.','')+(withYear?' '+d.getFullYear():'')}
+function historyRangeLabel(from,to){
+ if(!from&&!to)return 'Todo el historial';
+ if(from&&from===to)return historyNiceDate(from,true);
+ if(from&&to&&historyWeekStart(from)===from&&historyAddDays(from,6)===to)return 'Semana del '+historyNiceDate(from)+' al '+historyNiceDate(to);
+ return (from?historyNiceDate(from):'Inicio')+' → '+(to?historyNiceDate(to,true):'Hoy');
+}
+function setHistoryQuick(kind){
+ const today=localDate();let from='',to='';
+ if(kind==='today'){from=to=today}
+ else if(kind==='yesterday'){from=to=historyAddDays(today,-1)}
+ else if(kind==='week'){from=historyWeekStart(today);to=historyAddDays(from,6)}
+ else if(kind==='lastweek'){from=historyAddDays(historyWeekStart(today),-7);to=historyAddDays(from,6)}
+ else if(kind==='month'){from=today.slice(0,8)+'01';const d=historyParse(from);d.setMonth(d.getMonth()+1);d.setDate(0);to=historyIso(d)}
+ historyQuick=kind;$('historyFrom').value=from;$('historyTo').value=to;renderHistory();
+}
+function shiftHistoryRange(direction){
+ const from=$('historyFrom').value,to=$('historyTo').value;
+ if(!from||!to){setHistoryQuick('week');return}
+ const days=Math.round((historyParse(to)-historyParse(from))/86400000)+1;
+ $('historyFrom').value=historyAddDays(from,direction*days);$('historyTo').value=historyAddDays(to,direction*days);
+ historyQuick='';renderHistory();
+}
+function saleInvoiceState(s){return s.invoiceState||(clientById(s.clienteId)?.sendInvoice?'send':'normal')}
+function invoiceBadge(state){return state==='send'?'<span class="badge badge-red">Por facturar</span>':state==='done'?'<span class="badge badge-green">Facturada</span>':''}
+function historyMatches(s,text){
+ if(!text)return true;
+ const c=clientById(s.clienteId);
+ return [s.cliente,s.folio,c?.rut,c?.razonSocial,c?.name,s.ruta].some(v=>String(v??'').toLowerCase().includes(text));
+}
+function historySalesInRange(){
+ const from=$('historyFrom').value,to=$('historyTo').value,text=String($('historySearch')?.value||'').trim().toLowerCase(),invoiceOnly=!!$('historyInvoiceOnly')?.checked;
+ return getSales().filter(s=>(!from||saleDate(s)>=from)&&(!to||saleDate(s)<=to)&&historyMatches(s,text)&&(!invoiceOnly||saleInvoiceState(s)==='send'));
+}
+function historyVisitsInRange(){
+ const from=$('historyFrom').value,to=$('historyTo').value,visits=[];
+ Object.keys(localStorage).filter(k=>k.startsWith('zipperVisitados-')).forEach(k=>{
+  const date=k.slice('zipperVisitados-'.length);
+  if((from&&date<from)||(to&&date>to))return;
+  readArray(k).forEach(id=>visits.push({clientId:String(id),date}));
+ });
+ return visits;
+}
+function attendedClients(){
+ const text=String($('historySearch')?.value||'').trim().toLowerCase(),invoiceOnly=!!$('historyInvoiceOnly')?.checked,map=new Map();
+ const entry=(key,name,clientId)=>{if(!map.has(key))map.set(key,{key,name,clientId,client:clientById(clientId),sales:[],dates:new Set(),visitedOnly:new Set()});return map.get(key)};
+ historySalesInRange().forEach(s=>{const e=entry(String(s.clienteId||s.cliente||'sin-cliente'),s.cliente||'Sin cliente',s.clienteId);e.sales.push(s);e.dates.add(saleDate(s))});
+ if(!invoiceOnly)historyVisitsInRange().forEach(v=>{
+  const c=clientById(v.clientId);if(!c)return;
+  if(text&&![c.name,c.rut,c.razonSocial].some(x=>String(x??'').toLowerCase().includes(text)))return;
+  const e=entry(String(c.id),c.name,c.id);if(!e.dates.has(v.date))e.visitedOnly.add(v.date);
+ });
+ return [...map.values()].map(e=>({...e,total:e.sales.reduce((a,s)=>a+saleTotal(s),0),pending:e.sales.filter(s=>saleInvoiceState(s)==='send').length,done:e.sales.filter(s=>saleInvoiceState(s)==='done').length})).sort((a,b)=>b.total-a.total||a.name.localeCompare(b.name));
+}
+function renderHistorySummary(){
+ const box=$('historySummary');if(!box)return;
+ const sales=historySalesInRange(),clients=attendedClients(),total=sales.reduce((a,s)=>a+saleTotal(s),0),net=Math.round(total/1.19),toInvoice=sales.filter(s=>saleInvoiceState(s)==='send');
+ $('historyRangeLabel').textContent=historyRangeLabel($('historyFrom').value,$('historyTo').value);
+ document.querySelectorAll('#historyQuick button').forEach(b=>b.classList.toggle('active',b.dataset.quick===historyQuick));
+ box.innerHTML='<div class="summary-tile tile-blue"><strong>'+sales.length+'</strong><span>Ventas</span></div><div class="summary-tile tile-violet"><strong>'+clients.length+'</strong><span>Clientes atendidos</span></div><div class="summary-tile tile-green"><strong>'+money(total)+'</strong><span>Total con IVA</span></div><div class="summary-tile tile-amber"><strong>'+money(net)+'</strong><span>Neto ref. · IVA '+money(total-net)+'</span></div><div class="summary-tile tile-red"><strong>'+toInvoice.length+'</strong><span>Por facturar · '+money(toInvoice.reduce((a,s)=>a+saleTotal(s),0))+'</span></div>';
+}
+function bindHistoryReprint(){
+ document.querySelectorAll('.invoice-detail').forEach(b=>b.onclick=()=>openInvoiceDetail(b.dataset.saleId));
+ document.querySelectorAll('.history-reprint').forEach(b=>b.onclick=()=>{const sale=getSales().find(x=>String(x.id)===String(b.dataset.saleId));if(!sale){alert('No se encontró esta venta.');return}renderPrint(sale);openReceiptPreview()});
+}
+function historySaleRow(s){
+ const state=saleInvoiceState(s);
+ return '<article class="history-row"><div><strong>#'+esc(s.folio)+' · '+esc(s.cliente)+' '+invoiceBadge(state)+'</strong><span>'+esc(s.ruta||'Sin ruta')+' · '+plural((s.items||[]).length,'línea','líneas')+' · '+esc(paymentLabel(s))+'</span></div><div class="actions-small"><strong>'+money(saleTotal(s))+'</strong><button class="secondary history-reprint" data-sale-id="'+esc(s.id)+'" type="button">🧾 Ver ticket</button><button class="secondary invoice-detail" data-sale-id="'+esc(s.id)+'" type="button">📄 Datos para facturar</button></div></article>';
+}
+function renderHistory(){
+ renderHistorySummary();
+ const from=$('historyFrom').value,to=$('historyTo').value,out=$('historyOutput');
+ if(historyType==='sales'){
+  const rows=historySalesInRange().sort((a,b)=>saleDate(b).localeCompare(saleDate(a))||Number(b.folio||0)-Number(a.folio||0));
+  const groups=new Map();rows.forEach(s=>{const d=saleDate(s);if(!groups.has(d))groups.set(d,[]);groups.get(d).push(s)});
+  out.innerHTML=rows.length?[...groups].map(([date,list])=>'<div class="history-day"><div class="history-day-head"><strong>📅 '+esc(historyNiceDate(date,true))+'</strong><span>'+plural(list.length,'venta','ventas')+' · '+plural(new Set(list.map(s=>s.clienteId||s.cliente)).size,'cliente','clientes')+' · '+money(list.reduce((a,s)=>a+saleTotal(s),0))+'</span></div>'+list.map(historySaleRow).join('')+'</div>').join(''):'<p class="muted empty-state">🔍 No hay ventas en este período.</p>';
+  bindHistoryReprint();
+ }else if(historyType==='clients'){
+  const rows=attendedClients();
+  out.innerHTML=rows.length?'<div class="actions history-tools"><button id="historyCopyClients" class="secondary" type="button">📋 Copiar lista para facturar</button></div>'+rows.map((e,i)=>{
+   const c=e.client,dates=[...e.dates].sort().map(d=>historyNiceDate(d)),visits=[...e.visitedOnly].sort().map(d=>historyNiceDate(d));
+   return '<article class="history-row client-attended'+(e.pending?' needs-invoice':'')+'"><div><strong>'+esc(e.name)+' '+(e.pending?'<span class="badge badge-red">'+e.pending+' por facturar</span>':e.done&&e.done===e.sales.length?'<span class="badge badge-green">Facturado</span>':'')+(e.sales.length?'':'<span class="badge badge-gray">Visitado sin venta</span>')+'</strong><span>RUT: '+esc(c?.rut||'Sin RUT')+(c?.razonSocial?' · '+esc(c.razonSocial):'')+'</span><span>'+(dates.length?'🛒 '+esc(dates.join(', ')):'')+(visits.length?(dates.length?' · ':'')+'👣 Visitado: '+esc(visits.join(', ')):'')+'</span></div><div class="actions-small">'+(e.sales.length?'<strong>'+money(e.total)+'</strong><span class="muted">'+plural(e.sales.length,'venta','ventas')+' · Neto '+money(Math.round(e.total/1.19))+'</span>':'<span class="muted">Sin venta en este período</span>')+(e.sales.length?'<button class="secondary client-invoice" data-index="'+i+'" type="button">📄 Resumen para facturar</button><button class="secondary client-sales" data-index="'+i+'" type="button">Ver ventas</button>':'')+'</div></article>';
+  }).join(''):'<p class="muted empty-state">👥 No se atendieron clientes en este período.</p>';
+  document.querySelectorAll('.client-invoice').forEach(b=>b.onclick=()=>openClientInvoiceSummary(rows[Number(b.dataset.index)]));
+  document.querySelectorAll('.client-sales').forEach(b=>b.onclick=()=>{const e=rows[Number(b.dataset.index)];$('historySearch').value=e.client?.rut||e.name;setHistoryType('sales')});
+  const copy=$('historyCopyClients');if(copy)copy.onclick=()=>copyAttendedClients(rows);
+ }else if(historyType==='pending'){
+  const rows=getSales().filter(s=>s.paymentStatus==='pending'||s.paymentMethod==='pending').filter(s=>(!from||saleDate(s)>=from)&&(!to||saleDate(s)<=to)&&historyMatches(s,String($('historySearch')?.value||'').trim().toLowerCase())).sort((a,b)=>saleDate(a).localeCompare(saleDate(b)));
+  const total=debtClients().reduce((a,s)=>a+s.debt,0);
+  out.innerHTML=rows.length?'<div class="pending-total">Total pendiente: <strong>'+money(total)+'</strong></div>'+rows.map(s=>'<article class="history-row pending-row"><div><strong>'+esc(s.cliente)+'</strong><span>Venta #'+esc(s.folio)+' · '+esc(historyNiceDate(saleDate(s),true))+'</span></div><div class="actions-small"><strong>'+money(clientDebt(s.clienteId))+'</strong><button class="secondary history-reprint" data-sale-id="'+esc(s.id)+'" type="button">🧾 Ver ticket</button><button class="primary mark-paid" data-id="'+esc(s.id)+'" type="button">✅ Marcar pagado</button></div></article>').join(''):'<p class="muted empty-state">🎉 No hay pagos pendientes.</p>';
+  document.querySelectorAll('.mark-paid').forEach(b=>b.onclick=()=>markPendingPaid(b.dataset.id));
+  bindHistoryReprint();
+ }else{
+  const sums={};
+  historySalesInRange().forEach(s=>(s.items||[]).forEach(i=>{const k=i.desc||'Producto';if(!sums[k])sums[k]={qty:0,total:0,profit:0};sums[k].qty+=Number(i.qty||0);sums[k].total+=Number(i.qty||0)*Number(i.price||0);sums[k].profit+=Number(i.qty||0)*(Number(i.price||0)-Number(i.purchasePrice||0))}));
+  const rows=Object.entries(sums).sort((a,b)=>b[1].qty-a[1].qty);
+  out.innerHTML=rows.length?rows.map(x=>'<article class="history-row"><div><strong>'+esc(x[0])+'</strong><span>'+x[1].qty+' unidades · Ganancia '+money(x[1].profit)+'</span></div><strong>'+money(x[1].total)+'</strong></article>').join(''):'<p class="muted empty-state">📦 No hay movimientos de productos.</p>';
+ }
+}
+function setHistoryType(type){historyType=type;document.querySelectorAll('#historyType button').forEach(x=>x.classList.toggle('active',x.dataset.history===type));renderHistory()}
+function openClientInvoiceSummary(e){
+ if(!e||!e.sales.length)return;
+ const c=e.client,lines={};
+ e.sales.forEach(s=>(s.items||[]).forEach(i=>{const k=(i.desc||'Producto')+'|'+Number(i.price||0);if(!lines[k])lines[k]={desc:i.desc||'Producto',price:Number(i.price)||0,qty:0};lines[k].qty+=Number(i.qty)||0}));
+ const items=Object.values(lines).sort((a,b)=>a.desc.localeCompare(b.desc)).map(l=>'<tr><td>'+esc(l.desc)+'</td><td>'+esc(l.qty)+'</td><td>'+money(Math.round(l.price/1.19))+'</td><td>'+money(Math.round(l.qty*l.price/1.19))+'</td></tr>').join('');
+ const total=e.total,net=Math.round(total/1.19);
+ $('invoiceDetailBody').innerHTML='<h2>Resumen para facturar</h2><p><strong>'+esc(e.name)+'</strong></p><p>RUT: <strong>'+esc(c?.rut||'Sin RUT')+'</strong></p><p>Razón social: '+esc(c?.razonSocial||'Sin razón social registrada')+'</p><p>Período: '+esc(historyRangeLabel($('historyFrom').value,$('historyTo').value))+'</p><p>Tickets: '+e.sales.map(s=>'#'+esc(s.folio)+' ('+esc(historyNiceDate(saleDate(s)))+')').join(', ')+'</p><div class="invoice-table-scroll"><table class="invoice-table"><thead><tr><th>Producto</th><th>Cant.</th><th>Unit. neto aprox.</th><th>Neto línea aprox.</th></tr></thead><tbody>'+items+'</tbody></table></div><p><strong>Total con IVA: '+money(total)+'</strong></p><p>Neto referencial: '+money(net)+' · IVA referencial: '+money(total-net)+'</p><p class="muted">Valores netos referenciales; pueden diferir por redondeos del SII.</p><label>Indicación de factura para estos '+e.sales.length+' tickets<select id="invoiceDetailState"><option value="normal">Solo guardar / facturar después</option><option value="send">ENVIAR FACTURA</option><option value="done">Factura ya hecha</option></select></label>';
+ $('invoiceDetailState').value=e.pending?'send':(e.done===e.sales.length?'done':'normal');
+ $('invoiceDetailSave').onclick=()=>{const ids=new Set(e.sales.map(s=>String(s.id))),state=$('invoiceDetailState').value,rows=getSales().map(s=>ids.has(String(s.id))?{...s,invoiceState:state}:s);if(writeArray('zipperComprobantes',rows)){closeInvoiceDetail();renderHistory()}};
+ $('invoiceDetailDialog').classList.remove('hidden');
+}
+function copyAttendedClients(rows){
+ const text='Clientes atendidos · '+historyRangeLabel($('historyFrom').value,$('historyTo').value)+'\n\n'+rows.filter(e=>e.sales.length).map(e=>'• '+e.name+' · RUT '+(e.client?.rut||'sin RUT')+(e.client?.razonSocial?' · '+e.client.razonSocial:'')+'\n  '+plural(e.sales.length,'venta','ventas')+' · Total '+money(e.total)+' · Neto '+money(Math.round(e.total/1.19))+(e.pending?' · POR FACTURAR':'')).join('\n');
+ const done=()=>alert('Lista copiada. Puedes pegarla en WhatsApp, correo o el sistema de facturación.');
+ if(navigator.clipboard?.writeText)navigator.clipboard.writeText(text).then(done).catch(()=>prompt('Copia la lista:',text));else prompt('Copia la lista:',text);
+}
+function initHistoryFilters(){
+ document.querySelectorAll('#historyQuick button').forEach(b=>b.onclick=()=>setHistoryQuick(b.dataset.quick));
+ if($('historyPrev'))$('historyPrev').onclick=()=>shiftHistoryRange(-1);
+ if($('historyNext'))$('historyNext').onclick=()=>shiftHistoryRange(1);
+ if($('historySearch'))$('historySearch').oninput=renderHistory;
+ if($('historyInvoiceOnly'))$('historyInvoiceOnly').onchange=renderHistory;
+ $('historyFrom').addEventListener('change',()=>{historyQuick=''});
+ $('historyTo').addEventListener('change',()=>{historyQuick=''});
+ if(!$('historyFrom').value&&!$('historyTo').value){const from=historyWeekStart(localDate());$('historyFrom').value=from;$('historyTo').value=historyAddDays(from,6)}
+}
 
 let preparedReceipt=null;
 function renderPrint(s){preparedReceipt=s;$('printArea').innerHTML='<div class="receipt"><h2>DISTRIBUIDORA ZIPPER</h2><div>Comprobante #'+esc(s.folio)+' · '+esc(s.fecha)+'</div><div style="margin:6px 0"><strong>'+esc(s.cliente)+'</strong></div>'+(s.items||[]).map(i=>'<div class="line ticket-product-line"><span class="ticket-product">'+esc(i.desc)+(i.promotion?' · OFERTA':'')+'</span><span class="ticket-calculation">'+esc(i.qty)+' × '+money(i.price)+' = <strong>'+money(Math.round(Number(i.qty)*Number(i.price)))+'</strong></span></div>').join('')+'<div class="total"><span>TOTAL</span><strong>'+money(saleTotal(s))+'</strong></div></div>'}
@@ -954,7 +1087,7 @@ document.addEventListener('click',guardClientNavigation,true);function bind(){bi
 if($('statsCompareDate'))$('statsCompareDate').value=localDate();if($('cashDate')){$('cashDate').value=localDate();$('cashDate').onchange=renderCash;document.querySelectorAll('#cashRange button').forEach(b=>b.onclick=()=>{cashRange=b.dataset.range;document.querySelectorAll('#cashRange button').forEach(x=>x.classList.toggle('active',x===b));renderCash()})}document.querySelectorAll('#statType button').forEach(b=>b.onclick=()=>{statType=b.dataset.type;document.querySelectorAll('#statType button').forEach(x=>x.classList.toggle('active',x===b));renderStats()});document.querySelectorAll('#statPeriod button').forEach(b=>b.onclick=()=>{statPeriod=b.dataset.period;if(statPeriod==='day'){if($('statRouteFilter'))$('statRouteFilter').value='';if($('statDayFilter'))$('statDayFilter').value=''}document.querySelectorAll('#statPeriod button').forEach(x=>x.classList.toggle('active',x===b));renderStats();renderGeneralTotal()});document.querySelectorAll('#totalPeriod button').forEach(b=>b.onclick=()=>{totalPeriod=b.dataset.period;document.querySelectorAll('#totalPeriod button').forEach(x=>x.classList.toggle('active',x===b));renderGeneralTotal()});if($('statRouteFilter'))$('statRouteFilter').onchange=()=>{renderStats();renderGeneralTotal()};if($('statDayFilter'))$('statDayFilter').onchange=()=>{renderStats();renderGeneralTotal()};if($('chartMode'))$('chartMode').onchange=renderStatsChart;if($('statsCompareDate'))$('statsCompareDate').onchange=renderStatsChart;
 $('addPromo').onclick=()=>{currentPromos.push({minQty:1,price:0});renderPromoRows()};$('saveProduct').onclick=saveProduct;$('deleteProduct').onclick=()=>{if(editingProductId)deleteProduct(editingProductId)};$('cancelProduct').onclick=()=>{resetProductForm();focusProductSearch();};$('saveCategory').onclick=addCategory;$('closeCategoryAdmin').onclick=()=>{$('categoryAdminPanel').classList.add('hidden')};$('openCategoryAdmin').onclick=()=>{$('categoryAdminPanel').classList.toggle('hidden');renderCategories();};
 $('newClient').onclick=()=>{resetClientForm();$('clientEditor').scrollIntoView({behavior:'smooth',block:'start'});$('clientName').focus()};$('saveClient').onclick=saveClient;$('cancelClient').onclick=()=>{resetClientForm();$('clientSearchName').value='';$('clientSearchAddress').value='';renderClients();window.scrollTo({top:0,behavior:'smooth'});setTimeout(()=>$('clientSearchName').focus(),250)};$('deleteClient').onclick=()=>{if(editingClientId)deleteClient(editingClientId)};$('clientSearchName').oninput=renderClients;$('clientSearchAddress').oninput=renderClients;$('productSearch').oninput=renderInventory;$('clientWeek').onchange=()=>{if(!editingClientId)return;const r=clientRoute(clientById(editingClientId),$('clientWeek').value);$('clientDay').value=r?.day||'';$('clientPosition').value=r&&r.position<999999?r.position:'';};$('filterWeek').onchange=renderClients;$('filterDay').onchange=renderClients;bindImmediateValidation('clientRut');bindImmediateValidation('clientPhone');$('clientRut').oninput=e=>{e.target.value=e.target.value.toUpperCase().replace(/[^0-9K]/g,'').slice(0,9)};$('clientPhone').oninput=e=>{e.target.value=formatPhone(e.target.value)};
-document.querySelectorAll('#historyType button').forEach(b=>b.onclick=()=>{historyType=b.dataset.history;document.querySelectorAll('#historyType button').forEach(x=>x.classList.toggle('active',x===b));renderHistory()});$('historyFrom').onchange=renderHistory;$('historyTo').onchange=renderHistory}
+document.querySelectorAll('#historyType button').forEach(b=>b.onclick=()=>{historyType=b.dataset.history;document.querySelectorAll('#historyType button').forEach(x=>x.classList.toggle('active',x===b));renderHistory()});$('historyFrom').onchange=renderHistory;$('historyTo').onchange=renderHistory;initHistoryFilters();document.querySelectorAll('.feature-tile').forEach(b=>b.onclick=()=>{const go=b.dataset.go;if(go==='sellers'){location.href='./seller-admin.html';return}if(go==='invoice'){showView('history');setHistoryType('clients');return}if(go==='route'){const target=[$('cartSection'),$('activeRouteBox'),$('routeSetup')].find(x=>x&&!x.classList.contains('hidden'));target?.scrollIntoView({behavior:'smooth',block:'start'});return}$(go)?.click()})}
 try{bind()}catch(error){console.error('Zipper: error al conectar botones',error);alert('Error al iniciar botones: '+error.message)}
 if($('cashExpenseSave'))$('cashExpenseSave').onclick=addCashExpense;
 document.addEventListener('click',e=>{const history=e.target.closest('.debt-payment-history');if(history){openPaymentHistory(history.dataset.id);return}const edit=e.target.closest('.edit-debt-payment');if(edit){beginEditDebtPayment(edit.dataset.id);return}if(e.target.closest('#paymentHistoryClose')){closePaymentHistory();return}if(e.target.closest('#paymentEditSave')){saveDebtPaymentEdit();return}if(e.target.closest('#paymentEditCancel')){editingDebtPaymentId='';renderPaymentHistory();return}});

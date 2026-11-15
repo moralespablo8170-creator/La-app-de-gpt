@@ -231,7 +231,8 @@ async function login(email,password) {
   }
   if (profile.role !== 'owner') {
     await signOut(auth);
-    throw new Error('El acceso vendedor todavía no se activa en esta versión. La app seguirá usando el modo local mientras se termina la vista protegida por vendedor.');
+    setTimeout(()=>{location.href='./vendedor.html'},1500);
+    throw new Error('Esta es una cuenta de vendedor. Te llevamos a la app de ruta del vendedor…');
   }
   activeProfile = profile;
   announceProfile(profile);
@@ -678,8 +679,12 @@ async function startSync(profile) {
     if(pendingCloudCollection('visits')) return;
     const byDate={};
     rows.forEach(row=>{if(row.sellerUid!==profile.uid)return;const date=String(row.date||'');if(!date)return;(byDate[date]||= []).push(String(row.clientId))});
-    Object.keys(localStorage).filter(key=>key.startsWith('zipperVisitados-')).forEach(key=>localStorage.removeItem(key));
-    Object.entries(byDate).forEach(([date,ids])=>writeLocal('zipperVisitados-'+date,[...new Set(ids)]));
+    // Cloud-originated: must not be queued again as local changes.
+    const wasApplying=applyingCloud;applyingCloud=true;
+    try {
+      Object.keys(localStorage).filter(key=>key.startsWith('zipperVisitados-')&&!byDate[key.slice('zipperVisitados-'.length)]).forEach(key=>localStorage.removeItem(key));
+      Object.entries(byDate).forEach(([date,ids])=>writeLocal('zipperVisitados-'+date,[...new Set(ids)]));
+    } finally { applyingCloud=wasApplying; }
     scheduleRefresh();
   });
   watch('productCosts',rows=>{

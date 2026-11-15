@@ -1,0 +1,132 @@
+/* ==========================================================================
+   Tema colorido y ajustes para teléfono · Distribuidora Zipper
+   Se carga después de styles.css: solo añade color, jerarquía y tamaños táctiles.
+   ========================================================================== */
+:root{
+  --z-blue:#2563eb;--z-blue-soft:#dbeafe;
+  --z-violet:#7c3aed;--z-violet-soft:#ede9fe;
+  --z-orange:#ea580c;--z-orange-soft:#ffedd5;
+  --z-green:#16a34a;--z-green-soft:#dcfce7;
+  --z-pink:#db2777;--z-pink-soft:#fce7f3;
+  --z-red:#dc2626;--z-red-soft:#fee2e2;
+  --z-cyan:#0891b2;--z-cyan-soft:#cffafe;
+  --z-amber:#d97706;--z-amber-soft:#fef3c7;
+  --z-ink:#0f172a;
+}
+
+/* ---------- Ajustes generales para pantallas de teléfono ---------- */
+html,body{overflow-x:hidden;-webkit-text-size-adjust:100%}
+img,svg,table{max-width:100%}
+input,select,textarea{font-size:16px!important} /* evita el zoom automático del teléfono */
+button,.tab,select,input[type=date]{min-height:44px;touch-action:manipulation}
+.view{padding-bottom:96px}
+.card{overflow-wrap:anywhere}
+.invoice-table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* ---------- Menú de funciones en Inicio ---------- */
+.feature-menu{margin:0 0 16px}
+.feature-menu-title{color:#fff!important;font-size:21px;font-weight:900;margin:2px 4px 10px;letter-spacing:.2px}
+.feature-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.feature-tile{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:3px;
+  border:0;border-radius:18px;padding:8px 6px 10px;background:#fff;color:var(--z-ink);
+  box-shadow:0 6px 18px #0004;text-align:center;font:inherit;cursor:pointer;
+  transition:transform .12s ease,box-shadow .12s ease;border-top:5px solid var(--tile,#2563eb)}
+.feature-tile:active{transform:scale(.96)}
+.feature-tile img{width:100%;max-width:92px;height:auto;aspect-ratio:120/96}
+.feature-tile strong{font-size:14px;font-weight:900;line-height:1.15;color:var(--tile,#2563eb)}
+.feature-tile span{font-size:11px;color:#475569;line-height:1.2}
+.tile-route{--tile:var(--z-blue)}.tile-clients{--tile:var(--z-violet)}.tile-products{--tile:var(--z-orange)}
+.tile-cash{--tile:var(--z-green)}.tile-invoice{--tile:var(--z-red)}.tile-sellers{--tile:var(--z-cyan)}
+@media (max-width:340px){.feature-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* ---------- Encabezados de sección con ilustración y color ---------- */
+.page-banner{border-radius:20px;padding:12px 14px!important;margin:0 0 14px;gap:12px!important;box-shadow:0 8px 22px #0005}
+.page-banner .page-art{width:84px;height:auto;flex-shrink:0;border-radius:14px;background:#fff3;padding:3px}
+.page-banner h2{font-size:25px!important;font-weight:900;letter-spacing:.3px;text-shadow:0 2px 6px #0004}
+.page-banner p{color:#fffd!important;font-size:13px!important;font-weight:600}
+.banner-clients{background:linear-gradient(135deg,#6d28d9,#a855f7)}
+.banner-products{background:linear-gradient(135deg,#c2410c,#fb923c)}
+.banner-cash{background:linear-gradient(135deg,#15803d,#22c55e)}
+.banner-history{background:linear-gradient(135deg,#be185d,#f472b6)}
+
+/* Títulos de tarjetas más destacados con color por sección */
+.card h2{font-weight:900}
+.kicker{border-radius:12px}
+#clientsView .kicker{background:var(--z-violet-soft)!important;color:var(--z-violet)!important;border-left-color:var(--z-violet)!important}
+#productsView .kicker{background:var(--z-orange-soft)!important;color:var(--z-orange)!important;border-left-color:var(--z-orange)!important}
+#cashView .kicker{background:var(--z-green-soft)!important;color:var(--z-green)!important;border-left-color:var(--z-green)!important}
+#historyView .kicker{background:var(--z-pink-soft)!important;color:var(--z-pink)!important;border-left-color:var(--z-pink)!important}
+
+/* ---------- Barra de navegación inferior con color por pestaña ---------- */
+.tabs .tab{border-radius:12px!important;transition:background .15s ease,color .15s ease}
+.tabs .tab span{font-weight:800}
+.tabs #homeTab.active{color:#60a5fa!important;background:#1d4ed833!important;box-shadow:inset 0 -3px #60a5fa!important}
+.tabs #clientsTab.active{color:#c4b5fd!important;background:#7c3aed33!important;box-shadow:inset 0 -3px #c4b5fd!important}
+.tabs #productsTab.active{color:#fdba74!important;background:#ea580c33!important;box-shadow:inset 0 -3px #fdba74!important}
+.tabs #cashTab.active{color:#86efac!important;background:#16a34a33!important;box-shadow:inset 0 -3px #86efac!important}
+.tabs #historyTab.active{color:#f9a8d4!important;background:#db277733!important;box-shadow:inset 0 -3px #f9a8d4!important}
+
+/* ---------- Historial y facturación ---------- */
+.history-card h2{color:var(--z-pink)!important;font-size:22px}
+.quick-periods{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.quick-periods button{flex:1 1 auto;border:2px solid #fbcfe8;background:#fff;color:#9d174d;border-radius:999px;
+  padding:8px 12px;font-weight:800;font-size:14px}
+.quick-periods button.active{background:var(--z-pink);border-color:var(--z-pink);color:#fff;box-shadow:0 4px 12px #db277755}
+.range-nav{display:flex;align-items:center;gap:8px;margin:6px 0 12px;background:var(--z-pink-soft);border-radius:16px;padding:6px}
+.range-nav strong{flex:1;text-align:center;color:#831843;font-size:15px;line-height:1.25}
+.range-nav button{width:46px;flex-shrink:0;border:0;border-radius:12px;background:#fff;color:var(--z-pink);font-size:18px;font-weight:900;box-shadow:0 2px 6px #0001}
+.search-field{display:block;font-weight:800;margin-top:6px}
+.search-field input{width:100%;box-sizing:border-box;margin-top:6px}
+.check-row{display:flex!important;align-items:center;gap:10px;font-weight:700;margin:12px 0;color:#334155}
+.check-row input{width:24px!important;height:24px!important;min-height:0;margin:0;accent-color:var(--z-pink);flex-shrink:0}
+.history-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:8px 0 14px}
+.summary-tile{border-radius:16px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.summary-tile strong{font-size:20px;font-weight:900;line-height:1.1;overflow-wrap:anywhere}
+.summary-tile span{font-size:12px;font-weight:700;opacity:.85}
+.summary-tile:last-child:nth-child(odd){grid-column:1/-1}
+.tile-blue{background:var(--z-blue-soft);color:#1e3a8a}
+.tile-violet{background:var(--z-violet-soft);color:#4c1d95}
+.tile-green{background:var(--z-green-soft);color:#14532d}
+.tile-amber{background:var(--z-amber-soft);color:#78350f}
+.tile-red{background:var(--z-red-soft);color:#7f1d1d}
+#historyType{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#historyType button{font-size:14px}
+.history-day{margin:14px 0}
+.history-day-head{position:sticky;top:0;z-index:2;display:flex;flex-direction:column;gap:2px;
+  background:linear-gradient(135deg,#be185d,#ec4899);color:#fff;border-radius:14px;padding:9px 12px;margin-bottom:8px;box-shadow:0 4px 10px #be185d33}
+.history-day-head strong{font-size:16px}
+.history-day-head span{font-size:12px;font-weight:700;opacity:.95}
+.history-row{border-radius:16px}
+.history-row .actions-small{flex-wrap:wrap}
+.client-attended{border-left:5px solid var(--z-violet)}
+.client-attended.needs-invoice{border-left-color:var(--z-red);background:#fff7f7}
+.client-attended > div:first-child span{display:block}
+.badge{display:inline-block;vertical-align:middle;border-radius:999px;padding:2px 9px;font-size:11px;font-weight:900;margin-left:4px;white-space:nowrap}
+.badge-red{background:var(--z-red);color:#fff}
+.badge-green{background:var(--z-green);color:#fff}
+.badge-gray{background:#e2e8f0;color:#334155}
+.history-tools{margin:4px 0 10px}
+.empty-state{text-align:center;font-size:16px;padding:22px 8px;background:#f8fafc;border-radius:16px}
+.tools-heading{display:flex;align-items:center;gap:10px;color:#fff!important;font-size:19px;font-weight:900;margin:22px 4px 10px}
+.tools-heading img{border-radius:10px;background:#fff3;padding:2px}
+
+/* ---------- Pantallas angostas ---------- */
+@media (max-width:420px){
+  .page-banner .page-art{width:68px}
+  .page-banner h2{font-size:22px!important}
+  .history-row{flex-direction:column;align-items:stretch!important;gap:8px}
+  .history-row .actions-small{justify-content:flex-start}
+  .history-row .actions-small button{flex:1 1 140px}
+}
+.history-row .badge,.history-row strong .badge{display:inline-block!important;width:auto!important;margin:0 0 0 4px!important;color:#fff!important}
+.history-row .badge-gray,.history-row strong .badge-gray{color:#334155!important}
+/* Recuadro de título de cada tarjeta con el color de su sección */
+#clientsView .section-title{background:var(--z-violet-soft)!important;border-left-color:var(--z-violet)!important}
+#productsView .section-title{background:var(--z-orange-soft)!important;border-left-color:var(--z-orange)!important}
+#cashView .section-title{background:var(--z-green-soft)!important;border-left-color:var(--z-green)!important}
+#historyView .section-title{background:var(--z-pink-soft)!important;border-left-color:var(--z-pink)!important}
+#clientsView .section-title .kicker,#productsView .section-title .kicker,#cashView .section-title .kicker,#historyView .section-title .kicker{background:transparent!important}
+#clientsView .section-title h2{color:#4c1d95!important}
+#productsView .section-title h2{color:#7c2d12!important}
+#cashView .section-title h2{color:#14532d!important}
+#historyView .section-title h2{color:#831843!important}

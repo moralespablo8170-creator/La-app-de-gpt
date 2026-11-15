@@ -1,5 +1,13 @@
 # Puesta en marcha de vendedores: ruta sin costo fijo
 
+> **Actualización 15-11-2026 — todo funciona en el plan gratuito (Spark).** Desde Control de vendedores el dueño crea la cuenta del vendedor (correo y clave), lo activa o desactiva, y enciende o pausa el acceso general. Ya no se necesitan Cloud Functions ni Blaze. Pasos:
+> 1. Publicar `firestore.rules` en Firebase Console → Firestore → Reglas (copiar y pegar el archivo).
+> 2. Verificar que Authentication → Sign-in method tenga activo **Correo electrónico/contraseña**.
+> 3. En Control de vendedores: preparar el catálogo seguro, pulsar **Activar acceso de vendedores** y crear cada cuenta.
+> 4. Asignar clientes y rutas al vendedor y entregarle el enlace `vendedor.html` con su correo y clave.
+>
+> Al desactivar un vendedor, las reglas le niegan todos los datos de inmediato; su cuenta de acceso sigue existiendo pero no ve nada. Para borrarla por completo, hacerlo en Firebase Console → Authentication.
+
 Esta guía conserva la app maestra en modo local hasta que se contrate al primer vendedor. No es necesario vincular facturación, crear usuarios ni migrar datos mientras la app se usa solo en el teléfono.
 
 ## Qué queda listo desde ahora
