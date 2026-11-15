@@ -130,3 +130,35 @@ button,.tab,select,input[type=date]{min-height:44px;touch-action:manipulation}
 #productsView .section-title h2{color:#7c2d12!important}
 #cashView .section-title h2{color:#14532d!important}
 #historyView .section-title h2{color:#831843!important}
+
+/* ---------- Orden de clientes por día de ruta ---------- */
+.route-counts{margin:12px 0;background:var(--z-violet-soft);border-radius:18px;padding:12px}
+.route-counts-head{display:flex;flex-direction:column;margin-bottom:8px}
+.route-counts-head strong{color:#4c1d95;font-size:16px}
+.route-counts-head span{color:#6d28d9;font-size:12px;font-weight:700}
+.route-counts-table{display:grid;gap:5px;align-items:center}
+.rc-day{text-align:center;font-size:12px;font-weight:900;color:#4c1d95}
+.rc-week{display:flex;flex-direction:column;font-weight:900;font-size:13px;padding-right:4px;color:#1e293b}
+.rc-week small{font-size:11px;font-weight:700;color:#64748b}
+.rc-cell{min-height:44px;border:0;border-radius:12px;font-size:18px;font-weight:900;color:#fff;padding:0;box-shadow:0 2px 6px #0002}
+.rc-cell.week-A{background:linear-gradient(135deg,#2563eb,#60a5fa)}
+.rc-cell.week-B{background:linear-gradient(135deg,#ea580c,#fb923c)}
+.rc-cell.empty{background:#e2e8f0;color:#94a3b8;box-shadow:none}
+.rc-cell.active{outline:4px solid #7c3aed;outline-offset:1px;transform:scale(1.06)}
+.route-filter-note{margin:10px 0 0;font-size:14px;color:#3b0764}
+.link-button{min-height:0!important;border:0;background:none;color:#7c3aed;font-weight:900;text-decoration:underline;padding:0 4px;font:inherit}
+.route-chips{display:flex!important;flex-wrap:wrap;gap:6px;margin:4px 0}
+.route-chip{display:inline-flex!important;align-items:baseline;gap:3px;border-radius:999px;padding:3px 10px;font-size:12px!important;font-weight:800;color:#fff!important;margin:0!important;width:auto!important}
+.route-chip b{font-size:14px}
+.route-chip small{font-size:11px;opacity:.9}
+.route-chip.week-A{background:#2563eb}
+.route-chip.week-B{background:#ea580c}
+.route-chip.no-route{background:#e2e8f0;color:#475569!important}
+.client-route-preview{background:#f5f3ff;border:2px dashed #c4b5fd;border-radius:16px;padding:10px 12px;margin:6px 0 12px}
+.route-preview-title{margin:0 0 6px;color:#3b0764;font-size:14px;line-height:1.35}
+.route-preview{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px}
+.route-preview li{padding:5px 10px;border-radius:10px;background:#fff;font-size:14px}
+.route-preview li b{display:inline-block;min-width:26px;color:#6d28d9}
+.route-preview li.self{background:#7c3aed;color:#fff;font-weight:900}
+.route-preview li.self b{color:#fff}
+.route-preview li.gap{background:transparent;text-align:center;color:#94a3b8;padding:0}
