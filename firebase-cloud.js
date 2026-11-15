@@ -272,15 +272,27 @@ function toCloudRows(key, rows, profile) {
   }
   return null;
 }
+// Incremental write: only new or modified rows are uploaded and only rows that
+// disappeared since previousRows are deleted. A previous row that carries just
+// its id (no other fields) has unknown content, so it is rewritten to be safe.
 async function writeRows(collectionName, rows, previousRows=[]) {
-  const previousIds=new Set(previousRows.map(row=>String(row.id)));
-  const nextIds=new Set(rows.map(row=>String(row.id)));
+  const previousById=new Map();
+  for (const row of previousRows) {
+    if (row==null || row.id==null) continue;
+    previousById.set(String(row.id),row);
+  }
+  const nextIds=new Set();
   const operations=[];
   for (const row of rows) {
     const id=safeId(row.id);
+    nextIds.add(id);
+    const previous=previousById.get(id);
+    const previousHasData=!!previous && Object.keys(previous).some(key=>key!=='id');
+    if (previousHasData && stableCompareString({...previous,id})===stableCompareString({...row,id})) continue;
     operations.push({type:'set',ref:doc(colRef(collectionName),id),data:row});
   }
-  for (const id of previousIds) if (!nextIds.has(id)) operations.push({type:'delete',ref:doc(colRef(collectionName),safeId(id))});
+  for (const id of previousById.keys()) if (!nextIds.has(id)) operations.push({type:'delete',ref:doc(colRef(collectionName),safeId(id))});
+  if (!operations.length) return;
   for (let start=0; start<operations.length; start+=450) {
     const batch=writeBatch(db);
     operations.slice(start,start+450).forEach(op=>op.type==='set'?batch.set(op.ref,op.data):batch.delete(op.ref));
