@@ -106,7 +106,9 @@ body.printmode .hero p{display:none}
 .tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.tags span{font-size:11px;background:#f4f1ea;border-radius:20px;padding:2px 8px}
 @media print{
  @page{size:A4;margin:10mm 9mm}
- body{background:#fff;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ body{background:#fff;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-family:Poppins,'DejaVu Sans',sans-serif}
+ body *{font-family:Poppins,'DejaVu Sans',sans-serif!important}
+ .fmt,td small,.unit{font-weight:400}
  .printbar{display:none!important}
  .hero{border-radius:10px;padding:10px 14px}
  main{padding:0;max-width:none}
