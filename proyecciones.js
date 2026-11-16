@@ -52,7 +52,42 @@
   function readOrder(){try{const o=JSON.parse(localStorage.getItem(ORDER_KEY)||'{}');return {horizon:[7,14,30].includes(Number(o.horizon))?Number(o.horizon):7,qty:o.qty&&typeof o.qty==='object'?o.qty:{}}}catch(_){return {horizon:7,qty:{}}}}
   function saveOrder(o){try{localStorage.setItem(ORDER_KEY,JSON.stringify(o))}catch(e){console.warn('No se pudo guardar el pedido',e)}}
   function readSupplierOrders(){try{const a=JSON.parse(localStorage.getItem(SUPPLIER_KEY)||'[]');return Array.isArray(a)?a:[]}catch(_){return []}}
-  function saveSupplierOrders(a){try{localStorage.setItem(SUPPLIER_KEY,JSON.stringify(a));return true}catch(e){alert('No se pudo guardar el pedido en este teléfono.');return false}}
+  // Los pedidos a proveedores se guardan en el teléfono y además en Firebase (si estás conectado),
+  // así no se pierden si cambias o pierdes el teléfono.
+  const DELETED_KEY='zipperPedidosProveedorBorrados';
+  const cloudOk=()=>localStorage.getItem('zipperStorageMode')==='cloud'&&typeof window.zipperFirebaseCloud?.saveSupplierOrdersCloud==='function';
+  let pushTimer=null;
+  function saveSupplierOrders(a){
+    const before=new Map(readSupplierOrders().map(o=>[String(o.id),JSON.stringify(o)]));
+    const now=new Date().toISOString();
+    a.forEach(o=>{const {updatedAt,...rest}=o;const old=before.get(String(o.id));let oldRest=null;try{if(old){const {updatedAt:_u,...r}=JSON.parse(old);oldRest=JSON.stringify(r)}}catch(_){}if(!old||oldRest!==JSON.stringify(rest))o.updatedAt=now});
+    const ids=new Set(a.map(o=>String(o.id)));
+    let deleted=[];try{deleted=JSON.parse(localStorage.getItem(DELETED_KEY)||'[]')}catch(_){}
+    before.forEach((_,id)=>{if(!ids.has(id)&&!deleted.includes(id))deleted.push(id)});
+    try{localStorage.setItem(SUPPLIER_KEY,JSON.stringify(a));localStorage.setItem(DELETED_KEY,JSON.stringify(deleted.slice(-200)))}catch(e){alert('No se pudo guardar el pedido en este teléfono.');return false}
+    clearTimeout(pushTimer);pushTimer=setTimeout(pushCloud,1500);
+    return true;
+  }
+  async function pushCloud(){
+    if(!cloudOk())return;
+    let deleted=[];try{deleted=JSON.parse(localStorage.getItem(DELETED_KEY)||'[]')}catch(_){}
+    try{await window.zipperFirebaseCloud.saveSupplierOrdersCloud(readSupplierOrders(),deleted);localStorage.setItem(DELETED_KEY,'[]')}catch(e){console.warn('Pedidos a proveedor: no se pudo respaldar en Firebase',e)}
+  }
+  // Trae los pedidos de la nube y los junta con los del teléfono (gana el más reciente).
+  async function pullCloud(){
+    if(!cloudOk())return;
+    try{
+      const cloud=await window.zipperFirebaseCloud.readSupplierOrdersCloud();
+      let deleted=[];try{deleted=JSON.parse(localStorage.getItem(DELETED_KEY)||'[]')}catch(_){}
+      const local=readSupplierOrders(),map=new Map(local.map(o=>[String(o.id),o]));let changed=false;
+      cloud.forEach(o=>{const id=String(o.id);if(deleted.includes(id))return;const l=map.get(id);if(!l||String(o.updatedAt||'')>String(l.updatedAt||'')){map.set(id,o);changed=true}});
+      const merged=[...map.values()].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+      if(changed){localStorage.setItem(SUPPLIER_KEY,JSON.stringify(merged));try{renderSupplierOrders();renderPoHomeAlert();decorateInventory()}catch(_){}}
+      const cloudIds=new Set(cloud.map(o=>String(o.id)));if(local.some(o=>!cloudIds.has(String(o.id))))pushCloud();
+    }catch(e){console.warn('Pedidos a proveedor: no se pudo leer Firebase',e)}
+  }
+  setTimeout(pullCloud,8000);
+  document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('#productsTab'))setTimeout(pullCloud,200)},true);
   // Unidad de compra del producto: {unit:'caja',pack:12}. Por defecto 1 unidad.
   function buyUnitOf(p){const unit=UNITS.includes(String(p?.buyUnit||''))?p.buyUnit:'unidad';const pack=unit==='unidad'?1:Math.max(1,Math.round(Number(p?.buyPack)||1));return {unit,pack}}
   const rawIdOf=p=>String(p?.baseProductId||p?.id);

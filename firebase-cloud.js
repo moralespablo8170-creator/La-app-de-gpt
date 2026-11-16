@@ -8,7 +8,7 @@ import {
 } from 'firebase/auth';
 import {
   getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
-  doc, getDoc, collection, getDocs, onSnapshot, writeBatch, setDoc, deleteDoc, runTransaction, query, where
+  doc, getDoc, collection, getDocs, onSnapshot, writeBatch, setDoc, deleteDoc, updateDoc, runTransaction, query, where
 } from 'firebase/firestore';
 
 const firebaseApp = initializeApp(firebaseConfig);
@@ -983,12 +983,31 @@ async function publishCatalogPhoto(key,dataUrl){
 }
 async function deleteCatalogPhoto(key){await ownerCheck();await deleteDoc(doc(db,'publico',photoId(key)))}
 async function readCatalogPhoto(key){const snap=await getDoc(doc(db,'publico',photoId(key)));return snap.exists()?snap.data().data:null}
+// ---- Pedidos del catálogo web ----
+async function listCatalogOrders(){
+  await ownerCheck();
+  const snap=await getDocs(collection(db,'pedidosCatalogo'));
+  return snap.docs.map(d=>{const x=d.data();let data={};try{data=JSON.parse(x.data||'{}')}catch(_){}return {...data,id:d.id,status:x.status||'nuevo',seller:x.seller||'',createdAt:x.createdAt||'',loadedAt:x.loadedAt||'',saleId:x.saleId||''}});
+}
+async function setCatalogOrderStatus(id,status,extra={}){await ownerCheck();await updateDoc(doc(db,'pedidosCatalogo',String(id)),{status,...extra})}
+async function deleteCatalogOrder(id){await ownerCheck();await deleteDoc(doc(db,'pedidosCatalogo',String(id)))}
+// ---- Pedidos a proveedores (respaldo en la nube) ----
+async function saveSupplierOrdersCloud(list,deletedIds=[]){
+  await ownerCheck();
+  await Promise.all((list||[]).map(o=>setDoc(doc(colRef('supplierOrders'),String(o.id)),{data:JSON.stringify(o),updatedAt:String(o.updatedAt||o.date||'')})));
+  await Promise.all((deletedIds||[]).map(id=>deleteDoc(doc(colRef('supplierOrders'),String(id))).catch(()=>{})));
+}
+async function readSupplierOrdersCloud(){
+  await ownerCheck();
+  const snap=await getDocs(colRef('supplierOrders'));
+  return snap.docs.map(d=>{try{return JSON.parse(d.data().data||'null')}catch(_){return null}}).filter(Boolean);
+}
 async function readPublishedCatalog(){
   const snap=await getDoc(doc(db,'publico','catalogo'));
   if(!snap.exists())return null;
   try{return JSON.parse(snap.data().data||'null')}catch(_){return null}
 }
-const api={login,signOut:()=>signOut(auth),memberFor,listMembers,sellerActivity,inspectCloud,importLocalData,useExistingCloudData,prepareSellerCatalog,startSync,stopSync,onLocalArrayChanged,cloudLabel,publishCatalog,readPublishedCatalog,publishCatalogPhoto,deleteCatalogPhoto,readCatalogPhoto};
+const api={login,signOut:()=>signOut(auth),memberFor,listMembers,sellerActivity,inspectCloud,importLocalData,useExistingCloudData,prepareSellerCatalog,startSync,stopSync,onLocalArrayChanged,cloudLabel,publishCatalog,readPublishedCatalog,publishCatalogPhoto,deleteCatalogPhoto,readCatalogPhoto,listCatalogOrders,setCatalogOrderStatus,deleteCatalogOrder,saveSupplierOrdersCloud,readSupplierOrdersCloud};
 window.zipperFirebaseCloud=api;
 installStorageSyncHooks();
 if(!window.zipperRefreshAfterCloud)window.zipperRefreshAfterCloud=()=>['renderHome','renderCash','renderInventory','renderClients','renderHistory'].forEach(name=>{try{if(typeof window[name]==='function')window[name]()}catch(error){console.error(error)}});

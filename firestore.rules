@@ -279,6 +279,32 @@ service cloud.firestore {
       allow delete: if isOwner('zipper-a12f1') && docId.matches('foto-[a-z0-9-]{1,80}');
     }
 
+    // Pedidos que los clientes envían desde el catálogo web (además del WhatsApp).
+    // Cualquiera puede crear uno (con formato y tamaño limitados); solo el dueño los ve todos
+    // y cada vendedor ve los de sus propios clientes.
+    match /pedidosCatalogo/{orderId} {
+      allow create: if request.resource.data.keys().hasOnly(['data', 'createdAt', 'status', 'seller'])
+        && request.resource.data.data is string
+        && request.resource.data.data.size() < 20000
+        && request.resource.data.createdAt is string
+        && request.resource.data.createdAt.size() < 40
+        && request.resource.data.status == 'nuevo'
+        && request.resource.data.seller is string
+        && request.resource.data.seller.size() < 64;
+      allow read: if isOwner('zipper-a12f1')
+        || (isSeller('zipper-a12f1') && resource.data.seller == request.auth.uid);
+      allow update: if (isOwner('zipper-a12f1')
+          || (isSeller('zipper-a12f1') && resource.data.seller == request.auth.uid))
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'loadedAt', 'saleId']);
+      allow delete: if isOwner('zipper-a12f1')
+        || (isSeller('zipper-a12f1') && resource.data.seller == request.auth.uid);
+    }
+
+    // Pedidos a proveedores del dueño (respaldo en la nube). Solo el dueño.
+    match /orgs/{orgId}/supplierOrders/{orderId} {
+      allow read, write: if isOwner(orgId);
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

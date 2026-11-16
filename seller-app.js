@@ -7,7 +7,7 @@ import {
 import {
   initializeFirestore, getFirestore, persistentLocalCache, persistentMultipleTabManager,
   doc, getDoc, collection, query, where, getDocs, onSnapshot, setDoc,
-  runTransaction, serverTimestamp, updateDoc, increment
+  runTransaction, serverTimestamp, updateDoc, increment, deleteDoc
 } from 'firebase/firestore';
 
 // App del vendedor con el formato de la simulación: pestañas "Mi ruta" y "Clientes",
@@ -468,3 +468,29 @@ onAuthStateChanged(auth,async user=>{
   await activate();
  }catch(error){status(error.message||'No se pudo validar el perfil vendedor.','error');await signOut(auth)}
 });
+
+// ===== Pedidos de mis clientes desde el catálogo web =====
+// Los usa la pestaña "📒 Catálogo" (vendedor-catalogo.js) para listar y cargar pedidos en la venta.
+const nrmS=v=>String(v??'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+window.zipperSellerOrders={
+ uid:()=>profile?.uid||auth.currentUser?.uid||'',
+ clients:()=>clients.filter(c=>c.active!==false),
+ async list(){const uid=profile?.uid||auth.currentUser?.uid;if(!uid)return [];const snap=await getDocs(query(collection(db,'pedidosCatalogo'),where('seller','==',uid)));return snap.docs.map(d=>{const x=d.data();let data={};try{data=JSON.parse(x.data||'{}')}catch(_){}return {...data,id:d.id,status:x.status||'nuevo',createdAt:x.createdAt||'',loadedAt:x.loadedAt||''}}).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)))},
+ async remove(id){await deleteDoc(doc(db,'pedidosCatalogo',String(id)))},
+ async load(order,clientId){
+  if(!sessionOpen()){status('Inicia la jornada primero (pestaña Mi ruta) para cargar el pedido.','error');tab('route');return false}
+  openOrder(clientId);if(!selectedClient||String(selectedClient.id)!==String(clientId))return false;
+  cart=[];const missing=[],noStock=[];
+  (order.lines||[]).forEach(l=>{
+   let p=products.find(x=>String(x.id)===String(l.pid));
+   if(l.flavor){const base=p?String(p.baseProductId||p.id):String(l.pid);const f=products.find(x=>String(x.baseProductId||x.id)===base&&nrmS(x.flavor)===nrmS(l.flavor));if(f)p=f}
+   if(!p){missing.push(l.name+(l.flavor?' · '+l.flavor:''));return}
+   const qty=Number(l.q||0)*(l.box?Number(l.units||1):1);
+   if(!addToCart(p,qty,true))noStock.push(p.name);
+  });
+  renderSale();
+  status('🛒 Pedido web #'+(order.code||'')+' cargado. Revisa y guarda la venta.'+(missing.length?' ⚠ No está en el catálogo de la app: '+missing.join(', ')+'.':'')+(noStock.length?' ⚠ Sin stock suficiente: '+noStock.join(', ')+'.':''),missing.length||noStock.length?'error':'ok');
+  try{await updateDoc(doc(db,'pedidosCatalogo',String(order.id)),{status:'cargado',loadedAt:new Date().toISOString()})}catch(e){console.warn(e)}
+  return true;
+ }
+};

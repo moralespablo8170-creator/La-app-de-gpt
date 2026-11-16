@@ -136,6 +136,7 @@ body.printmode .hero p{display:none}
 <div class="sheet" id="sheet"><div class="panel"><h3>Tu pedido <button id="close" type="button" aria-label="Cerrar">×</button></h3><div id="lines"></div>
 <div class="tot"><span>Total estimado</span><span id="stotal"></span></div><p class="note">Precios referenciales. Te confirmamos stock y total por WhatsApp.</p>
 <label>Tu nombre o negocio<input id="who" autocomplete="organization" placeholder="Ej: Almacén Don Pedro"></label>
+<label>Tu teléfono (opcional)<input id="tel" inputmode="tel" autocomplete="tel" placeholder="Ej: 9 1234 5678"></label>
 <label>Comentario (opcional)<textarea id="msg" rows="2" placeholder="Ej: entregar el jueves"></textarea></label>
 <button class="send" id="send" type="button">Enviar pedido por WhatsApp</button><button class="clear" id="clear" type="button">Vaciar pedido</button></div></div>
 <script>
@@ -144,7 +145,8 @@ const FIRESTORE='https://firestore.googleapis.com/v1/projects/zipper-a12f1/datab
 const $=id=>document.getElementById(id);
 const QS=new URLSearchParams(location.search);const MODE=QS.get('modo')||'';
 // Enlace de un vendedor: ?v=569XXXXXXXX&n=Nombre → los pedidos van a su WhatsApp y no se muestran remedios.
-const SELLER_WA=/^569\d{8}$/.test(QS.get('v')||'')?QS.get('v'):'',SELLER_NAME=(QS.get('n')||'').slice(0,40);const PRINT=MODE==='imprimir'||MODE==='pdf',NOPRICE=MODE==='imprimir';
+const SELLER_WA=/^569\d{8}$/.test(QS.get('v')||'')?QS.get('v'):'',SELLER_NAME=(QS.get('n')||'').slice(0,40),SELLER_UID=/^[A-Za-z0-9]{10,40}$/.test(QS.get('s')||'')?QS.get('s'):'';
+const ORDERS_URL='https://firestore.googleapis.com/v1/projects/zipper-a12f1/databases/(default)/documents/pedidosCatalogo?key=AIzaSyAFYoHdqS1QP04MXzHbMpcpuvzNLqElZF4';const PRINT=MODE==='imprimir'||MODE==='pdf',NOPRICE=MODE==='imprimir';
 if(PRINT)document.body.classList.add('printmode',NOPRICE?'noprice':'withprice');
 const money=n=>'$'+Math.round(n).toLocaleString('es-CL');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -190,11 +192,21 @@ $('lines').addEventListener('click',e=>{const b=e.target.closest('[data-del]');i
 $('open').onclick=()=>{paintSheet();$('sheet').classList.add('show')};
 $('close').onclick=()=>$('sheet').classList.remove('show');
 $('sheet').addEventListener('click',e=>{if(e.target===$('sheet'))$('sheet').classList.remove('show')});
-$('who').value=store.get('zipperCatalogoNombre')||'';
+$('who').value=store.get('zipperCatalogoNombre')||'';$('tel').value=store.get('zipperCatalogoTel')||'';
 $('clear').onclick=()=>{if(confirm('¿Vaciar todo el pedido?')){cart={};save();render();$('sheet').classList.remove('show')}};
-$('send').onclick=()=>{const l=lineList();if(!l.length)return;const who=$('who').value.trim();store.set('zipperCatalogoNombre',who);
-  const txt=[(SELLER_WA?'Hola'+(SELLER_NAME?' '+SELLER_NAME:'')+' (Distribuidora Zipper) 👋':'Hola *Distribuidora Zipper* 👋')+', quiero hacer este pedido:',''].concat(l.map(x=>'• '+x.q+' × '+x.it.name+(x.flavor?' · '+x.flavor:'')+' ('+(x.box?'*caja de '+x.it.box.units+'*':x.per)+') — '+money(x.sub)),['','*Total estimado: '+money(l.reduce((a,x)=>a+x.sub,0))+'*']);
-  if(who)txt.push('Cliente: '+who);const m=$('msg').value.trim();if(m)txt.push('Comentario: '+m);
+// El pedido se envía por WhatsApp y además queda guardado para cargarlo en la app el día de la entrega.
+function orderCode(){const a='ABCDEFGHJKMNPQRSTUVWXYZ23456789';let c='';for(let i=0;i<4;i++)c+=a[Math.floor(Math.random()*a.length)];return c}
+function saveOrder(order){const ctl=new AbortController();const t=setTimeout(()=>ctl.abort(),2500);
+  return fetch(ORDERS_URL,{method:'POST',keepalive:true,signal:ctl.signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({fields:{data:{stringValue:JSON.stringify(order)},createdAt:{stringValue:order.createdAt},status:{stringValue:'nuevo'},seller:{stringValue:SELLER_UID}}})}).catch(()=>null).finally(()=>clearTimeout(t))}
+$('send').onclick=async()=>{const l=lineList();if(!l.length)return;const who=$('who').value.trim(),tel=$('tel').value.trim();store.set('zipperCatalogoNombre',who);store.set('zipperCatalogoTel',tel);
+  const code=orderCode(),total=l.reduce((a,x)=>a+x.sub,0),m=$('msg').value.trim();
+  const txt=[(SELLER_WA?'Hola'+(SELLER_NAME?' '+SELLER_NAME:'')+' (Distribuidora Zipper) 👋':'Hola *Distribuidora Zipper* 👋')+', quiero hacer este pedido:',''].concat(l.map(x=>'• '+x.q+' × '+x.it.name+(x.flavor?' · '+x.flavor:'')+' ('+(x.box?'*caja de '+x.it.box.units+'*':x.per)+') — '+money(x.sub)),['','*Total estimado: '+money(total)+'*']);
+  if(who)txt.push('Cliente: '+who);if(tel)txt.push('Teléfono: '+tel);if(m)txt.push('Comentario: '+m);txt.push('Pedido web #'+code);
+  const order={code,createdAt:new Date().toISOString(),who,tel,msg:m,total,sellerName:SELLER_NAME,sellerPhone:SELLER_WA,
+    lines:l.map(x=>({key:baseOf(x.k),name:x.it.name,flavor:x.flavor||'',q:x.q,box:!!x.box,units:x.box?x.it.box.units:1,each:x.each,sub:x.sub,pid:(data.links||{})[baseOf(x.k)]||x.it.pid||''}))};
+  const b=$('send');b.disabled=true;b.textContent='Enviando…';
+  await saveOrder(order);
+  b.disabled=false;b.textContent='Enviar pedido por WhatsApp';
   location.href='https://wa.me/'+data.whatsapp+'?text='+encodeURIComponent(txt.join('\n'))};
 function chips(){$('chips').innerHTML=data.sections.map((s,i)=>'<button data-s="'+i+'">'+esc(s.title)+'</button>').join('');$('chips').onclick=e=>{const b=e.target.closest('[data-s]');if(!b)return;filter='';$('q').value='';render();document.getElementById('s'+b.dataset.s)?.scrollIntoView({behavior:'smooth'})}}
 // Precios publicados desde la app del dueño (si existen) reemplazan los del archivo base.
@@ -205,7 +217,8 @@ async function livePrices(){try{const r=await fetch(FIRESTORE,{cache:'no-store'}
 Promise.all([fetch('catalogo/catalogo.json',{cache:'no-cache'}).then(r=>r.json()),livePrices()]).then(([base,live])=>{
   data=base;
   if(SELLER_WA){data.whatsapp=SELLER_WA;data.sections=data.sections.filter(s=>!s.table&&s.title!=='Remedios');$('mes').insertAdjacentHTML('afterend','<small class="seller">Tu vendedor'+(SELLER_NAME?': '+esc(SELLER_NAME):'')+' · WhatsApp +'+SELLER_WA.replace(/^56(9)(\d{4})(\d{4})$/,'56 $1 $2 $3')+'</small>')}
-  if(live&&Array.isArray(live.extra)){live.extra.forEach(x=>{if(!x||!x.key)return;let sec=data.sections.find(s=>s.title===x.section&&!s.table);if(!sec){sec=data.sections.find(s=>s.title==='Otros productos');if(!sec){sec={title:'Otros productos',color:'#64748b',items:[]};const ri=data.sections.findIndex(s=>s.table);data.sections.splice(ri<0?data.sections.length:ri,0,sec)}}sec.items.push({key:x.key,name:x.name,fmt:x.fmt||'',per:x.per||'unidad',price:0,img:''})})}
+  if(live&&Array.isArray(live.extra)){live.extra.forEach(x=>{if(!x||!x.key)return;let sec=data.sections.find(s=>s.title===x.section&&!s.table);if(!sec){sec=data.sections.find(s=>s.title==='Otros productos');if(!sec){sec={title:'Otros productos',color:'#64748b',items:[]};const ri=data.sections.findIndex(s=>s.table);data.sections.splice(ri<0?data.sections.length:ri,0,sec)}}sec.items.push({key:x.key,name:x.name,fmt:x.fmt||'',per:x.per||'unidad',price:0,img:'',pid:x.productId||''})})}
+  if(live&&live.links)data.links=live.links;
   if(live&&live.photos){data.sections.forEach(s=>s.items.forEach(it=>{const ph=live.photos[it.key];if(ph==='none')it.img='';else if(ph){it.img='';it.custom=true}}))}
   if(live&&live.items){data.sections.forEach(s=>s.items.forEach(it=>{const x=live.items[it.key];if(!x)return;if(x.price>0)it.price=x.price;if(!(it.price>0))it.hidden=true;if('promo' in x)it.promo=x.promo||undefined;if(x.hidden)it.hidden=true;if(x.mode==='dual'&&x.box&&x.box.units>1&&x.box.price>0){it.box=x.box;it.per='unidad';delete it.units}}));if(live.updatedAt)$('upd').textContent='Precios actualizados el '+new Date(live.updatedAt).toLocaleDateString('es-CL',{day:'numeric',month:'long',year:'numeric'})}
   data.sections.forEach(s=>s.items.forEach(it=>items.set(it.key,it)));
