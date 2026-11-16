@@ -18,6 +18,8 @@
 .comp-sim{margin:14px 0;padding:12px;border-radius:14px;background:#f0fdf4;border:2px solid #86efac}.comp-sim label{margin:0}.comp-sim-result{margin-top:8px;font-size:14px;color:#14532d}.comp-sim-result b{font-size:18px}
 .comp-results{display:grid;gap:10px}.comp-card{border:1px solid #e5e7eb;border-radius:14px;padding:12px;background:#fff}.comp-card-head{display:flex;justify-content:space-between;gap:8px;font-weight:900}.comp-card-head span{color:#166534}.comp-lines{display:grid;grid-template-columns:1fr auto;gap:4px 10px;margin:8px 0;font-size:14px}.comp-lines b{text-align:right}.comp-bar{height:10px;border-radius:999px;background:#e5e7eb;overflow:hidden}.comp-bar i{display:block;height:100%;background:linear-gradient(90deg,#22c55e,#16a34a)}.comp-card small{display:block;color:#475569;margin-top:5px}
 @media(max-width:420px){.comp-grid{grid-template-columns:1fr}}
+.seller-card-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}.seller-card-tabs button{margin:0;padding:10px 4px;font-size:13px;border-radius:12px;border:2px solid #c7d2fe;background:#eef2ff;color:#312e81;font-weight:800}.seller-card-tabs button.on{background:#4f46e5;border-color:#4f46e5;color:#fff}
+.seller-panel{border:2px solid #4f46e5;border-radius:16px;padding:12px;margin-top:10px;background:#fff}.panel-title{margin:0 0 6px;color:#312e81}
 </style>
 </head>
 <body>
@@ -36,14 +38,16 @@
 <section id="adminApp" class="admin-hidden">
 
 <section class="admin-card">
-<h2>Crear acceso a vendedores</h2>
+<h2>Mis vendedores</h2>
+<p class="admin-muted">Toca un botón del vendedor para ver solo esa información.</p>
+<div id="adminSellers" class="admin-list"></div>
+<details id="newSellerBox" class="admin-advanced"><summary>＋ Crear acceso a un vendedor nuevo</summary>
 <label>Nombre del vendedor<input id="sellerDisplayName" type="text" autocomplete="name" maxlength="80" placeholder="Nombre visible"></label>
 <label>Correo de acceso<input id="sellerEmail" type="email" autocomplete="email" maxlength="254" placeholder="correo@ejemplo.cl"></label>
 <label>Clave inicial (mínimo 8 caracteres)<input id="sellerPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="Clave inicial"></label>
 <button id="sellerCreateAccount" class="admin-btn" type="button" disabled>Crear cuenta de vendedor</button>
 <p id="sellerProfileStatus" class="admin-status" role="status" aria-live="polite"></p>
-<h2 style="margin-top:18px">Vendedores registrados</h2>
-<div id="adminSellers" class="admin-list"></div>
+</details>
 <div class="admin-access-row"><button id="sellerModeToggle" class="admin-btn secondary" type="button" disabled>Activar acceso de vendedores</button><small id="sellerModeStatus" class="admin-muted"></small></div>
 <details id="catalogDetails" class="admin-advanced"><summary>Catálogo para vendedores</summary>
 <p class="admin-muted">Se hace una sola vez: esconde tus precios de compra para que los vendedores no los vean. Los productos nuevos quedan protegidos solos.</p>
@@ -53,9 +57,9 @@
 </details>
 </section>
 
-<section class="admin-card">
-<h2>Sueldo de vendedores</h2>
-<div class="comp-grid"><label>Mes<input id="commissionMonth" type="month"></label><label>Vendedor<select id="compSeller"><option value="">Seleccionar vendedor</option></select></label></div>
+<section id="panelComp" class="seller-panel admin-hidden">
+<h3 class="panel-title">💰 Sueldo y comisiones</h3>
+<label>Mes<input id="commissionMonth" type="month"></label><select id="compSeller" hidden><option value="">Seleccionar vendedor</option></select>
 <label>Sueldo base mensual bruto<input id="compBaseSalary" type="text" inputmode="numeric" placeholder="Ej: 500000 (o 0 si solo gana comisión)"></label>
 <small class="admin-muted">Monto fijo antes de descuentos legales. Escribe solo números, sin puntos.</small>
 <label>¿Cómo se calcula la comisión?<select id="compMode"><option value="marginal">Escalonada: cada % solo sobre lo vendido dentro de su tramo</option><option value="total">Por meta alcanzada: el % del tramo logrado se aplica a todo lo vendido</option></select></label>
@@ -66,13 +70,13 @@
 <div class="comp-sim"><label>Probar con ventas pagadas del mes de<input id="compSimSales" type="text" inputmode="numeric" placeholder="Ej: 3000000"></label><div id="compSimResult" class="comp-sim-result"></div></div>
 <button id="compSave" class="admin-btn" type="button">Guardar sueldo y tramos</button>
 <p id="compStatus" class="admin-status" role="status" aria-live="polite">Selecciona un vendedor para definir sus condiciones.</p>
-<h3>Estimación de pago del mes</h3>
+<h3>Pago estimado del mes</h3>
 <p class="admin-muted">Solo cuentan las ventas <b>entregadas y pagadas</b>, en el mes en que se cobraron. Se marcan en tu app: Caja diaria → "Por cobrar al entregar" → ✅ Entregado y pagado. Si el cliente rechaza o no paga, toca ✖ Rechazado: la venta se anula, vuelve el stock y no cuenta. Resultado bruto, antes de descuentos.</p>
 <div id="compResults" class="comp-results"></div>
 </section>
 
-<section class="admin-card">
-<h2 id="adminDetailTitle">Detalle diario del vendedor</h2>
+<section id="panelDay" class="seller-panel admin-hidden">
+<h3 class="panel-title" id="adminDetailTitle">📅 Día del vendedor</h3>
 <label>Fecha<input id="adminDate" type="date"></label>
 <div class="admin-grid">
 <div class="admin-stat"><strong id="detailOpened">—</strong><span>Inicio jornada</span></div>
@@ -84,8 +88,10 @@
 <h3>Visitas</h3><div id="adminVisits" class="admin-list"></div>
 <h3>Movimientos de caja</h3><div id="adminCash" class="admin-list"></div>
 </section>
+<section id="panelAccess" class="seller-panel admin-hidden"><h3 class="panel-title">🔑 Acceso</h3><div id="accessBody"></div></section>
+<div id="panelHolder" hidden></div>
 </section>
 </main>
-<script type="module" src="./seller-admin.js?v=zipper-seller-admin-20261116-v4"></script>
+<script type="module" src="./seller-admin.js?v=zipper-seller-admin-20261116-v5"></script>
 </body>
 </html>

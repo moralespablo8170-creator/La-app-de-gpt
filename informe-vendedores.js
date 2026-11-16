@@ -41,6 +41,14 @@
     const label=typeof historyRangeLabel==='function'?historyRangeLabel($('historyFrom').value,$('historyTo').value):'';
     return ['*Informe de vendedores* · '+label,''].concat(...list.map(x=>['*'+(x.seller.displayName||x.seller.email)+'*','Días trabajados: '+x.daysWorked+' · Horas: '+dur(x.worked),'Inicio promedio: '+x.avgOpen+' · Término promedio: '+x.avgClose,'Ventas: '+x.sales+' · Total '+money(x.total)+' · Visitas sin venta: '+x.noSale,...x.rows.map(r=>'  '+nice(r.date)+': inicio '+hm(r.open)+' · término '+(r.stillOpen?'sin cerrar':hm(r.close))+' · '+r.sales.length+' ventas '+money(r.total)),''])).join('\n');
   }
+  // Historial propio de cada vendedor (separado del historial del dueño).
+  function salesList(x){
+    const from=$('historyFrom').value||'0000-01-01',to=$('historyTo').value||'9999-12-31';
+    const rows=(typeof getSales==='function'?getSales():[]).filter(s=>String(s.sellerUid)===String(x.seller.uid)&&saleDay(s)>=from&&saleDay(s)<=to).sort((a,b)=>String(b.occurredAt||saleDay(b)).localeCompare(String(a.occurredAt||saleDay(a))));
+    if(!rows.length)return '';
+    const st=s=>s.collectionStatus==='collected'?'<b class="sv-ok">✓ Entregado y pagado</b>':'<b class="sv-wait">⏳ Por entregar</b>';
+    return '<details class="seller-sales"><summary>🧾 Ventas de '+esc(x.seller.displayName||'este vendedor')+' ('+rows.length+')</summary>'+rows.map(s=>'<article class="history-row"><div><strong>#'+esc(s.folio||'')+' · '+esc(s.cliente||'Cliente')+'</strong><span>'+esc(nice(saleDay(s)))+' · '+((s.paymentMethod==='transfer')?'Transferencia':'Efectivo')+' · '+st(s)+'</span></div><div class="actions-small"><strong>'+money(s.total)+'</strong><button class="secondary history-reprint" data-sale-id="'+esc(String(s.id))+'" type="button">🧾 Ver ticket</button></div></article>').join('')+'</details>';
+  }
   function renderSellers(){
     if(typeof historyType==='undefined'||historyType!=='sellers')return;
     const out=$('historyOutput');if(!out)return;
@@ -50,8 +58,9 @@
     out.innerHTML='<p class="muted">'+(loading?'⏳ Actualizando desde Firebase…':'Actualizado a las '+hm(cache.loadedAt)+' · se actualiza solo al entrar. Cambia el período con los filtros de arriba.')+'</p>'+
       (list.length?list.map(x=>'<article class="seller-report"><div class="seller-report-head"><strong>🧑‍💼 '+esc(x.seller.displayName||x.seller.email||'Vendedor')+(x.seller.active===false?' · desactivado':'')+'</strong><span>'+money(x.total)+'</span></div>'+
         '<div class="seller-report-stats"><div><b>'+x.daysWorked+'</b><small>días trabajados</small></div><div><b>'+dur(x.worked)+'</b><small>horas en jornada</small></div><div><b>'+x.avgOpen+'</b><small>inicio promedio</small></div><div><b>'+x.avgClose+'</b><small>término promedio</small></div><div><b>'+x.sales+'</b><small>ventas</small></div><div><b>'+x.noSale+'</b><small>visitas sin venta</small></div></div>'+
-        (x.rows.length?'<div class="seller-report-table"><table><thead><tr><th>Día</th><th>Ruta</th><th>Inicio</th><th>1ª venta</th><th>Término</th><th>Jornada</th><th>Ventas</th><th>Total</th><th>Sin venta</th></tr></thead><tbody>'+x.rows.map(r=>'<tr class="'+(r.stillOpen?'still-open':!r.open?'no-session':'')+'"><td>'+esc(nice(r.date))+'</td><td>'+esc(r.route||'—')+'</td><td>'+hm(r.open)+'</td><td>'+hm(r.first)+'</td><td>'+(r.stillOpen?'<b>Sin cerrar</b>':hm(r.close))+'</td><td>'+dur(r.worked)+(r.stillOpen&&r.worked!=null?' (en curso)':'')+'</td><td>'+r.sales.length+'</td><td>'+money(r.total)+'</td><td>'+r.noSale+'</td></tr>').join('')+'</tbody></table></div>':'<p class="muted">Sin jornadas ni ventas en este período.</p>')+'</article>').join(''):'<p class="muted empty-state">Todavía no hay vendedores creados.</p>');
+        (x.rows.length?'<div class="seller-report-table"><table><thead><tr><th>Día</th><th>Ruta</th><th>Inicio</th><th>1ª venta</th><th>Término</th><th>Jornada</th><th>Ventas</th><th>Total</th><th>Sin venta</th></tr></thead><tbody>'+x.rows.map(r=>'<tr class="'+(r.stillOpen?'still-open':!r.open?'no-session':'')+'"><td>'+esc(nice(r.date))+'</td><td>'+esc(r.route||'—')+'</td><td>'+hm(r.open)+'</td><td>'+hm(r.first)+'</td><td>'+(r.stillOpen?'<b>Sin cerrar</b>':hm(r.close))+'</td><td>'+dur(r.worked)+(r.stillOpen&&r.worked!=null?' (en curso)':'')+'</td><td>'+r.sales.length+'</td><td>'+money(r.total)+'</td><td>'+r.noSale+'</td></tr>').join('')+'</tbody></table></div>':'<p class="muted">Sin jornadas ni ventas en este período.</p>')+salesList(x)+'</article>').join(''):'<p class="muted empty-state">Todavía no hay vendedores creados.</p>');
     // Cada vez que se entra a la pestaña (o pasa más de 1 minuto) se vuelve a leer Firebase.
+    if(typeof bindHistoryReprint==='function')bindHistoryReprint();
     if(!loading&&Date.now()-new Date(cache.loadedAt).getTime()>60000)load();
   }
   // Al tocar la pestaña Vendedores siempre se piden datos nuevos.

@@ -383,6 +383,7 @@ function openSaveOptions(){
  if(!sessionOpen()){status('Inicia la jornada antes de registrar una venta.','error');return}
  if(!selectedClient||!cart.length){status('Agrega productos a la bandeja.','error');return}
  $('saveSummary').textContent=selectedClient.name+' · '+cart.reduce((a,i)=>a+i.qty,0)+' unidades · Total '+money(cartTotal());
+ $('sellerPayment').value='';document.querySelectorAll('.pay-opt').forEach(b=>b.classList.remove('on'));$('saveOnly').disabled=true;$('saveAndWhatsApp').disabled=true;
  $('saveOptions').classList.remove('hide');
 }
 function closeSaveOptions(){$('saveOptions').classList.add('hide')}
@@ -391,7 +392,7 @@ function saleText(s){return ['*Distribuidora Zipper*','Comprobante #'+s.folio+' 
 function sendWhatsApp(s){const c=clients.find(x=>String(x.id)===String(s.clienteId));const url='https://wa.me/'+waPhone(c)+'?text='+encodeURIComponent(saleText(s));const w=window.open(url,'_blank');if(!w)location.href=url}
 async function saveSale(withWhatsApp){
  if(!sessionOpen()||!selectedClient||!cart.length){closeSaveOptions();return}
- const paymentMethod=$('sellerPayment').value;if(!['cash','transfer'].includes(paymentMethod)){status('Solo efectivo o transferencia.','error');return}
+ const paymentMethod=$('sellerPayment').value;if(!['cash','transfer'].includes(paymentMethod)){status('Elige si el cliente paga en efectivo o transferencia.','error');return}
  const client=selectedClient;
  const week=routeFor(client,session.routeWeek)?session.routeWeek:(routeFor(client,'A')?'A':'B'),day=routeFor(client,week)?.day;
  if(!day){closeSaveOptions();status(client.name+' no tiene día en tu ruta. Edítalo en Clientes y elige un día antes de venderle.','error');return}
@@ -448,7 +449,7 @@ function wire(){
  $('cartSearchName').oninput=()=>{if(draftId&&!draftQty)draftId='';renderSale()};$('cartCategory').onchange=renderSale;
  $('toggleCartTray').onclick=()=>{showTray=!showTray;renderSale()};
  $('closeCart').onclick=closeCart;$('cartVisitedNoSale').onclick=visitedNoSale;
- $('saveSale').onclick=openSaveOptions;$('saveOnly').onclick=()=>saveSale(false);$('saveAndWhatsApp').onclick=()=>saveSale(true);$('cancelSave').onclick=closeSaveOptions;
+ $('saveSale').onclick=openSaveOptions;document.querySelectorAll('.pay-opt').forEach(b=>b.onclick=()=>{$('sellerPayment').value=b.dataset.pay;document.querySelectorAll('.pay-opt').forEach(x=>x.classList.toggle('on',x===b));$('saveOnly').disabled=false;$('saveAndWhatsApp').disabled=false});$('saveOnly').onclick=()=>saveSale(false);$('saveAndWhatsApp').onclick=()=>saveSale(true);$('cancelSave').onclick=closeSaveOptions;
  $('sellerSalesToday').onclick=e=>{const b=e.target.closest('[data-wa]');if(!b)return;const s=[...queueRead(),...sales].find(x=>String(x.id)===String(b.dataset.wa));if(s)sendWhatsApp(s)};
  document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{tab(b.dataset.tab);window.scrollTo({top:0})});
  window.addEventListener('online',async()=>{status('Conexión recuperada · sincronizando…','warn');await flushPendingSales();if(navigator.onLine)await refreshFromServer();render()});

@@ -409,3 +409,12 @@ body.buy-mode .buy-dock{display:block;position:sticky;bottom:92px;z-index:5;marg
 .seller-report-table th{background:#f1f5f9;color:#334155}
 .seller-report-table tr.still-open td{background:#fef3c7}
 .seller-report-table tr.no-session td{color:#64748b}
+.seller-cash{grid-column:1/-1;margin:14px 0;padding:12px;border:2px solid #7c3aed;border-radius:16px;background:#f5f3ff}
+.seller-cash-head{display:flex;flex-direction:column;margin-bottom:8px}.seller-cash-head strong{color:#4c1d95;font-size:15px}.seller-cash-head small{color:#6d28d9;font-weight:700}
+.seller-cash-block{background:#fff;border-radius:14px;padding:10px;margin-top:8px;border:1px solid #ddd6fe}
+.seller-cash-name{font-weight:900;font-size:16px;color:#312e81;margin-bottom:6px}
+.seller-cash-totals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:8px}.seller-cash-totals div{background:#ede9fe;border-radius:10px;padding:7px;text-align:center}.seller-cash-totals b{display:block;font-size:14px;color:#1e1b4b}.seller-cash-totals small{font-size:10px;font-weight:700;color:#5b21b6}
+.seller-cash-row{display:grid;gap:6px;border-top:1px dashed #ddd6fe;padding:8px 0}.seller-cash-row span{font-size:12px;color:#475569;display:block}
+.seller-cash-pay{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;margin:0}.seller-cash-pay select{flex:1;min-height:40px;margin:0}
+.seller-cash-done{font-size:13px;margin-top:6px}.seller-cash-done summary{cursor:pointer;font-weight:800;color:#4c1d95}
+.seller-sales{margin-top:10px}.seller-sales summary{cursor:pointer;font-weight:900;color:#312e81;padding:6px 0}.sv-ok{color:#15803d}.sv-wait{color:#b45309}

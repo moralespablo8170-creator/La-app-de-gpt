@@ -71,6 +71,7 @@ label{display:block;margin:12px 0;font-size:14px;font-weight:700}
 .check{display:flex;align-items:center;gap:8px}.check input{width:auto}
 .chip{display:inline-block;margin:4px 4px 0 0;padding:3px 8px;border-radius:999px;background:#e0e7ff;color:#3730a3;font-size:12px;font-weight:800}
 .nav button{font-size:13px}
+.pay-choice{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.pay-opt{background:#fff;color:#20344e;border:2px solid #cbd5e1;padding:14px 6px;font-size:16px}.pay-opt.on{background:#1265e8;color:#fff;border-color:#1265e8}
 </style>
 </head>
 <body>
@@ -145,10 +146,10 @@ label{display:block;margin:12px 0;font-size:14px;font-weight:700}
 </section>
 </section>
 </main>
-<div id="saveOptions" class="modal hide" role="dialog" aria-modal="true"><div class="modal-card"><div class="kicker">VENTA LISTA</div><h3>¿Qué deseas hacer?</h3><p id="saveSummary" class="muted"></p><label class="pay-box">💳 ELIGE FORMA DE PAGO<select id="sellerPayment"><option value="cash">Efectivo</option><option value="transfer">Transferencia</option></select></label><p class="muted">El cobro queda pendiente de quien entrega el pedido. No se registran fiados ni abonos.</p><button id="saveOnly" class="secondary full" type="button">Solo guardar</button><button id="saveAndWhatsApp" class="wa full" type="button">📲 Guardar y enviar por WhatsApp</button><button id="cancelSave" class="ghost full" type="button">Cancelar</button></div></div>
+<div id="saveOptions" class="modal hide" role="dialog" aria-modal="true"><div class="modal-card"><div class="kicker">VENTA LISTA</div><h3>¿Qué deseas hacer?</h3><p id="saveSummary" class="muted"></p><div class="pay-box">💳 ¿CÓMO VA A PAGAR EL CLIENTE?<div class="pay-choice"><button type="button" class="pay-opt" data-pay="cash">💵 Efectivo</button><button type="button" class="pay-opt" data-pay="transfer">🏦 Transferencia</button></div><input type="hidden" id="sellerPayment" value=""></div><p class="muted">Queda anotado en el pedido para que quien lo entrega sepa cómo cobrar. El cliente puede cambiarlo al recibir.</p><button id="saveOnly" class="secondary full" type="button">Solo guardar</button><button id="saveAndWhatsApp" class="wa full" type="button">📲 Guardar y enviar por WhatsApp</button><button id="cancelSave" class="ghost full" type="button">Cancelar</button></div></div>
 <div id="sellerStatus" class="toast fade" role="status" aria-live="polite"></div>
 <nav class="nav hide" id="sellerNav"><button data-tab="route" class="active" type="button">⌖ Mi ruta</button><button data-tab="sale" type="button">🛒 Vender</button><button data-tab="clients" type="button">👥 Clientes</button></nav>
-<script type="module" src="./seller-app.js?v=zipper-seller-v7-20261116"></script>
+<script type="module" src="./seller-app.js?v=zipper-seller-v8-20261116"></script>
 <script>
 (function(){
  var deferred=null,btn=document.getElementById('sellerInstallButton'),box=document.getElementById('sellerInstall');

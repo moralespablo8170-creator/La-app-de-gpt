@@ -13,7 +13,7 @@ const SELLER_ACCOUNT_CREATION_READY=true;
 const SELLER_ACCESS_SERVER_READY=true;
 // Elementos que ya no están en la página reciben un reemplazo invisible (así las funciones antiguas no fallan).
 const ghosts={};const $=id=>document.getElementById(id)||(ghosts[id]||(ghosts[id]=document.createElement(id==='reportPeriod'||id==='compMode'?'select':'input')));
-let owner=null,sellers=[],sessions=[],sales=[],visits=[],cash=[],clients=[],compensationBySeller={},selectedSellerId=null,loading=false;
+let owner=null,sellers=[],sessions=[],sales=[],visits=[],cash=[],clients=[],compensationBySeller={},openPanel='',selectedSellerId=null,loading=false;
 const localDate=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
 const safe=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=value=>'$'+Math.round(Number(value)||0).toLocaleString('es-CL');
@@ -129,7 +129,7 @@ function renderCompResults(){
  sales.forEach(s=>{const uid=String(s.sellerUid||'');if(!uid)return;const amount=Number(s.total)||0;
   if(s.collectionStatus==='collected'&&dateKey(s.collectedAt||s.date||s.fecha||s.occurredAt).slice(0,7)===month)totals.set(uid,(totals.get(uid)||0)+amount);
   else if(s.collectionStatus==='awaiting_delivery'&&dateKey(s.date||s.fecha||s.occurredAt).slice(0,7)<=month)waiting.set(uid,(waiting.get(uid)||0)+amount)});
- const cards=sellers.map(s=>{
+ const cards=sellers.filter(s=>!selectedSellerId||s.uid===selectedSellerId).map(s=>{
   const policy=compensationFor(s.uid,month),salesTotal=totals.get(s.uid)||0,name=safe(s.displayName||s.email||'Vendedor');
   if(!policy||!Array.isArray(policy.tiers)||!policy.tiers.length)return '<div class="comp-card"><div class="comp-card-head">'+name+'<span>'+money(salesTotal)+' cobrado</span></div><small>Falta configurar su sueldo base y tramos (arriba).</small>'+(waiting.get(s.uid)?'<small>⏳ Por entregar y cobrar: '+money(waiting.get(s.uid))+' (aún no cuenta)</small>':'')+'</div>';
   const calc=commissionBreakdown(salesTotal,policy.tiers,policy.mode),base=Number(policy.monthlyBaseSalary)||0;
@@ -171,15 +171,22 @@ function render(){
  $('statVisits').textContent=String(filteredVisits.length);
  renderPeriodReport();renderCompForm();renderCompResults();
  $('adminCount').textContent=sellers.length+' vendedor'+(sellers.length===1?'':'es')+' · '+date;
+ // Cada vendedor es una tarjeta con botones; el panel elegido se abre justo debajo de su tarjeta.
+ ['panelDay','panelComp','panelAccess'].forEach(id=>{const el=document.getElementById(id);if(el){el.classList.add('admin-hidden');document.getElementById('panelHolder')?.appendChild(el)}});
  $('adminSellers').innerHTML=sellers.length?sellers.map(s=>{
   const selected=s.uid===selectedSellerId,active=s.active===true;
   const daySales=sales.filter(x=>x.sellerUid===s.uid&&rowDate(x,'sales')===date),session=sessionFor(s.uid);
-  return '<article class="admin-row" style="background:'+(selected?'#e8f1ff':'white')+'"><button type="button" style="text-align:left;background:transparent;border:0;padding:0;width:100%;font:inherit" data-seller="'+safe(s.uid)+'"><strong>'+safe(s.displayName||s.email||s.uid)+(active?'':' · desactivado')+'</strong><small>'+safe(s.email||'sin correo')+'</small><small>'+daySales.length+' ventas · '+money(daySales.reduce((n,x)=>n+Number(x.total||0),0))+' · '+(session?.status==='open'?'Jornada abierta':session?.status==='closed'?'Jornada cerrada':'Sin jornada registrada')+'</small></button><button type="button" class="admin-btn secondary" style="margin-bottom:0" data-seller-toggle="'+safe(s.uid)+'" '+''+'>'+(active?'Desactivar acceso':'Activar perfil')+'</button>'+(s.email?'<button type="button" class="admin-btn secondary" style="margin-bottom:0" data-seller-wa="'+safe(s.uid)+'">📲 Enviar acceso por WhatsApp</button><button type="button" class="admin-btn secondary" style="margin-bottom:0" data-seller-reset="'+safe(s.uid)+'">📧 Enviarle correo para cambiar clave</button>':'')+'</article>'
- }).join(''):'<p class="admin-muted">Aún no hay perfiles de vendedor registrados.</p>';
- document.querySelectorAll('[data-seller]').forEach(b=>b.onclick=()=>{selectedSellerId=b.dataset.seller;render()});
- document.querySelectorAll('[data-seller-toggle]').forEach(b=>b.onclick=()=>toggleSeller(b.dataset.seller));
- document.querySelectorAll('[data-seller-wa]').forEach(b=>b.onclick=()=>{const x=sellers.find(v=>v.uid===b.dataset.sellerWa);if(x)shareSellerAccess(x.displayName,x.email,'')});
- document.querySelectorAll('[data-seller-reset]').forEach(b=>b.onclick=()=>sendSellerReset(b.dataset.sellerReset));
+  const waiting=sales.filter(x=>x.sellerUid===s.uid&&x.collectionStatus==='awaiting_delivery').length;
+  const tab=(p,label)=>'<button type="button" data-panel="'+p+'" data-uid="'+safe(s.uid)+'" class="'+(selected&&openPanel===p?'on':'')+'">'+label+'</button>';
+  return '<article class="admin-row" style="background:'+(selected&&openPanel?'#eef2ff':'white')+'"><strong>'+safe(s.displayName||s.email||'Vendedor')+(active?'':' · desactivado')+'</strong><small>'+(session?.status==='open'?'🟢 Jornada abierta':session?.status==='closed'?'⚪ Jornada cerrada':'Sin jornada')+' · '+daySales.length+' ventas · '+money(daySales.reduce((n,x)=>n+Number(x.total||0),0))+(waiting?' · ⏳ '+waiting+' por entregar':'')+'</small><div class="seller-card-tabs">'+tab('day','📅 Día')+tab('comp','💰 Sueldo')+tab('access','🔑 Acceso')+'</div><div class="seller-slot" data-slot="'+safe(s.uid)+'"></div></article>';
+ }).join(''):'<p class="admin-muted">Aún no hay vendedores. Créalos abajo.</p>';
+ if(!sellers.length){const nb=document.getElementById('newSellerBox');if(nb)nb.open=true}
+ document.querySelectorAll('[data-panel]').forEach(b=>b.onclick=()=>{const same=selectedSellerId===b.dataset.uid&&openPanel===b.dataset.panel;selectedSellerId=b.dataset.uid;openPanel=same?'':b.dataset.panel;if($('compSeller'))$('compSeller').value=selectedSellerId;render();if(openPanel)setTimeout(()=>document.querySelector('[data-slot="'+CSS.escape(selectedSellerId)+'"]')?.scrollIntoView({behavior:'smooth',block:'start'}),50)});
+ const slot=openPanel&&document.querySelector('[data-slot="'+CSS.escape(selectedSellerId||'')+'"]');
+ if(slot){const id={day:'panelDay',comp:'panelComp',access:'panelAccess'}[openPanel],el=document.getElementById(id);if(el){el.classList.remove('admin-hidden');slot.appendChild(el)}
+  if(openPanel==='access'){const x=sellers.find(v=>v.uid===selectedSellerId),active=x?.active===true;$('accessBody').innerHTML='<p class="admin-muted">Correo: <b>'+safe(x?.email||'sin correo')+'</b> · '+(active?'acceso activo':'acceso desactivado')+'</p>'+(x?.email?'<button type="button" class="admin-btn" id="accWa">📲 Enviar acceso por WhatsApp</button><button type="button" class="admin-btn secondary" id="accReset">📧 Enviarle correo para cambiar clave</button>':'')+'<button type="button" class="admin-btn secondary" id="accToggle">'+(active?'⛔ Desactivar a este vendedor':'✅ Activar a este vendedor')+'</button>';
+   if($('accWa'))$('accWa').onclick=()=>shareSellerAccess(x.displayName,x.email,'');if($('accReset'))$('accReset').onclick=()=>sendSellerReset(x.uid);$('accToggle').onclick=()=>toggleSeller(x.uid)}
+ }
  const seller=sellers.find(s=>s.uid===selectedSellerId),session=seller?sessionFor(seller.uid):null;
  $('adminDetailTitle').textContent=seller?'Detalle de '+(seller.displayName||seller.email||'vendedor'):'Detalle diario · todos los vendedores';
  $('detailOpened').textContent=time(session?.openedAtLocal||session?.openedAt);
