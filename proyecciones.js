@@ -237,6 +237,9 @@
     $('buyReset')?.addEventListener('click',()=>{if(!confirm('¿Llenar el carrito con las cantidades sugeridas (según lo que vendes)? Se borran las cantidades que pusiste a mano.'))return;const o=readOrder();o.qty={};saveOrder(o);decorateInventory();const n=orderRows(readOrder()).length;if(typeof zipperToast==='function')zipperToast(n?'🛒 Carrito con '+n+' productos sugeridos.':'No hay sugeridos: tu stock alcanza para el período elegido.')});
     // Vaciar carrito: deja todas las cantidades en 0. No cambia el inventario.
     if($('buyReset')&&!$('buyClear')){$('buyReset').insertAdjacentHTML('beforebegin','<button id="buyClear" class="secondary" type="button">🗑 Vaciar carrito</button>');$('buyReset').textContent='↺ Llenar con lo sugerido'}
+    // Cerrar carrito: solo lo oculta; las cantidades quedan guardadas para la próxima vez.
+    if($('buySend')&&!$('buyClose')){$('buySend').closest('.buy-actions').insertAdjacentHTML('beforeend','<button id="buyClose" class="secondary" type="button">✖ Cerrar carrito</button>');}
+    $('buyClose')?.addEventListener('click',()=>{const m=$('buyMode');if(m){m.checked=false;m.dispatchEvent(new Event('change'))}document.body.classList.remove('buy-mode');window.scrollTo(0,0)});
     $('buyClear')?.addEventListener('click',()=>{if(!confirm('¿Vaciar el carrito de compra? No cambia tu inventario.'))return;const o=readOrder();getProducts().forEach(p=>{o.qty[String(p.id)]=0});saveOrder(o);decorateInventory();if(typeof zipperToast==='function')zipperToast('🗑 Carrito vacío. Tu inventario no cambió.')});
     $('buySend')?.addEventListener('click',sendOrder);
     renderSupplierOrders();
