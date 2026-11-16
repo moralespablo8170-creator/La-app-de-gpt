@@ -198,6 +198,16 @@ function render(){
  $('adminSales').innerHTML=filteredSales.map(s=>'<article class="admin-row"><strong>'+safe(s.cliente||s.clientName||'Cliente')+' · '+money(s.total)+'</strong><small>'+safe(s.folio||s.id)+' · '+safe(time(s.occurredAt||s.createdAt||s.fecha))+' · '+safe(s.paymentMethod||s.formaPago||'')+(s.collectionStatus==='awaiting_delivery'?' · Por cobrar al entregar':'')+' · '+safe(sellerLabel(s.sellerUid)||s.sellerName||'')+'</small></article>').join('')||'<p class="admin-muted">Sin ventas en esta fecha.</p>';
  $('adminVisits').innerHTML=filteredVisits.map(v=>{const client=clients.find(c=>String(c.id)===String(v.clientId)),saleExists=v.status!=='sale'||sales.some(s=>String(s.id)===String(v.saleId||'')&&String(s.sellerUid||'')===String(v.sellerUid||''))||(!v.saleId&&sales.some(s=>String(s.sellerUid||'')===String(v.sellerUid||'')&&String(s.clienteId||s.clientId||'')===String(v.clientId||'')&&rowDate(s,'sales')===rowDate(v,'visits'))),visitLabel=v.status==='sale'?(saleExists?'visitado · venta registrada':'visitado · sin venta'):v.status||'visitado';return '<article class="admin-row"><strong>'+safe(v.clientName||v.cliente||client?.name||v.clientId||'Cliente')+' · '+safe(visitLabel)+'</strong><small>'+safe(v.routeWeek||'')+' '+safe(v.routeDay||'')+' · '+safe(sellerLabel(v.sellerUid))+'</small></article>'}).join('')||'<p class="admin-muted">Sin visitas en esta fecha.</p>';
 }
+// Saca del catálogo de vendedores los productos de la categoría Remedios (una vez; los nuevos salen ocultos solos).
+let remediesChecked=false;
+async function hideRemediesFromSellers(){
+ if(remediesChecked||!owner)return;remediesChecked=true;
+ const snap=await getDocs(collection(db,'orgs',ORG,'products'));
+ const norm=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+ const visible=snap.docs.filter(d=>norm(d.data().category).includes('remedio')&&d.data().sellerVisible!==false);
+ for(let i=0;i<visible.length;i+=400){const batch=writeBatch(db);visible.slice(i,i+400).forEach(d=>batch.update(d.ref,{sellerVisible:false}));await batch.commit()}
+ if(visible.length)status(visible.length+' remedios quitados del catálogo de vendedores.','ok');
+}
 async function refresh(){
  if(!owner||loading)return;loading=true;status('Actualizando información de vendedores…');
  try{
@@ -213,6 +223,7 @@ async function refresh(){
    return [name,null];
   }));
   if(docs.members!==null)sellers=docs.members.map(d=>({uid:d.id,...d.data()})).filter(x=>x.role==='seller');
+  hideRemediesFromSellers().catch(e=>console.warn('Remedios:',e));
   if(docs.sellerCompensation!==null)compensationBySeller=Object.fromEntries(docs.sellerCompensation.map(d=>[d.id,d.data()]));
   if(docs.sessions!==null)sessions=docs.sessions.map(d=>({id:d.id,...d.data()}));
   if(docs.sales!==null)sales=docs.sales.map(d=>({id:d.id,...d.data()}));

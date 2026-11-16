@@ -90,12 +90,13 @@ function availableStock(p){const inCart=cart.filter(i=>String(i.productId)===Str
 function stockBadge(n){n=Math.max(0,Number(n)||0);return n===0?'<b class="stock-badge stock-zero">0 · SIN STOCK</b>':n<=5?'<b class="stock-badge stock-low">'+n+' · STOCK BAJO</b>':'<b class="stock-badge stock-ok">'+n+' · STOCK OK</b>'}
 const dot=p=>'<span class="dot"'+(p?.barColorHex||COLORS[p?.barColor]?' style="background:'+(p.barColorHex||COLORS[p.barColor])+'"':'')+'></span>';
 const COLORS={verde:'#22c55e',celeste:'#38bdf8',morado:'#7c3aed',menta:'#9ae6b4',cafe:'#8b5e3c',gris:'#808080',negro:'#111827',rosado:'#ec4899',naranja:'#f97316',amarillo:'#facc15',azul:'#2563eb',rojo:'#ef4444'};
-const sellable=()=>products.filter(p=>p&&p.active!==false&&p.id!=null&&String(p.name||'').trim()).sort((a,b)=>String(a.name).localeCompare(String(b.name),'es'));
+const isRemedy=p=>norm(p?.category).includes('remedio');
+const sellable=()=>products.filter(p=>p&&p.active!==false&&p.id!=null&&String(p.name||'').trim()&&!isRemedy(p)).sort((a,b)=>String(a.name).localeCompare(String(b.name),'es'));
 function cartTotal(){return cart.reduce((n,i)=>{const p=productOf(i.productId);return n+i.qty*(p?effectivePrice(p,i.qty).price:i.price)},0)}
 function suggestedFor(client){
  const list=sales.filter(s=>String(s.clienteId)===String(client.id)).sort((a,b)=>String(b.occurredAt||b.fecha||'').localeCompare(String(a.occurredAt||a.fecha||''))).slice(0,4);
  if(!list.length)return [];const map=new Map();
- list.forEach(s=>{const seen=new Set();(s.items||[]).forEach(i=>{const p=productOf(i.productId)||productOf(i.baseProductId);if(!p)return;const k=String(p.id);if(!map.has(k))map.set(k,{p,times:0,qty:0});const e=map.get(k);e.qty+=Number(i.qty)||0;if(!seen.has(k)){e.times++;seen.add(k)}})});
+ list.forEach(s=>{const seen=new Set();(s.items||[]).forEach(i=>{const p=productOf(i.productId)||productOf(i.baseProductId);if(!p||isRemedy(p))return;const k=String(p.id);if(!map.has(k))map.set(k,{p,times:0,qty:0});const e=map.get(k);e.qty+=Number(i.qty)||0;if(!seen.has(k)){e.times++;seen.add(k)}})});
  const min=list.length>=2?2:1;return [...map.values()].filter(e=>e.times>=min).map(e=>({p:e.p,times:e.times,qty:Math.max(1,Math.round(e.qty/e.times)),of:list.length})).slice(0,10);
 }
 function renderSale(){

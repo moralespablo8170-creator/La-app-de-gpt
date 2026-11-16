@@ -183,10 +183,12 @@ const countsLabel = state => {
 };
 const colRef = name => collection(db, ...ORG_PATH, name);
 const privateProductFields=['pricePurchase','purchasePrice','cost','costPrice','buyPrice','precioCompra'];
+// Los remedios no se venden por vendedores (no se pueden facturar): quedan fuera de su catálogo.
+const isRemedyProduct=row=>String(row?.category||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().includes('remedio');
 function publicSellerProduct(row) {
   const clean={...row};
   privateProductFields.forEach(key=>delete clean[key]);
-  clean.sellerVisible=true;
+  clean.sellerVisible=!isRemedyProduct(row);
   return clean;
 }
 function privateProductCost(row) {
@@ -367,7 +369,7 @@ async function prepareSellerCatalog() {
     const previousCost=costMap.get(item.id)||{};
     const pricePurchase=raw.pricePurchase??raw.purchasePrice??raw.costPrice??raw.cost??raw.buyPrice??raw.precioCompra??previousCost.pricePurchase??0;
     const safe=publicSellerProduct(raw);
-    safe.sellerVisible=true;
+    safe.sellerVisible=!isRemedyProduct(raw);
     operations.push({type:'set',ref:item.ref,data:safe});
     operations.push({type:'set',ref:doc(colRef('productCosts'),item.id),data:{id:item.id,pricePurchase:Math.max(0,Number(pricePurchase)||0),updatedAt:new Date().toISOString()}});
   }

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zipper-app-pwa-20261116-separar-50';
+const CACHE_NAME = 'zipper-app-pwa-20261116-remedios-51';
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -21,15 +21,15 @@ const APP_SHELL = [
   "./vendedores-caja.js?v=20261116-1",
   "./rutas-clientes.js?v=20261115-2",
   "./proyecciones.js?v=20261115-4",
-  "./firebase-cloud.js?v=20261116-vendedores-1",
+  "./firebase-cloud.js?v=20261116-remedios-2",
   "./firebase-config.js",
   "./firebase-test-config.js",
   "./seller-assignments.js?v=zipper-seller-bulk-20261115-v2",
   "./vendedor.html",
   "./vendedor-manifest.json?v=1",
-  "./seller-app.js?v=zipper-seller-v8-20261116",
+  "./seller-app.js?v=zipper-seller-v9-20261116",
   "./seller-admin.html",
-  "./seller-admin.js?v=zipper-seller-admin-20261116-v5",
+  "./seller-admin.js?v=zipper-seller-admin-20261116-v6",
   "./route-position-migration.js?v=1.2",
   "./route-position-migration-b.js?v=1.0",
   "./herramientas.js?v=20261115-restauracion-v33",
