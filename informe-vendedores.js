@@ -47,13 +47,15 @@
     if(!cloudOwner()){out.innerHTML='<p class="muted empty-state">🧑‍💼 Para ver el informe de vendedores conecta tu cuenta de Firebase (Herramientas → Conectar cuenta Firebase).</p>';return}
     if(!cache){out.innerHTML='<p class="muted empty-state">'+(lastError?'No se pudo cargar: '+esc(lastError):'⏳ Cargando jornadas y ventas de vendedores…')+'</p>';if(!loading&&!lastError)load();return}
     const list=build();
-    out.innerHTML='<div class="actions history-tools"><button id="sellersRefresh" class="secondary" type="button">'+(loading?'⏳ Actualizando…':'↻ Actualizar')+'</button><button id="sellersCopy" class="secondary" type="button">📋 Copiar informe</button></div><p class="muted">Datos de Firebase de las '+hm(cache.loadedAt)+' · Usa los filtros de arriba (Hoy, Esta semana, Este mes…) para cambiar el período.</p>'+
+    out.innerHTML='<p class="muted">'+(loading?'⏳ Actualizando desde Firebase…':'Actualizado a las '+hm(cache.loadedAt)+' · se actualiza solo al entrar. Cambia el período con los filtros de arriba.')+'</p>'+
       (list.length?list.map(x=>'<article class="seller-report"><div class="seller-report-head"><strong>🧑‍💼 '+esc(x.seller.displayName||x.seller.email||'Vendedor')+(x.seller.active===false?' · desactivado':'')+'</strong><span>'+money(x.total)+'</span></div>'+
         '<div class="seller-report-stats"><div><b>'+x.daysWorked+'</b><small>días trabajados</small></div><div><b>'+dur(x.worked)+'</b><small>horas en jornada</small></div><div><b>'+x.avgOpen+'</b><small>inicio promedio</small></div><div><b>'+x.avgClose+'</b><small>término promedio</small></div><div><b>'+x.sales+'</b><small>ventas</small></div><div><b>'+x.noSale+'</b><small>visitas sin venta</small></div></div>'+
         (x.rows.length?'<div class="seller-report-table"><table><thead><tr><th>Día</th><th>Ruta</th><th>Inicio</th><th>1ª venta</th><th>Término</th><th>Jornada</th><th>Ventas</th><th>Total</th><th>Sin venta</th></tr></thead><tbody>'+x.rows.map(r=>'<tr class="'+(r.stillOpen?'still-open':!r.open?'no-session':'')+'"><td>'+esc(nice(r.date))+'</td><td>'+esc(r.route||'—')+'</td><td>'+hm(r.open)+'</td><td>'+hm(r.first)+'</td><td>'+(r.stillOpen?'<b>Sin cerrar</b>':hm(r.close))+'</td><td>'+dur(r.worked)+(r.stillOpen&&r.worked!=null?' (en curso)':'')+'</td><td>'+r.sales.length+'</td><td>'+money(r.total)+'</td><td>'+r.noSale+'</td></tr>').join('')+'</tbody></table></div>':'<p class="muted">Sin jornadas ni ventas en este período.</p>')+'</article>').join(''):'<p class="muted empty-state">Todavía no hay vendedores creados.</p>');
-    $('sellersRefresh').onclick=()=>load(true);
-    $('sellersCopy').onclick=()=>{const t=reportText(list);const ok=()=>{if(typeof zipperToast==='function')zipperToast('📋 Informe copiado. Pégalo en WhatsApp o donde quieras.')};if(navigator.clipboard?.writeText)navigator.clipboard.writeText(t).then(ok).catch(()=>prompt('Copia el informe:',t));else prompt('Copia el informe:',t)};
+    // Cada vez que se entra a la pestaña (o pasa más de 1 minuto) se vuelve a leer Firebase.
+    if(!loading&&Date.now()-new Date(cache.loadedAt).getTime()>60000)load();
   }
+  // Al tocar la pestaña Vendedores siempre se piden datos nuevos.
+  document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('[data-history="sellers"]')&&cache&&!loading)setTimeout(()=>load(true),0)},true);
   function wrap(){const fn=window.renderHistory;if(typeof fn!=='function'||fn.__withSellers)return;window.renderHistory=function(){const r=fn.apply(this,arguments);try{renderSellers()}catch(e){console.error('Informe vendedores:',e)}return r};window.renderHistory.__withSellers=true}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(wrap,0),{once:true});else setTimeout(wrap,0);
 })();
