@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zipper-app-pwa-20261115-cobranza-41';
+const CACHE_NAME = 'zipper-app-pwa-20261115-cobranza-42';
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -15,7 +15,7 @@ const APP_SHELL = [
   "./assets/ilustraciones/carrito.svg",
   "./app.js?v=20261115-cancelar-12",
   "./whatsapp.js?v=20261115-4",
-  "./cobranza.js?v=20261115-3",
+  "./cobranza.js?v=20261115-4",
   "./ideas.js?v=20261115-1",
   "./rutas-clientes.js?v=20261115-2",
   "./proyecciones.js?v=20261115-4",

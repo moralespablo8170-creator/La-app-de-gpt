@@ -44,10 +44,9 @@
   function reminderText(x){
     const name=x.client?.name||x.name;
     const lines=x.open.map(o=>'• '+niceDate(o.date)+(o.folio?' · ticket #'+o.folio:'')+': '+money(o.due));
-    return ['Hola '+name+', le saluda *Distribuidora Zipper*.',
-      'Le recordamos que tiene un saldo pendiente de *'+money(x.debt)+'*'+(x.days?', con '+x.days+(x.days===1?' día':' días')+' desde la compra más antigua sin pagar':'')+'.',
+    return ['Hola '+name+', le saluda *Distribuidora Zipper*. Nos contactamos con Ud. para recordarle que tiene un saldo pendiente de *'+money(x.debt)+'*.',
       '',...lines,'',
-      'Puede pagarlo en la próxima visita o por transferencia. ¡Muchas gracias!'].join('\n');
+      'Quedamos atentos a sus comentarios. De antemano, ¡muchas gracias!','Saludos.'].join('\n');
   }
   function sendReminder(x){
     const phone=window.zipperWhatsApp?.waPhone(x.client)||'';
