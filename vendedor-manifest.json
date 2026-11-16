@@ -1,0 +1,18 @@
+{
+  "id": "./zipper-vendedor",
+  "name": "Zipper Vendedor",
+  "short_name": "Zipper Vendedor",
+  "start_url": "./vendedor.html",
+  "scope": "./vendedor.html",
+  "display": "standalone",
+  "background_color": "#0b1d33",
+  "theme_color": "#111827",
+  "icons": [
+    {
+      "src": "./assets/icono-512.png?v=20261015-icono-exterior-v2",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

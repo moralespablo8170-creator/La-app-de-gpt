@@ -1,9 +1,9 @@
-const CACHE_NAME = 'zipper-app-pwa-20261115-cobranza-42';
+const CACHE_NAME = 'zipper-app-pwa-20261115-vendedores-43';
 const APP_SHELL = [
   "./",
   "./index.html",
   "./styles.css?v=zipper-version-firebase-20261101-2",
-  "./tema-colores.css?v=20261115-15",
+  "./tema-colores.css?v=20261115-16",
   "./assets/ilustraciones/ruta.svg",
   "./assets/ilustraciones/clientes.svg",
   "./assets/ilustraciones/productos.svg",
@@ -22,11 +22,12 @@ const APP_SHELL = [
   "./firebase-cloud.js?v=20261115-restauracion-2",
   "./firebase-config.js",
   "./firebase-test-config.js",
-  "./seller-assignments.js?v=zipper-seller-routes-20261029-v1",
+  "./seller-assignments.js?v=zipper-seller-bulk-20261115-v2",
   "./vendedor.html",
-  "./seller-app.js?v=zipper-seller-revocation-20261029-v3",
+  "./vendedor-manifest.json?v=1",
+  "./seller-app.js?v=zipper-seller-login-20261115-v4",
   "./seller-admin.html",
-  "./seller-admin.js?v=zipper-seller-admin-spark-20261115-v1",
+  "./seller-admin.js?v=zipper-seller-access-20261115-v2",
   "./route-position-migration.js?v=1.2",
   "./route-position-migration-b.js?v=1.0",
   "./herramientas.js?v=20261115-restauracion-v33",

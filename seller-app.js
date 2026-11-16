@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { firebaseConfig, ORG_ID } from './firebase-config.js';
 import {
-  getAuth, setPersistence, browserLocalPersistence, signInWithEmailAndPassword,
+  getAuth, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, sendPasswordResetEmail,
   onAuthStateChanged, signOut
 } from 'firebase/auth';
 import {
@@ -68,7 +68,24 @@ async function signIn(){
    profile={uid:result.user.uid,email:result.user.email||'',...data};
    $('sellerPassword').value='';
    await activate();
- }catch(error){status(error.message||'No se pudo iniciar sesión.');button.disabled=false}
+ }catch(error){status(loginError(error),'error');button.disabled=false}
+}
+// Mensajes claros para los errores de Firebase al ingresar.
+function loginError(error){
+ const code=String(error?.code||'');
+ if(code.includes('invalid-credential')||code.includes('wrong-password')||code.includes('user-not-found'))return 'Correo o clave incorrectos, o la cuenta aún no existe. Revisa que escribas el correo y la clave tal cual te los entregó el dueño. Si no recuerdas la clave, toca "¿Olvidaste tu clave?".';
+ if(code.includes('invalid-email'))return 'El correo no es válido. Revísalo.';
+ if(code.includes('too-many-requests'))return 'Demasiados intentos. Espera unos minutos o cambia la clave con "¿Olvidaste tu clave?".';
+ if(code.includes('network-request-failed'))return 'Sin conexión a internet. Conéctate e intenta de nuevo.';
+ if(code.includes('user-disabled'))return 'Esta cuenta está deshabilitada. Habla con el dueño.';
+ if(code.includes('permission-denied'))return 'Firebase rechazó el acceso. El dueño debe revisar que tu perfil esté activo y que el acceso de vendedores esté encendido.';
+ return error?.message||'No se pudo iniciar sesión.';
+}
+async function resetPassword(){
+ const email=$('sellerEmail').value.trim();
+ if(!email){status('Escribe tu correo arriba y vuelve a tocar "¿Olvidaste tu clave?".','error');$('sellerEmail').focus();return}
+ try{await sendPasswordResetEmail(auth,email);status('Te enviamos un correo a '+email+' para crear una clave nueva. Revisa también la carpeta de spam.','ok')}
+ catch(error){status(loginError(error),'error')}
 }
 async function activate(){
  $('sellerLogin').classList.add('seller-hidden');$('sellerApp').classList.remove('seller-hidden');$('sellerWelcome').textContent=profile.displayName||profile.email||'Vendedor';
@@ -185,7 +202,7 @@ async function flushPendingSales(){
 }
 async function logout(){unsubs.forEach(fn=>{try{fn()}catch(_){}});await signOut(auth);profile=null;session=null;$('sellerApp').classList.add('seller-hidden');$('sellerLogin').classList.remove('seller-hidden');status('Sesión cerrada.');}
 function wire(){
- $('sellerLoginButton').onclick=signIn;$('sellerLogout').onclick=logout;$('sellerStart').onclick=startSession;$('sellerClose').onclick=closeSession;$('sellerAddItem').onclick=addItem;$('sellerSaveSale').onclick=saveSale;
+ $('sellerLoginButton').onclick=signIn;if($('sellerForgot'))$('sellerForgot').onclick=resetPassword;$('sellerLogout').onclick=logout;$('sellerStart').onclick=startSession;$('sellerClose').onclick=closeSession;$('sellerAddItem').onclick=addItem;$('sellerSaveSale').onclick=saveSale;
  $('sellerWeek').onchange=()=>{renderRouteDays();renderClients()};$('sellerDay').onchange=renderClients;$('sellerSearch').oninput=renderClients;
  window.addEventListener('online',async()=>{status('Conexión recuperada · sincronizando…','warn');await flushPendingSales();if(navigator.onLine)await refreshFromServer();if(selectedClient)await loadSelectedDebt()});
  window.addEventListener('offline',()=>status('Sin internet · los cambios quedarán pendientes.','warn'));

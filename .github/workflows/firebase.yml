@@ -1,0 +1,50 @@
+name: Firebase (reglas y revisión)
+
+# Requiere el secreto FIREBASE_SERVICE_ACCOUNT (clave JSON de una cuenta de servicio del proyecto zipper-a12f1).
+# El repositorio es público: la revisión imprime solo cantidades y estados.
+on:
+  workflow_dispatch:
+    inputs:
+      accion:
+        description: Qué hacer
+        type: choice
+        options: [revisar, publicar-reglas]
+        default: revisar
+  push:
+    branches: [main]
+    paths: [firestore.rules]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firebase-admin
+  cancel-in-progress: false
+
+jobs:
+  firebase:
+    runs-on: ubuntu-latest
+    env:
+      SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Preparar credenciales
+        run: |
+          if [ -z "$SA" ]; then echo "::error::Falta el secreto FIREBASE_SERVICE_ACCOUNT en Settings → Secrets and variables → Actions."; exit 1; fi
+          printf '%s' "$SA" > "$RUNNER_TEMP/sa.json"
+          python3 -c "import json,sys;d=json.load(open(sys.argv[1]));assert d.get('project_id')=='zipper-a12f1', 'La clave no es del proyecto zipper-a12f1'" "$RUNNER_TEMP/sa.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa.json" >> "$GITHUB_ENV"
+
+      - name: Publicar reglas de Firestore
+        if: github.event_name == 'push' || inputs.accion == 'publicar-reglas'
+        run: npx --yes firebase-tools@13 deploy --only firestore:rules --project zipper-a12f1 --non-interactive
+
+      - name: Revisar estado (solo cantidades)
+        run: |
+          npm install --no-save --no-package-lock firebase-admin@12 >/dev/null
+          node .github/firebase-revisar.cjs
+
+      - name: Borrar credenciales
+        if: always()
+        run: rm -f "$RUNNER_TEMP/sa.json"

@@ -394,3 +394,5 @@ body.buy-mode .buy-dock{display:block;position:sticky;bottom:92px;z-index:5;marg
 .lost-intro{margin:0 0 10px}
 .alert-collect{background:#fff7ed;border-color:#fb923c;color:#7c2d12}
 .alert-collect .primary{background:#ea580c!important;border-color:#c2410c!important;color:#fff!important}
+.seller-bulk{margin:12px 0}
+.seller-bulk summary{cursor:pointer;font-weight:900;font-size:16px;padding:6px 0}

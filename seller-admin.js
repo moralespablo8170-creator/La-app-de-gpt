@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { firebaseConfig, ORG_ID } from './firebase-config.js';
-import { getAuth, setPersistence, browserLocalPersistence, inMemoryPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, deleteUser, onAuthStateChanged, signOut } from 'firebase/auth';
+import { getAuth, setPersistence, browserLocalPersistence, inMemoryPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, deleteUser, onAuthStateChanged, signOut, sendPasswordResetEmail } from 'firebase/auth';
 import { getFirestore, doc, getDoc, collection, getDocs, writeBatch, setDoc, updateDoc } from 'firebase/firestore';
 
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),ORG=ORG_ID;
@@ -153,10 +153,12 @@ function render(){
  $('adminSellers').innerHTML=sellers.length?sellers.map(s=>{
   const selected=s.uid===selectedSellerId,active=s.active===true;
   const daySales=sales.filter(x=>x.sellerUid===s.uid&&rowDate(x,'sales')===date),session=sessionFor(s.uid);
-  return '<article class="admin-row" style="background:'+(selected?'#e8f1ff':'white')+'"><button type="button" style="text-align:left;background:transparent;border:0;padding:0;width:100%;font:inherit" data-seller="'+safe(s.uid)+'"><strong>'+safe(s.displayName||s.email||s.uid)+(active?'':' · desactivado')+'</strong><small>'+daySales.length+' ventas · '+money(daySales.reduce((n,x)=>n+Number(x.total||0),0))+' · '+(session?.status==='open'?'Jornada abierta':session?.status==='closed'?'Jornada cerrada':'Sin jornada registrada')+'</small></button><button type="button" class="admin-btn secondary" style="margin-bottom:0" data-seller-toggle="'+safe(s.uid)+'" '+''+'>'+(active?'Desactivar acceso':'Activar perfil')+'</button></article>'
+  return '<article class="admin-row" style="background:'+(selected?'#e8f1ff':'white')+'"><button type="button" style="text-align:left;background:transparent;border:0;padding:0;width:100%;font:inherit" data-seller="'+safe(s.uid)+'"><strong>'+safe(s.displayName||s.email||s.uid)+(active?'':' · desactivado')+'</strong><small>'+safe(s.email||'sin correo')+'</small><small>'+daySales.length+' ventas · '+money(daySales.reduce((n,x)=>n+Number(x.total||0),0))+' · '+(session?.status==='open'?'Jornada abierta':session?.status==='closed'?'Jornada cerrada':'Sin jornada registrada')+'</small></button><button type="button" class="admin-btn secondary" style="margin-bottom:0" data-seller-toggle="'+safe(s.uid)+'" '+''+'>'+(active?'Desactivar acceso':'Activar perfil')+'</button>'+(s.email?'<button type="button" class="admin-btn secondary" style="margin-bottom:0" data-seller-wa="'+safe(s.uid)+'">📲 Enviar acceso por WhatsApp</button><button type="button" class="admin-btn secondary" style="margin-bottom:0" data-seller-reset="'+safe(s.uid)+'">📧 Enviarle correo para cambiar clave</button>':'')+'</article>'
  }).join(''):'<p class="admin-muted">Aún no hay perfiles de vendedor registrados.</p>';
  document.querySelectorAll('[data-seller]').forEach(b=>b.onclick=()=>{selectedSellerId=b.dataset.seller;render()});
  document.querySelectorAll('[data-seller-toggle]').forEach(b=>b.onclick=()=>toggleSeller(b.dataset.seller));
+ document.querySelectorAll('[data-seller-wa]').forEach(b=>b.onclick=()=>{const x=sellers.find(v=>v.uid===b.dataset.sellerWa);if(x)shareSellerAccess(x.displayName,x.email,'')});
+ document.querySelectorAll('[data-seller-reset]').forEach(b=>b.onclick=()=>sendSellerReset(b.dataset.sellerReset));
  const seller=sellers.find(s=>s.uid===selectedSellerId),session=seller?sessionFor(seller.uid):null;
  $('adminDetailTitle').textContent=seller?'Detalle de '+(seller.displayName||seller.email||'vendedor'):'Detalle diario · todos los vendedores';
  $('detailOpened').textContent=time(session?.openedAtLocal||session?.openedAt);
@@ -289,7 +291,8 @@ async function createSellerAccount(){
   await setDoc(doc(db,'orgs',ORG,'members',created.uid),{role:'seller',active:true,displayName,email,provisionedBy:owner.uid,createdAt:now,updatedAt:now});
   $('sellerDisplayName').value='';$('sellerEmail').value='';
   selectedSellerId=created.uid;
-  label.textContent='Cuenta creada para '+displayName+' · '+email+'. Entrega la clave directamente al vendedor; no se guarda en la app.';
+  label.textContent='✅ Cuenta creada para '+displayName+' · '+email+'. La clave no se guarda en la app: envíasela ahora.';
+  showCreatedAccess(displayName,email,password);
   await refresh();
  }catch(error){
   console.error('No se pudo crear la cuenta del vendedor.',error.code||error.message);
@@ -307,6 +310,28 @@ async function createSellerAccount(){
   $('sellerPassword').value='';
   button.disabled=!owner;
  }
+}
+// ===== Entrega de acceso al vendedor =====
+const SELLER_APP_URL=new URL('./vendedor.html',location.href).href;
+function sellerAccessText(name,email,password){
+ return ['Hola '+(name||'')+', este es tu acceso a la app de ventas de *Distribuidora Zipper*:','','1) Abre este enlace en Chrome: '+SELLER_APP_URL,'2) Correo: '+email,password?'3) Clave: '+password:'3) Clave: la que te entregué (si no la recuerdas, toca "¿Olvidaste tu clave?" en la app)','','Para dejarla como app: en Chrome toca ⋮ → "Agregar a pantalla principal".'].join('\n');
+}
+function shareSellerAccess(name,email,password){
+ const url='https://wa.me/?text='+encodeURIComponent(sellerAccessText(name,email,password));
+ const w=window.open(url,'_blank');if(!w)location.href=url;
+}
+function showCreatedAccess(name,email,password){
+ let box=$('sellerCreatedAccess');
+ if(!box){box=document.createElement('div');box.id='sellerCreatedAccess';box.className='admin-row';box.style.cssText='margin-top:10px;background:#f0fdf4;border-color:#86efac';$('sellerProfileStatus').after(box)}
+ box.innerHTML='<strong>Datos para '+safe(name)+'</strong><small>Enlace: '+safe(SELLER_APP_URL)+'</small><small>Correo: '+safe(email)+'</small><small>Clave: '+safe(password)+'</small><button type="button" class="admin-btn" id="sellerCreatedWa">📲 Enviar acceso por WhatsApp</button><button type="button" class="admin-btn secondary" id="sellerCreatedDone">Listo, ya se lo envié</button>';
+ $('sellerCreatedWa').onclick=()=>shareSellerAccess(name,email,password);
+ $('sellerCreatedDone').onclick=()=>box.remove();
+}
+async function sendSellerReset(uid){
+ const seller=sellers.find(item=>item.uid===uid);if(!seller?.email)return;
+ if(!window.confirm('¿Enviar a '+seller.email+' un correo para que '+(seller.displayName||'el vendedor')+' cree una clave nueva?'))return;
+ try{await sendPasswordResetEmail(provisioningAuth,seller.email);status('Correo enviado a '+seller.email+'. El vendedor debe abrirlo (revisar spam) y crear su clave nueva.','ok')}
+ catch(error){console.error(error);status(error.code&&String(error.code).includes('user-not-found')?'Ese correo no tiene cuenta creada.':(error.message||'No se pudo enviar el correo.'),'error')}
 }
 async function toggleSeller(uid){
  if(!owner||navigator.onLine===false){status('Necesitas la cuenta propietaria y conexión para cambiar el acceso.','error');return}
