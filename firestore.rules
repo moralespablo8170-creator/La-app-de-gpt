@@ -43,7 +43,7 @@ service cloud.firestore {
 
     function canReadSale(orgId) {
       return isOwner(orgId)
-        || (isSeller(orgId) && resource.data.sellerUid == request.auth.uid);
+        || (isSeller(orgId) && (resource == null || resource.data.sellerUid == request.auth.uid));
     }
 
     function assignedClientForSale(orgId) {
@@ -205,7 +205,7 @@ service cloud.firestore {
 
     match /orgs/{orgId}/sessions/{sessionId} {
       allow read: if isOwner(orgId)
-        || (isSeller(orgId) && resource.data.sellerUid == request.auth.uid);
+        || (isSeller(orgId) && (resource == null || resource.data.sellerUid == request.auth.uid));
       allow create: if isOwner(orgId)
         || (isSeller(orgId) && validSellerSession(sessionId));
       allow update: if isOwner(orgId)

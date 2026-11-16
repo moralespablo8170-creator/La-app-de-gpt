@@ -3,85 +3,122 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#111827">
-<title>Ruta del vendedor · Distribuidora Zipper</title>
+<meta name="theme-color" content="#102b48">
+<title>Zipper Vendedor · Distribuidora Zipper</title>
 <link rel="manifest" href="./vendedor-manifest.json?v=1">
 <link rel="apple-touch-icon" href="./assets/icono-512.png?v=20261015-icono-exterior-v2">
-<link rel="stylesheet" href="./styles.css?v=zipper-sync-status-20261029-v1">
 <script type="importmap">
 {"imports":{"firebase/app":"https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js","firebase/auth":"https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js","firebase/firestore":"https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js"}}
 </script>
 <style>
-.seller-shell{max-width:760px;margin:0 auto;padding:16px 16px 110px}.seller-card{background:#fff;border-radius:22px;padding:20px;margin:14px 0;box-shadow:0 8px 24px #0002}.seller-card h1,.seller-card h2{margin:0 0 12px;color:#10233c}.seller-muted{color:#697381}.seller-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.seller-shell label{display:block;font-weight:700;margin:12px 0}.seller-shell input,.seller-shell select{font-size:16px!important;display:block;width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:12px;padding:13px;font:inherit;margin-top:6px}.seller-btn{display:block;width:100%;border:0;border-radius:14px;padding:14px 16px;font:inherit;font-weight:800;margin:10px 0;background:#1265e8;color:white}.seller-btn.secondary{background:#e5e7eb;color:#111827}.seller-btn.danger{background:#e11d48;color:white}.seller-row{padding:12px 0;border-bottom:1px solid #e5e7eb}.seller-row strong{display:block;color:#10233c}.seller-row small{display:block;color:#687381;margin-top:4px}.seller-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.seller-actions button{flex:1}.seller-status{padding:12px;border-radius:12px;background:#e8f1ff;color:#174476;font-weight:700}.seller-status.ok{background:#dcfce7;color:#166534}.seller-status.warn{background:#fef3c7;color:#92400e}.seller-status.error{background:#fee2e2;color:#991b1b}.seller-hidden{display:none!important}.seller-total{font-size:22px;font-weight:900;color:#10233c}.seller-list{max-height:45vh;overflow:auto}.seller-pill{display:inline-block;padding:4px 9px;border-radius:999px;background:#dbeafe;color:#1e40af;font-size:12px;font-weight:800}.seller-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.seller-products{display:grid;grid-template-columns:1fr 1fr;gap:8px}.seller-product{border:1px solid #e5e7eb;border-radius:12px;padding:10px}.seller-product span{display:block;color:#64748b;font-size:13px}.seller-note{font-size:13px;color:#64748b;line-height:1.4}@media(max-width:520px){.seller-grid,.seller-products{grid-template-columns:1fr}.seller-shell{padding:12px 12px 100px}.seller-card{padding:16px}}
-.seller-new-client{border:2px solid #93c5fd;background:#eff6ff;border-radius:16px;padding:12px;margin:10px 0}.seller-new-client h3{margin:0 0 6px;color:#1e3a8a}.seller-route-tools{margin-top:6px}.seller-mini{flex:1;border:1px solid #cbd5e1;background:#f8fafc;color:#334155;border-radius:10px;padding:8px 6px;font:inherit;font-size:13px;font-weight:700}.seller-mini:disabled{opacity:.4}
+:root{font-family:system-ui,Arial;color:#16263c;background:#edf2f7}*{box-sizing:border-box}body{margin:0}
+header{background:#102b48;color:#fff;padding:16px 17px calc(14px);padding-top:max(16px,env(safe-area-inset-top));position:sticky;top:0;z-index:5;box-shadow:0 3px 15px #0002;display:flex;align-items:center;justify-content:space-between;gap:10px}
+header h1{font-size:22px;margin:0}header small{display:block;color:#c8d9eb;margin-top:2px}
+header button{background:#ffffff1f;color:#fff;padding:9px 12px;font-size:13px}
+.shell{max-width:760px;margin:auto;padding:14px 14px 150px}
+.card{background:#fff;border-radius:17px;padding:17px;margin-bottom:13px;box-shadow:0 3px 14px #15294312}
+h2{font-size:19px;margin:0 0 12px}h3{margin:0 0 8px;font-size:17px;color:#153c67}
+.muted{color:#64748b;font-size:13px}
+.badge{display:inline-block;padding:5px 9px;border-radius:8px;background:#dbeafe;color:#1d4ed8;font-size:12px;font-weight:800}
+.badge.ok,.client-status.ok{background:#dcfce7;color:#166534}.badge.warn,.client-status.warn{background:#fee2e2;color:#b91c1c}
+.client-status{display:inline-block;border-radius:9px;padding:6px 10px;font-weight:800;font-size:13px}
+.section-heading{border-bottom:2px solid #dbeafe;padding-bottom:10px;color:#153c67;display:flex;align-items:center;gap:9px}.section-heading .symbol{font-size:23px;line-height:1}
+.line{border-top:1px solid #e4eaf0;padding:12px 0}.line:first-child{border-top:0}.line strong{display:block;font-size:16px}.line small{display:block;color:#64748b;margin:4px 0}
+.actions{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap}.actions>*{flex:1}
+button{font:inherit;font-weight:750;border:0;border-radius:11px;padding:11px 14px;background:#1265e8;color:#fff;cursor:pointer}button:disabled{opacity:.45;cursor:default}
+.secondary{background:#e8eef5;color:#20344e}.danger{background:#fee2e2;color:#b91c1c}.full{width:100%}
+.mini{background:#f8fafc;color:#334155;border:1px solid #cbd5e1;padding:8px 6px;font-size:13px}
+input,select{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:11px;background:#fff;font:inherit}
+label{display:block;margin:12px 0;font-size:14px;font-weight:700}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:#f1f5f9;padding:12px;border-radius:11px}.stat strong{display:block;font-size:20px}.stat small{color:#64748b}
+.hide{display:none!important}
+.sum{font-size:26px;font-weight:850;color:#15803d;text-align:right}
+.pill{padding:10px;background:#eff6ff;border-radius:10px;margin:10px 0;font-weight:700}
+.nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:#fff;box-shadow:0 -4px 18px #0002;padding:8px 10px;padding-bottom:max(8px,env(safe-area-inset-bottom));z-index:6}
+.nav button{flex:1;font-size:14px;padding:12px 4px;margin:0 3px}.nav button.active{background:#1265e8;color:#fff}.nav button:not(.active){background:#edf2f7;color:#34455c}
+.stock-inline{display:block;margin-top:7px;padding:9px 12px;border-radius:10px;background:#dcfce7;color:#166534;font-weight:800}.stock-inline.empty{background:#fee2e2;color:#b91c1c}
+.field-heading{font-weight:800;color:#153c67}
+.toast{position:fixed;left:12px;right:12px;bottom:84px;z-index:7;max-width:736px;margin:auto;padding:13px 14px;border-radius:13px;background:#102b48;color:#fff;font-weight:750;box-shadow:0 8px 24px #0005;transition:opacity .3s,transform .3s}
+.toast.ok{background:#166534}.toast.warn{background:#92400e}.toast.error{background:#b91c1c}.toast.fade{opacity:0;transform:translateY(10px);pointer-events:none}
+.login-status{padding:12px;border-radius:12px;background:#e8f1ff;color:#174476;font-weight:700;margin-top:10px}.login-status.ok{background:#dcfce7;color:#166534}.login-status.error{background:#fee2e2;color:#991b1b}.login-status.warn{background:#fef3c7;color:#92400e}
+.hint{background:#fef3c7;color:#92400e;border-radius:10px;padding:10px;font-weight:700;font-size:13px;margin:8px 0}
+.newclient{border:2px solid #93c5fd;background:#eff6ff;border-radius:14px;padding:12px;margin:10px 0}
+.qty{padding:12px;font-weight:800;flex:0 0 auto!important}
+.product{display:flex;justify-content:space-between;gap:8px;border-top:1px solid #eef2f6;padding:9px 0;font-size:14px}.product:first-child{border-top:0}
 </style>
 </head>
 <body>
-<main class="seller-shell">
-<header class="seller-card">
-<div class="seller-heading" style="padding:12px;border-radius:18px;background:linear-gradient(135deg,#1d4ed8,#38bdf8)"><img src="assets/ilustraciones/ruta.svg" alt="" width="84" height="67" style="border-radius:12px;background:#fff3;padding:3px;flex-shrink:0"><div style="flex:1"><span class="seller-pill">DISTRIBUIDORA ZIPPER</span><h1 style="color:#fff;margin:6px 0 0">Ruta del vendedor</h1></div></div>
-<p class="seller-muted">Ingresa con tu cuenta asignada. Solo verás los clientes de tus rutas y el inventario para consulta.</p>
-<div id="sellerStatus" class="seller-status" role="status" aria-live="polite">Esperando conexión…</div>
-</header>
-<section id="sellerLogin" class="seller-card">
-<h2>Iniciar sesión</h2>
-<label>Correo electrónico<input id="sellerEmail" type="email" autocomplete="username"></label>
-<label>Contraseña<input id="sellerPassword" type="password" autocomplete="current-password"></label>
-<button id="sellerLoginButton" class="seller-btn" type="button">Ingresar</button>
-<button id="sellerForgot" class="seller-btn secondary" type="button">¿Olvidaste tu clave?</button><p class="seller-note">Si aún no tienes una cuenta activa, pide al dueño que la prepare.</p></section><section id="sellerInstall" class="seller-card"><h2>📲 Instalar la app en tu teléfono</h2><p class="seller-muted">Así queda un ícono "Zipper Vendedor" en tu pantalla y se abre como aplicación.</p><button id="sellerInstallButton" class="seller-btn" type="button" hidden>Instalar Zipper Vendedor</button><p id="sellerInstallHelp" class="seller-note">En Chrome: toca el menú <b>⋮</b> (arriba a la derecha) → <b>Agregar a pantalla principal</b> o <b>Instalar app</b>.</p>
-</section>
-<section id="sellerApp" class="seller-hidden">
-<section class="seller-card">
-<div class="seller-heading"><div><h2 id="sellerWelcome">Vendedor</h2><p id="sellerSessionLabel" class="seller-muted">Jornada cerrada</p></div><button id="sellerLogout" class="seller-btn secondary" style="width:auto">Salir</button></div>
-<div class="seller-grid">
-<label>Semana<select id="sellerWeek"><option value="A">Semana A</option><option value="B">Semana B</option></select></label>
-<label>Día<select id="sellerDay"><option value="">Seleccionar día</option></select></label>
-</div>
-<button id="sellerStart" class="seller-btn" type="button">Iniciar jornada</button>
-<button id="sellerClose" class="seller-btn danger seller-hidden" type="button">Cerrar jornada</button>
-</section>
-<section class="seller-card">
-<div class="seller-heading"><h2>Clientes de la ruta</h2><span id="sellerClientCount" class="seller-pill">0</span></div><button id="sellerNewClientOpen" class="seller-btn secondary" type="button">＋ Nuevo cliente</button>
-<div id="sellerNewClient" class="seller-new-client seller-hidden"><h3>Nuevo cliente</h3>
-<label>Nombre del local o cliente<input id="newClientName" maxlength="120"></label>
-<label>Dirección<input id="newClientAddress" maxlength="200"></label>
-<label>Teléfono (WhatsApp)<input id="newClientPhone" inputmode="numeric" maxlength="15" value="569 "></label>
-<div class="seller-grid"><label>Semana<select id="newClientWeek"><option value="A">Semana A</option><option value="B">Semana B</option></select></label><label>Día de visita<select id="newClientDay"></select></label></div>
-<div class="seller-grid"><label>Comuna<input id="newClientComuna" maxlength="80"></label><label>RUT (opcional)<input id="newClientRut" maxlength="12"></label></div>
-<label>Observaciones<input id="newClientNotes" maxlength="200"></label>
-<p id="newClientMsg" class="seller-note" style="color:#b91c1c;font-weight:700"></p>
-<button id="newClientSave" class="seller-btn" type="button">Guardar cliente en mi ruta</button><button id="newClientCancel" class="seller-btn secondary" type="button">Cancelar</button></div>
-<label>Buscar cliente<input id="sellerSearch" type="search" placeholder="Nombre o dirección"></label>
-<div id="sellerClients" class="seller-list"></div>
-</section>
-<section class="seller-card">
-<h2>Registrar venta</h2>
-<p id="sellerSelectedClient" class="seller-muted">Selecciona un cliente de la ruta.</p>
-<label>Producto<select id="sellerProduct"></select></label>
-<div class="seller-grid"><label>Cantidad<input id="sellerQuantity" type="number" min="1" step="1" value="1" inputmode="numeric"></label><label>Forma de pago<select id="sellerPayment"><option value="cash">Efectivo</option><option value="transfer">Transferencia</option></select></label></div>
-<button id="sellerAddItem" class="seller-btn secondary" type="button">Agregar producto</button>
-<div id="sellerCart" class="seller-list"></div>
-<p id="sellerSaleTotal" class="seller-total">$0</p>
-<button id="sellerSaveSale" class="seller-btn" type="button">Guardar venta</button>
-<p class="seller-note">El vendedor indica efectivo o transferencia. El cobro queda pendiente de la persona que entrega; no es crédito ni dinero recibido por el vendedor. No se permiten abonos.</p>
+<header><div><h1>◉ DZ · Zipper Vendedor</h1><small id="sellerWelcome">Distribuidora Zipper</small></div><button id="sellerLogout" class="hide" type="button">Salir</button></header>
+<main class="shell">
+
+<section id="sellerLogin">
+ <div class="card"><h2 class="section-heading"><span class="symbol">🔐</span> Iniciar sesión</h2>
+  <p class="muted">Ingresa con la cuenta que te entregó el dueño. Solo verás tus clientes y el inventario para consulta.</p>
+  <label>Correo electrónico<input id="sellerEmail" type="email" autocomplete="username" inputmode="email"></label>
+  <label>Contraseña<input id="sellerPassword" type="password" autocomplete="current-password"></label>
+  <button id="sellerLoginButton" class="full" type="button">Ingresar</button>
+  <button id="sellerForgot" class="secondary full" style="margin-top:8px" type="button">¿Olvidaste tu clave?</button>
+  <div id="sellerLoginStatus" class="login-status">Esperando conexión…</div>
+ </div>
+ <div id="sellerInstall" class="card"><h2 class="section-heading"><span class="symbol">📲</span> Instalar en tu teléfono</h2><p class="muted">Así queda el ícono "Zipper Vendedor" en tu pantalla y se abre como aplicación.</p><button id="sellerInstallButton" class="full" type="button" hidden>Instalar Zipper Vendedor</button><p class="muted">En Chrome: toca el menú <b>⋮</b> → <b>Agregar a pantalla principal</b> o <b>Instalar app</b>.</p></div>
 </section>
 
-<section class="seller-card">
-<div class="seller-heading"><h2>Inventario</h2><span class="seller-pill">Solo consulta</span></div>
-<div id="sellerInventory" class="seller-products"></div>
-</section>
-<section class="seller-card">
-<h2>Ventas de hoy</h2>
-<div id="sellerSalesToday" class="seller-list"></div>
-</section>
+<section id="sellerApp" class="hide">
+ <section id="routeTab">
+  <div class="card"><h2 class="section-heading"><span class="symbol">🕘</span> Jornada</h2>
+   <div class="two"><div class="stat"><small>Estado</small><strong id="state">Sin iniciar</strong></div><div class="stat"><small>Ventas del día</small><strong id="count">0</strong></div></div>
+   <p id="sessionInfo" class="muted"></p>
+   <div class="actions"><button id="sellerStart" type="button">Iniciar jornada</button><button id="sellerClose" class="secondary" type="button" disabled>Cerrar jornada</button></div>
+  </div>
+  <div class="card"><h2 class="section-heading"><span class="symbol">🗺️</span> Mi ruta</h2>
+   <div class="two"><label>📅 Semana<select id="sellerWeek"><option value="A">A</option><option value="B">B</option></select></label><label>🗓️ Día<select id="sellerDay"></select></label></div>
+   <p class="muted" id="routeSummary"></p>
+   <p id="routeHint" class="hint hide">Toca "Iniciar jornada" para marcar visitas y tomar pedidos.</p>
+   <div id="sellerClients"></div>
+   <button id="sellerNewClientOpen" class="secondary full" style="margin-top:10px" type="button">＋ Nuevo cliente en mi ruta</button>
+   <div id="sellerNewClient" class="newclient hide"><h3>Nuevo cliente</h3>
+    <label>Nombre del local o cliente<input id="newClientName" maxlength="120"></label>
+    <label>Dirección<input id="newClientAddress" maxlength="200"></label>
+    <label>Teléfono (WhatsApp)<input id="newClientPhone" inputmode="numeric" maxlength="15" value="569 "></label>
+    <div class="two"><label>Semana<select id="newClientWeek"><option value="A">Semana A</option><option value="B">Semana B</option></select></label><label>Día de visita<select id="newClientDay"></select></label></div>
+    <div class="two"><label>Comuna<input id="newClientComuna" maxlength="80"></label><label>RUT (opcional)<input id="newClientRut" maxlength="12"></label></div>
+    <label>Observaciones<input id="newClientNotes" maxlength="200"></label>
+    <p id="newClientMsg" class="muted" style="color:#b91c1c;font-weight:700"></p>
+    <button id="newClientSave" class="full" type="button">Guardar cliente en mi ruta</button><button id="newClientCancel" class="secondary full" style="margin-top:8px" type="button">Cancelar</button>
+   </div>
+  </div>
+  <div class="card"><h2 class="section-heading"><span class="symbol">📦</span> Inventario <span class="badge" style="margin-left:auto">Solo consulta</span></h2><input id="inventorySearch" placeholder="Buscar producto"><div id="sellerInventory" style="margin-top:8px"></div></div>
+ </section>
+
+ <section id="saleTab" class="hide">
+  <div class="card"><h2 class="section-heading"><span class="symbol">👥</span> Clientes atendidos</h2><div id="attended"></div>
+   <h2 class="section-heading" style="margin-top:16px"><span class="symbol">🔎</span> Buscar clientes</h2><input id="clientSearch" placeholder="Buscar por nombre o dirección"><div id="allClients"></div></div>
+  <div class="card" id="cartCard"><h2 class="section-heading"><span class="symbol">🛒</span> Carrito de compras</h2>
+   <p class="pill" id="chosen">Selecciona un cliente desde Mi ruta.</p>
+   <label>Buscar producto<input id="productSearch" placeholder="Escribe las primeras letras" autocomplete="off"></label>
+   <label class="field-heading">📦 Producto<select id="sellerProduct"></select><span id="stockInfo" class="stock-inline">Stock disponible: 0 unidades</span></label>
+   <label>Cantidad<input id="sellerQuantity" type="number" inputmode="numeric" min="1" placeholder="Cantidad"></label>
+   <button id="sellerAddItem" class="secondary full" type="button">Agregar al pedido</button>
+   <h2 class="section-heading" style="margin-top:18px"><span class="symbol">📦</span> Bandeja de productos</h2>
+   <button id="trayToggle" class="secondary full" type="button">Ocultar bandeja</button>
+   <div id="sellerCart"></div>
+   <div class="sum" id="sellerSaleTotal">$0</div>
+   <label>Forma de pago<select id="sellerPayment"><option value="cash">Efectivo</option><option value="transfer">Transferencia</option></select></label>
+   <button id="sellerSaveSale" class="full" type="button">Guardar venta</button>
+   <p class="muted">Efectivo o transferencia: el cobro queda pendiente de quien entrega el pedido. No se registran abonos.</p>
+  </div>
+  <div class="card"><h2 class="section-heading"><span class="symbol">🧾</span> Ventas de hoy</h2><div id="sellerSalesToday"></div></div>
+ </section>
 </section>
 </main>
-<script type="module" src="./seller-app.js?v=zipper-seller-clients-20261115-v5"></script>
+<div id="sellerStatus" class="toast fade" role="status" aria-live="polite"></div>
+<nav class="nav hide" id="sellerNav"><button data-tab="route" class="active" type="button">⌖ Mi ruta</button><button data-tab="sale" type="button">🛒 Clientes</button></nav>
+<script type="module" src="./seller-app.js?v=zipper-seller-v6-20261115"></script>
 <script>
 (function(){
- var deferred=null,btn=document.getElementById('sellerInstallButton'),help=document.getElementById('sellerInstallHelp'),box=document.getElementById('sellerInstall');
- var standalone=window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches;
- if(standalone&&box)box.hidden=true;
+ var deferred=null,btn=document.getElementById('sellerInstallButton'),box=document.getElementById('sellerInstall');
+ if(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches&&box)box.hidden=true;
  window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferred=e;if(btn)btn.hidden=false});
  if(btn)btn.onclick=function(){if(!deferred)return;deferred.prompt();deferred.userChoice.finally(function(){deferred=null;btn.hidden=true})};
  window.addEventListener('appinstalled',function(){if(box)box.hidden=true});
