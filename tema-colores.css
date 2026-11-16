@@ -370,3 +370,25 @@ body.buy-mode .buy-dock{display:block;position:sticky;bottom:92px;z-index:5;marg
 .lvl-orange{border-left-color:#f97316}.lvl-orange .cobranza-badge{background:#ffedd5;color:#9a3412}
 .lvl-red{border-left-color:#dc2626;background:#fef2f2}.lvl-red .cobranza-badge{background:#dc2626;color:#fff}
 .cobranza-sub{margin:10px 0 0;font-size:14px;color:#475569}
+/* Stock bajo, pedido sugerido y clientes sin comprar */
+.alert-stock{background:#fffbeb;border-color:#f59e0b;color:#78350f}
+.alert-stock .primary{background:#d97706!important;border-color:#b45309!important;color:#fff!important}
+.cart-suggested{margin:0 0 12px;border-radius:16px;background:#f5f3ff;border:2px solid #c4b5fd;padding:8px 10px}
+.sug-toggle{display:grid!important;grid-template-columns:1fr auto;align-items:center;width:100%;background:none!important;border:0!important;padding:4px 2px;text-align:left;color:#4c1d95!important;min-height:0}
+.sug-toggle span{font-weight:900;font-size:16px}
+.sug-toggle small{grid-column:1;font-size:12px;color:#6d28d9;font-weight:600}
+.sug-toggle b{grid-row:1/3;grid-column:2;font-size:14px}
+.sug-list{display:flex;flex-direction:column;gap:6px;margin:8px 0}
+.sug-row{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#fff;border-radius:12px;padding:8px 10px;border:1px solid #ddd6fe}
+.sug-row>div{display:flex;flex-direction:column;min-width:0}
+.sug-row small{font-size:11px;color:#475569}
+.sug-row.in-cart{opacity:.65}
+.sug-add{background:#7c3aed!important;color:#fff!important;border:0!important;border-radius:12px;min-height:42px;min-width:58px;font-weight:900;font-size:16px}
+.sug-ok{font-size:12px;font-weight:800;color:#15803d;white-space:nowrap}
+.sug-none{font-size:12px;font-weight:800;color:#b91c1c;white-space:nowrap}
+.sug-all{background:#7c3aed!important;border-color:#6d28d9!important;color:#fff!important;min-height:46px}
+.sug-msg{margin:6px 0 0;font-size:12px;color:#4c1d95;font-weight:700}
+.sug-msg:empty{display:none}
+.lost-row{border-left:6px solid #f59e0b}
+.lost-row.lost-old{border-left-color:#dc2626}
+.lost-intro{margin:0 0 10px}

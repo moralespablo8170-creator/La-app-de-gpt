@@ -87,6 +87,15 @@
     if((age===null||age>=BACKUP_EVERY)&&snooze!==localDate()){
       parts.push('<div class="home-alert alert-backup"><div><strong>💾 Toca guardar el respaldo semanal</strong><span>'+(last?'El último fue hace '+age+' días ('+esc(niceDate(last))+').':'Todavía no hay un respaldo registrado en este teléfono.')+'</span></div><div class="home-alert-actions"><button id="alertBackupNow" class="primary" type="button">Guardar ahora</button><button id="alertBackupLater" class="ghost" type="button">Mañana</button></div></div>');
     }
+    // Stock bajo al iniciar la ruta del día
+    const route=readJSON('zipperRutaSesion',null),hidden=localStorage.getItem('zipperStockAvisoOculto')===localDate();
+    if(route&&route.date===localDate()&&!hidden){
+      let low=[];try{low=getProducts().filter(p=>p.active!==false).map(p=>({p,stock:Math.max(0,Number(p.stock)||0),min:productMinimum(p)})).filter(x=>x.stock<=x.min).sort((a,b)=>a.stock-b.stock||String(a.p.name).localeCompare(String(b.p.name),'es'))}catch(e){console.error('Stock bajo:',e)}
+      if(low.length){
+        const zero=low.filter(x=>x.stock===0).length;
+        parts.push('<div class="home-alert alert-stock"><div><strong>📦 Antes de salir: '+plural(low.length,'producto','productos')+' con stock bajo'+(zero?' · '+zero+' sin stock':'')+'</strong><span>'+low.slice(0,6).map(x=>esc(x.p.name)+' ('+x.stock+')').join(', ')+(low.length>6?' y '+(low.length-6)+' más':'')+'</span></div><div class="home-alert-actions"><button id="alertStockOpen" class="primary" type="button">Ver productos</button><button id="alertStockHide" class="ghost" type="button">Ocultar hoy</button></div></div>');
+      }
+    }
     // Cobranza
     let list=[];try{list=debtors()}catch(e){console.error('Cobranza:',e)}
     const late=list.filter(x=>x.days>15);
@@ -97,6 +106,8 @@
     box.innerHTML=parts.join('');
     $('alertBackupNow')?.addEventListener('click',()=>{if(typeof window.zipperBackupDirect==='function')window.zipperBackupDirect();else if(typeof exportZipperBackup==='function')exportZipperBackup()});
     $('alertBackupLater')?.addEventListener('click',()=>{try{localStorage.setItem(BACKUP_SNOOZE_KEY,localDate())}catch(_){};renderAlerts()});
+    $('alertStockOpen')?.addEventListener('click',()=>{document.getElementById('productsTab')?.click();setTimeout(()=>window.scrollTo(0,0),50)});
+    $('alertStockHide')?.addEventListener('click',()=>{try{localStorage.setItem('zipperStockAvisoOculto',localDate())}catch(_){};renderAlerts()});
     $('alertDebtOpen')?.addEventListener('click',()=>{document.getElementById('historyTab')?.click();setTimeout(()=>{if(typeof setHistoryType==='function'){if($('historyFrom'))$('historyFrom').value='';if($('historyTo'))$('historyTo').value='';setHistoryType('pending')}window.scrollTo(0,0)},50)});
   }
 
