@@ -8,7 +8,7 @@ import {
 } from 'firebase/auth';
 import {
   getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
-  doc, getDoc, collection, getDocs, onSnapshot, writeBatch, setDoc, deleteDoc, runTransaction
+  doc, getDoc, collection, getDocs, onSnapshot, writeBatch, setDoc, deleteDoc, runTransaction, query, where
 } from 'firebase/firestore';
 
 const firebaseApp = initializeApp(firebaseConfig);
@@ -248,6 +248,17 @@ async function listMembers() {
   if (!activeProfile || activeProfile.role !== 'owner') throw new Error('Solo el dueño puede consultar los vendedores.');
   const snapshot = await getDocs(collection(db, ...ORG_PATH, 'members'));
   return snapshot.docs.map(item=>({uid:item.id,...item.data()})).filter(item=>item.active===true && item.role==='seller');
+}
+// Informe de vendedores para el dueño: perfiles, jornadas, visitas y ventas de vendedores.
+async function sellerActivity() {
+  if (!activeProfile || activeProfile.role !== 'owner') throw new Error('Solo el dueño puede ver el informe de vendedores.');
+  const [m,s,v]=await Promise.all([getDocs(collection(db,...ORG_PATH,'members')),getDocs(collection(db,...ORG_PATH,'sessions')),getDocs(collection(db,...ORG_PATH,'visits'))]);
+  const sellers=m.docs.map(d=>({uid:d.id,...d.data()})).filter(x=>x.role==='seller');
+  const uids=sellers.map(x=>x.uid);
+  const sales=[];
+  for(let i=0;i<uids.length;i+=30){const snap=await getDocs(query(collection(db,...ORG_PATH,'sales'),where('sellerUid','in',uids.slice(i,i+30))));snap.docs.forEach(d=>sales.push({id:d.id,...d.data()}))}
+  const plain=x=>JSON.parse(JSON.stringify(x,(k,val)=>val&&typeof val.toDate==='function'?val.toDate().toISOString():val));
+  return plain({sellers,sessions:s.docs.map(d=>({id:d.id,...d.data()})).filter(x=>uids.includes(x.sellerUid)),visits:v.docs.map(d=>({id:d.id,...d.data()})).filter(x=>uids.includes(x.sellerUid)),sales,loadedAt:new Date().toISOString()});
 }
 function stopSync() { unsubs.forEach(fn=>{try{fn()}catch(_){}}); unsubs=[]; }
 function writeLocal(key,rows) {
@@ -948,7 +959,7 @@ async function connectUi() {
     }
   });
 }
-const api={login,signOut:()=>signOut(auth),memberFor,listMembers,inspectCloud,importLocalData,useExistingCloudData,prepareSellerCatalog,startSync,stopSync,onLocalArrayChanged,cloudLabel};
+const api={login,signOut:()=>signOut(auth),memberFor,listMembers,sellerActivity,inspectCloud,importLocalData,useExistingCloudData,prepareSellerCatalog,startSync,stopSync,onLocalArrayChanged,cloudLabel};
 window.zipperFirebaseCloud=api;
 installStorageSyncHooks();
 if(!window.zipperRefreshAfterCloud)window.zipperRefreshAfterCloud=()=>['renderHome','renderCash','renderInventory','renderClients','renderHistory'].forEach(name=>{try{if(typeof window[name]==='function')window[name]()}catch(error){console.error(error)}});
