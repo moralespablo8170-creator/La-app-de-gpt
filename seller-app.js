@@ -7,7 +7,7 @@ import {
 import {
   initializeFirestore, getFirestore, persistentLocalCache, persistentMultipleTabManager,
   doc, getDoc, collection, query, where, getDocs, onSnapshot, setDoc,
-  runTransaction, serverTimestamp
+  runTransaction, serverTimestamp, updateDoc
 } from 'firebase/firestore';
 
 const app=initializeApp(firebaseConfig);
@@ -42,8 +42,8 @@ function routeFor(client,week){return client?.sellerRoutes?.[profile.uid]?.[week
 function routeDays(week){return [...new Set(clients.map(c=>routeFor(c,week)?.day).filter(day=>DAYS.includes(day)))].sort((a,b)=>DAYS.indexOf(a)-DAYS.indexOf(b))}
 function selectedRoute(){return {week:$('sellerWeek').value||'A',day:$('sellerDay').value||''}}
 function filteredClients(){const {week,day}=selectedRoute(),q=String($('sellerSearch').value||'').trim().toLocaleLowerCase('es');return clients.filter(c=>{const r=routeFor(c,week);return c.active!==false&&r&&r.day===day&&(!q||String(c.name||'').toLocaleLowerCase('es').includes(q)||String(c.address||'').toLocaleLowerCase('es').includes(q))}).sort((a,b)=>(Number(routeFor(a,week)?.position)||999999)-(Number(routeFor(b,week)?.position)||999999)||String(a.name).localeCompare(String(b.name),'es'))}
-function renderRouteDays(){const week=$('sellerWeek').value||'A',days=routeDays(week),select=$('sellerDay'),current=select.value;select.innerHTML='<option value="">Seleccionar día</option>'+days.map(d=>'<option>'+safeText(d)+'</option>').join('');if(days.includes(current))select.value=current;else if(days.length===1)select.value=days[0]}
-function renderClients(){const rows=filteredClients();$('sellerClientCount').textContent=String(rows.length);$('sellerClients').innerHTML=rows.length?rows.map((c,i)=>'<article class="seller-row"><strong>'+(i+1)+'. '+safeText(c.name)+'</strong><small>'+safeText(c.address||'Sin dirección')+' · '+safeText(c.phone||'Sin teléfono')+'</small><div class="seller-actions"><button class="seller-btn secondary" type="button" data-visit="'+safeText(c.id)+'">Marcar visitado</button><button class="seller-btn" type="button" data-select="'+safeText(c.id)+'">Vender</button></div></article>').join(''):'<p class="seller-muted">No hay clientes asignados para esta semana y día.</p>';document.querySelectorAll('[data-visit]').forEach(b=>b.onclick=()=>markVisited(b.dataset.visit));document.querySelectorAll('[data-select]').forEach(b=>b.onclick=()=>selectClient(b.dataset.select))}
+function renderRouteDays(){const week=$('sellerWeek').value||'A',withClients=routeDays(week),select=$('sellerDay'),current=select.value;const count=d=>clients.filter(c=>c.active!==false&&routeFor(c,week)?.day===d).length;select.innerHTML='<option value="">Seleccionar día</option>'+DAYS.map(d=>'<option value="'+d+'">'+d+(count(d)?' ('+count(d)+')':'')+'</option>').join('');if(DAYS.includes(current))select.value=current;else if(withClients.length===1)select.value=withClients[0]}
+function renderClients(){const rows=filteredClients();$('sellerClientCount').textContent=String(rows.length);$('sellerClients').innerHTML=rows.length?rows.map((c,i)=>'<article class="seller-row"><strong>'+(i+1)+'. '+safeText(c.name)+'</strong><small>'+safeText(c.address||'Sin dirección')+' · '+safeText(c.phone||'Sin teléfono')+'</small><div class="seller-actions"><button class="seller-btn secondary" type="button" data-visit="'+safeText(c.id)+'">Marcar visitado</button><button class="seller-btn" type="button" data-select="'+safeText(c.id)+'">Vender</button></div><div class="seller-actions seller-route-tools"><button class="seller-mini" type="button" data-up="'+safeText(c.id)+'"'+(i===0?' disabled':'')+'>↑ Subir</button><button class="seller-mini" type="button" data-down="'+safeText(c.id)+'"'+(i===rows.length-1?' disabled':'')+'>↓ Bajar</button><button class="seller-mini" type="button" data-move="'+safeText(c.id)+'">📅 Cambiar día</button></div></article>').join(''):'<p class="seller-muted">'+($('sellerDay').value?'Aún no tienes clientes este día. Agrégalos con "＋ Nuevo cliente".':'Elige el día para ver o armar tu ruta.')+'</p>';document.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>moveClient(b.dataset.up,-1));document.querySelectorAll('[data-down]').forEach(b=>b.onclick=()=>moveClient(b.dataset.down,1));document.querySelectorAll('[data-move]').forEach(b=>b.onclick=()=>changeClientDay(b.dataset.move));document.querySelectorAll('[data-visit]').forEach(b=>b.onclick=()=>markVisited(b.dataset.visit));document.querySelectorAll('[data-select]').forEach(b=>b.onclick=()=>selectClient(b.dataset.select))}
 function renderProducts(){const available=products.filter(p=>p&&p.active!==false&&p.id!=null&&String(p.name||'').trim());$('sellerProduct').innerHTML='<option value="">Seleccionar producto</option>'+available.map(p=>'<option value="'+safeText(p.id)+'">'+safeText(p.name)+' · '+money(p.price)+' · stock '+Number(p.stock||0)+'</option>').join('');$('sellerInventory').innerHTML=available.slice().sort((a,b)=>String(a.name).localeCompare(String(b.name),'es')).map(p=>'<div class="seller-product"><strong>'+safeText(p.name)+'</strong><span>Stock: '+Number(p.stock||0)+' · '+money(p.price)+'</span></div>').join('')||'<p class="seller-muted">Inventario aún no disponible. Conéctate a internet para cargarlo la primera vez.</p>'}
 function renderCart(){const total=cart.reduce((n,item)=>n+item.qty*item.price,0);$('sellerCart').innerHTML=cart.length?cart.map((item,i)=>'<div class="seller-row"><strong>'+safeText(item.name)+' × '+item.qty+'</strong><small>'+money(item.price)+' c/u · '+money(item.qty*item.price)+'</small><button class="seller-btn secondary" type="button" data-remove="'+i+'">Quitar</button></div>').join(''):'<p class="seller-muted">Carrito vacío.</p>';document.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{cart.splice(Number(b.dataset.remove),1);renderCart()});$('sellerSaleTotal').textContent=money(total)}
 function renderSales(){const today=sales.filter(s=>String(s.fecha||'').slice(0,10)===localDate()).sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));const pending=queueRead();$('sellerSalesToday').innerHTML=[...pending.map(s=>({...s,_pending:true})),...today].map(s=>'<article class="seller-row"><strong>#'+safeText(s.folio||'pendiente')+' · '+safeText(s.cliente)+'</strong><small>'+safeText(s.fecha||localDate())+' · '+money(s.total)+' · '+(s._pending?'Pendiente de sincronizar':'Guardada en Firebase')+'</small></article>').join('')||'<p class="seller-muted">Todavía no hay ventas hoy.</p>'}
@@ -140,6 +140,57 @@ async function markVisited(clientId){
  try{await setDoc(doc(db,'orgs',ORG,'visits',id),{id,sellerUid:profile.uid,clientId:String(client.id),date,status:'visited',routeWeek:week,routeDay:day,visitedAt:serverTimestamp()},{merge:true});status(navigator.onLine?'Visita guardada.':'Visita guardada pendiente de conexión.','ok')}
  catch(error){status('No se pudo guardar la visita: '+(error.message||''),'error')}
 }
+// ===== El vendedor crea clientes y arma su ruta =====
+function newClientId(){return 'v'+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function nextPosition(week,day){return clients.filter(c=>routeFor(c,week)?.day===day).reduce((m,c)=>Math.max(m,Number(routeFor(c,week)?.position)||0),0)+1}
+function cleanPhone(v){let d=String(v||'').replace(/\D/g,'');if(d.length===8)d='569'+d;if(d.length===9&&d.startsWith('9'))d='56'+d;return d}
+function toggleNewClient(show){const box=$('sellerNewClient');if(!box)return;box.classList.toggle('seller-hidden',!show);if(show){const {week,day}=selectedRoute();$('newClientWeek').value=week;$('newClientDay').innerHTML=DAYS.map(d=>'<option>'+d+'</option>').join('');$('newClientDay').value=day||'Lunes';$('newClientMsg').textContent='';box.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>$('newClientName').focus(),300)}}
+async function saveNewClient(){
+ const name=$('newClientName').value.trim(),address=$('newClientAddress').value.trim(),phone=cleanPhone($('newClientPhone').value),week=$('newClientWeek').value||'A',day=$('newClientDay').value,msg=$('newClientMsg');
+ if(name.length<2){msg.textContent='Escribe el nombre del local o cliente.';$('newClientName').focus();return}
+ if(address.length<3){msg.textContent='Escribe la dirección.';$('newClientAddress').focus();return}
+ if(phone&&!/^569\d{8}$/.test(phone)){msg.textContent='Teléfono incompleto: 8 dígitos después de 569 (o déjalo vacío).';$('newClientPhone').focus();return}
+ const n=s=>String(s||'').toLocaleLowerCase('es').replace(/\s+/g,' ').trim();
+ if(clients.some(c=>n(c.name)===n(name)&&n(c.address)===n(address))){msg.textContent='Ya tienes un cliente con ese nombre y dirección.';return}
+ const id=newClientId(),now=new Date().toISOString();
+ const row={id,name,address,phone,rut:$('newClientRut').value.trim().toUpperCase(),razonSocial:'',comuna:$('newClientComuna').value.trim(),observations:$('newClientNotes').value.trim(),sendInvoice:false,active:true,assignedSellerUids:[profile.uid],sellerRoutes:{[profile.uid]:{[week]:{day,position:nextPosition(week,day)}}},createdBySeller:profile.uid,createdBySellerName:profile.displayName||profile.email||'',createdAt:now,updatedAt:now};
+ $('newClientSave').disabled=true;
+ try{
+  const pending=setDoc(doc(db,'orgs',ORG,'clients',id),row);
+  clients=[...clients,row];cacheWrite('clients',clients);
+  ['newClientName','newClientAddress','newClientPhone','newClientRut','newClientComuna','newClientNotes'].forEach(k=>$(k).value='');
+  $('newClientPhone').value='569 ';
+  $('sellerWeek').value=week;renderRouteDays();$('sellerDay').value=day;toggleNewClient(false);render();
+  status(navigator.onLine?'Cliente '+name+' agregado a tu ruta ('+week+' · '+day+').':'Cliente guardado en el teléfono; se enviará al reconectar.','ok');
+  if(navigator.onLine)await pending;
+ }catch(error){status('No se pudo crear el cliente: '+(error.message||''),'error')}
+ finally{$('newClientSave').disabled=false}
+}
+async function saveRoutes(changes){
+ // changes: [{client, route}] — solo cambia la ruta propia del vendedor.
+ for(const {client,week,route} of changes){
+  const mine={...(client.sellerRoutes?.[profile.uid]||{})};if(route)mine[week]=route;else delete mine[week];
+  client.sellerRoutes={...(client.sellerRoutes||{}),[profile.uid]:mine};
+ }
+ cacheWrite('clients',clients);render();
+ try{await Promise.all(changes.map(({client})=>updateDoc(doc(db,'orgs',ORG,'clients',String(client.id)),{[`sellerRoutes.${profile.uid}`]:client.sellerRoutes[profile.uid]})))}
+ catch(error){status('No se pudo guardar el orden: '+(error.message||''),'error')}
+}
+function moveClient(id,dir){
+ const {week}=selectedRoute(),rows=filteredClients(),i=rows.findIndex(c=>String(c.id)===String(id)),j=i+dir;
+ if(i<0||j<0||j>=rows.length)return;
+ [rows[i],rows[j]]=[rows[j],rows[i]];
+ saveRoutes(rows.map((c,k)=>({client:c,week,route:{...routeFor(c,week),position:k+1}})).filter(x=>Number(routeFor(x.client,week)?.position)!==x.route.position));
+}
+function changeClientDay(id){
+ const client=clients.find(c=>String(c.id)===String(id));if(!client)return;const {week}=selectedRoute(),cur=routeFor(client,week);
+ const answer=window.prompt('¿A qué día pasa '+client.name+'? Escribe: '+DAYS.join(', ')+'.\nDeja vacío para quitarlo de la Semana '+week+'.',cur?.day||'');
+ if(answer===null)return;
+ const day=DAYS.find(d=>d.toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'')===answer.trim().toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,''));
+ if(answer.trim()&&!day){status('Día no reconocido. Escribe por ejemplo: Martes.','error');return}
+ saveRoutes([{client,week,route:day?{day,position:nextPosition(week,day)}:null}]);
+ status(day?client.name+' pasa al '+day+'.':client.name+' se quitó de la Semana '+week+'.','ok');
+}
 function selectClient(id){selectedClient=clients.find(c=>String(c.id)===String(id))||null;cart=[];renderCart();renderSession()}
 function addItem(){
  const id=$('sellerProduct').value,p=products.find(x=>String(x.id)===String(id)),qty=Math.floor(Number($('sellerQuantity').value));
@@ -203,8 +254,8 @@ async function flushPendingSales(){
 async function logout(){unsubs.forEach(fn=>{try{fn()}catch(_){}});await signOut(auth);profile=null;session=null;$('sellerApp').classList.add('seller-hidden');$('sellerLogin').classList.remove('seller-hidden');status('Sesión cerrada.');}
 function wire(){
  $('sellerLoginButton').onclick=signIn;if($('sellerForgot'))$('sellerForgot').onclick=resetPassword;$('sellerLogout').onclick=logout;$('sellerStart').onclick=startSession;$('sellerClose').onclick=closeSession;$('sellerAddItem').onclick=addItem;$('sellerSaveSale').onclick=saveSale;
- $('sellerWeek').onchange=()=>{renderRouteDays();renderClients()};$('sellerDay').onchange=renderClients;$('sellerSearch').oninput=renderClients;
- window.addEventListener('online',async()=>{status('Conexión recuperada · sincronizando…','warn');await flushPendingSales();if(navigator.onLine)await refreshFromServer();if(selectedClient)await loadSelectedDebt()});
+ $('sellerWeek').onchange=()=>{renderRouteDays();renderClients()};if($('sellerNewClientOpen'))$('sellerNewClientOpen').onclick=()=>toggleNewClient(true);if($('newClientCancel'))$('newClientCancel').onclick=()=>toggleNewClient(false);if($('newClientSave'))$('newClientSave').onclick=saveNewClient;$('sellerDay').onchange=renderClients;$('sellerSearch').oninput=renderClients;
+ window.addEventListener('online',async()=>{status('Conexión recuperada · sincronizando…','warn');await flushPendingSales();if(navigator.onLine)await refreshFromServer();});
  window.addEventListener('offline',()=>status('Sin internet · los cambios quedarán pendientes.','warn'));
 }
 wire();
