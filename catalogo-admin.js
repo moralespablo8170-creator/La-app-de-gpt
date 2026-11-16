@@ -1,11 +1,15 @@
-// Catálogo para clientes: enlaza cada producto del catálogo con tu inventario,
-// revisa precios y los publica. Los clientes ven siempre los precios publicados
-// en catalogo.html (y lo pueden pedir por WhatsApp).
+// Catálogo para clientes (catalogo.html): se maneja desde la app del dueño.
+// - Precios y ofertas: salen de tu inventario. Después de la primera publicación,
+//   cada cambio de precio u oferta en la app se publica solo (unos segundos después).
+// - Fotos: se cambian, quitan o vuelven a la original desde "Editar catálogo".
+// - Productos: puedes agregar productos de tu app al catálogo o dejar de mostrar alguno.
 (function(){
   const URL_CAT='https://moralespablo8170-creator.github.io/La-app-de-gpt/catalogo.html';
   const LINKS='zipperCatalogoEnlaces';
+  const PERS=['display','caja','unidad','bolsa','pack','manga','rollo','tira','sachet','paquete'];
   const $=id=>document.getElementById(id);
   const n=v=>String(v??'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/bigtime/g,'big time').replace(/rocklet\b/g,'rocklets');
+  const slug=v=>n(v).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,60);
   const STOP=new Set(['de','con','x','y','el','la','por','display','unidad','unidades','gr','g','und','caja','bolsa']);
   const stem=t=>t.length>4&&t.endsWith('s')?t.slice(0,-1):t;
   const list=s=>n(s).split(/[^a-z0-9]+/).filter(t=>t&&!STOP.has(t)).map(stem);
@@ -15,13 +19,13 @@
   const score=(a,b)=>{const A=tokens(a),B=tokens(b);if(!A.size||!B.size)return 0;let i=0,real=false;A.forEach(t=>{if(B.has(t)){i++;if(/[a-z]{3,}/.test(t)&&t!=='mg')real=true}});if(!real)return 0;return i/(A.size+B.size-i)+(list(a)[0]===list(b)[0]?.2:0)};
   const priceOk=(cat,app)=>app>0&&app/cat>.8&&app/cat<1.25;
   const fmt=v=>typeof money==='function'?money(v):'$'+Math.round(v).toLocaleString('es-CL');
+  const escH=v=>typeof esc==='function'?esc(v):String(v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const read=k=>{try{return JSON.parse(localStorage.getItem(k)||'null')}catch(_){return null}};
-  let base=null,state=null;
+  const cloud=()=>localStorage.getItem('zipperStorageMode')==='cloud'&&typeof window.zipperFirebaseCloud?.publishCatalog==='function';
+  let base=null,published=null,rows=null,extra=[],photos={},photoCache={},sections=[];
 
   function products(){return (typeof getProducts==='function'?getProducts():[]).filter(p=>p.active!==false)}
   function label(p){return p.name+(p.color&&!n(p.name).includes(n(p.color))?' ('+p.color+')':'')}
-  // Enlace automático: se reparte de mayor a menor parecido, cada producto de la app una sola vez,
-  // y solo si el precio es parecido (si no, probablemente uno es por unidad y el otro por display).
   function autoLinks(items,ps,fixed){
     const taken=new Set(Object.values(fixed).map(String)),out={},pairs=[];
     items.forEach(it=>{if(it.key in fixed)return;ps.forEach(p=>{if(!priceOk(it.price,Number(p.price)))return;const s=score(it.name,label(p)+' '+(p.flavor||''));if(s>=.5)pairs.push([s,it.key,p])})});
@@ -31,106 +35,206 @@
     return out;
   }
   async function loadBase(){if(base)return base;const r=await fetch('catalogo/catalogo.json',{cache:'no-cache'});base=await r.json();return base}
+  async function loadPublished(){try{if(cloud()&&window.zipperFirebaseCloud.readPublishedCatalog)published=await window.zipperFirebaseCloud.readPublishedCatalog()}catch(_){}return published}
 
-  async function open(){
-    const modal=$('catalogAdmin');modal.classList.remove('hidden');
-    $('catalogAdminBody').innerHTML='<p class="muted">Cargando catálogo…</p>';
-    try{await loadBase()}catch(e){$('catalogAdminBody').innerHTML='<p class="status">No se pudo cargar el catálogo. Revisa tu conexión.</p>';return}
-    let published=null;
-    try{if(localStorage.getItem('zipperStorageMode')==='cloud'&&window.zipperFirebaseCloud?.readPublishedCatalog)published=await window.zipperFirebaseCloud.readPublishedCatalog()}catch(_){}
-    const saved=read(LINKS)||published?.links||{};
+  // Arma la lista completa (catálogo base + productos agregados) enlazada con el inventario.
+  function build(){
+    const saved={...(published?.links||{}),...(read(LINKS)||{})};
     const ps=products(),byId=new Map(ps.map(p=>[String(p.id),p]));
+    extra=(published?.extra||[]).filter(x=>x&&x.key&&x.name);
+    photos={...(published?.photos||{})};
+    sections=base.sections.map(s=>s.title);
     const all=base.sections.flatMap(sec=>sec.items),fixed={};
     all.forEach(it=>{const l=saved[it.key];if(l==='none'||(l&&byId.has(String(l))))fixed[it.key]=l});
     const auto=autoLinks(all,ps,Object.fromEntries(Object.entries(fixed).filter(([,v])=>v!=='none')));
-    Object.keys(fixed).forEach(k=>{if(fixed[k]==='none')auto[k]=undefined});
-    state=[];
-    base.sections.forEach(sec=>sec.items.forEach(it=>{
-      const link=fixed[it.key];
-      const p=link==='none'?null:link?byId.get(String(link)):(auto[it.key]||null);
-      const pub=published?.items?.[it.key];
-      state.push({it,sec:sec.title,p,none:link==='none',hidden:!!pub?.hidden,manual:pub?.manual?pub.price:null});
-    }));
-    paint();
+    rows=[];
+    base.sections.forEach(sec=>{
+      sec.items.forEach(it=>{
+        const link=fixed[it.key];
+        const p=link==='none'?null:link?byId.get(String(link)):(auto[it.key]||null);
+        const pub=published?.items?.[it.key];
+        rows.push({it,sec:sec.title,p,none:link==='none',hidden:!!pub?.userHidden||(!!pub?.hidden&&!pub?.autoHidden),manual:pub?.manual?pub.price:null});
+      });
+      extra.filter(x=>x.section===sec.title).forEach(x=>rows.push(extraRow(x,byId)));
+    });
+    extra.filter(x=>!sections.includes(x.section)).forEach(x=>rows.push(extraRow(x,byId)));
   }
+  function extraRow(x,byId){const p=byId.get(String(x.productId))||null;const pub=published?.items?.[x.key];return {it:{key:x.key,name:x.name,fmt:x.fmt||'',per:x.per||'unidad',price:p?Number(p.price):Number(pub?.price||0)},sec:x.section||'Otros productos',p,extra:true,hidden:!!pub?.userHidden,manual:pub?.manual?pub.price:null}}
   function rowPrice(r){return r.manual!=null?r.manual:r.p&&Number(r.p.price)>0?Number(r.p.price):r.it.price}
-  function paint(){
-    const ps=products();
-    const linked=state.filter(r=>r.p).length,diff=state.filter(r=>r.p&&Number(r.p.price)>0&&Number(r.p.price)!==r.it.price&&r.manual==null).length,noStock=state.filter(r=>r.p&&Number(r.p.stock)<=0).length;
-    let html='<datalist id="catalogProductNames">'+ps.map(p=>'<option value="'+esc(label(p))+'">').join('')+'</datalist>'+
-      '<p class="muted">'+linked+' de '+state.length+' productos enlazados con tu inventario. El precio que publicas es el de tu app; si un producto no está enlazado se usa el precio del catálogo.'+(diff?' <b>'+diff+(diff===1?' cambia':' cambian')+' de precio.</b>':'')+'</p>'+
-      '<label class="check-row"><input id="catalogHideNoStock" type="checkbox"'+(read('zipperCatalogoOcultarSinStock')?' checked':'')+'> Ocultar a los clientes los productos sin stock'+(noStock?' ('+noStock+')':'')+'</label>'+
-      '<label class="check-row"><input id="catalogOnlyUnlinked" type="checkbox"> Ver solo los que faltan por enlazar ('+(state.length-linked)+')</label>'+'<label class="search-field">🔍 Buscar<input id="catalogAdminSearch" type="search" placeholder="Producto…"></label><div id="catalogAdminRows">';
-    let last='';
-    state.forEach((r,i)=>{
-      if(r.sec!==last){html+='<h3 class="cat-sec">'+esc(r.sec)+'</h3>';last=r.sec}
-      const appPrice=r.p?Number(r.p.price):0,price=rowPrice(r),changed=price!==r.it.price;
-      html+='<div class="cat-row'+(r.p?'':' cat-unlinked')+(r.hidden?' cat-hidden':'')+'" data-i="'+i+'" data-q="'+esc(n(r.it.name+' '+r.sec))+'">'+
-        '<img src="'+esc(r.it.img||'')+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">'+
-        '<div class="cat-main"><strong>'+esc(r.it.name)+'</strong><small>'+esc(r.it.fmt)+'</small>'+
-        '<input class="cat-link" list="catalogProductNames" placeholder="Enlazar con producto de la app…" value="'+esc(r.p?label(r.p):'')+'">'+
-        '<small class="cat-info">'+(r.p?'App: '+fmt(appPrice)+' · stock '+Number(r.p.stock||0)+(priceOk(r.it.price,appPrice)?'':' · <b class="cat-diff">⚠ precio muy distinto: ¿la app vende por unidad?</b>'):'Sin enlazar · se publica con precio del catálogo')+'</small></div>'+
-        '<div class="cat-side"><label>Precio<input class="cat-price" inputmode="numeric" value="'+price+'"></label>'+(changed?'<small class="cat-diff">antes '+fmt(r.it.price)+'</small>':'')+
-        '<label class="cat-vis"><input class="cat-hide" type="checkbox"'+(r.hidden?' checked':'')+'> Ocultar</label></div></div>';
-    });
-    html+='</div>';
-    $('catalogAdminBody').innerHTML=html;
-    const rows=$('catalogAdminRows');
-    const filter=()=>{const q=n($('catalogAdminSearch').value.trim()),only=$('catalogOnlyUnlinked').checked;rows.querySelectorAll('.cat-row').forEach(x=>x.style.display=(!q||x.dataset.q.includes(q))&&(!only||x.classList.contains('cat-unlinked'))?'':'none')};
-    $('catalogAdminSearch').oninput=filter;$('catalogOnlyUnlinked').onchange=filter;
-    $('catalogHideNoStock').onchange=e=>{try{localStorage.setItem('zipperCatalogoOcultarSinStock',e.target.checked?'true':'false')}catch(_){}};
-    rows.addEventListener('change',e=>{
-      const row=e.target.closest('.cat-row');if(!row)return;const r=state[Number(row.dataset.i)];
-      if(e.target.classList.contains('cat-link')){
-        const v=e.target.value.trim();
-        if(!v){r.p=null;r.none=true;r.manual=null}else{const p=products().find(x=>n(label(x))===n(v)||n(x.name)===n(v));if(!p){alert('No encontré ese producto en tu inventario. Elige uno de la lista.');e.target.value=r.p?label(r.p):'';return}r.p=p;r.none=false;r.manual=null}
-        const y=window.scrollY;paint();window.scrollTo(0,y);
-      }else if(e.target.classList.contains('cat-price')){
-        const v=Math.round(Number(String(e.target.value).replace(/\D/g,'')));
-        if(!(v>0)){e.target.value=rowPrice(r);return}
-        r.manual=(r.p&&Number(r.p.price)===v)||(!r.p&&v===r.it.price)?null:v;
-      }else if(e.target.classList.contains('cat-hide')){r.hidden=e.target.checked;row.classList.toggle('cat-hidden',r.hidden)}
-    });
-  }
-  async function publish(){
-    if(!state)return;
-    const st=$('catalogAdminStatus');
-    if(localStorage.getItem('zipperStorageMode')!=='cloud'||!window.zipperFirebaseCloud?.publishCatalog){st.textContent='Para publicar, conecta tu cuenta de Firebase (Herramientas → Conectar cuenta Firebase).';return}
-    const hideNoStock=!!read('zipperCatalogoOcultarSinStock');
+  function payload(){
+    const hideNoStock=!!(read('zipperCatalogoOcultarSinStock')??published?.settings?.hideNoStock);
     const items={},links={};
-    state.forEach(r=>{
+    rows.forEach(r=>{
       const x={price:rowPrice(r)};
       if(r.manual!=null)x.manual=true;
       const promo=r.p&&Array.isArray(r.p.promotions)&&r.p.promotions.find(p=>Number(p.minQty)>1&&Number(p.price)>0&&Number(p.price)<x.price);
       if(promo)x.promo={min:Number(promo.minQty),price:Number(promo.price)};else if(r.p)x.promo=null;
-      if(r.hidden||(hideNoStock&&r.p&&Number(r.p.stock)<=0))x.hidden=true;
+      if(r.hidden){x.hidden=true;x.userHidden=true}
+      else if(hideNoStock&&r.p&&Number(r.p.stock)<=0){x.hidden=true;x.autoHidden=true}
       items[r.it.key]=x;
-      links[r.it.key]=r.p?String(r.p.id):(r.none?'none':undefined);
+      if(!r.extra)links[r.it.key]=r.p?String(r.p.id):(r.none?'none':undefined);
     });
-    try{localStorage.setItem(LINKS,JSON.stringify(links))}catch(_){}
+    return {version:2,items,links,extra,photos,settings:{hideNoStock}};
+  }
+  const same=(a,b)=>JSON.stringify({i:a.items,e:a.extra,p:a.photos,s:a.settings})===JSON.stringify({i:b?.items,e:b?.extra,p:b?.photos,s:b?.settings});
+  async function send(data){
+    const full={...data,updatedAt:new Date().toISOString()};
+    await window.zipperFirebaseCloud.publishCatalog(full);
+    published=full;
+    try{localStorage.setItem(LINKS,JSON.stringify(data.links))}catch(_){}
+  }
+
+  // ---- Publicación automática: cuando cambian tus productos (precio, oferta, stock) ----
+  let autoTimer=null,autoBusy=false,lastProducts=null;
+  function scheduleAuto(delay){clearTimeout(autoTimer);autoTimer=setTimeout(autoPublish,delay||6000)}
+  async function autoPublish(){
+    if(autoBusy||!cloud()||!$('catalogAdmin')?.classList.contains('hidden'))return; // si el editor está abierto, publica el dueño
+    autoBusy=true;
+    try{
+      await loadBase();await loadPublished();
+      if(!published)return; // la primera vez se revisa y publica a mano
+      build();const data=payload();
+      if(!same(data,published)){await send(data);paintCardStatus('✅ Precios del catálogo actualizados automáticamente')}
+    }catch(e){console.warn('Catálogo: publicación automática',e)}
+    finally{autoBusy=false}
+  }
+  function watchProducts(){
+    const real=localStorage.setItem.bind(localStorage);
+    try{localStorage.setItem=function(k,v){const r=real(k,v);if(k==='zipperProductos'&&v!==lastProducts){lastProducts=v;scheduleAuto()}return r}}catch(_){}
+    lastProducts=localStorage.getItem('zipperProductos');
+    setTimeout(()=>scheduleAuto(1000),15000); // al abrir la app también revisa
+  }
+  function paintCardStatus(t){const el=$('catalogCardStatus');if(el)el.textContent=t}
+
+  // ---- Fotos ----
+  function resizePhoto(file){return new Promise((resolve,reject)=>{const url=URL.createObjectURL(file),img=new Image();img.onload=()=>{const S=420,c=document.createElement('canvas');c.width=S;c.height=S;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,S,S);const k=Math.min((S*.94)/img.width,(S*.94)/img.height),w=img.width*k,h=img.height*k;g.drawImage(img,(S-w)/2,(S-h)/2,w,h);URL.revokeObjectURL(url);resolve(c.toDataURL('image/jpeg',.82))};img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('No se pudo leer la imagen'))};img.src=url})}
+  function photoSrc(r){const ph=photos[r.it.key];if(ph==='none')return '';if(ph)return photoCache[r.it.key]||'';return r.it.img||''}
+  async function loadCustomPhotos(){
+    const keys=Object.entries(photos).filter(([k,v])=>v&&v!=='none'&&!photoCache[k]).map(([k])=>k);
+    await Promise.all(keys.map(async k=>{try{const d=await window.zipperFirebaseCloud.readCatalogPhoto(k);if(d){photoCache[k]=d;document.querySelectorAll('[data-photo="'+CSS.escape(k)+'"]').forEach(img=>{img.src=d;img.style.visibility=''})}}catch(_){}}));
+  }
+  function photoMenu(r){
+    const m=document.createElement('div');m.className='zipper-modal';m.style.zIndex='20001';
+    const hasCustom=photos[r.it.key]&&photos[r.it.key]!=='none',hasOriginal=!!r.it.img;
+    m.innerHTML='<div class="zipper-modal-panel"><h2>Foto · '+escH(r.it.name)+'</h2><div class="actions"><button class="primary" data-a="new" type="button">📷 Elegir foto nueva</button>'+(photos[r.it.key]!=='none'?'<button class="danger" data-a="none" type="button">🗑 Quitar foto</button>':'')+((hasCustom||photos[r.it.key]==='none')&&hasOriginal?'<button class="secondary" data-a="orig" type="button">↺ Volver a la foto original</button>':'')+'<button class="secondary" data-a="close" type="button">Cancelar</button></div><p class="status" aria-live="polite"></p></div>';
+    document.body.appendChild(m);
+    const st=m.querySelector('.status'),close=()=>m.remove();
+    m.onclick=async e=>{
+      const a=e.target.closest('[data-a]')?.dataset.a;if(!a)return;
+      if(a==='close')return close();
+      if(!cloud()){st.textContent='Conecta tu cuenta de Firebase para guardar fotos.';return}
+      try{
+        if(a==='new'){
+          const input=document.createElement('input');input.type='file';input.accept='image/*';
+          input.onchange=async()=>{const f=input.files&&input.files[0];if(!f)return;st.textContent='Guardando foto…';try{const data=await resizePhoto(f);await window.zipperFirebaseCloud.publishCatalogPhoto(r.it.key,data);photoCache[r.it.key]=data;photos[r.it.key]=Date.now();await send(payload());close();repaint();toast('✅ Foto guardada. Los clientes ya la ven.')}catch(err){st.textContent='No se pudo guardar: '+(err.message||err)}};
+          input.click();return;
+        }
+        st.textContent='Guardando…';
+        if(hasCustom){try{await window.zipperFirebaseCloud.deleteCatalogPhoto(r.it.key)}catch(_){}}
+        delete photoCache[r.it.key];
+        if(a==='none')photos[r.it.key]='none';else delete photos[r.it.key];
+        await send(payload());close();repaint();toast(a==='none'?'Foto quitada.':'Se volvió a la foto original.');
+      }catch(err){st.textContent='No se pudo guardar: '+(err.message||err)}
+    };
+  }
+  function toast(t){const el=$('catalogAdminStatus');if(el)el.textContent=t}
+
+  // ---- Editor ----
+  async function open(){
+    const modal=$('catalogAdmin');modal.classList.remove('hidden');
+    $('catalogAdminBody').innerHTML='<p class="muted">Cargando catálogo…</p>';$('catalogAdminStatus').textContent='';
+    try{await loadBase()}catch(e){$('catalogAdminBody').innerHTML='<p class="status">No se pudo cargar el catálogo. Revisa tu conexión.</p>';return}
+    await loadPublished();build();paint();
+    if(cloud())loadCustomPhotos();
+  }
+  function repaint(){const y=$('catalogAdmin').querySelector('.catalog-admin-panel').scrollTop;paint();$('catalogAdmin').querySelector('.catalog-admin-panel').scrollTop=y;loadCustomPhotos()}
+  function paint(){
+    const ps=products(),linkedIds=new Set(rows.filter(r=>r.p).map(r=>String(r.p.id)));
+    const linked=rows.filter(r=>r.p).length,noStock=rows.filter(r=>r.p&&Number(r.p.stock)<=0).length;
+    const free=ps.filter(p=>!linkedIds.has(String(p.id)));
+    let html='<datalist id="catalogProductNames">'+ps.map(p=>'<option value="'+escH(label(p))+'">').join('')+'</datalist><datalist id="catalogFreeNames">'+free.map(p=>'<option value="'+escH(label(p))+'">').join('')+'</datalist>'+
+      '<p class="muted">'+(published?'✅ Publicado. Los cambios de precio y ofertas que hagas en tus productos se publican solos.':'⚠ Aún no publicado. Revisa los enlaces y toca <b>Publicar catálogo</b>; desde ahí los precios se actualizan solos.')+' '+linked+' de '+rows.length+' productos enlazados con tu inventario.</p>'+
+      '<p class="muted">📷 Toca una foto para cambiarla o quitarla.</p>'+
+      '<details class="cat-add"><summary>➕ Agregar un producto de tu app al catálogo</summary><label>Producto<input id="catAddProduct" list="catalogFreeNames" placeholder="Busca en tu inventario…"></label><label>Sección<select id="catAddSection">'+sections.concat(['Otros productos']).map(s=>'<option>'+escH(s)+'</option>').join('')+'</select></label><label>Formato (lo que lee el cliente)<input id="catAddFmt" placeholder="Ej: Display x 24"></label><label>Precio por<select id="catAddPer">'+PERS.map(p=>'<option>'+p+'</option>').join('')+'</select></label><button id="catAddBtn" class="primary" type="button">Agregar al catálogo</button><p class="muted">Después puedes ponerle foto tocando el recuadro.</p></details>'+
+      '<label class="check-row"><input id="catalogHideNoStock" type="checkbox"'+(payload().settings.hideNoStock?' checked':'')+'> No mostrar a los clientes los productos sin stock'+(noStock?' ('+noStock+')':'')+'</label>'+
+      '<label class="check-row"><input id="catalogOnlyUnlinked" type="checkbox"> Ver solo los que faltan por enlazar ('+(rows.length-linked)+')</label>'+
+      '<label class="search-field">🔍 Buscar<input id="catalogAdminSearch" type="search" placeholder="Producto…"></label><div id="catalogAdminRows">';
+    let last='';
+    rows.forEach((r,i)=>{
+      if(r.sec!==last){html+='<h3 class="cat-sec">'+escH(r.sec)+'</h3>';last=r.sec}
+      const appPrice=r.p?Number(r.p.price):0,price=rowPrice(r),src=photoSrc(r);
+      html+='<div class="cat-row'+(r.p?'':' cat-unlinked')+(r.hidden?' cat-hidden':'')+'" data-i="'+i+'" data-q="'+escH(n(r.it.name+' '+r.sec))+'">'+
+        '<button class="cat-photo" type="button" title="Cambiar foto">'+(src||photos[r.it.key]&&photos[r.it.key]!=='none'?'<img data-photo="'+escH(r.it.key)+'" src="'+escH(src)+'" alt=""'+(src?'':' style="visibility:hidden"')+'>':'<span>📷<br>Sin foto</span>')+'</button>'+
+        '<div class="cat-main"><strong>'+escH(r.it.name)+(r.extra?' <em class="cat-new">agregado</em>':'')+'</strong><small>'+escH(r.it.fmt)+'</small>'+
+        (r.extra?'<small class="cat-info">Enlazado a: '+escH(r.p?label(r.p):'producto borrado de la app')+'</small><button class="cat-remove secondary" type="button">Quitar del catálogo</button>':
+        '<input class="cat-link" list="catalogProductNames" placeholder="Enlazar con producto de la app…" value="'+escH(r.p?label(r.p):'')+'">')+
+        '<small class="cat-info">'+(r.p?'App: '+fmt(appPrice)+' · stock '+Number(r.p.stock||0)+(r.extra||priceOk(r.it.price,appPrice)?'':' · <b class="cat-diff">⚠ precio muy distinto: ¿la app vende por unidad?</b>'):r.extra?'':'Sin enlazar · se publica con precio del catálogo')+'</small></div>'+
+        '<div class="cat-side"><label>Precio<input class="cat-price" inputmode="numeric" value="'+price+'"></label>'+(r.manual!=null?'<small class="cat-diff">precio fijado a mano</small>':'')+
+        '<label class="cat-vis"><input class="cat-hide" type="checkbox"'+(r.hidden?' checked':'')+'> No mostrar</label></div></div>';
+    });
+    html+='</div>';
+    $('catalogAdminBody').innerHTML=html;
+    const box=$('catalogAdminRows');
+    const filter=()=>{const q=n($('catalogAdminSearch').value.trim()),only=$('catalogOnlyUnlinked').checked;box.querySelectorAll('.cat-row').forEach(x=>x.style.display=(!q||x.dataset.q.includes(q))&&(!only||x.classList.contains('cat-unlinked'))?'':'none')};
+    $('catalogAdminSearch').oninput=filter;$('catalogOnlyUnlinked').onchange=filter;
+    $('catalogHideNoStock').onchange=e=>{try{localStorage.setItem('zipperCatalogoOcultarSinStock',e.target.checked?'true':'false')}catch(_){}};
+    $('catAddProduct').onchange=e=>{const p=products().find(x=>n(label(x))===n(e.target.value)||n(x.name)===n(e.target.value));if(p&&!$('catAddFmt').value)$('catAddFmt').value=p.buyUnit&&p.buyUnit!=='unidad'&&p.buyPack>1?(p.buyUnit[0].toUpperCase()+p.buyUnit.slice(1))+' x '+p.buyPack:''};
+    $('catAddBtn').onclick=()=>{
+      const v=$('catAddProduct').value.trim(),p=products().find(x=>n(label(x))===n(v)||n(x.name)===n(v));
+      if(!p){alert('Elige un producto de tu inventario de la lista.');return}
+      let key='x-'+slug(p.name);while(rows.some(r=>r.it.key===key))key+='-2';
+      const x={key,name:p.name,fmt:$('catAddFmt').value.trim(),per:$('catAddPer').value,section:$('catAddSection').value,productId:String(p.id)};
+      extra.push(x);rows.push(extraRow(x,new Map([[String(p.id),p]])));
+      rows.sort((a,b)=>{const ia=sections.indexOf(a.sec),ib=sections.indexOf(b.sec);return (ia<0?999:ia)-(ib<0?999:ib)});
+      repaint();toast('Agregado: '+p.name+'. Toca "Publicar catálogo" para que lo vean los clientes.');
+    };
+    box.addEventListener('click',e=>{
+      const row=e.target.closest('.cat-row');if(!row)return;const r=rows[Number(row.dataset.i)];
+      if(e.target.closest('.cat-photo'))photoMenu(r);
+      else if(e.target.closest('.cat-remove')){if(!confirm('¿Quitar "'+r.it.name+'" del catálogo?'))return;extra=extra.filter(x=>x.key!==r.it.key);rows=rows.filter(x=>x!==r);delete photos[r.it.key];repaint();toast('Quitado. Toca "Publicar catálogo" para guardar.')}
+    });
+    box.addEventListener('change',e=>{
+      const row=e.target.closest('.cat-row');if(!row)return;const r=rows[Number(row.dataset.i)];
+      if(e.target.classList.contains('cat-link')){
+        const v=e.target.value.trim();
+        if(!v){r.p=null;r.none=true;r.manual=null}else{const p=products().find(x=>n(label(x))===n(v)||n(x.name)===n(v));if(!p){alert('No encontré ese producto en tu inventario. Elige uno de la lista.');e.target.value=r.p?label(r.p):'';return}r.p=p;r.none=false;r.manual=null}
+        repaint();
+      }else if(e.target.classList.contains('cat-price')){
+        const v=Math.round(Number(String(e.target.value).replace(/\D/g,'')));
+        if(!(v>0)){e.target.value=rowPrice(r);return}
+        r.manual=(r.p&&Number(r.p.price)===v)||(!r.p&&v===r.it.price)?null:v;
+        if(r.manual!=null)toast('Precio fijado a mano: no cambiará solo. Para que vuelva a seguir la app, pon el mismo precio de la app.');
+      }else if(e.target.classList.contains('cat-hide')){r.hidden=e.target.checked;row.classList.toggle('cat-hidden',r.hidden)}
+    });
+  }
+  async function publish(){
+    if(!rows)return;
+    const st=$('catalogAdminStatus');
+    if(!cloud()){st.textContent='Para publicar, conecta tu cuenta de Firebase (Herramientas → Conectar cuenta Firebase).';return}
     st.textContent='Publicando…';$('catalogAdminPublish').disabled=true;
-    try{await window.zipperFirebaseCloud.publishCatalog({version:1,updatedAt:new Date().toISOString(),items,links});st.textContent='✅ Catálogo publicado. Los clientes ya ven estos precios.'}
+    try{await send(payload());st.textContent='✅ Catálogo publicado. Desde ahora los cambios de precio y ofertas de tu app se publican solos.';paintCardStatus('')}
     catch(e){st.textContent='No se pudo publicar: '+(e.message||e)}
     finally{$('catalogAdminPublish').disabled=false}
   }
   function share(){location.href='https://wa.me/?text='+encodeURIComponent('Hola 👋, este es el catálogo de *Distribuidora Zipper*. Marca los productos que necesitas y envíanos tu pedido por WhatsApp:\n'+URL_CAT)}
   function mount(){
     if($('catalogCard'))return;
-    const cloud=$('cloudSettingsCard');if(!cloud)return;
+    const cloudCard=$('cloudSettingsCard');if(!cloudCard)return;
     const card=document.createElement('section');card.className='card';card.id='catalogCard';
-    card.innerHTML='<div class="kicker">CLIENTES</div><h2>📒 Catálogo para clientes</h2><p class="muted">Tus clientes abren el enlace, marcan productos y te envían el pedido por WhatsApp. Los precios salen de tu inventario cuando publicas.</p><div class="actions"><button id="catalogAdminOpen" class="primary" type="button">Revisar y publicar precios</button><button id="catalogShare" class="secondary" type="button">Enviar enlace por WhatsApp</button><button id="catalogView" class="secondary" type="button">Ver catálogo</button><button id="catalogPrint" class="secondary" type="button">Catálogo para imprimir (sin precios)</button><button id="catalogPdf" class="secondary" type="button">Catálogo PDF con precios</button></div>';
-    cloud.parentNode.insertBefore(card,cloud.nextSibling);
+    card.innerHTML='<div class="kicker">CLIENTES</div><h2>📒 Catálogo para clientes</h2><p class="muted">Tus clientes abren el enlace, marcan productos y te envían el pedido por WhatsApp. Los precios y ofertas salen de tus productos y se actualizan solos.</p><div class="actions"><button id="catalogAdminOpen" class="primary" type="button">Editar catálogo (fotos, productos, precios)</button><button id="catalogShare" class="secondary" type="button">Enviar enlace por WhatsApp</button><button id="catalogView" class="secondary" type="button">Ver catálogo</button><button id="catalogPrint" class="secondary" type="button">Catálogo para imprimir (sin precios)</button><button id="catalogPdf" class="secondary" type="button">Catálogo PDF con precios</button></div><p id="catalogCardStatus" class="status" aria-live="polite"></p>';
+    cloudCard.parentNode.insertBefore(card,cloudCard.nextSibling);
     const modal=document.createElement('div');modal.id='catalogAdmin';modal.className='zipper-modal hidden';modal.setAttribute('role','dialog');
-    modal.innerHTML='<div class="zipper-modal-panel catalog-admin-panel"><h2>📒 Precios del catálogo</h2><div id="catalogAdminBody"></div><p id="catalogAdminStatus" class="status" aria-live="polite"></p><div class="actions catalog-admin-actions"><button id="catalogAdminPublish" class="primary" type="button">Publicar catálogo</button><button id="catalogAdminClose" class="secondary" type="button">Cerrar</button></div></div>';
+    modal.innerHTML='<div class="zipper-modal-panel catalog-admin-panel"><h2>📒 Editar catálogo</h2><div id="catalogAdminBody"></div><div class="catalog-admin-actions"><p id="catalogAdminStatus" class="status" aria-live="polite"></p><div class="actions"><button id="catalogAdminPublish" class="primary" type="button">Publicar catálogo</button><button id="catalogAdminClose" class="secondary" type="button">Cerrar</button></div></div></div>';
     document.body.appendChild(modal);
-    $('catalogAdminOpen').onclick=open;$('catalogAdminClose').onclick=()=>modal.classList.add('hidden');$('catalogAdminPublish').onclick=publish;
+    $('catalogAdminOpen').onclick=open;$('catalogAdminClose').onclick=()=>{modal.classList.add('hidden');scheduleAuto(1500)};$('catalogAdminPublish').onclick=publish;
     $('catalogShare').onclick=share;
     $('catalogView').onclick=()=>window.open('catalogo.html','_blank');
     $('catalogPrint').onclick=()=>window.open('catalogo.html?modo=imprimir','_blank');
     $('catalogPdf').onclick=()=>window.open('catalogo.html?modo=pdf','_blank');
-    const css=document.createElement('style');css.textContent='.catalog-admin-panel{max-width:640px!important;max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain}.catalog-admin-actions{position:sticky;bottom:-20px;background:#fff;padding:10px 0 4px}.cat-sec{margin:16px 0 6px;font-size:14px;text-transform:uppercase;color:#102b5c;border-bottom:2px solid #102b5c;padding-bottom:4px}.cat-row{display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-bottom:1px solid #e5e7eb}.cat-row img{width:48px;height:48px;object-fit:contain;border-radius:8px;background:#f8fafc;flex:none}.cat-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.cat-main small{color:#64748b;font-size:12px}.cat-link{font-size:14px!important;padding:6px 8px!important;margin-top:4px;min-height:0!important}.cat-side{width:96px;flex:none;display:flex;flex-direction:column;gap:4px;font-size:12px}.cat-price{font-size:15px!important;padding:6px!important;min-height:0!important;font-weight:700}.cat-diff{color:#b45309;font-weight:600}.cat-unlinked .cat-link{border-color:#f59e0b!important;background:#fffbeb}.cat-hidden{opacity:.45}.cat-vis{display:flex;align-items:center;gap:4px}';
+    const css=document.createElement('style');css.textContent='.catalog-admin-panel{max-width:640px!important;max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain}.catalog-admin-actions{position:sticky;bottom:-20px;background:#fff;padding:8px 0 4px;border-top:1px solid #e5e7eb}.catalog-admin-actions .status{margin:0 0 6px}.cat-sec{margin:16px 0 6px;font-size:14px;text-transform:uppercase;color:#102b5c;border-bottom:2px solid #102b5c;padding-bottom:4px}.cat-row{display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-bottom:1px solid #e5e7eb}.cat-photo{width:58px;height:58px;flex:none;border:1px dashed #94a3b8;border-radius:10px;background:#f8fafc;padding:2px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#64748b;line-height:1.2;min-height:0!important}.cat-photo img{width:100%;height:100%;object-fit:contain}.cat-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.cat-main small{color:#64748b;font-size:12px}.cat-new{font-style:normal;font-size:11px;background:#dcfce7;color:#166534;border-radius:8px;padding:1px 6px}.cat-link{font-size:14px!important;padding:6px 8px!important;margin-top:4px;min-height:0!important}.cat-remove{min-height:0!important;padding:6px 10px!important;font-size:13px!important;align-self:flex-start;margin-top:4px}.cat-side{width:96px;flex:none;display:flex;flex-direction:column;gap:4px;font-size:12px}.cat-price{font-size:15px!important;padding:6px!important;min-height:0!important;font-weight:700}.cat-diff{color:#b45309;font-weight:600}.cat-unlinked .cat-link{border-color:#f59e0b!important;background:#fffbeb}.cat-hidden{opacity:.45}.cat-vis{display:flex;align-items:center;gap:4px}.cat-add{background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:10px;margin:10px 0}.cat-add summary{font-weight:700;cursor:pointer}.cat-add label{display:block;margin-top:8px}.cat-add button{margin-top:10px;width:100%}';
     document.head.appendChild(css);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});else mount();
-  window.zipperCatalogAdmin={open,publish,score};
+  watchProducts();
+  window.zipperCatalogAdmin={open,publish,score,autoPublish};
 })();

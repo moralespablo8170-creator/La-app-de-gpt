@@ -969,12 +969,26 @@ async function publishCatalog(payload){
   await setDoc(doc(db,'publico','catalogo'),{data:JSON.stringify(payload),updatedAt:new Date().toISOString()});
   return true;
 }
+async function ownerCheck(){
+  const user=auth.currentUser;
+  if(!user)throw new Error('Conecta tu cuenta de Firebase para editar el catálogo.');
+  const profile=activeProfile||await memberFor(user);
+  if(profile?.role!=='owner')throw new Error('Solo el dueño puede editar el catálogo.');
+}
+const photoId=key=>'foto-'+String(key).toLowerCase().replace(/[^a-z0-9-]/g,'-').slice(0,80);
+async function publishCatalogPhoto(key,dataUrl){
+  await ownerCheck();
+  if(!/^data:image\/jpeg;base64,/.test(dataUrl)||dataUrl.length>390000)throw new Error('La foto es muy grande.');
+  await setDoc(doc(db,'publico',photoId(key)),{data:dataUrl,updatedAt:new Date().toISOString()});
+}
+async function deleteCatalogPhoto(key){await ownerCheck();await deleteDoc(doc(db,'publico',photoId(key)))}
+async function readCatalogPhoto(key){const snap=await getDoc(doc(db,'publico',photoId(key)));return snap.exists()?snap.data().data:null}
 async function readPublishedCatalog(){
   const snap=await getDoc(doc(db,'publico','catalogo'));
   if(!snap.exists())return null;
   try{return JSON.parse(snap.data().data||'null')}catch(_){return null}
 }
-const api={login,signOut:()=>signOut(auth),memberFor,listMembers,sellerActivity,inspectCloud,importLocalData,useExistingCloudData,prepareSellerCatalog,startSync,stopSync,onLocalArrayChanged,cloudLabel,publishCatalog,readPublishedCatalog};
+const api={login,signOut:()=>signOut(auth),memberFor,listMembers,sellerActivity,inspectCloud,importLocalData,useExistingCloudData,prepareSellerCatalog,startSync,stopSync,onLocalArrayChanged,cloudLabel,publishCatalog,readPublishedCatalog,publishCatalogPhoto,deleteCatalogPhoto,readCatalogPhoto};
 window.zipperFirebaseCloud=api;
 installStorageSyncHooks();
 if(!window.zipperRefreshAfterCloud)window.zipperRefreshAfterCloud=()=>['renderHome','renderCash','renderInventory','renderClients','renderHistory'].forEach(name=>{try{if(typeof window[name]==='function')window[name]()}catch(error){console.error(error)}});

@@ -268,13 +268,15 @@ service cloud.firestore {
       allow write: if isOwner(orgId);
     }
 
-    // Catálogo público para clientes: cualquiera lo lee; solo el dueño publica precios.
-    match /publico/catalogo {
-      allow read: if true;
+    // Catálogo público para clientes: cualquiera lo lee; solo el dueño publica precios y fotos.
+    match /publico/{docId} {
+      allow read: if docId == 'catalogo' || docId.matches('foto-[a-z0-9-]{1,80}');
       allow write: if isOwner('zipper-a12f1')
+        && (docId == 'catalogo' || docId.matches('foto-[a-z0-9-]{1,80}'))
         && request.resource.data.keys().hasOnly(['data', 'updatedAt'])
         && request.resource.data.data is string
-        && request.resource.data.data.size() < 300000;
+        && request.resource.data.data.size() < 400000;
+      allow delete: if isOwner('zipper-a12f1') && docId.matches('foto-[a-z0-9-]{1,80}');
     }
 
     match /{document=**} {

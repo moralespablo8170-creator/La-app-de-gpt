@@ -42,6 +42,7 @@ main{padding:4px 12px;max-width:1100px;margin:0 auto}
 .card.sel{box-shadow:0 0 0 2px var(--wa)}
 .ph{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;padding:6px;border-bottom:1px dashed var(--line)}
 .ph img{max-width:100%;max-height:100%;object-fit:contain}
+.noph{font-family:Poppins;font-weight:700;font-size:15px;color:#b9b2a2;text-align:center;padding:10px}
 .info{padding:8px 10px 10px;display:flex;flex-direction:column;flex:1}
 .info h3{font-family:Poppins;font-size:13.5px;font-weight:600;line-height:1.2}
 .fmt{font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.3}
@@ -157,7 +158,7 @@ function card(it,c){const flv=it.wide&&it.fmt.includes(':')?it.fmt.split(': ')[1
   const unit=it.units?'<span class="unit">'+money(it.price/it.units)+' por unidad</span>':'';
   const promo=it.promo?'<span class="promo">★ Desde '+it.promo.min+': '+money(it.promo.price)+' c/'+esc(it.per)+'</span>':'';
   const body=flv?'<div class="flv">'+flv.map(f=>'<div><span>'+esc(f)+'</span>'+stepHTML(it.key+'::'+f)+'</div>').join('')+'</div>':stepHTML(it.key);
-  return '<article class="card'+(flv?' wide':'')+'" style="--c:'+c+'" data-card="'+esc(it.key)+'">'+(it.new?'<span class="new">NUEVO</span>':'')+'<div class="ph"><img src="'+esc(it.img)+'" alt="'+esc(it.name)+'"></div><div class="info"><h3>'+esc(it.name)+'</h3><p class="fmt">'+esc(flv?'Elige sabores y cantidad':it.fmt)+'</p>'+(NOPRICE?'':'<div class="pr"><b>'+money(it.price)+'</b><span>por '+esc(it.per)+'</span></div>'+unit+promo)+body+'</div></article>'}
+  return '<article class="card'+(flv?' wide':'')+'" style="--c:'+c+'" data-card="'+esc(it.key)+'">'+(it.new?'<span class="new">NUEVO</span>':'')+'<div class="ph">'+(it.img?'<img src="'+esc(it.img)+'" alt="'+esc(it.name)+'">':'<span class="noph">'+esc(it.name)+'</span>')+'</div><div class="info"><h3>'+esc(it.name)+'</h3><p class="fmt">'+esc(flv?'Elige sabores y cantidad':it.fmt)+'</p>'+(NOPRICE?'':'<div class="pr"><b>'+money(it.price)+'</b><span>por '+esc(it.per)+'</span></div>'+unit+promo)+body+'</div></article>'}
 function render(){
   const q=norm(filter.trim());const out=[];
   data.sections.forEach((s,i)=>{const list=s.items.filter(it=>!it.hidden&&(!q||norm(it.name+' '+it.fmt+' '+s.title).includes(q)));if(!list.length)return;
@@ -186,15 +187,21 @@ $('send').onclick=()=>{const l=lineList();if(!l.length)return;const who=$('who')
   location.href='https://wa.me/'+data.whatsapp+'?text='+encodeURIComponent(txt.join('\n'))};
 function chips(){$('chips').innerHTML=data.sections.map((s,i)=>'<button data-s="'+i+'">'+esc(s.title)+'</button>').join('');$('chips').onclick=e=>{const b=e.target.closest('[data-s]');if(!b)return;filter='';$('q').value='';render();document.getElementById('s'+b.dataset.s)?.scrollIntoView({behavior:'smooth'})}}
 // Precios publicados desde la app del dueño (si existen) reemplazan los del archivo base.
+function photoURL(k){return FIRESTORE.replace('/publico/catalogo?','/publico/foto-'+String(k).toLowerCase().replace(/[^a-z0-9-]/g,'-').slice(0,80)+'?')}
+async function customPhotos(){const list=[];data.sections.forEach(s=>s.items.forEach(it=>{if(it.custom&&!it.hidden)list.push(it)}));
+  await Promise.all(list.map(async it=>{try{const r=await fetch(photoURL(it.key));if(!r.ok)return;const j=await r.json();const d=j.fields?.data?.stringValue;if(!d)return;it.img=d;document.querySelectorAll('[data-card="'+CSS.escape(it.key)+'"] .ph').forEach(ph=>{ph.innerHTML='<img src="'+d+'" alt="">'})}catch(_){}}))}
 async function livePrices(){try{const r=await fetch(FIRESTORE,{cache:'no-store'});if(!r.ok)return null;const j=await r.json();return JSON.parse(j.fields?.data?.stringValue||'null')}catch(_){return null}}
 Promise.all([fetch('catalogo/catalogo.json',{cache:'no-cache'}).then(r=>r.json()),livePrices()]).then(([base,live])=>{
   data=base;
-  if(live&&live.items){data.sections.forEach(s=>s.items.forEach(it=>{const x=live.items[it.key];if(!x)return;if(x.price>0)it.price=x.price;if('promo' in x)it.promo=x.promo||undefined;if(x.hidden)it.hidden=true}));if(live.updatedAt)$('upd').textContent='Precios actualizados el '+new Date(live.updatedAt).toLocaleDateString('es-CL',{day:'numeric',month:'long',year:'numeric'})}
+  if(live&&Array.isArray(live.extra)){live.extra.forEach(x=>{if(!x||!x.key)return;let sec=data.sections.find(s=>s.title===x.section&&!s.table);if(!sec){sec=data.sections.find(s=>s.title==='Otros productos');if(!sec){sec={title:'Otros productos',color:'#64748b',items:[]};const ri=data.sections.findIndex(s=>s.table);data.sections.splice(ri<0?data.sections.length:ri,0,sec)}}sec.items.push({key:x.key,name:x.name,fmt:x.fmt||'',per:x.per||'unidad',price:0,img:''})})}
+  if(live&&live.photos){data.sections.forEach(s=>s.items.forEach(it=>{const ph=live.photos[it.key];if(ph==='none')it.img='';else if(ph){it.img='';it.custom=true}}))}
+  if(live&&live.items){data.sections.forEach(s=>s.items.forEach(it=>{const x=live.items[it.key];if(!x)return;if(x.price>0)it.price=x.price;if(!(it.price>0))it.hidden=true;if('promo' in x)it.promo=x.promo||undefined;if(x.hidden)it.hidden=true}));if(live.updatedAt)$('upd').textContent='Precios actualizados el '+new Date(live.updatedAt).toLocaleDateString('es-CL',{day:'numeric',month:'long',year:'numeric'})}
   data.sections.forEach(s=>s.items.forEach(it=>items.set(it.key,it)));
   $('mes').textContent=NOPRICE?'Catálogo · Mes / año: ____________':'Catálogo · '+new Date().toLocaleDateString('es-CL',{month:'long',year:'numeric'});
   if(PRINT)document.title='Catálogo Zipper'+(NOPRICE?' - para imprimir':' - con precios');
   for(const k of Object.keys(cart)){const it=items.get(k.split('::')[0]);if(!it||it.hidden)delete cart[k]}
-  chips();render();save();
+  data.sections.forEach(s=>s.items=s.items.filter(it=>it.price>0||it.hidden));
+  chips();render();save();customPhotos();
 }).catch(()=>{$('list').innerHTML='<p class="empty">No se pudo cargar el catálogo. Revisa tu conexión o escríbenos por WhatsApp.</p>'});
 })();
 </script>
