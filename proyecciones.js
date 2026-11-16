@@ -133,11 +133,15 @@
       const list=readSupplierOrders();
       list.unshift({id:uid(),date:localDate(),createdAt:new Date().toISOString(),supplier:cat||'Varios',status:'pendiente',lines:rows.map(x=>({id:String(x.p.id),rawId:rawIdOf(x.p),name:x.p.name,unit:x.unit,pack:x.pack,qty:x.q}))});
       if(!saveSupplierOrders(list))return;
-      const o=readOrder();rows.forEach(x=>{delete o.qty[String(x.p.id)]});saveOrder(o);
-      decorateInventory();
-      if(typeof zipperToast==='function')zipperToast('🚚 Pedido registrado en "Pedidos por recibir". Cuando llegue, márcalo para sumar el stock.');
+      // El carrito queda vacío (en 0, no vuelve el sugerido) para armar el pedido del siguiente proveedor.
+      const o=readOrder();rows.forEach(x=>{o.qty[String(x.p.id)]=0});saveOrder(o);
+      decorateInventory();renderPoHomeAlert();
+      if(typeof zipperToast==='function')zipperToast('🚚 Pedido guardado en "Pedidos por recibir" (arriba en Productos). Cuando llegue, toca "📦 Llegó" y el stock se suma solo.');
+      setTimeout(()=>$('supplierOrders')?.scrollIntoView({behavior:'smooth',block:'start'}),400);
     };
-    if(navigator.share){navigator.share({text}).then(register).catch(err=>{if(err?.name!=='AbortError')copyText(text,register)})}else copyText(text,register);
+    // Se registra apenas se envía: así nunca se pierde aunque el teléfono no avise que se compartió.
+    register();
+    if(navigator.share){navigator.share({text}).catch(err=>{if(err?.name!=='AbortError')copyText(text,()=>{})})}else copyText(text,()=>{});
   }
   function copyText(text,done){if(navigator.clipboard?.writeText)navigator.clipboard.writeText(text).then(()=>{done();if(typeof zipperToast==='function')zipperToast('📋 Pedido copiado. Pégalo en WhatsApp al proveedor.')}).catch(()=>{prompt('Copia el pedido:',text);done()});else{prompt('Copia el pedido:',text);done()}}
 
@@ -151,9 +155,17 @@
       (pending.length?pending.map(o=>'<div class="po-row"><div><strong>'+esc(o.supplier)+'</strong><small>'+esc(historyNice(o.date))+' · '+plural(o.lines.length,'producto','productos')+'</small><small>'+esc(o.lines.map(l=>l.name+': '+lineText(l)).join(' · '))+'</small></div><div class="po-row-actions"><button class="primary po-receive" type="button" data-id="'+esc(o.id)+'">📦 Llegó</button><button class="ghost po-delete" type="button" data-id="'+esc(o.id)+'" aria-label="Borrar pedido">🗑</button></div></div>').join(''):'<p class="muted">No hay pedidos en camino.</p>')+
       (done.length?'<details class="po-done"><summary>Últimos recibidos</summary>'+done.map(o=>{const miss=o.lines.filter(l=>(l.received??l.qty)<l.qty);return '<div class="po-done-row"><strong>'+esc(o.supplier)+'</strong> · recibido '+esc(historyNice(o.receivedDate||o.date))+(miss.length?' · <span class="po-miss">faltó: '+esc(miss.map(l=>l.name+' '+(l.qty-(l.received||0))+' '+unitWord(l.unit,l.qty-(l.received||0))).join(', '))+'</span>':' · <span class="po-ok">completo</span>')+'</div>'}).join('')+'</details>':'')+'</div>';
     box.querySelectorAll('.po-receive').forEach(b=>b.onclick=()=>receiveOrder(b.dataset.id));
-    box.querySelectorAll('.po-delete').forEach(b=>b.onclick=()=>{if(!confirm('¿Borrar este pedido? No cambia el stock.'))return;saveSupplierOrders(readSupplierOrders().filter(o=>o.id!==b.dataset.id));decorateInventory()});
+    box.querySelectorAll('.po-delete').forEach(b=>b.onclick=()=>{if(!confirm('¿Borrar este pedido? No cambia el stock.'))return;saveSupplierOrders(readSupplierOrders().filter(o=>o.id!==b.dataset.id));decorateInventory();renderPoHomeAlert()});
   }
   const historyNice=d=>typeof historyNiceDate==='function'?historyNiceDate(d):d;
+  function renderPoHomeAlert(){
+    const home=$('homeAlerts');if(!home)return;
+    let box=$('poHomeAlert');if(!box){box=document.createElement('div');box.id='poHomeAlert';home.insertAdjacentElement('afterend',box)}
+    const pending=readSupplierOrders().filter(o=>o.status==='pendiente');
+    box.innerHTML=pending.length?'<div class="home-alert alert-stock"><div><strong>🚚 '+plural(pending.length,'pedido','pedidos')+' de proveedor por recibir</strong><span>'+esc(pending.map(o=>o.supplier+' ('+historyNice(o.date)+')').join(', '))+'. Cuando llegue, márcalo y el stock se suma solo.</span></div><div class="home-alert-actions"><button class="primary" type="button" id="poHomeOpen">📦 Recibir pedido</button></div></div>':'';
+    $('poHomeOpen')?.addEventListener('click',()=>{document.getElementById('productsTab')?.click();setTimeout(()=>$('supplierOrders')?.scrollIntoView({behavior:'smooth',block:'start'}),150)});
+  }
+  window.zipperPoHomeAlert=renderPoHomeAlert;
   function receiveOrder(orderId){
     const order=readSupplierOrders().find(o=>o.id===orderId&&o.status==='pendiente');if(!order)return;
     const m=modal('<h3>Recibir pedido · '+esc(order.supplier)+'</h3><p class="muted">Pedido del '+esc(historyNice(order.date))+'. Si algo no llegó, baja la cantidad. Al confirmar se suma al stock.</p><div class="po-lines">'+order.lines.map((l,i)=>'<div class="po-line" data-i="'+i+'"><div><strong>'+esc(l.name)+'</strong><small>Pedido: '+esc(lineText(l))+'</small></div><div class="buy-stepper"><button type="button" class="po-minus">−</button><input class="po-got" type="number" min="0" step="1" inputmode="numeric" value="'+l.qty+'"><button type="button" class="po-plus">+</button></div></div>').join('')+'</div><p id="poReceiveInfo" class="po-info"></p><div class="po-receive-actions"><button class="primary wide" type="button" id="poAllOk">✅ Llegó todo completo</button><button class="secondary wide" type="button" id="poConfirm">Confirmar lo recibido</button><button class="ghost wide" type="button" data-close>Cancelar</button></div>');
@@ -169,7 +181,7 @@
       if(added.length&&!writeArray('zipperProductos',ps))return;
       const list=readSupplierOrders(),ix=list.findIndex(o=>o.id===order.id);
       if(ix>=0){list[ix]={...list[ix],status:'recibido',receivedDate:localDate(),receivedAt:new Date().toISOString(),lines:list[ix].lines.map((l,i)=>({...l,received:g[i]}))};saveSupplierOrders(list)}
-      m.remove();renderInventory();
+      m.remove();renderInventory();renderPoHomeAlert();
       const miss=order.lines.filter((l,i)=>g[i]<l.qty);
       const msg='Stock actualizado: '+(added.join(', ')||'sin cambios')+(miss.length?'. Faltó: '+miss.map(l=>l.name).join(', '):'')+(lost.length?'. No encontrados: '+lost.join(', '):'');
       if($('productStatus'))$('productStatus').textContent=msg;
@@ -222,9 +234,14 @@
     $('productSearch')?.addEventListener('input',()=>setTimeout(decorateInventory,0));
     $('buyOnly')?.addEventListener('change',decorateInventory);
     $('buyHorizon')?.addEventListener('change',()=>{const o=readOrder();o.horizon=Number($('buyHorizon').value)||7;saveOrder(o);decorateInventory()});
-    $('buyReset')?.addEventListener('click',()=>{if(!confirm('¿Volver a las cantidades sugeridas? Se borran los cambios que hiciste a mano.'))return;const o=readOrder();o.qty={};saveOrder(o);decorateInventory()});
+    $('buyReset')?.addEventListener('click',()=>{if(!confirm('¿Llenar el carrito con las cantidades sugeridas (según lo que vendes)? Se borran las cantidades que pusiste a mano.'))return;const o=readOrder();o.qty={};saveOrder(o);decorateInventory();const n=orderRows(readOrder()).length;if(typeof zipperToast==='function')zipperToast(n?'🛒 Carrito con '+n+' productos sugeridos.':'No hay sugeridos: tu stock alcanza para el período elegido.')});
+    // Vaciar carrito: deja todas las cantidades en 0. No cambia el inventario.
+    if($('buyReset')&&!$('buyClear')){$('buyReset').insertAdjacentHTML('beforebegin','<button id="buyClear" class="secondary" type="button">🗑 Vaciar carrito</button>');$('buyReset').textContent='↺ Llenar con lo sugerido'}
+    $('buyClear')?.addEventListener('click',()=>{if(!confirm('¿Vaciar el carrito de compra? No cambia tu inventario.'))return;const o=readOrder();getProducts().forEach(p=>{o.qty[String(p.id)]=0});saveOrder(o);decorateInventory();if(typeof zipperToast==='function')zipperToast('🗑 Carrito vacío. Tu inventario no cambió.')});
     $('buySend')?.addEventListener('click',sendOrder);
     renderSupplierOrders();
+    const home=window.renderHome;if(typeof home==='function'&&!home.__withPo){window.renderHome=function(){const r=home.apply(this,arguments);try{renderPoHomeAlert()}catch(e){console.error(e)}return r};window.renderHome.__withPo=true}
+    setTimeout(renderPoHomeAlert,300);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
 })();
