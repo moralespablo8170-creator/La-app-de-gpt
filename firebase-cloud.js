@@ -961,7 +961,20 @@ async function connectUi() {
     }
   });
 }
-const api={login,signOut:()=>signOut(auth),memberFor,listMembers,sellerActivity,inspectCloud,importLocalData,useExistingCloudData,prepareSellerCatalog,startSync,stopSync,onLocalArrayChanged,cloudLabel};
+async function publishCatalog(payload){
+  const user=auth.currentUser;
+  if(!user)throw new Error('Conecta tu cuenta de Firebase para publicar el catálogo.');
+  const profile=activeProfile||await memberFor(user);
+  if(profile?.role!=='owner')throw new Error('Solo el dueño puede publicar el catálogo.');
+  await setDoc(doc(db,'publico','catalogo'),{data:JSON.stringify(payload),updatedAt:new Date().toISOString()});
+  return true;
+}
+async function readPublishedCatalog(){
+  const snap=await getDoc(doc(db,'publico','catalogo'));
+  if(!snap.exists())return null;
+  try{return JSON.parse(snap.data().data||'null')}catch(_){return null}
+}
+const api={login,signOut:()=>signOut(auth),memberFor,listMembers,sellerActivity,inspectCloud,importLocalData,useExistingCloudData,prepareSellerCatalog,startSync,stopSync,onLocalArrayChanged,cloudLabel,publishCatalog,readPublishedCatalog};
 window.zipperFirebaseCloud=api;
 installStorageSyncHooks();
 if(!window.zipperRefreshAfterCloud)window.zipperRefreshAfterCloud=()=>['renderHome','renderCash','renderInventory','renderClients','renderHistory'].forEach(name=>{try{if(typeof window[name]==='function')window[name]()}catch(error){console.error(error)}});

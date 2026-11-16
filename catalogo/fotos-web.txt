@@ -1,0 +1,6 @@
+# clave-del-producto | URL de la foto (la descarga GitHub y la deja en catalogo/img-web/ para revisarla)
+gomitas-ambrosoli-amberries|https://jumbocl.vtexassets.com/arquivos/ids/384890-900-900?width=900&height=900&aspect=true
+gomitas-ambrosoli-ambrosito|https://jumbocl.vtexassets.com/arquivos/ids/384878-900-900?width=900&height=900&aspect=true
+gomitas-ambrosoli-loop|https://jumbocl.vtexassets.com/arquivos/ids/384891-900-900?width=900&height=900&aspect=true
+menta-chocolate-arcor|https://cdn11.bigcommerce.com/s-3stx4pub31/images/stencil/608x608/products/13059/32689/arcor-menta-chocolate-140g__09805.1697656847.1280.1280__82776.1736200362.jpg?c=3
+butter-toffee-surtido|https://cdn.mafrservices.com/sys-master-root/h83/h86/30577696931870/1302689_main.jpg

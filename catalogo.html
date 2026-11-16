@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Catálogo · Distribuidora Zipper</title>
+<meta name="description" content="Catálogo de Distribuidora Zipper: marca tus productos y envía tu pedido por WhatsApp.">
+<meta property="og:title" content="Catálogo Distribuidora Zipper">
+<meta property="og:description" content="Tabaquería · confitería · bazar. Arma tu pedido y envíalo por WhatsApp.">
+<meta property="og:image" content="https://moralespablo8170-creator.github.io/La-app-de-gpt/assets/icono-512.png">
+<meta name="theme-color" content="#0b0b0c">
+<link rel="icon" href="assets/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#c9a227;--red:#c8102e;--ink:#18181b;--muted:#6b6b73;--bg:#f6f4ef;--line:#e6e2d8;--wa:#25d366}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-padding-top:120px}
+body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink);padding-bottom:110px;-webkit-tap-highlight-color:transparent}
+button{font:inherit;border:0;background:none;color:inherit;cursor:pointer}
+.hero{background:#0b0b0c;color:#fff;padding:18px 16px 16px;display:flex;gap:14px;align-items:center;border-bottom:3px solid var(--gold)}
+.hero img{width:58px;height:58px;border-radius:12px}
+.hero h1{font-family:Poppins;font-size:19px;line-height:1.1;letter-spacing:.02em}
+.hero p{font-size:12.5px;color:#cfcfd4;margin-top:3px}
+.hero small{display:block;color:var(--gold);font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-top:4px}
+.bar{position:sticky;top:0;z-index:20;background:rgba(246,244,239,.97);backdrop-filter:blur(8px);padding:10px 12px 8px;border-bottom:1px solid var(--line)}
+.search{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:0 12px}
+.search input{flex:1;border:0;outline:0;font:inherit;font-size:16px;padding:11px 0;background:none}
+.chips{display:flex;gap:6px;overflow-x:auto;margin-top:8px;padding-bottom:2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chips button{white-space:nowrap;font-size:12.5px;font-weight:600;background:#fff;border:1px solid var(--line);padding:6px 11px;border-radius:30px}
+.chips button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+main{padding:4px 12px;max-width:1100px;margin:0 auto}
+.sec{margin-top:18px}
+.sec h2{font-family:Poppins;font-size:16px;text-transform:uppercase;letter-spacing:.02em;display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:2px solid var(--ink);margin-bottom:10px}
+.sec h2:before{content:"";width:5px;height:18px;border-radius:3px;background:var(--c)}
+.sec h2 span{margin-left:auto;font-family:Inter;font-size:11.5px;font-weight:500;color:var(--muted);text-transform:none}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media(min-width:640px){.grid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:900px){.grid{grid-template-columns:repeat(4,1fr)}}
+.card{background:#fff;border:1px solid var(--line);border-top:3px solid var(--c);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;position:relative;transition:box-shadow .15s}
+.card.sel{box-shadow:0 0 0 2px var(--wa)}
+.ph{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;padding:6px;border-bottom:1px dashed var(--line)}
+.ph img{max-width:100%;max-height:100%;object-fit:contain}
+.info{padding:8px 10px 10px;display:flex;flex-direction:column;flex:1}
+.info h3{font-family:Poppins;font-size:13.5px;font-weight:600;line-height:1.2}
+.fmt{font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.3}
+.pr{margin-top:auto;padding-top:6px}
+.pr b{font-family:Poppins;font-size:18px;color:var(--red)}
+.pr span{font-size:11px;color:var(--muted);margin-left:3px}
+.unit{display:inline-block;font-size:11px;background:#f4f1ea;border-radius:6px;padding:2px 6px;margin-top:2px}
+.promo{display:inline-block;font-size:11px;font-weight:700;background:var(--gold);color:#111;border-radius:6px;padding:2px 6px;margin-top:4px}
+.new{position:absolute;top:8px;left:8px;background:var(--red);color:#fff;font-family:Poppins;font-weight:700;font-size:10.5px;letter-spacing:.06em;padding:3px 8px;border-radius:20px}
+.step{display:flex;align-items:center;justify-content:space-between;margin-top:8px;background:#f4f1ea;border-radius:10px}
+.step button{width:40px;height:38px;font-size:22px;font-weight:600;border-radius:10px}
+.step button.add{background:var(--ink);color:#fff}
+.step input{width:44px;text-align:center;border:0;background:none;font:inherit;font-family:Poppins;font-weight:700;font-size:16px;outline:0}
+.addbtn{margin-top:8px;height:38px;border-radius:10px;background:var(--ink);color:#fff;font-weight:600;font-size:13.5px}
+.wide{grid-column:1/-1;flex-direction:row;flex-wrap:wrap}
+.wide .ph{width:40%;aspect-ratio:auto;border-bottom:0;border-right:1px dashed var(--line)}
+.wide .info{width:60%}
+.flv{display:grid;grid-template-columns:1fr;gap:4px;margin-top:6px}
+@media(min-width:640px){.flv{grid-template-columns:1fr 1fr}}
+.flv div{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;background:#f8f6f1;border-radius:8px;padding:2px 2px 2px 8px}
+.flv .step{margin:0;background:none}
+.flv .step button{width:32px;height:30px;font-size:18px}
+.flv .step input{width:30px;font-size:14px}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:13px}
+td{padding:6px 8px;border-bottom:1px solid #eee9de}
+td.p{font-family:Poppins;font-weight:600;color:var(--red);white-space:nowrap;text-align:right}
+td small{color:var(--muted);display:block;font-size:11px}
+td .step{margin:0;background:none}
+td .step button{width:30px;height:30px;font-size:18px}
+td .step input{width:28px;font-size:14px}
+.empty{padding:30px;text-align:center;color:var(--muted)}
+.foot{position:fixed;left:0;right:0;bottom:0;z-index:30;background:#0b0b0c;color:#fff;padding:10px 12px calc(10px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:10px;transform:translateY(110%);transition:transform .2s}
+.foot.show{transform:none}
+.foot div{flex:1;line-height:1.2}
+.foot small{color:#bdbdc4;font-size:12px}
+.foot b{font-family:Poppins;font-size:18px;display:block}
+.foot button{background:var(--wa);color:#05210f;font-family:Poppins;font-weight:700;font-size:14px;padding:12px 16px;border-radius:30px}
+.sheet{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.55);display:none;align-items:flex-end;justify-content:center}
+.sheet.show{display:flex}
+.panel{background:#fff;width:100%;max-width:560px;max-height:88vh;overflow:auto;border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom))}
+.panel h3{font-family:Poppins;font-size:18px;display:flex;justify-content:space-between;align-items:center}
+.panel h3 button{font-size:26px;line-height:1;color:var(--muted)}
+.line{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #f0ede5;font-size:13.5px}
+.line .n{flex:1}
+.line .n small{display:block;color:var(--muted);font-size:11.5px}
+.line .t{font-family:Poppins;font-weight:600;white-space:nowrap}
+.line .x{color:var(--red);font-size:20px;width:30px}
+.tot{display:flex;justify-content:space-between;font-family:Poppins;font-weight:700;font-size:18px;margin:12px 0 4px}
+.note{font-size:11.5px;color:var(--muted)}
+.panel label{display:block;font-size:12.5px;font-weight:600;margin-top:12px}
+.panel input,.panel textarea{width:100%;font:inherit;font-size:16px;border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:4px}
+.send{width:100%;margin-top:14px;background:var(--wa);color:#05210f;font-family:Poppins;font-weight:700;font-size:16px;padding:14px;border-radius:14px}
+.clear{width:100%;margin-top:8px;color:var(--muted);font-size:13px;padding:8px}
+.upd{font-size:11.5px;color:var(--muted);text-align:center;margin:18px 0 6px}
+.printbar{display:none}
+body.printmode .printbar{display:flex;gap:10px;align-items:center;justify-content:space-between;background:var(--gold);padding:10px 12px;font-size:13px;font-weight:600}
+body.printmode .printbar button{background:#111;color:#fff;padding:10px 14px;border-radius:10px;font-weight:700;white-space:nowrap}
+body.printmode .bar,body.printmode .foot,body.printmode .upd{display:none}
+body.printmode{padding-bottom:20px}
+body.printmode .hero p{display:none}
+.tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.tags span{font-size:11px;background:#f4f1ea;border-radius:20px;padding:2px 8px}
+@media print{
+ @page{size:A4;margin:10mm 9mm}
+ body{background:#fff;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ .printbar{display:none!important}
+ .hero{border-radius:10px;padding:10px 14px}
+ main{padding:0;max-width:none}
+ .grid{grid-template-columns:repeat(3,1fr)!important;gap:7px}
+ .card{break-inside:avoid;page-break-inside:avoid}
+ .sec h2{break-after:avoid;page-break-after:avoid}
+ .sec{margin-top:10px}
+ .ph{aspect-ratio:auto;height:44mm}
+ .wide .ph{height:50mm}
+ .info h3{font-size:12px}
+ .pr b{font-size:16px}
+ tr{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="printbar"><span>Vista para PDF: toca el botón y elige “Guardar como PDF”.</span><button type="button" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button></div>
+<header class="hero"><img src="assets/icono-512.png" alt="Distribuidora Zipper" onerror="this.style.display='none'"><div><h1>DISTRIBUIDORA ZIPPER</h1><p>Toca ＋ en lo que necesites y envía tu pedido por WhatsApp.</p><small id="mes">Catálogo</small></div></header>
+<div class="bar"><label class="search">🔎<input id="q" type="search" placeholder="Buscar producto…" autocomplete="off"></label><nav class="chips" id="chips"></nav></div>
+<main id="list"><p class="empty">Cargando catálogo…</p></main>
+<p class="upd" id="upd"></p>
+<div class="foot" id="foot"><div><small id="fcount"></small><b id="ftotal"></b></div><button id="open" type="button">Ver pedido →</button></div>
+<div class="sheet" id="sheet"><div class="panel"><h3>Tu pedido <button id="close" type="button" aria-label="Cerrar">×</button></h3><div id="lines"></div>
+<div class="tot"><span>Total estimado</span><span id="stotal"></span></div><p class="note">Precios referenciales. Te confirmamos stock y total por WhatsApp.</p>
+<label>Tu nombre o negocio<input id="who" autocomplete="organization" placeholder="Ej: Almacén Don Pedro"></label>
+<label>Comentario (opcional)<textarea id="msg" rows="2" placeholder="Ej: entregar el jueves"></textarea></label>
+<button class="send" id="send" type="button">Enviar pedido por WhatsApp</button><button class="clear" id="clear" type="button">Vaciar pedido</button></div></div>
+<script>
+(function(){
+const FIRESTORE='https://firestore.googleapis.com/v1/projects/zipper-a12f1/databases/(default)/documents/publico/catalogo?key=AIzaSyAFYoHdqS1QP04MXzHbMpcpuvzNLqElZF4';
+const $=id=>document.getElementById(id);
+const MODE=new URLSearchParams(location.search).get('modo')||'';const PRINT=MODE==='imprimir'||MODE==='pdf',NOPRICE=MODE==='imprimir';
+if(PRINT)document.body.classList.add('printmode',NOPRICE?'noprice':'withprice');
+const money=n=>'$'+Math.round(n).toLocaleString('es-CL');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const norm=s=>String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+const store={get(k){try{return JSON.parse(localStorage.getItem(k)||'null')}catch(_){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(_){}}};
+let data=null,items=new Map(),cart=store.get('zipperCatalogoPedido')||{},filter='';
+const qtyOf=k=>Number(cart[k]||0);
+function priceFor(it,q){return it.promo&&q>=it.promo.min?it.promo.price:it.price}
+function lineList(){const out=[];for(const [k,q] of Object.entries(cart)){if(!(q>0))continue;const [base,fl]=k.split('::');const it=items.get(base);if(!it)continue;out.push({k,it,q,flavor:fl||'',sub:priceFor(it,q)*q})}return out}
+function save(){store.set('zipperCatalogoPedido',cart);refreshFoot()}
+function setQty(k,q){q=Math.max(0,Math.min(999,Math.round(Number(q)||0)));if(q)cart[k]=q;else delete cart[k];save();document.querySelectorAll('[data-k="'+CSS.escape(k)+'"]').forEach(el=>paintStep(el,k));const base=k.split('::')[0];const card=document.querySelector('[data-card="'+CSS.escape(base)+'"]');if(card)paintCard(card,base)}
+function stepHTML(k){return PRINT?'':'<div class="step" data-k="'+esc(k)+'"></div>'}
+function paintStep(el,k){const q=qtyOf(k);if(!q&&!el.closest('.flv')&&!el.closest('td')){el.className='';el.innerHTML='<button class="addbtn" style="width:100%" data-a="+">＋ Agregar</button>';return}el.className='step';el.innerHTML='<button data-a="-" aria-label="Quitar">−</button><input inputmode="numeric" value="'+q+'" aria-label="Cantidad"><button class="add" data-a="+" aria-label="Agregar">＋</button>'}
+function paintCard(card,base){const it=items.get(base);const any=Object.keys(cart).some(k=>k===base||k.startsWith(base+'::'));card.classList.toggle('sel',any);const pr=card.querySelector('.pr b');if(pr&&it){const q=qtyOf(base);pr.textContent=money(priceFor(it,q))}}
+function card(it,c){const flv=it.wide&&it.fmt.includes(':')?it.fmt.split(': ')[1].split(' · '):null;
+  if(PRINT&&flv)return '<article class="card wide" style="--c:'+c+'"><div class="ph"><img src="'+esc(it.img)+'" alt=""></div><div class="info"><h3>'+esc(it.name)+'</h3><p class="fmt">'+flv.length+' sabores</p><div class="tags">'+flv.map(f=>'<span>'+esc(f)+'</span>').join('')+'</div>'+(NOPRICE?'':'<div class="pr"><b>'+money(it.price)+'</b><span>por '+esc(it.per)+'</span></div>')+'</div></article>';
+  const unit=it.units?'<span class="unit">'+money(it.price/it.units)+' por unidad</span>':'';
+  const promo=it.promo?'<span class="promo">★ Desde '+it.promo.min+': '+money(it.promo.price)+' c/'+esc(it.per)+'</span>':'';
+  const body=flv?'<div class="flv">'+flv.map(f=>'<div><span>'+esc(f)+'</span>'+stepHTML(it.key+'::'+f)+'</div>').join('')+'</div>':stepHTML(it.key);
+  return '<article class="card'+(flv?' wide':'')+'" style="--c:'+c+'" data-card="'+esc(it.key)+'">'+(it.new?'<span class="new">NUEVO</span>':'')+'<div class="ph"><img src="'+esc(it.img)+'" alt="'+esc(it.name)+'"></div><div class="info"><h3>'+esc(it.name)+'</h3><p class="fmt">'+esc(flv?'Elige sabores y cantidad':it.fmt)+'</p>'+(NOPRICE?'':'<div class="pr"><b>'+money(it.price)+'</b><span>por '+esc(it.per)+'</span></div>'+unit+promo)+body+'</div></article>'}
+function render(){
+  const q=norm(filter.trim());const out=[];
+  data.sections.forEach((s,i)=>{const list=s.items.filter(it=>!it.hidden&&(!q||norm(it.name+' '+it.fmt+' '+s.title).includes(q)));if(!list.length)return;
+    if(s.table){out.push('<section class="sec" id="s'+i+'" style="--c:'+s.color+'"><h2>'+esc(s.title)+'<span>'+list.length+' productos</span></h2><table>'+list.map(it=>'<tr data-card="'+esc(it.key)+'"><td>'+esc(it.name)+'<small>'+esc(it.fmt)+'</small></td>'+(NOPRICE?'':'<td class="p">'+money(it.price)+'</td>')+(PRINT?'':'<td>'+stepHTML(it.key)+'</td>')+'</tr>').join('')+'</table></section>');return}
+    out.push('<section class="sec" id="s'+i+'" style="--c:'+s.color+'"><h2>'+esc(s.title)+'<span>'+list.length+' producto'+(list.length>1?'s':'')+'</span></h2><div class="grid">'+list.map(it=>card(it,s.color)).join('')+'</div></section>')});
+  $('list').innerHTML=out.join('')||'<p class="empty">No encontramos “'+esc(filter)+'”. Pregúntanos por WhatsApp.</p>';
+  document.querySelectorAll('[data-k]').forEach(el=>paintStep(el,el.dataset.k));
+  document.querySelectorAll('[data-card]').forEach(el=>paintCard(el,el.dataset.card));
+}
+$('list').addEventListener('click',e=>{const b=e.target.closest('button[data-a]');if(!b)return;const k=b.closest('[data-k]').dataset.k;setQty(k,qtyOf(k)+(b.dataset.a==='+'?1:-1))});
+$('list').addEventListener('change',e=>{if(e.target.matches('[data-k] input'))setQty(e.target.closest('[data-k]').dataset.k,e.target.value)});
+$('q').addEventListener('input',e=>{filter=e.target.value;render()});
+function refreshFoot(){const l=lineList();const tot=l.reduce((a,x)=>a+x.sub,0),n=l.reduce((a,x)=>a+x.q,0);$('foot').classList.toggle('show',l.length>0);$('fcount').textContent=l.length+' producto'+(l.length!==1?'s':'')+' · '+n+' en total';$('ftotal').textContent=money(tot);if($('sheet').classList.contains('show'))paintSheet()}
+function paintSheet(){const l=lineList();if(!l.length){$('sheet').classList.remove('show');return}
+  $('lines').innerHTML=l.map(x=>'<div class="line"><button class="x" data-del="'+esc(x.k)+'" aria-label="Quitar">×</button><div class="n">'+esc(x.it.name)+(x.flavor?' · '+esc(x.flavor):'')+'<small>'+x.q+' × '+money(priceFor(x.it,x.q))+' por '+esc(x.it.per)+'</small></div><span class="t">'+money(x.sub)+'</span></div>').join('');
+  $('stotal').textContent=money(l.reduce((a,x)=>a+x.sub,0))}
+$('lines').addEventListener('click',e=>{const b=e.target.closest('[data-del]');if(b)setQty(b.dataset.del,0)});
+$('open').onclick=()=>{paintSheet();$('sheet').classList.add('show')};
+$('close').onclick=()=>$('sheet').classList.remove('show');
+$('sheet').addEventListener('click',e=>{if(e.target===$('sheet'))$('sheet').classList.remove('show')});
+$('who').value=store.get('zipperCatalogoNombre')||'';
+$('clear').onclick=()=>{if(confirm('¿Vaciar todo el pedido?')){cart={};save();render();$('sheet').classList.remove('show')}};
+$('send').onclick=()=>{const l=lineList();if(!l.length)return;const who=$('who').value.trim();store.set('zipperCatalogoNombre',who);
+  const txt=['Hola *Distribuidora Zipper* 👋, quiero hacer este pedido:',''].concat(l.map(x=>'• '+x.q+' × '+x.it.name+(x.flavor?' · '+x.flavor:'')+' ('+x.it.per+') — '+money(x.sub)),['','*Total estimado: '+money(l.reduce((a,x)=>a+x.sub,0))+'*']);
+  if(who)txt.push('Cliente: '+who);const m=$('msg').value.trim();if(m)txt.push('Comentario: '+m);
+  location.href='https://wa.me/'+data.whatsapp+'?text='+encodeURIComponent(txt.join('\n'))};
+function chips(){$('chips').innerHTML=data.sections.map((s,i)=>'<button data-s="'+i+'">'+esc(s.title)+'</button>').join('');$('chips').onclick=e=>{const b=e.target.closest('[data-s]');if(!b)return;filter='';$('q').value='';render();document.getElementById('s'+b.dataset.s)?.scrollIntoView({behavior:'smooth'})}}
+// Precios publicados desde la app del dueño (si existen) reemplazan los del archivo base.
+async function livePrices(){try{const r=await fetch(FIRESTORE,{cache:'no-store'});if(!r.ok)return null;const j=await r.json();return JSON.parse(j.fields?.data?.stringValue||'null')}catch(_){return null}}
+Promise.all([fetch('catalogo/catalogo.json',{cache:'no-cache'}).then(r=>r.json()),livePrices()]).then(([base,live])=>{
+  data=base;
+  if(live&&live.items){data.sections.forEach(s=>s.items.forEach(it=>{const x=live.items[it.key];if(!x)return;if(x.price>0)it.price=x.price;if('promo' in x)it.promo=x.promo||undefined;if(x.hidden)it.hidden=true}));if(live.updatedAt)$('upd').textContent='Precios actualizados el '+new Date(live.updatedAt).toLocaleDateString('es-CL',{day:'numeric',month:'long',year:'numeric'})}
+  data.sections.forEach(s=>s.items.forEach(it=>items.set(it.key,it)));
+  $('mes').textContent=NOPRICE?'Catálogo · Mes / año: ____________':'Catálogo · '+new Date().toLocaleDateString('es-CL',{month:'long',year:'numeric'});
+  if(PRINT)document.title='Catálogo Zipper'+(NOPRICE?' - para imprimir':' - con precios');
+  for(const k of Object.keys(cart)){const it=items.get(k.split('::')[0]);if(!it||it.hidden)delete cart[k]}
+  chips();render();save();
+}).catch(()=>{$('list').innerHTML='<p class="empty">No se pudo cargar el catálogo. Revisa tu conexión o escríbenos por WhatsApp.</p>'});
+})();
+</script>
+</body>
+</html>

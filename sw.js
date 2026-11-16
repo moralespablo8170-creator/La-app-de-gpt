@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zipper-app-pwa-20261116-gps-54';
+const CACHE_NAME = 'zipper-app-pwa-20261116-catalogo-55';
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -19,9 +19,10 @@ const APP_SHELL = [
   "./ideas.js?v=20261115-1",
   "./informe-vendedores.js?v=20261116-3",
   "./vendedores-caja.js?v=20261116-2",
+  "./catalogo-admin.js?v=20261116-1",
   "./rutas-clientes.js?v=20261115-2",
   "./proyecciones.js?v=20261115-4",
-  "./firebase-cloud.js?v=20261116-remedios-2",
+  "./firebase-cloud.js?v=20261116-catalogo-1",
   "./firebase-config.js",
   "./firebase-test-config.js",
   "./seller-assignments.js?v=zipper-seller-bulk-20261115-v2",

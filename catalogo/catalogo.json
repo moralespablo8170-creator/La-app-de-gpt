@@ -1,0 +1,1175 @@
+{
+ "version": 1,
+ "whatsapp": "56975676799",
+ "sections": [
+  {
+   "title": "Encendedores",
+   "color": "#e11d48",
+   "items": [
+    {
+     "key": "ronson-transparente",
+     "name": "Ronson transparente",
+     "fmt": "Display · 20 unidades",
+     "price": 3600,
+     "per": "display",
+     "img": "catalogo/img/ronson-transparente.jpg",
+     "units": 20,
+     "promo": {
+      "min": 10,
+      "price": 3300
+     }
+    },
+    {
+     "key": "ronson-clasico",
+     "name": "Ronson clásico",
+     "fmt": "Display · 20 unidades",
+     "price": 3800,
+     "per": "display",
+     "img": "catalogo/img/ronson-clasico.jpg",
+     "units": 20
+    },
+    {
+     "key": "ronson-diseno",
+     "name": "Ronson diseño",
+     "fmt": "Display · 20 unidades · diseños surtidos",
+     "price": 5400,
+     "per": "display",
+     "img": "catalogo/img/ronson-diseno.jpg",
+     "units": 20
+    },
+    {
+     "key": "chispero-ronson",
+     "name": "Chispero Ronson",
+     "fmt": "Venta por unidad · colores variados",
+     "price": 1800,
+     "per": "unidad",
+     "img": "catalogo/img/chispero-ronson.jpg"
+    },
+    {
+     "key": "clipper-coleccionable",
+     "name": "Clipper coleccionable",
+     "fmt": "Display · 24 unidades · diseños coleccionables",
+     "price": 16800,
+     "per": "display",
+     "img": "catalogo/img/clipper-coleccionable.jpg",
+     "units": 24
+    }
+   ]
+  },
+  {
+   "title": "Vasos desechables",
+   "color": "#0ea5e9",
+   "items": [
+    {
+     "key": "vaso-plastico-transparente-10-oz",
+     "name": "Vaso plástico transparente 10 oz",
+     "fmt": "Manga x 50",
+     "price": 2000,
+     "per": "manga",
+     "img": "catalogo/img/vaso-plastico-transparente-10-oz.jpg",
+     "units": 50
+    },
+    {
+     "key": "vaso-bacan-transparente-16-oz",
+     "name": "Vaso Bacán transparente 16 oz",
+     "fmt": "Manga x 25",
+     "price": 1750,
+     "per": "manga",
+     "img": "catalogo/img/vaso-bacan-transparente-16-oz.jpg",
+     "units": 25
+    },
+    {
+     "key": "vaso-bacan-rojo-16-oz",
+     "name": "Vaso Bacán rojo 16 oz",
+     "fmt": "Manga x 25",
+     "price": 2500,
+     "per": "manga",
+     "img": "catalogo/img/vaso-bacan-rojo-16-oz.jpg",
+     "units": 25
+    }
+   ]
+  },
+  {
+   "title": "Papelillos y conos",
+   "color": "#a16207",
+   "items": [
+    {
+     "key": "ocb-negro-premium",
+     "name": "OCB negro Premium",
+     "fmt": "Display x 25 libritos",
+     "price": 13000,
+     "per": "display",
+     "img": "catalogo/img/ocb-negro-premium.jpg",
+     "units": 25
+    },
+    {
+     "key": "ocb-gris-x-pert",
+     "name": "OCB gris X-Pert",
+     "fmt": "Display x 25 libritos",
+     "price": 14000,
+     "per": "display",
+     "img": "catalogo/img/ocb-gris-x-pert.jpg",
+     "units": 25
+    },
+    {
+     "key": "ocb-organico-bamboo",
+     "name": "OCB orgánico Bamboo",
+     "fmt": "Display x 25 libritos",
+     "price": 14000,
+     "per": "display",
+     "img": "catalogo/img/ocb-organico-bamboo.jpg",
+     "units": 25
+    },
+    {
+     "key": "amsterdam-1-1-4",
+     "name": "Amsterdam 1 1/4",
+     "fmt": "Caja x 20 libritos",
+     "price": 5000,
+     "per": "caja",
+     "img": "catalogo/img/amsterdam-1-1-4.jpg",
+     "units": 20
+    },
+    {
+     "key": "papel-cono-rosa",
+     "name": "Papel cono rosa",
+     "fmt": "Pack x 40 conos",
+     "price": 5000,
+     "per": "pack",
+     "img": "catalogo/img/papel-cono-rosa.jpg",
+     "units": 40
+    }
+   ]
+  },
+  {
+   "title": "Papelillos con boquilla",
+   "color": "#a16207",
+   "items": [
+    {
+     "key": "raw-con-boquilla",
+     "name": "RAW con boquilla",
+     "fmt": "Caja x 24",
+     "price": 24000,
+     "per": "caja",
+     "img": "catalogo/img/raw-con-boquilla.jpg",
+     "units": 24
+    },
+    {
+     "key": "ocb-con-boquilla",
+     "name": "OCB con boquilla",
+     "fmt": "Display x 24",
+     "price": 29500,
+     "per": "display",
+     "img": "catalogo/img/ocb-con-boquilla.jpg",
+     "units": 24
+    },
+    {
+     "key": "amsterdam-con-boquilla",
+     "name": "Amsterdam con boquilla",
+     "fmt": "Display x 25 · formato 1 1/4",
+     "price": 15000,
+     "per": "display",
+     "img": "catalogo/img/amsterdam-con-boquilla.jpg",
+     "units": 25
+    }
+   ]
+  },
+  {
+   "title": "Boquillas",
+   "color": "#a16207",
+   "items": [
+    {
+     "key": "boquilla-amsterdam-blanca",
+     "name": "Boquilla Amsterdam blanca",
+     "fmt": "Display completo",
+     "price": 8500,
+     "per": "display",
+     "img": "catalogo/img/boquilla-amsterdam-blanca.jpg",
+     "units": 50
+    },
+    {
+     "key": "boquilla-amsterdam-cafe",
+     "name": "Boquilla Amsterdam café",
+     "fmt": "Display completo",
+     "price": 8500,
+     "per": "display",
+     "img": "catalogo/img/boquilla-amsterdam-cafe.jpg",
+     "units": 50
+    },
+    {
+     "key": "boquilla-ocb",
+     "name": "Boquilla OCB",
+     "fmt": "Display x 25",
+     "price": 7000,
+     "per": "display",
+     "img": "catalogo/img/boquilla-ocb.jpg",
+     "units": 25
+    }
+   ]
+  },
+  {
+   "title": "Blunt",
+   "color": "#7c3aed",
+   "items": [
+    {
+     "key": "blunt-wrap",
+     "name": "Blunt Wrap",
+     "fmt": "Display x 25 · sabores surtidos",
+     "price": 15000,
+     "per": "display",
+     "img": "catalogo/img/blunt-wrap.jpg",
+     "units": 25
+    },
+    {
+     "key": "blunt-petalos-de-rosa-amsterdam",
+     "name": "Blunt pétalos de rosa Amsterdam",
+     "fmt": "Display x 15",
+     "price": 10500,
+     "per": "display",
+     "img": "catalogo/img/blunt-petalos-de-rosa-amsterdam.jpg",
+     "units": 15
+    }
+   ]
+  },
+  {
+   "title": "Artículos de tabaquería",
+   "color": "#7c3aed",
+   "items": [
+    {
+     "key": "pipa-con-moledor",
+     "name": "Pipa con moledor",
+     "fmt": "Sachet con pipa, malla y moledor pequeño",
+     "price": 1800,
+     "per": "sachet",
+     "img": "catalogo/img/pipa-con-moledor.jpg"
+    },
+    {
+     "key": "pipa-con-malla",
+     "name": "Pipa con malla",
+     "fmt": "Sachet con pipa y malla lateral",
+     "price": 1500,
+     "per": "sachet",
+     "img": "catalogo/img/pipa-con-malla.jpg"
+    },
+    {
+     "key": "malla-para-pipas",
+     "name": "Malla para pipas",
+     "fmt": "Pack x 100 unidades",
+     "price": 5000,
+     "per": "pack",
+     "img": "catalogo/img/malla-para-pipas.jpg",
+     "units": 100
+    },
+    {
+     "key": "moledor",
+     "name": "Moledor",
+     "fmt": "Unidad",
+     "price": 1500,
+     "per": "unidad",
+     "img": "catalogo/img/moledor.jpg"
+    },
+    {
+     "key": "enroladora",
+     "name": "Enroladora",
+     "fmt": "Unidad",
+     "price": 1500,
+     "per": "unidad",
+     "img": "catalogo/img/enroladora.jpg"
+    }
+   ]
+  },
+  {
+   "title": "Tabaco Bristol",
+   "color": "#7c3aed",
+   "items": [
+    {
+     "key": "tabaco-bristol",
+     "name": "Tabaco Bristol",
+     "fmt": "Sabores: chocolate · cherry · caramelo · vainilla · original · mango · uva · arándano · menta · sandía · mango maracuyá · coco · Virginia · café turco",
+     "price": 4800,
+     "per": "unidad",
+     "img": "catalogo/img/tabaco-bristol.jpg",
+     "wide": true
+    }
+   ]
+  },
+  {
+   "title": "Filtros Verso",
+   "color": "#475569",
+   "items": [
+    {
+     "key": "filtro-verso-azul-slim",
+     "name": "Filtro Verso azul · Slim",
+     "fmt": "Bolsa x 200 filtros",
+     "price": 1000,
+     "per": "bolsa",
+     "img": "catalogo/img/filtro-verso-azul-slim.jpg"
+    },
+    {
+     "key": "filtro-verso-verde-mentolado",
+     "name": "Filtro Verso verde · mentolado",
+     "fmt": "Bolsa x 200 filtros",
+     "price": 1000,
+     "per": "bolsa",
+     "img": "catalogo/img/filtro-verso-verde-mentolado.jpg"
+    },
+    {
+     "key": "filtro-verso-cafe-organico",
+     "name": "Filtro Verso café · orgánico",
+     "fmt": "Bolsa x 200 filtros · biodegradable",
+     "price": 1000,
+     "per": "bolsa",
+     "img": "catalogo/img/filtro-verso-cafe-organico.jpg"
+    },
+    {
+     "key": "filtro-verso-rojo-semi-slim-long",
+     "name": "Filtro Verso rojo · Semi Slim Long",
+     "fmt": "Bolsa x 180 filtros · 7 × 20 mm",
+     "price": 1000,
+     "per": "bolsa",
+     "img": "catalogo/img/filtro-verso-rojo-semi-slim-long.jpg"
+    }
+   ]
+  },
+  {
+   "title": "Big Time regular",
+   "color": "#16a34a",
+   "items": [
+    {
+     "key": "big-time-menta-verde",
+     "name": "Big Time · Menta (verde)",
+     "fmt": "Display · 20 unidades",
+     "price": 5800,
+     "per": "display",
+     "img": "catalogo/img/big-time-menta-verde.jpg",
+     "units": 20
+    },
+    {
+     "key": "big-time-menta-fuerte-negro",
+     "name": "Big Time · Menta fuerte (negro)",
+     "fmt": "Display · 20 unidades",
+     "price": 5800,
+     "per": "display",
+     "img": "catalogo/img/big-time-menta-fuerte-negro.jpg",
+     "units": 20
+    },
+    {
+     "key": "big-time-sandia-rojo",
+     "name": "Big Time · Sandía (rojo)",
+     "fmt": "Display · 20 unidades",
+     "price": 5800,
+     "per": "display",
+     "img": "catalogo/img/big-time-sandia-rojo.jpg",
+     "units": 20
+    },
+    {
+     "key": "big-time-aqua-azul",
+     "name": "Big Time · Aqua (azul)",
+     "fmt": "Display · 20 unidades",
+     "price": 5800,
+     "per": "display",
+     "img": "catalogo/img/big-time-aqua-azul.jpg",
+     "units": 20
+    },
+    {
+     "key": "big-time-refrescante-celeste",
+     "name": "Big Time · Refrescante (celeste)",
+     "fmt": "Display · 20 unidades",
+     "price": 5800,
+     "per": "display",
+     "img": "catalogo/img/big-time-refrescante-celeste.jpg",
+     "units": 20
+    },
+    {
+     "key": "big-time-bubble-fun-rosado",
+     "name": "Big Time · Bubble Fun (rosado)",
+     "fmt": "Display · 20 unidades",
+     "price": 5800,
+     "per": "display",
+     "img": "catalogo/img/big-time-bubble-fun-rosado.jpg",
+     "units": 20
+    }
+   ]
+  },
+  {
+   "title": "Big Time Ultra",
+   "color": "#16a34a",
+   "items": [
+    {
+     "key": "big-time-ultra-aqua-azul",
+     "name": "Big Time Ultra · Aqua (azul)",
+     "fmt": "Display · 12 unidades",
+     "price": 11700,
+     "per": "display",
+     "img": "catalogo/img/big-time-ultra-aqua-azul.jpg",
+     "units": 12,
+     "promo": {
+      "min": 3,
+      "price": 11200
+     }
+    },
+    {
+     "key": "big-time-ultra-menta-verde",
+     "name": "Big Time Ultra · Menta (verde)",
+     "fmt": "Display · 12 unidades",
+     "price": 11700,
+     "per": "display",
+     "img": "catalogo/img/big-time-ultra-menta-verde.jpg",
+     "units": 12,
+     "promo": {
+      "min": 3,
+      "price": 11200
+     }
+    },
+    {
+     "key": "big-time-ultra-sandia-rojo",
+     "name": "Big Time Ultra · Sandía (rojo)",
+     "fmt": "Display · 12 unidades",
+     "price": 11700,
+     "per": "display",
+     "img": "catalogo/img/big-time-ultra-sandia-rojo.jpg",
+     "units": 12,
+     "promo": {
+      "min": 3,
+      "price": 11200
+     }
+    },
+    {
+     "key": "big-time-ultra-menta-fuerte-negro",
+     "name": "Big Time Ultra · Menta fuerte (negro)",
+     "fmt": "Display · 12 unidades",
+     "price": 11700,
+     "per": "display",
+     "img": "catalogo/img/big-time-ultra-menta-fuerte-negro.jpg",
+     "units": 12,
+     "promo": {
+      "min": 3,
+      "price": 11200
+     }
+    }
+   ]
+  },
+  {
+   "title": "Chicles y chocolates",
+   "color": "#b45309",
+   "items": [
+    {
+     "key": "nikolo",
+     "name": "Nikolo",
+     "fmt": "Display x 24",
+     "price": 6400,
+     "per": "display",
+     "img": "catalogo/img/nikolo.jpg",
+     "units": 24
+    },
+    {
+     "key": "chicle-bazooka",
+     "name": "Chicle Bazooka",
+     "fmt": "Display x 25",
+     "price": 4500,
+     "per": "display",
+     "img": "catalogo/img/chicle-bazooka.jpg",
+     "units": 25
+    },
+    {
+     "key": "bon-o-bon",
+     "name": "Bon o Bon",
+     "fmt": "Display x 30",
+     "price": 6500,
+     "per": "display",
+     "img": "catalogo/img/bon-o-bon.jpg",
+     "units": 30
+    },
+    {
+     "key": "rocklets-mani",
+     "name": "Rocklets maní",
+     "fmt": "Display x 18",
+     "price": 6500,
+     "per": "display",
+     "img": "catalogo/img/rocklets-mani.jpg",
+     "units": 18
+    },
+    {
+     "key": "rocklets",
+     "name": "Rocklets",
+     "fmt": "Display x 18",
+     "price": 6500,
+     "per": "display",
+     "img": "catalogo/img/rocklets.jpg",
+     "units": 18
+    },
+    {
+     "key": "tifany",
+     "name": "Tifany",
+     "fmt": "Display x 20",
+     "price": 4300,
+     "per": "display",
+     "img": "catalogo/img/tifany.jpg",
+     "units": 20
+    },
+    {
+     "key": "chubi",
+     "name": "Chubi",
+     "fmt": "Display x 24",
+     "price": 5200,
+     "per": "display",
+     "img": "catalogo/img/chubi.jpg",
+     "units": 24
+    }
+   ]
+  },
+  {
+   "title": "Gomitas Ambrosoli",
+   "color": "#db2777",
+   "items": [
+    {
+     "key": "gomitas-ambrosoli-chubi",
+     "name": "Gomitas Ambrosoli · Chubi",
+     "fmt": "Display x 20 unidades",
+     "price": 4300,
+     "per": "display",
+     "img": "catalogo/img/gomitas-ambrosoli-chubi.jpg",
+     "units": 20
+    },
+    {
+     "key": "gomitas-ambrosoli-frutilla",
+     "name": "Gomitas Ambrosoli · frutilla",
+     "fmt": "Display x 20 unidades",
+     "price": 4300,
+     "per": "display",
+     "img": "catalogo/img/gomitas-ambrosoli-frutilla.jpg",
+     "units": 20
+    },
+    {
+     "key": "gomitas-ambrosoli-loop",
+     "name": "Gomitas Ambrosoli · Loop",
+     "fmt": "Display x 20 unidades",
+     "price": 4300,
+     "per": "display",
+     "img": "catalogo/img/gomitas-ambrosoli-loop.jpg",
+     "units": 20
+    },
+    {
+     "key": "gomitas-ambrosoli-amberries",
+     "name": "Gomitas Ambrosoli · Amberries",
+     "fmt": "Display x 20 unidades",
+     "price": 4300,
+     "per": "display",
+     "img": "catalogo/img/gomitas-ambrosoli-amberries.jpg",
+     "units": 20
+    },
+    {
+     "key": "gomitas-ambrosoli-ambrosito",
+     "name": "Gomitas Ambrosoli · Ambrosito",
+     "fmt": "Display x 20 unidades",
+     "price": 4300,
+     "per": "display",
+     "img": "catalogo/img/gomitas-ambrosoli-ambrosito.jpg",
+     "units": 20
+    }
+   ]
+  },
+  {
+   "title": "Masticables",
+   "color": "#ea580c",
+   "items": [
+    {
+     "key": "turron-de-mani",
+     "name": "Turrón de maní",
+     "fmt": "Display x 28",
+     "price": 9500,
+     "per": "display",
+     "img": "catalogo/img/turron-de-mani.jpg",
+     "units": 28
+    },
+    {
+     "key": "languetazo-naranja",
+     "name": "Langüetazo naranja",
+     "fmt": "Display x 24",
+     "price": 3000,
+     "per": "display",
+     "img": "catalogo/img/languetazo-naranja.jpg",
+     "units": 24
+    },
+    {
+     "key": "languetazo-verde-manzana",
+     "name": "Langüetazo verde manzana",
+     "fmt": "Display x 24",
+     "price": 3000,
+     "per": "display",
+     "img": "catalogo/img/languetazo-verde-manzana.jpg",
+     "units": 24
+    }
+   ]
+  },
+  {
+   "title": "Chupetes",
+   "color": "#ea580c",
+   "items": [
+    {
+     "key": "bon-bon-boom-surtido",
+     "name": "Bon Bon Boom surtido",
+     "fmt": "Display x 24 · chicle al interior",
+     "price": 2000,
+     "per": "display",
+     "img": "catalogo/img/bon-bon-boom-surtido.jpg",
+     "units": 24
+    },
+    {
+     "key": "bon-bon-boom-rojo",
+     "name": "Bon Bon Boom rojo",
+     "fmt": "Display x 24 · chicle al interior",
+     "price": 2000,
+     "per": "display",
+     "img": "catalogo/img/bon-bon-boom-rojo.jpg",
+     "units": 24
+    },
+    {
+     "key": "bowling-rojo",
+     "name": "Bowling rojo",
+     "fmt": "Display x 24 · sin chicle al interior",
+     "price": 2000,
+     "per": "display",
+     "img": "catalogo/img/bowling-rojo.jpg",
+     "units": 24
+    }
+   ]
+  },
+  {
+   "title": "Caramelos",
+   "color": "#ea580c",
+   "items": [
+    {
+     "key": "menta-chocolate-arcor",
+     "name": "Menta chocolate Arcor",
+     "fmt": "Bolsa",
+     "price": 3400,
+     "per": "bolsa",
+     "img": "catalogo/img/menta-chocolate-arcor.jpg"
+    },
+    {
+     "key": "butter-toffee-surtido",
+     "name": "Butter Toffee surtido",
+     "fmt": "Bolsa x 400 g",
+     "price": 2700,
+     "per": "bolsa",
+     "img": "catalogo/img/butter-toffee-surtido.jpg"
+    }
+   ]
+  },
+  {
+   "title": "Mentitas y Full Ambrosoli",
+   "color": "#0d9488",
+   "items": [
+    {
+     "key": "mentitas-ambrosoli",
+     "name": "Mentitas Ambrosoli",
+     "fmt": "Display x 24",
+     "price": 5250,
+     "per": "display",
+     "img": "catalogo/img/mentitas-ambrosoli.jpg",
+     "units": 24
+    },
+    {
+     "key": "full-ambrosoli-limon",
+     "name": "Full Ambrosoli · limón",
+     "fmt": "Display x 24 unidades",
+     "price": 5250,
+     "per": "display",
+     "img": "catalogo/img/full-ambrosoli-limon.jpg",
+     "units": 24
+    }
+   ]
+  },
+  {
+   "title": "Freegells",
+   "color": "#0d9488",
+   "items": [
+    {
+     "key": "freegells-azul-eucaliptus",
+     "name": "Freegells azul · eucaliptus",
+     "fmt": "Display x 12",
+     "price": 2100,
+     "per": "display",
+     "img": "catalogo/img/freegells-azul-eucaliptus.jpg",
+     "units": 12
+    },
+    {
+     "key": "freegells-rojo-cereza",
+     "name": "Freegells rojo · cereza",
+     "fmt": "Display x 12",
+     "price": 2100,
+     "per": "display",
+     "img": "catalogo/img/freegells-rojo-cereza.jpg",
+     "units": 12
+    },
+    {
+     "key": "freegells-vit-c-miel-limon-y-propoleo",
+     "name": "Freegells Vit. C · miel, limón y propóleo",
+     "fmt": "Display x 12",
+     "price": 2100,
+     "per": "display",
+     "img": "catalogo/img/freegells-vit-c-miel-limon-y-propoleo.jpg",
+     "units": 12
+    }
+   ]
+  },
+  {
+   "title": "Alkas",
+   "color": "#0d9488",
+   "items": [
+    {
+     "key": "alka-caramelo",
+     "name": "Alka caramelo",
+     "fmt": "Bolsa x 400 g",
+     "price": 2400,
+     "per": "bolsa",
+     "img": "catalogo/img/alka-caramelo.jpg",
+     "units": 40
+    },
+    {
+     "key": "alka-ace-mentol-azul",
+     "name": "Alka Ace mentol azul",
+     "fmt": "Display x 100",
+     "price": 2800,
+     "per": "display",
+     "img": "catalogo/img/alka-ace-mentol-azul.jpg",
+     "units": 100
+    },
+    {
+     "key": "alka-2-menta-cherry-y-manzana",
+     "name": "Alka 2 · menta, cherry y manzana",
+     "fmt": "Display x 12 · tres sabores",
+     "price": 4100,
+     "per": "display",
+     "img": "catalogo/img/alka-2-menta-cherry-y-manzana.jpg",
+     "units": 12
+    },
+    {
+     "key": "alka-ice-cereza",
+     "name": "Alka Ice cereza",
+     "fmt": "Bolsa x 100 unidades · 390 g",
+     "price": 2800,
+     "per": "bolsa",
+     "img": "catalogo/img/alka-ice-cereza.jpg",
+     "units": 100,
+     "new": true
+    }
+   ]
+  },
+  {
+   "title": "Galletas",
+   "color": "#92400e",
+   "items": [
+    {
+     "key": "conquista-rollo-palmerita",
+     "name": "Conquista rollo palmerita",
+     "fmt": "Rollo",
+     "price": 600,
+     "per": "unidad",
+     "img": "catalogo/img/conquista-rollo-palmerita.jpg"
+    },
+    {
+     "key": "cracker",
+     "name": "Cracker",
+     "fmt": "Individual · familiar · grande",
+     "price": 650,
+     "per": "unidad",
+     "img": "catalogo/img/cracker.jpg"
+    },
+    {
+     "key": "triton-vainilla",
+     "name": "Tritón vainilla",
+     "fmt": "Paquete",
+     "price": 750,
+     "per": "unidad",
+     "img": "catalogo/img/triton-vainilla.jpg"
+    },
+    {
+     "key": "triton-chocolate",
+     "name": "Tritón chocolate",
+     "fmt": "Paquete",
+     "price": 750,
+     "per": "unidad",
+     "img": "catalogo/img/triton-chocolate.jpg"
+    },
+    {
+     "key": "kuky-clasica",
+     "name": "Kuky clásica",
+     "fmt": "Paquete",
+     "price": 1000,
+     "per": "unidad",
+     "img": "catalogo/img/kuky-clasica.jpg"
+    },
+    {
+     "key": "galleta-vino",
+     "name": "Galleta Vino",
+     "fmt": "Paquete",
+     "price": 750,
+     "per": "unidad",
+     "img": "catalogo/img/galleta-vino.jpg"
+    }
+   ]
+  },
+  {
+   "title": "Chocolates en display y barra",
+   "color": "#7f1d1d",
+   "items": [
+    {
+     "key": "super-8",
+     "name": "Super 8",
+     "fmt": "Display x 24",
+     "price": 6600,
+     "per": "display",
+     "img": "catalogo/img/super-8.jpg",
+     "units": 24
+    },
+    {
+     "key": "kitkat",
+     "name": "KitKat",
+     "fmt": "Display x 24",
+     "price": 16500,
+     "per": "display",
+     "img": "catalogo/img/kitkat.jpg",
+     "units": 24
+    },
+    {
+     "key": "kitkat-por-unidad",
+     "name": "KitKat por unidad",
+     "fmt": "Venta por unidad",
+     "price": 700,
+     "per": "unidad",
+     "img": "catalogo/img/kitkat-por-unidad.jpg"
+    },
+    {
+     "key": "capri-almendra",
+     "name": "Capri almendra",
+     "fmt": "Display x 24 · barra 30 g",
+     "price": 9300,
+     "per": "display",
+     "img": "catalogo/img/capri-almendra.jpg",
+     "units": 24,
+     "new": true
+    },
+    {
+     "key": "capri-frutilla",
+     "name": "Capri frutilla",
+     "fmt": "Display x 24 · barra 30 g",
+     "price": 9300,
+     "per": "display",
+     "img": "catalogo/img/capri-frutilla.jpg",
+     "units": 24,
+     "new": true
+    },
+    {
+     "key": "sahne-nuss-90-g",
+     "name": "Sahne-Nuss 90 g",
+     "fmt": "Barra",
+     "price": 2100,
+     "per": "unidad",
+     "img": "catalogo/img/sahne-nuss-90-g.jpg"
+    },
+    {
+     "key": "trencito-80-g",
+     "name": "Trencito 80 g",
+     "fmt": "Barra",
+     "price": 1600,
+     "per": "unidad",
+     "img": "catalogo/img/trencito-80-g.jpg"
+    }
+   ]
+  },
+  {
+   "title": "Bazar y embalaje",
+   "color": "#334155",
+   "items": [
+    {
+     "key": "bolsa-botillera-plastica-gruesa",
+     "name": "Bolsa botillera plástica gruesa",
+     "fmt": "Rollo x 100",
+     "price": 3300,
+     "per": "rollo",
+     "img": "catalogo/img/bolsa-botillera-plastica-gruesa.jpg",
+     "units": 100
+    },
+    {
+     "key": "huincha-de-embalaje-transparente",
+     "name": "Huincha de embalaje transparente",
+     "fmt": "Unidad",
+     "price": 800,
+     "per": "unidad",
+     "img": "catalogo/img/huincha-de-embalaje-transparente.jpg"
+    },
+    {
+     "key": "bolsa-de-basura-80-110-cm",
+     "name": "Bolsa de basura 80 × 110 cm",
+     "fmt": "Rollo x 10 bolsas",
+     "price": 1500,
+     "per": "rollo",
+     "img": "catalogo/img/bolsa-de-basura-80-110-cm.jpg",
+     "units": 10
+    },
+    {
+     "key": "bolsa-de-basura-90-120-cm",
+     "name": "Bolsa de basura 90 × 120 cm",
+     "fmt": "Rollo x 10 bolsas",
+     "price": 3500,
+     "per": "rollo",
+     "img": "catalogo/img/bolsa-de-basura-90-120-cm.jpg",
+     "units": 10
+    },
+    {
+     "key": "panuelos-elite",
+     "name": "Pañuelos Elite",
+     "fmt": "Pack x 18",
+     "price": 3100,
+     "per": "pack",
+     "img": "catalogo/img/panuelos-elite.jpg",
+     "units": 18
+    }
+   ]
+  },
+  {
+   "title": "Pilas Eveready",
+   "color": "#334155",
+   "items": [
+    {
+     "key": "pila-aaa",
+     "name": "Pila AAA",
+     "fmt": "Caja x 24 unidades",
+     "price": 5000,
+     "per": "caja",
+     "img": "catalogo/img/pila-aaa.jpg",
+     "units": 24
+    },
+    {
+     "key": "pila-aa",
+     "name": "Pila AA",
+     "fmt": "Tira x 24 · 12 pares",
+     "price": 5000,
+     "per": "tira",
+     "img": "catalogo/img/pila-aa.jpg",
+     "units": 24
+    },
+    {
+     "key": "pila-d",
+     "name": "Pila D",
+     "fmt": "Display x 12 unidades",
+     "price": 8000,
+     "per": "display",
+     "img": "catalogo/img/pila-d.jpg",
+     "units": 12
+    }
+   ]
+  },
+  {
+   "title": "Remedios",
+   "color": "#dc2626",
+   "table": true,
+   "items": [
+    {
+     "key": "rem-acido-mefenamico",
+     "name": "Ácido mefenámico",
+     "fmt": "10 unidades",
+     "price": 1000,
+     "per": "caja"
+    },
+    {
+     "key": "rem-amoxicilina",
+     "name": "Amoxicilina",
+     "fmt": "21 unidades",
+     "price": 2500,
+     "per": "caja"
+    },
+    {
+     "key": "rem-cefalmin",
+     "name": "Cefalmin",
+     "fmt": "10 unidades",
+     "price": 1600,
+     "per": "caja"
+    },
+    {
+     "key": "rem-clorfenamina",
+     "name": "Clorfenamina",
+     "fmt": "10 unidades",
+     "price": 600,
+     "per": "caja"
+    },
+    {
+     "key": "rem-colmax",
+     "name": "Colmax",
+     "fmt": "10 unidades",
+     "price": 1800,
+     "per": "caja"
+    },
+    {
+     "key": "rem-diclofenaco-sodico",
+     "name": "Diclofenaco sódico",
+     "fmt": "8 unidades",
+     "price": 1800,
+     "per": "caja"
+    },
+    {
+     "key": "rem-domperidona-10-mg",
+     "name": "Domperidona 10 mg",
+     "fmt": "20 unidades",
+     "price": 1200,
+     "per": "caja"
+    },
+    {
+     "key": "rem-famotidina",
+     "name": "Famotidina",
+     "fmt": "10 unidades",
+     "price": 950,
+     "per": "caja"
+    },
+    {
+     "key": "rem-ibuprofeno-600-mg",
+     "name": "Ibuprofeno 600 mg",
+     "fmt": "20 unidades",
+     "price": 1600,
+     "per": "caja"
+    },
+    {
+     "key": "rem-ketoprofeno-200-mg",
+     "name": "Ketoprofeno 200 mg",
+     "fmt": "10 unidades",
+     "price": 1600,
+     "per": "caja"
+    },
+    {
+     "key": "rem-ketorolaco-10-mg",
+     "name": "Ketorolaco 10 mg",
+     "fmt": "10 unidades",
+     "price": 1200,
+     "per": "caja"
+    },
+    {
+     "key": "rem-loratadina-10-mg",
+     "name": "Loratadina 10 mg",
+     "fmt": "30 unidades",
+     "price": 1200,
+     "per": "caja"
+    },
+    {
+     "key": "rem-loperamida",
+     "name": "Loperamida",
+     "fmt": "6 unidades",
+     "price": 800,
+     "per": "caja"
+    },
+    {
+     "key": "rem-desloratadina-5-mg",
+     "name": "Desloratadina 5 mg",
+     "fmt": "30 unidades",
+     "price": 2500,
+     "per": "caja"
+    },
+    {
+     "key": "rem-migranol",
+     "name": "Migranol",
+     "fmt": "10 unidades",
+     "price": 1800,
+     "per": "caja"
+    },
+    {
+     "key": "rem-naproxeno",
+     "name": "Naproxeno",
+     "fmt": "10 unidades",
+     "price": 1800,
+     "per": "caja"
+    },
+    {
+     "key": "rem-en-hora",
+     "name": "En Hora",
+     "fmt": "6 unidades",
+     "price": 5000,
+     "per": "caja"
+    },
+    {
+     "key": "rem-test-de-embarazo",
+     "name": "Test de embarazo",
+     "fmt": "1 unidad",
+     "price": 1000,
+     "per": "caja"
+    },
+    {
+     "key": "rem-omeprazol",
+     "name": "Omeprazol",
+     "fmt": "30 unidades",
+     "price": 1500,
+     "per": "caja"
+    },
+    {
+     "key": "rem-paracetamol-adulto",
+     "name": "Paracetamol adulto",
+     "fmt": "16 unidades",
+     "price": 700,
+     "per": "caja"
+    },
+    {
+     "key": "rem-parches-curita",
+     "name": "Parches curita",
+     "fmt": "100 unidades",
+     "price": 1850,
+     "per": "caja"
+    },
+    {
+     "key": "rem-pastilla-de-carbon",
+     "name": "Pastilla de carbón",
+     "fmt": "10 unidades",
+     "price": 1000,
+     "per": "caja"
+    },
+    {
+     "key": "rem-preservativos",
+     "name": "Preservativos",
+     "fmt": "3 unidades",
+     "price": 1100,
+     "per": "caja"
+    },
+    {
+     "key": "rem-eno",
+     "name": "ENO",
+     "fmt": "60 unidades",
+     "price": 6000,
+     "per": "caja"
+    },
+    {
+     "key": "rem-tapsin-caliente-dia",
+     "name": "Tapsin caliente día",
+     "fmt": "1 unidad",
+     "price": 550,
+     "per": "caja"
+    },
+    {
+     "key": "rem-tapsin-caliente-noche",
+     "name": "Tapsin caliente noche",
+     "fmt": "1 unidad",
+     "price": 550,
+     "per": "caja"
+    },
+    {
+     "key": "rem-tapsin-caliente-x-caja",
+     "name": "Tapsin caliente x caja",
+     "fmt": "60 unidades",
+     "price": 27500,
+     "per": "caja"
+    },
+    {
+     "key": "rem-tapsin-dia",
+     "name": "Tapsin día",
+     "fmt": "3 unidades",
+     "price": 400,
+     "per": "caja"
+    },
+    {
+     "key": "rem-tapsin-noche",
+     "name": "Tapsin noche",
+     "fmt": "3 unidades",
+     "price": 400,
+     "per": "caja"
+    }
+   ]
+  }
+ ]
+}
