@@ -123,14 +123,18 @@ function commissionBreakdown(salesTotal,tiers,mode='marginal'){
 }
 function renderCompResults(){
  const month=$('commissionMonth').value;
- const monthSales=sales.filter(s=>dateKey(s.date||s.fecha||s.occurredAt).slice(0,7)===month),totals=new Map();
- monthSales.forEach(s=>{const uid=String(s.sellerUid||'');if(uid)totals.set(uid,(totals.get(uid)||0)+(Number(s.total)||0))});
+ // Solo cuentan las ventas entregadas y pagadas (marcadas en Caja diaria), en el mes en que se cobraron.
+ // Las rechazadas se anulan y desaparecen; las que esperan entrega se muestran aparte y aún no cuentan.
+ const totals=new Map(),waiting=new Map();
+ sales.forEach(s=>{const uid=String(s.sellerUid||'');if(!uid)return;const amount=Number(s.total)||0;
+  if(s.collectionStatus==='collected'&&dateKey(s.collectedAt||s.date||s.fecha||s.occurredAt).slice(0,7)===month)totals.set(uid,(totals.get(uid)||0)+amount);
+  else if(s.collectionStatus==='awaiting_delivery'&&dateKey(s.date||s.fecha||s.occurredAt).slice(0,7)<=month)waiting.set(uid,(waiting.get(uid)||0)+amount)});
  const cards=sellers.map(s=>{
   const policy=compensationFor(s.uid,month),salesTotal=totals.get(s.uid)||0,name=safe(s.displayName||s.email||'Vendedor');
-  if(!policy||!Array.isArray(policy.tiers)||!policy.tiers.length)return '<div class="comp-card"><div class="comp-card-head">'+name+'<span>'+money(salesTotal)+' vendido</span></div><small>Falta configurar su sueldo base y tramos (arriba).</small></div>';
+  if(!policy||!Array.isArray(policy.tiers)||!policy.tiers.length)return '<div class="comp-card"><div class="comp-card-head">'+name+'<span>'+money(salesTotal)+' cobrado</span></div><small>Falta configurar su sueldo base y tramos (arriba).</small>'+(waiting.get(s.uid)?'<small>⏳ Por entregar y cobrar: '+money(waiting.get(s.uid))+' (aún no cuenta)</small>':'')+'</div>';
   const calc=commissionBreakdown(salesTotal,policy.tiers,policy.mode),base=Number(policy.monthlyBaseSalary)||0;
   const prog=calc.next?Math.min(100,Math.round((salesTotal-calc.reached.threshold)/(calc.next.threshold-calc.reached.threshold)*100)):100;
-  return '<div class="comp-card"><div class="comp-card-head">'+name+'<span>'+money(calc.total+base)+'</span></div><div class="comp-lines"><span>Ventas del mes</span><b>'+money(salesTotal)+'</b><span>Comisión ('+calc.effective.toLocaleString('es-CL',{maximumFractionDigits:2})+' % efectivo)</span><b>'+money(calc.total)+'</b><span>Sueldo base</span><b>'+money(base)+'</b><span><strong>Total bruto estimado</strong></span><b>'+money(calc.total+base)+'</b></div><div class="comp-bar"><i style="width:'+prog+'%"></i></div><small>'+(calc.next?'Le faltan '+money(calc.next.threshold-salesTotal)+' para el tramo de '+calc.next.ratePct.toLocaleString('es-CL')+' %':'Está en el tramo más alto ('+calc.reached.ratePct.toLocaleString('es-CL')+' %)')+' · '+(policy.mode==='total'?'por meta alcanzada':'escalonada')+'</small><details><summary>Ver cálculo</summary><small>'+safe(calc.breakdown)+'</small></details></div>';
+  return '<div class="comp-card"><div class="comp-card-head">'+name+'<span>'+money(calc.total+base)+'</span></div><div class="comp-lines"><span>Ventas entregadas y pagadas</span><b>'+money(salesTotal)+'</b>'+(waiting.get(s.uid)?'<span>⏳ Por entregar y cobrar (aún no cuenta)</span><b>'+money(waiting.get(s.uid))+'</b>':'')+'<span>Comisión ('+calc.effective.toLocaleString('es-CL',{maximumFractionDigits:2})+' % efectivo)</span><b>'+money(calc.total)+'</b><span>Sueldo base</span><b>'+money(base)+'</b><span><strong>Total bruto estimado</strong></span><b>'+money(calc.total+base)+'</b></div><div class="comp-bar"><i style="width:'+prog+'%"></i></div><small>'+(calc.next?'Le faltan '+money(calc.next.threshold-salesTotal)+' para el tramo de '+calc.next.ratePct.toLocaleString('es-CL')+' %':'Está en el tramo más alto ('+calc.reached.ratePct.toLocaleString('es-CL')+' %)')+' · '+(policy.mode==='total'?'por meta alcanzada':'escalonada')+'</small><details><summary>Ver cálculo</summary><small>'+safe(calc.breakdown)+'</small></details></div>';
  });
  $('compResults').innerHTML=cards.join('')||'<p class="admin-muted">Aún no hay vendedores registrados.</p>';
 }

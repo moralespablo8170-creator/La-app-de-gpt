@@ -63,11 +63,11 @@
 <p class="admin-muted">El % se escribe como número: <b>3</b> = 3 %. El primer tramo parte en $0.</p>
 <div id="compTiers" class="comp-tiers"></div>
 <button id="compAddTier" class="admin-btn secondary" type="button">＋ Agregar tramo</button>
-<div class="comp-sim"><label>Probar con ventas del mes de<input id="compSimSales" type="text" inputmode="numeric" placeholder="Ej: 3000000"></label><div id="compSimResult" class="comp-sim-result"></div></div>
+<div class="comp-sim"><label>Probar con ventas pagadas del mes de<input id="compSimSales" type="text" inputmode="numeric" placeholder="Ej: 3000000"></label><div id="compSimResult" class="comp-sim-result"></div></div>
 <button id="compSave" class="admin-btn" type="button">Guardar sueldo y tramos</button>
 <p id="compStatus" class="admin-status" role="status" aria-live="polite">Selecciona un vendedor para definir sus condiciones.</p>
 <h3>Estimación de pago del mes</h3>
-<p class="admin-muted">Ventas = total de los tickets que el vendedor registró en el mes. Resultado bruto, antes de descuentos.</p>
+<p class="admin-muted">Solo cuentan las ventas <b>entregadas y pagadas</b>, en el mes en que se cobraron. Se marcan en tu app: Caja diaria → "Por cobrar al entregar" → ✅ Entregado y pagado. Si el cliente rechaza o no paga, toca ✖ Rechazado: la venta se anula, vuelve el stock y no cuenta. Resultado bruto, antes de descuentos.</p>
 <div id="compResults" class="comp-results"></div>
 </section>
 
@@ -86,6 +86,6 @@
 </section>
 </section>
 </main>
-<script type="module" src="./seller-admin.js?v=zipper-seller-admin-20261116-v3"></script>
+<script type="module" src="./seller-admin.js?v=zipper-seller-admin-20261116-v4"></script>
 </body>
 </html>
