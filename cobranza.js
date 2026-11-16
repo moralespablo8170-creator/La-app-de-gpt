@@ -99,9 +99,9 @@
     // Cobranza
     let list=[];try{list=debtors()}catch(e){console.error('Cobranza:',e)}
     const late=list.filter(x=>x.days>15);
-    if(late.length){
-      const total=late.reduce((a,x)=>a+x.debt,0);
-      parts.push('<div class="home-alert alert-debt"><div><strong>⏰ '+plural(late.length,'cliente','clientes')+' con deuda de más de 15 días · '+money(total)+'</strong><span>'+late.slice(0,3).map(x=>esc(x.client?.name||x.name)+' ('+x.days+' días)').join(', ')+(late.length>3?' y '+(late.length-3)+' más':'')+'</span></div><div class="home-alert-actions"><button id="alertDebtOpen" class="primary" type="button">Ver cobranza</button></div></div>');
+    if(list.length){
+      const total=list.reduce((a,x)=>a+x.debt,0),shown=(late.length?late:list).slice(0,3);
+      parts.push('<div class="home-alert '+(late.length?'alert-debt':'alert-collect')+'"><div><strong>💰 Cobranza: '+plural(list.length,'cliente debe','clientes deben')+' '+money(total)+'</strong><span>'+(late.length?'⏰ '+late.length+' con más de 15 días: ':'Más antiguos: ')+shown.map(x=>esc(x.client?.name||x.name)+' ('+x.days+(x.days===1?' día':' días')+')').join(', ')+((late.length||list.length)>3?' y '+((late.length||list.length)-3)+' más':'')+'</span></div><div class="home-alert-actions"><button id="alertDebtOpen" class="primary" type="button">Ver cobranza y recordar</button></div></div>');
     }
     box.innerHTML=parts.join('');
     $('alertBackupNow')?.addEventListener('click',()=>{if(typeof window.zipperBackupDirect==='function')window.zipperBackupDirect();else if(typeof exportZipperBackup==='function')exportZipperBackup()});

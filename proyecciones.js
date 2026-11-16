@@ -212,8 +212,11 @@
     const list=$('inventoryList');
     list?.addEventListener('click',e=>{const strip=e.target.closest('.buy-strip');if(!strip)return;const id=strip.dataset.buyId,input=strip.querySelector('.buy-qty'),v=Number(input.value)||0;if(e.target.closest('.buy-unit'))editBuyUnit(id);else if(e.target.closest('.buy-plus'))setQty(id,v+1);else if(e.target.closest('.buy-minus'))setQty(id,Math.max(0,v-1))});
     list?.addEventListener('change',e=>{const input=e.target.closest('.buy-qty');if(input)setQty(input.closest('.buy-strip').dataset.buyId,input.value)});
-    $('buyMode')?.addEventListener('change',()=>{localStorage.setItem('zipperPedidoVisible',$('buyMode').checked?'1':'0');renderInventory()});
-    if($('buyMode'))$('buyMode').checked=localStorage.getItem('zipperPedidoVisible')==='1';
+    // El pedido de compra parte cerrado y se abre solo cuando se marca; se cierra al salir de Productos.
+    $('buyMode')?.addEventListener('change',()=>renderInventory());
+    if($('buyMode'))$('buyMode').checked=false;
+    try{localStorage.removeItem('zipperPedidoVisible')}catch(_){}
+    document.addEventListener('click',e=>{const tab=e.target.closest&&e.target.closest('.tab');if(tab&&tab.id!=='productsTab'&&$('buyMode')?.checked){$('buyMode').checked=false;document.body.classList.remove('buy-mode')}},true);
     // El buscador y el filtro de categoría llaman a la lista original: después se agrega el pedido.
     $('lowStockCategory')?.addEventListener('change',()=>setTimeout(decorateInventory,0));
     $('productSearch')?.addEventListener('input',()=>setTimeout(decorateInventory,0));

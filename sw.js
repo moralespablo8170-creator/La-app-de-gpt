@@ -1,9 +1,9 @@
-const CACHE_NAME = 'zipper-app-pwa-20261115-ideas-40';
+const CACHE_NAME = 'zipper-app-pwa-20261115-cobranza-41';
 const APP_SHELL = [
   "./",
   "./index.html",
   "./styles.css?v=zipper-version-firebase-20261101-2",
-  "./tema-colores.css?v=20261115-14",
+  "./tema-colores.css?v=20261115-15",
   "./assets/ilustraciones/ruta.svg",
   "./assets/ilustraciones/clientes.svg",
   "./assets/ilustraciones/productos.svg",
@@ -15,10 +15,10 @@ const APP_SHELL = [
   "./assets/ilustraciones/carrito.svg",
   "./app.js?v=20261115-cancelar-12",
   "./whatsapp.js?v=20261115-4",
-  "./cobranza.js?v=20261115-2",
+  "./cobranza.js?v=20261115-3",
   "./ideas.js?v=20261115-1",
   "./rutas-clientes.js?v=20261115-2",
-  "./proyecciones.js?v=20261115-3",
+  "./proyecciones.js?v=20261115-4",
   "./firebase-cloud.js?v=20261115-restauracion-2",
   "./firebase-config.js",
   "./firebase-test-config.js",
