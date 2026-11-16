@@ -1,0 +1,18 @@
+{
+  "id": "./zipper-reparto",
+  "name": "Zipper Reparto",
+  "short_name": "Zipper Reparto",
+  "start_url": "./repartidor.html",
+  "scope": "./repartidor.html",
+  "display": "standalone",
+  "background_color": "#0b1d33",
+  "theme_color": "#111827",
+  "icons": [
+    {
+      "src": "./assets/icono-512.png?v=20261015-icono-exterior-v2",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

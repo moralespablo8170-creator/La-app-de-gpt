@@ -13,7 +13,7 @@ const SELLER_ACCOUNT_CREATION_READY=true;
 const SELLER_ACCESS_SERVER_READY=true;
 // Elementos que ya no están en la página reciben un reemplazo invisible (así las funciones antiguas no fallan).
 const ghosts={};const $=id=>document.getElementById(id)||(ghosts[id]||(ghosts[id]=document.createElement(id==='reportPeriod'||id==='compMode'?'select':'input')));
-let owner=null,sellers=[],sessions=[],sales=[],visits=[],cash=[],clients=[],compensationBySeller={},openPanel='',selectedSellerId=null,loading=false;
+let owner=null,sellers=[],sessions=[],sales=[],visits=[],cash=[],clients=[],compensationBySeller={},drivers=[],driverSessions=[],openPanel='',selectedSellerId=null,loading=false;
 const localDate=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
 const safe=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=value=>'$'+Math.round(Number(value)||0).toLocaleString('es-CL');
@@ -172,20 +172,23 @@ function render(){
  renderPeriodReport();renderCompForm();renderCompResults();
  $('adminCount').textContent=sellers.length+' vendedor'+(sellers.length===1?'':'es')+' · '+date;
  // Cada vendedor es una tarjeta con botones; el panel elegido se abre justo debajo de su tarjeta.
- ['panelDay','panelComp','panelAccess'].forEach(id=>{const el=document.getElementById(id);if(el){el.classList.add('admin-hidden');document.getElementById('panelHolder')?.appendChild(el)}});
- $('adminSellers').innerHTML=sellers.length?sellers.map(s=>{
+ ['panelDay','panelComp','panelAccess','panelDriver'].forEach(id=>{const el=document.getElementById(id);if(el){el.classList.add('admin-hidden');document.getElementById('panelHolder')?.appendChild(el)}});
+ const team=[...sellers,...drivers];
+ $('adminSellers').innerHTML=team.length?team.map(s=>{
+  if(s.role==='driver'){const sel=s.uid===selectedSellerId,ds=driverSessions.find(x=>x.driverUid===s.uid&&String(x.id).endsWith(localDateStr()));const tb=(p,l)=>'<button type="button" data-panel="'+p+'" data-uid="'+safe(s.uid)+'" class="'+(sel&&openPanel===p?'on':'')+'">'+l+'</button>';return '<article class="admin-row" style="background:'+(sel&&openPanel?'#fff7ed':'white')+'"><strong>🚚 '+safe(s.displayName||s.email||'Repartidor')+' · repartidor'+(s.active===true?'':' · desactivado')+'</strong><small>'+(ds?.status==='open'?'🟢 Jornada abierta':ds?.status==='closed'?'⚪ Jornada cerrada':'Sin jornada hoy')+(ds?' · '+(ds.delivered||0)+' entregados':'')+'</small><div class="seller-card-tabs" style="grid-template-columns:1fr 1fr">'+tb('driver','🚚 Día')+tb('access','🔑 Acceso')+'</div><div class="seller-slot" data-slot="'+safe(s.uid)+'"></div></article>'}
   const selected=s.uid===selectedSellerId,active=s.active===true;
   const daySales=sales.filter(x=>x.sellerUid===s.uid&&rowDate(x,'sales')===date),session=sessionFor(s.uid);
   const waiting=sales.filter(x=>x.sellerUid===s.uid&&x.collectionStatus==='awaiting_delivery').length;
   const tab=(p,label)=>'<button type="button" data-panel="'+p+'" data-uid="'+safe(s.uid)+'" class="'+(selected&&openPanel===p?'on':'')+'">'+label+'</button>';
   return '<article class="admin-row" style="background:'+(selected&&openPanel?'#eef2ff':'white')+'"><strong>'+safe(s.displayName||s.email||'Vendedor')+(active?'':' · desactivado')+'</strong><small>'+(session?.status==='open'?'🟢 Jornada abierta':session?.status==='closed'?'⚪ Jornada cerrada':'Sin jornada')+' · '+daySales.length+' ventas · '+money(daySales.reduce((n,x)=>n+Number(x.total||0),0))+(waiting?' · ⏳ '+waiting+' por entregar':'')+'</small><div class="seller-card-tabs">'+tab('day','📅 Día')+tab('comp','💰 Sueldo')+tab('access','🔑 Acceso')+'</div><div class="seller-slot" data-slot="'+safe(s.uid)+'"></div></article>';
  }).join(''):'<p class="admin-muted">Aún no hay vendedores. Créalos abajo.</p>';
- if(!sellers.length){const nb=document.getElementById('newSellerBox');if(nb)nb.open=true}
+ if(!team.length){const nb=document.getElementById('newSellerBox');if(nb)nb.open=true}
  document.querySelectorAll('[data-panel]').forEach(b=>b.onclick=()=>{const same=selectedSellerId===b.dataset.uid&&openPanel===b.dataset.panel;selectedSellerId=b.dataset.uid;openPanel=same?'':b.dataset.panel;if($('compSeller'))$('compSeller').value=selectedSellerId;render();if(openPanel)setTimeout(()=>document.querySelector('[data-slot="'+CSS.escape(selectedSellerId)+'"]')?.scrollIntoView({behavior:'smooth',block:'start'}),50)});
  const slot=openPanel&&document.querySelector('[data-slot="'+CSS.escape(selectedSellerId||'')+'"]');
- if(slot){const id={day:'panelDay',comp:'panelComp',access:'panelAccess'}[openPanel],el=document.getElementById(id);if(el){el.classList.remove('admin-hidden');slot.appendChild(el)}
-  if(openPanel==='access'){const x=sellers.find(v=>v.uid===selectedSellerId),active=x?.active===true;$('accessBody').innerHTML='<p class="admin-muted">Correo: <b>'+safe(x?.email||'sin correo')+'</b> · '+(active?'acceso activo':'acceso desactivado')+'</p>'+(x?.email?'<button type="button" class="admin-btn" id="accWa">📲 Enviar acceso por WhatsApp</button><button type="button" class="admin-btn secondary" id="accReset">📧 Enviarle correo para cambiar clave</button>':'')+'<button type="button" class="admin-btn secondary" id="accToggle">'+(active?'⛔ Desactivar a este vendedor':'✅ Activar a este vendedor')+'</button>';
-   if($('accWa'))$('accWa').onclick=()=>shareSellerAccess(x.displayName,x.email,'');if($('accReset'))$('accReset').onclick=()=>sendSellerReset(x.uid);$('accToggle').onclick=()=>toggleSeller(x.uid)}
+ if(slot){const id={day:'panelDay',comp:'panelComp',access:'panelAccess',driver:'panelDriver'}[openPanel],el=document.getElementById(id);if(el){el.classList.remove('admin-hidden');slot.appendChild(el)}
+  if(openPanel==='driver')renderDriverPanel();
+  if(openPanel==='access'){const x=team.find(v=>v.uid===selectedSellerId),active=x?.active===true;$('accessBody').innerHTML='<p class="admin-muted">Correo: <b>'+safe(x?.email||'sin correo')+'</b> · '+(active?'acceso activo':'acceso desactivado')+'</p>'+(x?.email?'<button type="button" class="admin-btn" id="accWa">📲 Enviar acceso por WhatsApp</button><button type="button" class="admin-btn secondary" id="accReset">📧 Enviarle correo para cambiar clave</button>':'')+'<button type="button" class="admin-btn secondary" id="accToggle">'+(active?'⛔ Desactivar a este vendedor':'✅ Activar a este vendedor')+'</button>';
+   if($('accWa'))$('accWa').onclick=()=>shareSellerAccess(x.displayName,x.email,'',x.role);if($('accReset'))$('accReset').onclick=()=>sendSellerReset(x.uid);$('accToggle').onclick=()=>toggleSeller(x.uid)}
  }
  const seller=sellers.find(s=>s.uid===selectedSellerId),session=seller?sessionFor(seller.uid):null;
  $('adminDetailTitle').textContent=seller?'Detalle de '+(seller.displayName||seller.email||'vendedor'):'Detalle diario · todos los vendedores';
@@ -208,11 +211,26 @@ async function hideRemediesFromSellers(){
  for(let i=0;i<visible.length;i+=400){const batch=writeBatch(db);visible.slice(i,i+400).forEach(d=>batch.update(d.ref,{sellerVisible:false}));await batch.commit()}
  if(visible.length)status(visible.length+' remedios quitados del catálogo de vendedores.','ok');
 }
+const localDateStr=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
+// ===== Repartidor =====
+function renderDriverPanel(){
+ const uid=selectedSellerId,date=$('driverDate').value||localDateStr();if(!$('driverDate').value)$('driverDate').value=date;
+ const ds=driverSessions.find(x=>x.driverUid===uid&&String(x.id).endsWith(date));
+ const hm=v=>v?new Date(v).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}):'—';
+ const rows=sales.filter(x=>x.deliveredBy===uid&&String(x.deliveredAt||x.collectedAt||'').slice(0,10)===date);
+ const ok=rows.filter(x=>x.collectionStatus==='collected'),cash=ok.filter(x=>x.paymentMethod!=='transfer').reduce((a,x)=>a+Number(x.total||0),0),tr=ok.filter(x=>x.paymentMethod==='transfer').reduce((a,x)=>a+Number(x.total||0),0);
+ const mins=ds?.openedAtLocal&&ds?.closedAtLocal?Math.round((new Date(ds.closedAtLocal)-new Date(ds.openedAtLocal))/60000):null;
+ const waiting=sales.filter(x=>x.collectionStatus==='awaiting_delivery').length;
+ $('driverBody').innerHTML='<div class="admin-grid"><div class="admin-stat"><strong>'+hm(ds?.openedAtLocal)+'</strong><span>Inicio</span></div><div class="admin-stat"><strong>'+(ds?.closedAtLocal?hm(ds.closedAtLocal):ds?'Sin cerrar':'—')+'</strong><span>Término</span></div><div class="admin-stat"><strong>'+(mins!=null?Math.floor(mins/60)+' h '+String(mins%60).padStart(2,'0'):'—')+'</strong><span>Jornada</span></div><div class="admin-stat"><strong>'+ok.length+' / '+rows.length+'</strong><span>Entregados</span></div><div class="admin-stat"><strong>'+money(cash)+'</strong><span>Efectivo a rendir</span></div><div class="admin-stat"><strong>'+money(tr)+'</strong><span>Transferencias</span></div></div><p class="admin-muted">Pedidos de vendedores esperando reparto: '+waiting+'</p>'+
+  (rows.length?rows.map(x=>'<article class="admin-row"><strong>'+safe(x.cliente||'Cliente')+' · '+money(x.total)+'</strong><small>'+(x.collectionStatus==='collected'?'✅ Entregado · '+(x.paymentMethod==='transfer'?'Transferencia':'Efectivo')+(x.paymentMethodOriginal?' (cambió)':''):'✖ Rechazado · '+safe(x.deliveryNote||''))+' · '+hm(x.deliveredAt)+'</small></article>').join(''):'<p class="admin-muted">Sin entregas en esta fecha.</p>');
+}
+async function loadOffice(){try{const s=await getDoc(doc(db,'orgs',ORG,'settings','delivery'));$('officeAddress').value=s.exists()&&s.data().officeAddress?s.data().officeAddress:'Quebrada de Aroma 1517, Peñalolén'}catch(_){}}
+async function saveOffice(){const v=$('officeAddress').value.trim();if(v.length<5){status('Escribe la dirección de la oficina.','error');return}try{await setDoc(doc(db,'orgs',ORG,'settings','delivery'),{officeAddress:v.includes('Chile')?v:v+', Santiago, Chile',officeLat:null,officeLng:null,updatedAt:new Date().toISOString()},{merge:true});status('Dirección de la oficina guardada.','ok')}catch(e){status(e.message||'No se pudo guardar la dirección.','error')}}
 async function refresh(){
  if(!owner||loading)return;loading=true;status('Actualizando información de vendedores…');
  try{
   // A single denied collection must not hide the other owner reports.
-  const names=['members','sessions','sales','visits','cashMovements','clients','sellerCompensation'];
+  const names=['members','sessions','sales','visits','cashMovements','clients','sellerCompensation','driverSessions'];
   const results=await Promise.allSettled(names.map(name=>getDocs(collection(db,'orgs',ORG,name))));
   const failures=[];
   const docs=Object.fromEntries(results.map((result,index)=>{
@@ -222,7 +240,9 @@ async function refresh(){
    console.warn('Control de vendedores: lectura fallida en '+name,result.reason);
    return [name,null];
   }));
-  if(docs.members!==null)sellers=docs.members.map(d=>({uid:d.id,...d.data()})).filter(x=>x.role==='seller');
+  if(docs.members!==null){sellers=docs.members.map(d=>({uid:d.id,...d.data()})).filter(x=>x.role==='seller');drivers=docs.members.map(d=>({uid:d.id,...d.data()})).filter(x=>x.role==='driver')}
+  if(docs.driverSessions!==null)driverSessions=docs.driverSessions.map(d=>({id:d.id,...d.data()}));
+  loadOffice();
   hideRemediesFromSellers().catch(e=>console.warn('Remedios:',e));
   if(docs.sellerCompensation!==null)compensationBySeller=Object.fromEntries(docs.sellerCompensation.map(d=>[d.id,d.data()]));
   if(docs.sessions!==null)sessions=docs.sessions.map(d=>({id:d.id,...d.data()}));
@@ -327,7 +347,8 @@ async function createSellerAccount(){
   created=credential.user;
   await updateProfile(created,{displayName}).catch(()=>{});
   const now=new Date().toISOString();
-  await setDoc(doc(db,'orgs',ORG,'members',created.uid),{role:'seller',active:true,displayName,email,provisionedBy:owner.uid,createdAt:now,updatedAt:now});
+  const role=$('memberRole').value==='driver'?'driver':'seller';
+  await setDoc(doc(db,'orgs',ORG,'members',created.uid),{role,active:true,displayName,email,provisionedBy:owner.uid,createdAt:now,updatedAt:now});
   $('sellerDisplayName').value='';$('sellerEmail').value='';
   selectedSellerId=created.uid;
   label.textContent='✅ Cuenta creada para '+displayName+' · '+email+'. La clave no se guarda en la app: envíasela ahora.';
@@ -352,22 +373,24 @@ async function createSellerAccount(){
 }
 // ===== Entrega de acceso al vendedor =====
 const SELLER_APP_URL=new URL('./vendedor.html',location.href).href;
-function sellerAccessText(name,email,password){
- return ['Hola '+(name||'')+', este es tu acceso a la app de ventas de *Distribuidora Zipper*:','','1) Abre este enlace en Chrome: '+SELLER_APP_URL,'2) Correo: '+email,password?'3) Clave: '+password:'3) Clave: la que te entregué (si no la recuerdas, toca "¿Olvidaste tu clave?" en la app)','','Para dejarla como app: en Chrome toca ⋮ → "Agregar a pantalla principal".'].join('\n');
+const DRIVER_APP_URL=new URL('./repartidor.html',location.href).href;
+function sellerAccessText(name,email,password,role){
+ return ['Hola '+(name||'')+', este es tu acceso a la app de '+(role==='driver'?'reparto':'ventas')+' de *Distribuidora Zipper*:','','1) Abre este enlace en Chrome: '+(role==='driver'?DRIVER_APP_URL:SELLER_APP_URL),'2) Correo: '+email,password?'3) Clave: '+password:'3) Clave: la que te entregué (si no la recuerdas, toca "¿Olvidaste tu clave?" en la app)','','Para dejarla como app: en Chrome toca ⋮ → "Agregar a pantalla principal".'].join('\n');
 }
-function shareSellerAccess(name,email,password){
- const url='https://wa.me/?text='+encodeURIComponent(sellerAccessText(name,email,password));
+function shareSellerAccess(name,email,password,role){
+ const role2=role||($('memberRole').value==='driver'?'driver':'seller');
+ const url='https://wa.me/?text='+encodeURIComponent(sellerAccessText(name,email,password,role2));
  const w=window.open(url,'_blank');if(!w)location.href=url;
 }
 function showCreatedAccess(name,email,password){
  let box=$('sellerCreatedAccess');
  if(!box){box=document.createElement('div');box.id='sellerCreatedAccess';box.className='admin-row';box.style.cssText='margin-top:10px;background:#f0fdf4;border-color:#86efac';$('sellerProfileStatus').after(box)}
  box.innerHTML='<strong>Datos para '+safe(name)+'</strong><small>Enlace: '+safe(SELLER_APP_URL)+'</small><small>Correo: '+safe(email)+'</small><small>Clave: '+safe(password)+'</small><button type="button" class="admin-btn" id="sellerCreatedWa">📲 Enviar acceso por WhatsApp</button><button type="button" class="admin-btn secondary" id="sellerCreatedDone">Listo, ya se lo envié</button>';
- $('sellerCreatedWa').onclick=()=>shareSellerAccess(name,email,password);
+ $('sellerCreatedWa').onclick=()=>shareSellerAccess(name,email,password,$('memberRole').value);
  $('sellerCreatedDone').onclick=()=>box.remove();
 }
 async function sendSellerReset(uid){
- const seller=sellers.find(item=>item.uid===uid);if(!seller?.email)return;
+ const seller=[...sellers,...drivers].find(item=>item.uid===uid);if(!seller?.email)return;
  if(!window.confirm('¿Enviar a '+seller.email+' un correo para que '+(seller.displayName||'el vendedor')+' cree una clave nueva?'))return;
  try{await sendPasswordResetEmail(provisioningAuth,seller.email);status('Correo enviado a '+seller.email+'. El vendedor debe abrirlo (revisar spam) y crear su clave nueva.','ok')}
  catch(error){console.error(error);status(error.code&&String(error.code).includes('user-not-found')?'Ese correo no tiene cuenta creada.':(error.message||'No se pudo enviar el correo.'),'error')}
@@ -409,7 +432,7 @@ async function toggleSellerMode(){
  await refreshSellerModeState();
 }
 async function logout(){await signOut(auth);owner=null;sellers=[];sessions=[];sales=[];visits=[];cash=[]}
-$('adminLoginButton').onclick=login;$('adminLogout').onclick=logout;$('adminDate').onchange=render;$('reportPeriod').onchange=render;$('reportReference').onchange=render;$('commissionMonth').onchange=()=>{renderCompForm();renderCompResults()};$('compSeller').onchange=renderCompForm;$('compAddTier').onclick=()=>{const tiers=readCompTiers();tiers.push({threshold:'',ratePct:''});renderCompTiers(tiers)};$('compMode').onchange=renderCompSim;$('compSimSales').oninput=renderCompSim;$('compBaseSalary').oninput=renderCompSim;$('compSave').onclick=saveCompensation;$('sellerCreateAccount').onclick=createSellerAccount;updateSellerCreationState();
+$('adminLoginButton').onclick=login;$('adminLogout').onclick=logout;$('adminDate').onchange=render;$('reportPeriod').onchange=render;$('reportReference').onchange=render;$('commissionMonth').onchange=()=>{renderCompForm();renderCompResults()};$('compSeller').onchange=renderCompForm;$('compAddTier').onclick=()=>{const tiers=readCompTiers();tiers.push({threshold:'',ratePct:''});renderCompTiers(tiers)};$('compMode').onchange=renderCompSim;$('compSimSales').oninput=renderCompSim;$('compBaseSalary').oninput=renderCompSim;$('compSave').onclick=saveCompensation;$('officeSave').onclick=saveOffice;$('driverDate').onchange=renderDriverPanel;$('sellerCreateAccount').onclick=createSellerAccount;updateSellerCreationState();
 $('catalogBackupConfirm').onchange=refreshCatalogPrepState;
 $('catalogPrepareButton').onclick=prepareCatalog;
 if($('sellerModeToggle'))$('sellerModeToggle').onclick=toggleSellerMode;

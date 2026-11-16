@@ -418,3 +418,4 @@ body.buy-mode .buy-dock{display:block;position:sticky;bottom:92px;z-index:5;marg
 .seller-cash-pay{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;margin:0}.seller-cash-pay select{flex:1;min-height:40px;margin:0}
 .seller-cash-done{font-size:13px;margin-top:6px}.seller-cash-done summary{cursor:pointer;font-weight:800;color:#4c1d95}
 .seller-sales{margin-top:10px}.seller-sales summary{cursor:pointer;font-weight:900;color:#312e81;padding:6px 0}.sv-ok{color:#15803d}.sv-wait{color:#b45309}
+.seller-cash-rej{margin-top:8px;padding:8px;border-radius:10px;background:#fef2f2;border:1px solid #fecaca}.seller-cash-rej>strong{color:#991b1b}

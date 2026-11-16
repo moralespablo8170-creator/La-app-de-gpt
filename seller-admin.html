@@ -38,17 +38,19 @@
 <section id="adminApp" class="admin-hidden">
 
 <section class="admin-card">
-<h2>Mis vendedores</h2>
+<h2>Mi equipo</h2>
 <p class="admin-muted">Toca un botón del vendedor para ver solo esa información.</p>
 <div id="adminSellers" class="admin-list"></div>
-<details id="newSellerBox" class="admin-advanced"><summary>＋ Crear acceso a un vendedor nuevo</summary>
-<label>Nombre del vendedor<input id="sellerDisplayName" type="text" autocomplete="name" maxlength="80" placeholder="Nombre visible"></label>
+<details id="newSellerBox" class="admin-advanced"><summary>＋ Crear acceso a un vendedor o repartidor nuevo</summary>
+<label>Tipo de cuenta<select id="memberRole"><option value="seller">Vendedor (toma pedidos)</option><option value="driver">Repartidor (entrega pedidos)</option></select></label>
+<label>Nombre<input id="sellerDisplayName" type="text" autocomplete="name" maxlength="80" placeholder="Nombre visible"></label>
 <label>Correo de acceso<input id="sellerEmail" type="email" autocomplete="email" maxlength="254" placeholder="correo@ejemplo.cl"></label>
 <label>Clave inicial (mínimo 8 caracteres)<input id="sellerPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="Clave inicial"></label>
 <button id="sellerCreateAccount" class="admin-btn" type="button" disabled>Crear cuenta de vendedor</button>
 <p id="sellerProfileStatus" class="admin-status" role="status" aria-live="polite"></p>
 </details>
 <div class="admin-access-row"><button id="sellerModeToggle" class="admin-btn secondary" type="button" disabled>Activar acceso de vendedores</button><small id="sellerModeStatus" class="admin-muted"></small></div>
+<details id="officeDetails" class="admin-advanced"><summary>🏠 Oficina (punto de partida del repartidor)</summary><label>Dirección de la oficina<input id="officeAddress" maxlength="200" placeholder="Quebrada de Aroma 1517, Peñalolén"></label><button id="officeSave" class="admin-btn secondary" type="button">Guardar dirección</button></details>
 <details id="catalogDetails" class="admin-advanced"><summary>Catálogo para vendedores</summary>
 <p class="admin-muted">Se hace una sola vez: esconde tus precios de compra para que los vendedores no los vean. Los productos nuevos quedan protegidos solos.</p>
 <label><input id="catalogBackupConfirm" type="checkbox"> Confirmo que guardé un respaldo antes de preparar el catálogo.</label>
@@ -88,10 +90,11 @@
 <h3>Visitas</h3><div id="adminVisits" class="admin-list"></div>
 <h3>Movimientos de caja</h3><div id="adminCash" class="admin-list"></div>
 </section>
+<section id="panelDriver" class="seller-panel admin-hidden"><h3 class="panel-title">🚚 Día del repartidor</h3><label>Fecha<input id="driverDate" type="date"></label><div id="driverBody"></div></section>
 <section id="panelAccess" class="seller-panel admin-hidden"><h3 class="panel-title">🔑 Acceso</h3><div id="accessBody"></div></section>
 <div id="panelHolder" hidden></div>
 </section>
 </main>
-<script type="module" src="./seller-admin.js?v=zipper-seller-admin-20261116-v6"></script>
+<script type="module" src="./seller-admin.js?v=zipper-seller-admin-20261116-v7"></script>
 </body>
 </html>
