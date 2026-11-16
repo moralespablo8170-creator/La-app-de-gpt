@@ -120,9 +120,9 @@ label{display:block;margin:12px 0;font-size:14px;font-weight:700}
   </div>
  </section>
  <section id="tabCash" class="hide">
-  <div class="card"><h2 class="section-heading"><span class="symbol">💵</span> Caja del día</h2>
+  <div class="card"><h2 class="section-heading"><span class="symbol">✅</span> Entregados y caja del día</h2>
    <div class="cashgrid"><div><b id="cashTotal">$0</b><small>Efectivo a rendir</small></div><div><b id="transferTotal">$0</b><small>Transferencias</small></div><div><b id="rejectedCount">0</b><small>Rechazados</small></div></div>
-   <p class="muted" style="margin-top:10px">Al llegar a la oficina entrega el efectivo y revisa con el dueño la lista de abajo.</p>
+   <p class="muted" style="margin-top:10px">Al llegar a la oficina entrega el efectivo y cuadra con esta lista.</p>
    <div id="cashList"></div>
   </div>
  </section>
@@ -130,9 +130,9 @@ label{display:block;margin:12px 0;font-size:14px;font-weight:700}
 </main>
 <div id="deliverModal" class="modal hide" role="dialog" aria-modal="true"><div class="modal-card"><div class="kicker">ENTREGA</div><h3 id="dmTitle">Cliente</h3><p id="dmAmount" class="muted"></p><div class="pay-box">💳 ¿CÓMO PAGÓ EL CLIENTE?<div class="pay-choice"><button type="button" class="pay-opt" data-pay="cash">💵 Efectivo</button><button type="button" class="pay-opt" data-pay="transfer">🏦 Transferencia</button></div></div><p id="dmNote" class="muted"></p><button id="dmConfirm" class="full big" type="button" disabled>✅ Confirmar entregado y pagado</button><button id="dmCancel" class="ghost full" type="button">Cancelar</button></div></div>
 <div id="toast" class="toast fade" role="status" aria-live="polite"></div>
-<nav class="nav hide" id="nav"><button data-tab="day" class="active" type="button">🚚 Reparto</button><button data-tab="cash" type="button">💵 Caja del día</button></nav>
+<nav class="nav hide" id="nav"><button data-tab="day" class="active" type="button">🚚 Reparto</button><button data-tab="cash" type="button">✅ Entregados<span id="doneTabCount"></span></button></nav>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-<script type="module" src="./driver-app.js?v=zipper-driver-20261116-v1"></script>
+<script type="module" src="./driver-app.js?v=zipper-driver-20261116-v2"></script>
 <script>
 (function(){var d=null,b=document.getElementById('installBtn'),box=document.getElementById('installBox');if(window.matchMedia&&matchMedia('(display-mode: standalone)').matches&&box)box.hidden=true;addEventListener('beforeinstallprompt',function(e){e.preventDefault();d=e;if(b)b.hidden=false});if(b)b.onclick=function(){if(!d)return;d.prompt();d.userChoice.finally(function(){d=null;b.hidden=true})};if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(function(){})})();
 </script>

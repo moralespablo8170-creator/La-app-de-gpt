@@ -57,7 +57,6 @@ function watch(){
 // ===== Pedidos =====
 // Se entregan hoy los pedidos tomados hasta ayer; los de hoy quedan para mañana.
 const toDeliver=()=>pending.filter(s=>saleDay(s)<localDate());
-const forTomorrow=()=>pending.filter(s=>saleDay(s)>=localDate());
 const deliveredToday=()=>delivered.filter(s=>String(s.deliveredAt||s.collectedAt||'').slice(0,10)===localDate());
 const clientOf=s=>clients.get(String(s.clienteId))||{name:s.cliente||'Cliente'};
 const fullAddress=c=>[c.address,c.comuna,'Santiago','Chile'].filter(Boolean).join(', ');
@@ -83,15 +82,14 @@ function render(){
  $('state').textContent=open?'Abierta':closed?'Cerrada':'Sin iniciar';
  $('sessionInfo').textContent=session?.openedAtLocal?'Inicio '+new Date(session.openedAtLocal).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'})+(session.closedAtLocal?' · Término '+new Date(session.closedAtLocal).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}):''):'';
  $('startBtn').disabled=open;$('startBtn').textContent=closed?'Reabrir jornada':'Iniciar jornada';$('closeBtn').disabled=!open;$('routeHint').classList.toggle('hide',open);
- const list=sortedPending(),today=deliveredToday(),tomorrow=forTomorrow();
+ const list=sortedPending(),today=deliveredToday();
  $('deliveredCount').textContent=String(today.filter(s=>s.collectionStatus==='collected').length);
- $('routeSummary').textContent=list.length+' por entregar · '+today.length+' listos hoy · Total por cobrar '+money(list.reduce((a,s)=>a+Number(s.total||0),0))+' · Parte desde '+office.address.split(',').slice(0,2).join(',');
- $('deliveries').innerHTML=(list.length?list.map((s,i)=>deliveryCard(s,i,'')).join(''):'<p class="muted">🎉 No quedan pedidos por entregar.</p>')+
-  (today.length?'<h3 style="margin-top:16px">Ya entregados hoy</h3>'+today.map(s=>deliveryCard(s,0,'done')).join(''):'')+
-  (tomorrow.length?'<details style="margin-top:14px"><summary class="muted">Pedidos tomados hoy (se entregan mañana): '+tomorrow.length+'</summary>'+tomorrow.map(s=>'<p class="muted">• '+safe(clientOf(s).name)+' · '+money(s.total)+'</p>').join('')+'</details>':'');
+ $('routeSummary').textContent=list.length+' por entregar · Total por cobrar '+money(list.reduce((a,s)=>a+Number(s.total||0),0))+' · Parte desde '+office.address.split(',').slice(0,2).join(',');
+ $('deliveries').innerHTML=(list.length?list.map((s,i)=>deliveryCard(s,i,'')).join(''):'<p class="muted">🎉 No quedan pedidos por entregar. Revisa la pestaña Entregados para cuadrar la caja.</p>');
  const ok=today.filter(s=>s.collectionStatus==='collected'),cash=ok.filter(s=>s.paymentMethod!=='transfer').reduce((a,s)=>a+Number(s.total||0),0),tr=ok.filter(s=>s.paymentMethod==='transfer').reduce((a,s)=>a+Number(s.total||0),0);
  $('cashTotal').textContent=money(cash);$('transferTotal').textContent=money(tr);$('rejectedCount').textContent=String(today.filter(s=>s.collectionStatus==='delivery_rejected').length);
- $('cashList').innerHTML=today.length?today.map(s=>'<div class="line"><strong>'+safe(clientOf(s).name)+' · '+money(s.total)+'</strong><small>'+(s.collectionStatus==='delivery_rejected'?'✖ Rechazado'+(s.deliveryNote?' · '+safe(s.deliveryNote):''):(s.paymentMethod==='transfer'?'🏦 Transferencia':'💵 Efectivo'))+'</small></div>').join(''):'<p class="muted">Aún no hay entregas hoy.</p>';
+ $('cashList').innerHTML=today.length?today.map(s=>deliveryCard(s,0,'done')).join(''):'<p class="muted">Aún no hay entregas hoy.</p>';
+ $('doneTabCount').textContent=today.length?' ('+today.length+')':'';
 }
 
 // ===== Jornada =====
