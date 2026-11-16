@@ -43,6 +43,7 @@ main{padding:4px 12px;max-width:1100px;margin:0 auto}
 .card.sel{box-shadow:0 0 0 2px var(--wa)}
 .ph{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;padding:6px;border-bottom:1px dashed var(--line)}
 .ph img{max-width:100%;max-height:100%;object-fit:contain}
+.opt{border-top:1px dashed var(--line);padding-top:6px;margin-top:6px}.opt.box{background:#fbf8ef;border-radius:10px;padding:6px;border-top:0}.optl{font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}.opt .pr{padding-top:2px}
 .noph{font-family:Poppins;font-weight:700;font-size:15px;color:#b9b2a2;text-align:center;padding:10px}
 .info{padding:8px 10px 10px;display:flex;flex-direction:column;flex:1}
 .info h3{font-family:Poppins;font-size:13.5px;font-weight:600;line-height:1.2}
@@ -152,22 +153,27 @@ const store={get(k){try{return JSON.parse(localStorage.getItem(k)||'null')}catch
 let data=null,items=new Map(),cart=store.get('zipperCatalogoPedido')||{},filter='';
 const qtyOf=k=>Number(cart[k]||0);
 function priceFor(it,q){return it.promo&&q>=it.promo.min?it.promo.price:it.price}
-function lineList(){const out=[];for(const [k,q] of Object.entries(cart)){if(!(q>0))continue;const [base,fl]=k.split('::');const it=items.get(base);if(!it)continue;out.push({k,it,q,flavor:fl||'',sub:priceFor(it,q)*q})}return out}
+const baseOf=k=>k.split('|')[0].split('::')[0];
+function lineList(){const out=[];for(const [k,q] of Object.entries(cart)){if(!(q>0))continue;const isBox=k.endsWith('|caja');const [base,fl]=k.replace(/\|caja$/,'').split('::');const it=items.get(base);if(!it||(isBox&&!it.box))continue;const each=isBox?it.box.price:priceFor(it,q);out.push({k,it,q,flavor:fl||'',box:isBox,each,per:isBox?'caja de '+it.box.units:it.per,sub:each*q})}return out}
 function save(){store.set('zipperCatalogoPedido',cart);refreshFoot()}
-function setQty(k,q){q=Math.max(0,Math.min(999,Math.round(Number(q)||0)));if(q)cart[k]=q;else delete cart[k];save();document.querySelectorAll('[data-k="'+CSS.escape(k)+'"]').forEach(el=>paintStep(el,k));const base=k.split('::')[0];const card=document.querySelector('[data-card="'+CSS.escape(base)+'"]');if(card)paintCard(card,base)}
+function setQty(k,q){q=Math.max(0,Math.min(999,Math.round(Number(q)||0)));if(q)cart[k]=q;else delete cart[k];save();document.querySelectorAll('[data-k="'+CSS.escape(k)+'"]').forEach(el=>paintStep(el,k));const base=baseOf(k);const card=document.querySelector('[data-card="'+CSS.escape(base)+'"]');if(card)paintCard(card,base)}
 function stepHTML(k){return PRINT?'':'<div class="step" data-k="'+esc(k)+'"></div>'}
 function paintStep(el,k){const q=qtyOf(k);if(!q&&!el.closest('.flv')&&!el.closest('td')){el.className='';el.innerHTML='<button class="addbtn" style="width:100%" data-a="+">＋ Agregar</button>';return}el.className='step';el.innerHTML='<button data-a="-" aria-label="Quitar">−</button><input inputmode="numeric" value="'+q+'" aria-label="Cantidad"><button class="add" data-a="+" aria-label="Agregar">＋</button>'}
-function paintCard(card,base){const it=items.get(base);const any=Object.keys(cart).some(k=>k===base||k.startsWith(base+'::'));card.classList.toggle('sel',any);const pr=card.querySelector('.pr b');if(pr&&it){const q=qtyOf(base);pr.textContent=money(priceFor(it,q))}}
+function paintCard(card,base){const it=items.get(base);const any=Object.keys(cart).some(k=>baseOf(k)===base);card.classList.toggle('sel',any);const pr=card.querySelector('.pr:not(.boxpr) b');if(pr&&it){const q=qtyOf(base);pr.textContent=money(priceFor(it,q))}}
 function card(it,c){const flv=it.wide&&it.fmt.includes(':')?it.fmt.split(': ')[1].split(' · '):null;
   if(PRINT&&flv)return '<article class="card wide" style="--c:'+c+'"><div class="ph"><img src="'+esc(it.img)+'" alt=""></div><div class="info"><h3>'+esc(it.name)+'</h3><p class="fmt">'+flv.length+' sabores</p><div class="tags">'+flv.map(f=>'<span>'+esc(f)+'</span>').join('')+'</div>'+(NOPRICE?'':'<div class="pr"><b>'+money(it.price)+'</b><span>por '+esc(it.per)+'</span></div>')+'</div></article>';
   const unit=it.units?'<span class="unit">'+money(it.price/it.units)+' por unidad</span>':'';
   const promo=it.promo?'<span class="promo">★ Desde '+it.promo.min+': '+money(it.promo.price)+' c/'+esc(it.per)+'</span>':'';
+  if(it.box){const bx=it.box,each=Math.round(bx.price/bx.units);
+    return '<article class="card" style="--c:'+c+'" data-card="'+esc(it.key)+'">'+(it.new?'<span class="new">NUEVO</span>':'')+'<div class="ph">'+(it.img?'<img src="'+esc(it.img)+'" alt="'+esc(it.name)+'">':'<span class="noph">'+esc(it.name)+'</span>')+'</div><div class="info"><h3>'+esc(it.name)+'</h3><p class="fmt">Por unidad o caja de '+bx.units+'</p>'+
+    '<div class="opt"><div class="optl">Unidad</div>'+(NOPRICE?'':'<div class="pr"><b>'+money(it.price)+'</b><span>c/u</span></div>'+promo)+stepHTML(it.key)+'</div>'+
+    '<div class="opt box"><div class="optl">📦 Caja x '+bx.units+'</div>'+(NOPRICE?'':'<div class="pr boxpr"><b>'+money(bx.price)+'</b><span>la caja</span></div>'+(each<it.price?'<span class="unit">sale a '+money(each)+' c/u</span>':''))+stepHTML(it.key+'|caja')+'</div></div></article>'}
   const body=flv?'<div class="flv">'+flv.map(f=>'<div><span>'+esc(f)+'</span>'+stepHTML(it.key+'::'+f)+'</div>').join('')+'</div>':stepHTML(it.key);
   return '<article class="card'+(flv?' wide':'')+'" style="--c:'+c+'" data-card="'+esc(it.key)+'">'+(it.new?'<span class="new">NUEVO</span>':'')+'<div class="ph">'+(it.img?'<img src="'+esc(it.img)+'" alt="'+esc(it.name)+'">':'<span class="noph">'+esc(it.name)+'</span>')+'</div><div class="info"><h3>'+esc(it.name)+'</h3><p class="fmt">'+esc(flv?'Elige sabores y cantidad':it.fmt)+'</p>'+(NOPRICE?'':'<div class="pr"><b>'+money(it.price)+'</b><span>por '+esc(it.per)+'</span></div>'+unit+promo)+body+'</div></article>'}
 function render(){
   const q=norm(filter.trim());const out=[];
   data.sections.forEach((s,i)=>{const list=s.items.filter(it=>!it.hidden&&(!q||norm(it.name+' '+it.fmt+' '+s.title).includes(q)));if(!list.length)return;
-    if(s.table){out.push('<section class="sec" id="s'+i+'" style="--c:'+s.color+'"><h2>'+esc(s.title)+'<span>'+list.length+' productos</span></h2><table>'+list.map(it=>'<tr data-card="'+esc(it.key)+'"><td>'+esc(it.name)+'<small>'+esc(it.fmt)+'</small></td>'+(NOPRICE?'':'<td class="p">'+money(it.price)+'</td>')+(PRINT?'':'<td>'+stepHTML(it.key)+'</td>')+'</tr>').join('')+'</table></section>');return}
+    if(s.table){out.push('<section class="sec" id="s'+i+'" style="--c:'+s.color+'"><h2>'+esc(s.title)+'<span>'+list.length+' productos</span></h2><table>'+list.map(it=>'<tr data-card="'+esc(it.key)+'"><td>'+esc(it.name)+'<small>'+esc(it.box?'por unidad':it.fmt)+'</small></td>'+(NOPRICE?'':'<td class="p">'+money(it.price)+'</td>')+(PRINT?'':'<td>'+stepHTML(it.key)+'</td>')+'</tr>'+(it.box?'<tr data-card="'+esc(it.key)+'"><td>'+esc(it.name)+'<small>📦 caja de '+it.box.units+'</small></td>'+(NOPRICE?'':'<td class="p">'+money(it.box.price)+'</td>')+(PRINT?'':'<td>'+stepHTML(it.key+'|caja')+'</td>')+'</tr>':'')).join('')+'</table></section>');return}
     out.push('<section class="sec" id="s'+i+'" style="--c:'+s.color+'"><h2>'+esc(s.title)+'<span>'+list.length+' producto'+(list.length>1?'s':'')+'</span></h2><div class="grid">'+list.map(it=>card(it,s.color)).join('')+'</div></section>')});
   $('list').innerHTML=out.join('')||'<p class="empty">No encontramos “'+esc(filter)+'”. Pregúntanos por WhatsApp.</p>';
   document.querySelectorAll('[data-k]').forEach(el=>paintStep(el,el.dataset.k));
@@ -178,7 +184,7 @@ $('list').addEventListener('change',e=>{if(e.target.matches('[data-k] input'))se
 $('q').addEventListener('input',e=>{filter=e.target.value;render()});
 function refreshFoot(){const l=lineList();const tot=l.reduce((a,x)=>a+x.sub,0),n=l.reduce((a,x)=>a+x.q,0);$('foot').classList.toggle('show',l.length>0);$('fcount').textContent=l.length+' producto'+(l.length!==1?'s':'')+' · '+n+' en total';$('ftotal').textContent=money(tot);if($('sheet').classList.contains('show'))paintSheet()}
 function paintSheet(){const l=lineList();if(!l.length){$('sheet').classList.remove('show');return}
-  $('lines').innerHTML=l.map(x=>'<div class="line"><button class="x" data-del="'+esc(x.k)+'" aria-label="Quitar">×</button><div class="n">'+esc(x.it.name)+(x.flavor?' · '+esc(x.flavor):'')+'<small>'+x.q+' × '+money(priceFor(x.it,x.q))+' por '+esc(x.it.per)+'</small></div><span class="t">'+money(x.sub)+'</span></div>').join('');
+  $('lines').innerHTML=l.map(x=>'<div class="line"><button class="x" data-del="'+esc(x.k)+'" aria-label="Quitar">×</button><div class="n">'+esc(x.it.name)+(x.flavor?' · '+esc(x.flavor):'')+(x.box?' · <b>CAJA</b>':'')+'<small>'+x.q+' × '+money(x.each)+' por '+esc(x.per)+'</small></div><span class="t">'+money(x.sub)+'</span></div>').join('');
   $('stotal').textContent=money(l.reduce((a,x)=>a+x.sub,0))}
 $('lines').addEventListener('click',e=>{const b=e.target.closest('[data-del]');if(b)setQty(b.dataset.del,0)});
 $('open').onclick=()=>{paintSheet();$('sheet').classList.add('show')};
@@ -187,7 +193,7 @@ $('sheet').addEventListener('click',e=>{if(e.target===$('sheet'))$('sheet').clas
 $('who').value=store.get('zipperCatalogoNombre')||'';
 $('clear').onclick=()=>{if(confirm('¿Vaciar todo el pedido?')){cart={};save();render();$('sheet').classList.remove('show')}};
 $('send').onclick=()=>{const l=lineList();if(!l.length)return;const who=$('who').value.trim();store.set('zipperCatalogoNombre',who);
-  const txt=[(SELLER_WA?'Hola'+(SELLER_NAME?' '+SELLER_NAME:'')+' (Distribuidora Zipper) 👋':'Hola *Distribuidora Zipper* 👋')+', quiero hacer este pedido:',''].concat(l.map(x=>'• '+x.q+' × '+x.it.name+(x.flavor?' · '+x.flavor:'')+' ('+x.it.per+') — '+money(x.sub)),['','*Total estimado: '+money(l.reduce((a,x)=>a+x.sub,0))+'*']);
+  const txt=[(SELLER_WA?'Hola'+(SELLER_NAME?' '+SELLER_NAME:'')+' (Distribuidora Zipper) 👋':'Hola *Distribuidora Zipper* 👋')+', quiero hacer este pedido:',''].concat(l.map(x=>'• '+x.q+' × '+x.it.name+(x.flavor?' · '+x.flavor:'')+' ('+(x.box?'*caja de '+x.it.box.units+'*':x.per)+') — '+money(x.sub)),['','*Total estimado: '+money(l.reduce((a,x)=>a+x.sub,0))+'*']);
   if(who)txt.push('Cliente: '+who);const m=$('msg').value.trim();if(m)txt.push('Comentario: '+m);
   location.href='https://wa.me/'+data.whatsapp+'?text='+encodeURIComponent(txt.join('\n'))};
 function chips(){$('chips').innerHTML=data.sections.map((s,i)=>'<button data-s="'+i+'">'+esc(s.title)+'</button>').join('');$('chips').onclick=e=>{const b=e.target.closest('[data-s]');if(!b)return;filter='';$('q').value='';render();document.getElementById('s'+b.dataset.s)?.scrollIntoView({behavior:'smooth'})}}
@@ -201,11 +207,11 @@ Promise.all([fetch('catalogo/catalogo.json',{cache:'no-cache'}).then(r=>r.json()
   if(SELLER_WA){data.whatsapp=SELLER_WA;data.sections=data.sections.filter(s=>!s.table&&s.title!=='Remedios');$('mes').insertAdjacentHTML('afterend','<small class="seller">Tu vendedor'+(SELLER_NAME?': '+esc(SELLER_NAME):'')+' · WhatsApp +'+SELLER_WA.replace(/^56(9)(\d{4})(\d{4})$/,'56 $1 $2 $3')+'</small>')}
   if(live&&Array.isArray(live.extra)){live.extra.forEach(x=>{if(!x||!x.key)return;let sec=data.sections.find(s=>s.title===x.section&&!s.table);if(!sec){sec=data.sections.find(s=>s.title==='Otros productos');if(!sec){sec={title:'Otros productos',color:'#64748b',items:[]};const ri=data.sections.findIndex(s=>s.table);data.sections.splice(ri<0?data.sections.length:ri,0,sec)}}sec.items.push({key:x.key,name:x.name,fmt:x.fmt||'',per:x.per||'unidad',price:0,img:''})})}
   if(live&&live.photos){data.sections.forEach(s=>s.items.forEach(it=>{const ph=live.photos[it.key];if(ph==='none')it.img='';else if(ph){it.img='';it.custom=true}}))}
-  if(live&&live.items){data.sections.forEach(s=>s.items.forEach(it=>{const x=live.items[it.key];if(!x)return;if(x.price>0)it.price=x.price;if(!(it.price>0))it.hidden=true;if('promo' in x)it.promo=x.promo||undefined;if(x.hidden)it.hidden=true}));if(live.updatedAt)$('upd').textContent='Precios actualizados el '+new Date(live.updatedAt).toLocaleDateString('es-CL',{day:'numeric',month:'long',year:'numeric'})}
+  if(live&&live.items){data.sections.forEach(s=>s.items.forEach(it=>{const x=live.items[it.key];if(!x)return;if(x.price>0)it.price=x.price;if(!(it.price>0))it.hidden=true;if('promo' in x)it.promo=x.promo||undefined;if(x.hidden)it.hidden=true;if(x.mode==='dual'&&x.box&&x.box.units>1&&x.box.price>0){it.box=x.box;it.per='unidad';delete it.units}}));if(live.updatedAt)$('upd').textContent='Precios actualizados el '+new Date(live.updatedAt).toLocaleDateString('es-CL',{day:'numeric',month:'long',year:'numeric'})}
   data.sections.forEach(s=>s.items.forEach(it=>items.set(it.key,it)));
   $('mes').textContent=NOPRICE?'Catálogo · Mes / año: ____________':'Catálogo · '+new Date().toLocaleDateString('es-CL',{month:'long',year:'numeric'});
   if(PRINT)document.title='Catálogo Zipper'+(NOPRICE?' - para imprimir':' - con precios');
-  for(const k of Object.keys(cart)){const it=items.get(k.split('::')[0]);if(!it||it.hidden)delete cart[k]}
+  for(const k of Object.keys(cart)){const it=items.get(baseOf(k));if(!it||it.hidden||(k.endsWith('|caja')&&!it.box))delete cart[k]}
   data.sections.forEach(s=>s.items=s.items.filter(it=>it.price>0||it.hidden));
   chips();render();save();customPhotos();
 }).catch(()=>{$('list').innerHTML='<p class="empty">No se pudo cargar el catálogo. Revisa tu conexión o escríbenos por WhatsApp.</p>'});
