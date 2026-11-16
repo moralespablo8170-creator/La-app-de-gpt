@@ -175,7 +175,7 @@ function render(){
  ['panelDay','panelComp','panelAccess','panelDriver'].forEach(id=>{const el=document.getElementById(id);if(el){el.classList.add('admin-hidden');document.getElementById('panelHolder')?.appendChild(el)}});
  const team=[...sellers,...drivers];
  $('adminSellers').innerHTML=team.length?team.map(s=>{
-  if(s.role==='driver'){const sel=s.uid===selectedSellerId,ds=driverSessions.find(x=>x.driverUid===s.uid&&String(x.id).endsWith(localDateStr()));const tb=(p,l)=>'<button type="button" data-panel="'+p+'" data-uid="'+safe(s.uid)+'" class="'+(sel&&openPanel===p?'on':'')+'">'+l+'</button>';return '<article class="admin-row" style="background:'+(sel&&openPanel?'#fff7ed':'white')+'"><strong>🚚 '+safe(s.displayName||s.email||'Repartidor')+' · repartidor'+(s.active===true?'':' · desactivado')+'</strong><small>'+(ds?.status==='open'?'🟢 Jornada abierta':ds?.status==='closed'?'⚪ Jornada cerrada':'Sin jornada hoy')+(ds?' · '+(ds.delivered||0)+' entregados':'')+'</small><div class="seller-card-tabs" style="grid-template-columns:1fr 1fr">'+tb('driver','🚚 Día')+tb('access','🔑 Acceso')+'</div><div class="seller-slot" data-slot="'+safe(s.uid)+'"></div></article>'}
+  if(s.role==='driver'){const sel=s.uid===selectedSellerId,ds=driverSessions.find(x=>x.driverUid===s.uid&&String(x.id).endsWith(localDateStr()));const tb=(p,l)=>'<button type="button" data-panel="'+p+'" data-uid="'+safe(s.uid)+'" class="'+(sel&&openPanel===p?'on':'')+'">'+l+'</button>';return '<article class="admin-row" style="background:'+(sel&&openPanel?'#fff7ed':'white')+'"><strong>🚚 '+safe(s.displayName||s.email||'Repartidor')+' · repartidor'+(s.active===true?'':' · desactivado')+'</strong><small>'+(ds?.status==='open'?'🟢 Jornada abierta':ds?.status==='closed'?'⚪ Jornada cerrada':'Sin jornada hoy')+(ds?' · '+(ds.delivered||0)+' entregados':'')+(ds?.lastLocAt?' · 📍 '+ago(ds.lastLocAt):'')+'</small><div class="seller-card-tabs" style="grid-template-columns:1fr 1fr">'+tb('driver','🚚 Día')+tb('access','🔑 Acceso')+'</div><div class="seller-slot" data-slot="'+safe(s.uid)+'"></div></article>'}
   const selected=s.uid===selectedSellerId,active=s.active===true;
   const daySales=sales.filter(x=>x.sellerUid===s.uid&&rowDate(x,'sales')===date),session=sessionFor(s.uid);
   const waiting=sales.filter(x=>x.sellerUid===s.uid&&x.collectionStatus==='awaiting_delivery').length;
@@ -186,7 +186,7 @@ function render(){
  document.querySelectorAll('[data-panel]').forEach(b=>b.onclick=()=>{const same=selectedSellerId===b.dataset.uid&&openPanel===b.dataset.panel;selectedSellerId=b.dataset.uid;openPanel=same?'':b.dataset.panel;if($('compSeller'))$('compSeller').value=selectedSellerId;render();if(openPanel)setTimeout(()=>document.querySelector('[data-slot="'+CSS.escape(selectedSellerId)+'"]')?.scrollIntoView({behavior:'smooth',block:'start'}),50)});
  const slot=openPanel&&document.querySelector('[data-slot="'+CSS.escape(selectedSellerId||'')+'"]');
  if(slot){const id={day:'panelDay',comp:'panelComp',access:'panelAccess',driver:'panelDriver'}[openPanel],el=document.getElementById(id);if(el){el.classList.remove('admin-hidden');slot.appendChild(el)}
-  if(openPanel==='driver')renderDriverPanel();
+  if(openPanel==='driver'){renderDriverPanel();clearInterval(driverTimer);driverTimer=setInterval(()=>{if(openPanel==='driver'&&document.visibilityState==='visible')refresh()},60000)}else clearInterval(driverTimer);
   if(openPanel==='access'){const x=team.find(v=>v.uid===selectedSellerId),active=x?.active===true;$('accessBody').innerHTML='<p class="admin-muted">Correo: <b>'+safe(x?.email||'sin correo')+'</b> · '+(active?'acceso activo':'acceso desactivado')+'</p>'+(x?.email?'<button type="button" class="admin-btn" id="accWa">📲 Enviar acceso por WhatsApp</button><button type="button" class="admin-btn secondary" id="accReset">📧 Enviarle correo para cambiar clave</button>':'')+'<button type="button" class="admin-btn secondary" id="accToggle">'+(active?'⛔ Desactivar a este vendedor':'✅ Activar a este vendedor')+'</button>';
    if($('accWa'))$('accWa').onclick=()=>shareSellerAccess(x.displayName,x.email,'',x.role);if($('accReset'))$('accReset').onclick=()=>sendSellerReset(x.uid);$('accToggle').onclick=()=>toggleSeller(x.uid)}
  }
@@ -221,8 +221,28 @@ function renderDriverPanel(){
  const ok=rows.filter(x=>x.collectionStatus==='collected'),cash=ok.filter(x=>x.paymentMethod!=='transfer').reduce((a,x)=>a+Number(x.total||0),0),tr=ok.filter(x=>x.paymentMethod==='transfer').reduce((a,x)=>a+Number(x.total||0),0);
  const mins=ds?.openedAtLocal&&ds?.closedAtLocal?Math.round((new Date(ds.closedAtLocal)-new Date(ds.openedAtLocal))/60000):null;
  const waiting=sales.filter(x=>x.collectionStatus==='awaiting_delivery').length;
+ renderDriverGps(ds,rows);
  $('driverBody').innerHTML='<div class="admin-grid"><div class="admin-stat"><strong>'+hm(ds?.openedAtLocal)+'</strong><span>Inicio</span></div><div class="admin-stat"><strong>'+(ds?.closedAtLocal?hm(ds.closedAtLocal):ds?'Sin cerrar':'—')+'</strong><span>Término</span></div><div class="admin-stat"><strong>'+(mins!=null?Math.floor(mins/60)+' h '+String(mins%60).padStart(2,'0'):'—')+'</strong><span>Jornada</span></div><div class="admin-stat"><strong>'+ok.length+' / '+rows.length+'</strong><span>Entregados</span></div><div class="admin-stat"><strong>'+money(cash)+'</strong><span>Efectivo a rendir</span></div><div class="admin-stat"><strong>'+money(tr)+'</strong><span>Transferencias</span></div></div><p class="admin-muted">Pedidos de vendedores esperando reparto: '+waiting+'</p>'+
   (rows.length?rows.map(x=>'<article class="admin-row"><strong>'+safe(x.cliente||'Cliente')+' · '+money(x.total)+'</strong><small>'+(x.collectionStatus==='collected'?'✅ Entregado · '+(x.paymentMethod==='transfer'?'Transferencia':'Efectivo')+(x.paymentMethodOriginal?' (cambió)':''):'✖ Rechazado · '+safe(x.deliveryNote||''))+' · '+hm(x.deliveredAt)+'</small></article>').join(''):'<p class="admin-muted">Sin entregas en esta fecha.</p>');
+}
+// Ubicación del repartidor: último punto enviado, recorrido del día y lugares de entrega.
+let driverMap=null,driverLayer=null,driverTimer=null;
+function ago(iso){const m=Math.round((Date.now()-new Date(iso).getTime())/60000);return m<1?'recién':m<60?'hace '+m+' min':'hace '+Math.floor(m/60)+' h '+(m%60)+' min'}
+function renderDriverGps(ds,rows){
+ const box=$('driverGps'),mapEl=$('driverMap');
+ if(!ds?.lastLat){box.innerHTML='<div class="gps-box old">📍 Sin ubicación en esta fecha. Se ve cuando el repartidor inicia la jornada y tiene la app abierta con el GPS permitido.</div>';mapEl.style.display='none';return}
+ const old=Date.now()-new Date(ds.lastLocAt).getTime()>15*60000&&ds.status==='open';
+ box.innerHTML='<div class="gps-box'+(old?' old':'')+'">📍 <b>'+(ds.status==='open'?'Última ubicación':'Ubicación al cerrar')+'</b> '+ago(ds.lastLocAt)+' ('+new Date(ds.lastLocAt).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'})+', precisión '+(ds.lastAccuracy||'?')+' m)'+(old?'<br>⚠️ Hace rato no envía ubicación: puede tener la app cerrada o sin señal.':'')+'<br><a href="https://www.google.com/maps?q='+ds.lastLat+','+ds.lastLng+'" target="_blank" rel="noopener">Ver en Google Maps</a></div>';
+ if(typeof L==='undefined'){mapEl.style.display='none';return}
+ mapEl.style.display='block';
+ if(!driverMap){driverMap=L.map('driverMap');L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(driverMap)}
+ if(driverLayer)driverLayer.remove();driverLayer=L.layerGroup().addTo(driverMap);
+ const pts=(Array.isArray(ds.track)?ds.track:[]).map(p=>[p.lat,p.lng]);
+ if(pts.length>1)L.polyline(pts,{color:'#2563eb',weight:3,opacity:.6}).addTo(driverLayer);
+ const bounds=[[ds.lastLat,ds.lastLng],...pts];
+ rows.filter(x=>x.deliveredLat).forEach((x,i)=>{L.marker([x.deliveredLat,x.deliveredLng],{icon:L.divIcon({className:x.collectionStatus==='collected'?'dnum':'drej',html:x.collectionStatus==='collected'?'✓':'✖',iconSize:[22,22]})}).addTo(driverLayer).bindPopup(safe(x.cliente||'Cliente')+' · '+money(x.total));bounds.push([x.deliveredLat,x.deliveredLng])});
+ L.marker([ds.lastLat,ds.lastLng],{icon:L.divIcon({className:'dnow',iconSize:[18,18]})}).addTo(driverLayer).bindPopup('Repartidor · '+ago(ds.lastLocAt));
+ driverMap.fitBounds(L.latLngBounds(bounds).pad(.2),{maxZoom:16});setTimeout(()=>driverMap.invalidateSize(),120);
 }
 async function loadOffice(){try{const s=await getDoc(doc(db,'orgs',ORG,'settings','delivery'));$('officeAddress').value=s.exists()&&s.data().officeAddress?s.data().officeAddress:'Quebrada de Aroma 1517, Peñalolén'}catch(_){}}
 async function saveOffice(){const v=$('officeAddress').value.trim();if(v.length<5){status('Escribe la dirección de la oficina.','error');return}try{await setDoc(doc(db,'orgs',ORG,'settings','delivery'),{officeAddress:v.includes('Chile')?v:v+', Santiago, Chile',officeLat:null,officeLng:null,updatedAt:new Date().toISOString()},{merge:true});status('Dirección de la oficina guardada.','ok')}catch(e){status(e.message||'No se pudo guardar la dirección.','error')}}

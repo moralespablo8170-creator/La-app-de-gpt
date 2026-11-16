@@ -216,7 +216,7 @@ service cloud.firestore {
           && request.resource.data.paymentMethod in ['cash', 'transfer']
           && request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['collectionStatus', 'collectedAt', 'paymentMethod', 'paymentMethodOriginal',
-              'deliveredBy', 'deliveredByName', 'deliveredAt', 'deliveryNote']));
+              'deliveredBy', 'deliveredByName', 'deliveredAt', 'deliveryNote', 'deliveredLat', 'deliveredLng']));
       allow delete: if isOwner(orgId);
     }
 
@@ -229,7 +229,9 @@ service cloud.firestore {
           && request.resource.data.driverUid == request.auth.uid
           && (resource == null || resource.data.driverUid == request.auth.uid)
           && request.resource.data.keys().hasOnly(['id', 'driverUid', 'status', 'openedAt', 'openedAtLocal',
-            'closedAt', 'closedAtLocal', 'delivered', 'rejected', 'cashTotal', 'transferTotal', 'updatedAt']));
+            'closedAt', 'closedAtLocal', 'delivered', 'rejected', 'cashTotal', 'transferTotal', 'updatedAt',
+            'lastLat', 'lastLng', 'lastAccuracy', 'lastLocAt', 'track'])
+          && (!('track' in request.resource.data) || request.resource.data.track.size() <= 400));
       allow delete: if isOwner(orgId);
     }
 

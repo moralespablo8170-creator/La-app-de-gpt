@@ -6,6 +6,8 @@
 <meta name="theme-color" content="#111827">
 <title>Vendedores · Distribuidora Zipper</title>
 <link rel="stylesheet" href="./styles.css?v=zipper-sync-status-20261029-v1">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script type="importmap">
 {"imports":{"firebase/app":"https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js","firebase/auth":"https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js","firebase/firestore":"https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js"}}
 </script>
@@ -20,6 +22,8 @@
 @media(max-width:420px){.comp-grid{grid-template-columns:1fr}}
 .seller-card-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}.seller-card-tabs button{margin:0;padding:10px 4px;font-size:13px;border-radius:12px;border:2px solid #c7d2fe;background:#eef2ff;color:#312e81;font-weight:800}.seller-card-tabs button.on{background:#4f46e5;border-color:#4f46e5;color:#fff}
 .seller-panel{border:2px solid #4f46e5;border-radius:16px;padding:12px;margin-top:10px;background:#fff}.panel-title{margin:0 0 6px;color:#312e81}
+.gps-box{padding:10px;border-radius:12px;background:#ecfeff;border:2px solid #67e8f9;margin:6px 0}.gps-box.old{background:#fff7ed;border-color:#fdba74}.gps-box a{font-weight:800}
+.leaflet-div-icon.dnum{background:#16a34a;color:#fff;border:2px solid #fff;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:900}.leaflet-div-icon.drej{background:#dc2626;color:#fff;border:2px solid #fff;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:900}.leaflet-div-icon.dnow{background:#2563eb;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 4px #2563eb55}
 </style>
 </head>
 <body>
@@ -90,11 +94,11 @@
 <h3>Visitas</h3><div id="adminVisits" class="admin-list"></div>
 <h3>Movimientos de caja</h3><div id="adminCash" class="admin-list"></div>
 </section>
-<section id="panelDriver" class="seller-panel admin-hidden"><h3 class="panel-title">🚚 Día del repartidor</h3><label>Fecha<input id="driverDate" type="date"></label><div id="driverBody"></div></section>
+<section id="panelDriver" class="seller-panel admin-hidden"><h3 class="panel-title">🚚 Día del repartidor</h3><label>Fecha<input id="driverDate" type="date"></label><div id="driverGps"></div><div id="driverMap" style="height:260px;border-radius:14px;margin:8px 0;display:none"></div><div id="driverBody"></div></section>
 <section id="panelAccess" class="seller-panel admin-hidden"><h3 class="panel-title">🔑 Acceso</h3><div id="accessBody"></div></section>
 <div id="panelHolder" hidden></div>
 </section>
 </main>
-<script type="module" src="./seller-admin.js?v=zipper-seller-admin-20261116-v7"></script>
+<script type="module" src="./seller-admin.js?v=zipper-seller-admin-20261116-v8"></script>
 </body>
 </html>

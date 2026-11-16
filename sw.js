@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zipper-app-pwa-20261116-reparto-53';
+const CACHE_NAME = 'zipper-app-pwa-20261116-gps-54';
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -28,11 +28,11 @@ const APP_SHELL = [
   "./vendedor.html",
   "./repartidor.html",
   "./repartidor-manifest.json?v=1",
-  "./driver-app.js?v=zipper-driver-20261116-v2",
+  "./driver-app.js?v=zipper-driver-20261116-v3",
   "./vendedor-manifest.json?v=1",
   "./seller-app.js?v=zipper-seller-v9-20261116",
   "./seller-admin.html",
-  "./seller-admin.js?v=zipper-seller-admin-20261116-v7",
+  "./seller-admin.js?v=zipper-seller-admin-20261116-v8",
   "./route-position-migration.js?v=1.2",
   "./route-position-migration-b.js?v=1.0",
   "./herramientas.js?v=20261115-restauracion-v33",

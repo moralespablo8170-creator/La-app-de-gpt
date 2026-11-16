@@ -12,7 +12,7 @@ let db;try{db=initializeFirestore(app,{localCache:persistentLocalCache({tabManag
 const ORG=ORG_ID;
 const OFFICE_DEFAULT='Quebrada de Aroma 1517, Peñalolén, Santiago, Chile';
 const $=id=>document.getElementById(id);
-let profile=null,clients=new Map(),pending=[],delivered=[],session=null,unsubs=[],office={address:OFFICE_DEFAULT,lat:null,lng:null},order=[],map=null,mapLayer=null,modalSale=null,modalPay='';
+let gps={watch:null,last:null,sentAt:0,sent:null,track:[],error:''},profile=null,clients=new Map(),pending=[],delivered=[],session=null,unsubs=[],office={address:OFFICE_DEFAULT,lat:null,lng:null},order=[],map=null,mapLayer=null,modalSale=null,modalPay='';
 const localDate=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
 const money=v=>'$'+Math.round(Number(v)||0).toLocaleString('es-CL');
 const safe=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -45,6 +45,7 @@ async function enter(user){
  try{const st=await getDoc(doc(db,'orgs',ORG,'settings','delivery'));if(st.exists()&&st.data().officeAddress){const d=st.data();if(d.officeAddress!==office.address)office={address:d.officeAddress,lat:Number(d.officeLat)||null,lng:Number(d.officeLng)||null};localStorage.setItem(prefix()+'office',JSON.stringify(office))}}catch(_){}
  try{const s=await getDoc(doc(db,'orgs',ORG,'driverSessions',sessionId()));if(s.exists())session={id:s.id,...s.data()}}catch(_){}
  watch();
+ if(sessionOpen())startGps();
 }
 function watch(){
  unsubs.forEach(f=>{try{f()}catch(_){}});unsubs=[];
@@ -76,7 +77,7 @@ function deliveryCard(s,i,kind){
    :'<div class="actions"><button type="button" data-deliver="'+safe(s.id)+'"'+(sessionOpen()?'':' disabled')+'>✅ Entregado</button><button type="button" class="danger" data-reject="'+safe(s.id)+'"'+(sessionOpen()?'':' disabled')+'>✖ Rechazado</button></div>')+'</div>';
 }
 function render(){
- if(!profile)return;
+ if(!profile)return;renderGps();
  $('welcome').textContent=(profile.displayName||'Repartidor')+' · '+(navigator.onLine?'en línea':'sin internet');
  const open=sessionOpen(),closed=session&&session.status==='closed';
  $('state').textContent=open?'Abierta':closed?'Cerrada':'Sin iniciar';
@@ -92,6 +93,26 @@ function render(){
  $('doneTabCount').textContent=today.length?' ('+today.length+')':'';
 }
 
+// ===== GPS: mientras la jornada está abierta y la app abierta, comparte la ubicación con el dueño =====
+function startGps(){
+ if(gps.watch!=null||!('geolocation' in navigator))return;
+ try{const t=JSON.parse(localStorage.getItem(prefix()+'track_'+localDate())||'[]');if(Array.isArray(t))gps.track=t}catch(_){}
+ gps.watch=navigator.geolocation.watchPosition(p=>{gps.error='';gps.last={lat:+p.coords.latitude.toFixed(6),lng:+p.coords.longitude.toFixed(6),acc:Math.round(p.coords.accuracy||0),t:new Date().toISOString()};sendGps(false);renderGps()},
+  e=>{gps.error=e.code===1?'Permiso de ubicación denegado: actívalo en el teléfono para que el dueño vea dónde estás.':'No se pudo obtener la ubicación.';renderGps()},
+  {enableHighAccuracy:true,maximumAge:30000,timeout:30000});
+}
+function stopGps(){if(gps.watch!=null){navigator.geolocation.clearWatch(gps.watch);gps.watch=null}renderGps()}
+async function sendGps(force){
+ const p=gps.last;if(!p||!sessionOpen())return;
+ const moved=gps.sent?dist(gps.sent,p)*1000:Infinity;
+ if(!force&&Date.now()-gps.sentAt<120000&&moved<150)return; // cada 2 minutos o al moverse 150 m
+ gps.sentAt=Date.now();gps.sent=p;
+ gps.track=[...gps.track,{lat:p.lat,lng:p.lng,t:p.t}].slice(-400);
+ try{localStorage.setItem(prefix()+'track_'+localDate(),JSON.stringify(gps.track))}catch(_){}
+ try{await setDoc(doc(db,'orgs',ORG,'driverSessions',sessionId()),{id:sessionId(),driverUid:profile.uid,lastLat:p.lat,lastLng:p.lng,lastAccuracy:p.acc,lastLocAt:p.t,track:gps.track,updatedAt:serverTimestamp()},{merge:true})}catch(e){console.warn('GPS:',e)}
+}
+function renderGps(){const el=$('gpsStatus');if(!el)return;el.textContent=gps.error?'⚠️ '+gps.error:gps.watch==null?'📍 La ubicación se comparte con el dueño mientras la jornada está abierta.':gps.last?'📍 Ubicación compartida · '+new Date(gps.last.t).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'})+' (precisión '+gps.last.acc+' m). Mantén la app abierta.':'📍 Buscando ubicación…';el.className='muted'+(gps.error?' gps-warn':'')}
+
 // ===== Jornada =====
 async function saveSession(extra){
  const today=deliveredToday(),ok=today.filter(s=>s.collectionStatus==='collected');
@@ -100,13 +121,13 @@ async function saveSession(extra){
  await setDoc(doc(db,'orgs',ORG,'driverSessions',row.id),row,{merge:true});
 }
 async function startSession(){
- try{const p=saveSession({status:'open',closedAt:null,closedAtLocal:null});status('✅ Jornada iniciada. '+toDeliver().length+' pedidos por entregar.','ok');await p}
+ try{const p=saveSession({status:'open',closedAt:null,closedAtLocal:null});startGps();status('✅ Jornada iniciada. '+toDeliver().length+' pedidos por entregar.','ok');await p;sendGps(true)}
  catch(e){status('No se pudo guardar la jornada: '+(isPerm(e)?'permiso denegado (faltan reglas nuevas).':e.message),'error')}
 }
 async function closeSession(){
  const left=toDeliver().length;if(left&&!confirm('Quedan '+left+' pedidos sin entregar. ¿Cerrar la jornada igual?'))return;
  const now=new Date().toISOString();
- try{const p=saveSession({status:'closed',closedAt:serverTimestamp(),closedAtLocal:now});status('Jornada cerrada. Efectivo a rendir: '+$('cashTotal').textContent,'ok');await p}
+ try{await sendGps(true);stopGps();const p=saveSession({status:'closed',closedAt:serverTimestamp(),closedAtLocal:now});status('Jornada cerrada. Efectivo a rendir: '+$('cashTotal').textContent,'ok');await p}
  catch(e){status('No se pudo cerrar la jornada: '+e.message,'error')}
 }
 
@@ -119,7 +140,7 @@ function openDeliver(id){
 }
 async function confirmDeliver(){
  const s=modalSale;if(!s||!modalPay)return;$('deliverModal').classList.add('hide');
- const now=new Date().toISOString(),data={collectionStatus:'collected',collectedAt:now,deliveredAt:now,deliveredBy:profile.uid,deliveredByName:profile.displayName||profile.email||'Repartidor',paymentMethod:modalPay};
+ const now=new Date().toISOString(),data={...(gps.last?{deliveredLat:gps.last.lat,deliveredLng:gps.last.lng}:{}),collectionStatus:'collected',collectedAt:now,deliveredAt:now,deliveredBy:profile.uid,deliveredByName:profile.displayName||profile.email||'Repartidor',paymentMethod:modalPay};
  if(modalPay!==(s.paymentMethod==='transfer'?'transfer':'cash'))data.paymentMethodOriginal=s.paymentMethod||'cash';
  await applyUpdate(s,data,'✅ '+clientOf(s).name+' entregado · '+money(s.total)+' en '+(modalPay==='transfer'?'transferencia':'efectivo')+'.');
 }
@@ -127,7 +148,7 @@ async function reject(id){
  const s=pending.find(x=>String(x.id)===String(id));if(!s)return;
  const note=prompt('¿Por qué se rechazó el pedido de '+clientOf(s).name+'? (cerrado, no tenía dinero, no lo pidió…)','');if(note===null)return;
  const now=new Date().toISOString();
- await applyUpdate(s,{collectionStatus:'delivery_rejected',deliveredAt:now,deliveredBy:profile.uid,deliveredByName:profile.displayName||profile.email||'Repartidor',deliveryNote:String(note).slice(0,200),paymentMethod:s.paymentMethod==='transfer'?'transfer':'cash'},'✖ Pedido de '+clientOf(s).name+' marcado como rechazado. El dueño lo revisa en su caja.');
+ await applyUpdate(s,{...(gps.last?{deliveredLat:gps.last.lat,deliveredLng:gps.last.lng}:{}),collectionStatus:'delivery_rejected',deliveredAt:now,deliveredBy:profile.uid,deliveredByName:profile.displayName||profile.email||'Repartidor',deliveryNote:String(note).slice(0,200),paymentMethod:s.paymentMethod==='transfer'?'transfer':'cash'},'✖ Pedido de '+clientOf(s).name+' marcado como rechazado. El dueño lo revisa en su caja.');
 }
 async function applyUpdate(s,data,msg){
  // Se refleja al tiro en pantalla; si no hay señal, Firebase lo envía al reconectar.
