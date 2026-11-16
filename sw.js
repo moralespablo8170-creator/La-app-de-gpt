@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zipper-app-pwa-20261116-vendedores-46';
+const CACHE_NAME = 'zipper-app-pwa-20261116-control-47';
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -15,7 +15,7 @@ const APP_SHELL = [
   "./assets/ilustraciones/carrito.svg",
   "./app.js?v=20261115-cancelar-12",
   "./whatsapp.js?v=20261115-4",
-  "./cobranza.js?v=20261115-4",
+  "./cobranza.js?v=20261116-5",
   "./ideas.js?v=20261115-1",
   "./informe-vendedores.js?v=20261116-1",
   "./rutas-clientes.js?v=20261115-2",
@@ -28,7 +28,7 @@ const APP_SHELL = [
   "./vendedor-manifest.json?v=1",
   "./seller-app.js?v=zipper-seller-v7-20261116",
   "./seller-admin.html",
-  "./seller-admin.js?v=zipper-seller-access-20261115-v2",
+  "./seller-admin.js?v=zipper-seller-admin-20261116-v3",
   "./route-position-migration.js?v=1.2",
   "./route-position-migration-b.js?v=1.0",
   "./herramientas.js?v=20261115-restauracion-v33",

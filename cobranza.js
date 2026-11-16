@@ -64,13 +64,15 @@
     const list=debtors();
     out.querySelector('.cobranza')?.remove();
     out.querySelectorAll('.wa-remind').forEach(b=>b.remove());
-    if(!list.length)return;
+    // Solo los clientes que aún deben: el detalle de tickets antiguos ya está en Historial → Ventas.
+    out.innerHTML='';
+    if(!list.length){out.innerHTML='<p class="muted empty-state">🎉 Ningún cliente te debe.</p>';return}
     const late=list.filter(x=>x.days>15);
     const box=document.createElement('section');box.className='cobranza';
     box.innerHTML='<div class="cobranza-head"><h3>💰 Cobranza por cliente</h3><span>'+plural(list.length,'cliente','clientes')+' · '+money(list.reduce((a,x)=>a+x.debt,0))+(late.length?' · <b>'+late.length+' con más de 15 días</b>':'')+'</span></div>'+
       list.map((x,i)=>'<article class="cobranza-row lvl-'+x.level.key+'"><div class="cobranza-main"><strong>'+esc(x.client?.name||x.name)+'</strong><span class="cobranza-badge">'+(x.days?x.days+(x.days===1?' día':' días'):'Hoy')+' · '+x.level.label+'</span><small>'+plural(x.open.length,'compra pendiente','compras pendientes')+(x.oldest?' · desde '+esc(niceDate(x.oldest)):'')+(x.lastNotice?' · último aviso '+esc(x.lastNotice===localDate()?'hoy':'hace '+daysSince(x.lastNotice)+' días'):'')+'</small></div><div class="cobranza-side"><strong>'+money(x.debt)+'</strong><button class="wa-btn cobranza-wa" data-i="'+i+'" type="button">📲 Recordar</button><button class="secondary cobranza-pay" data-i="'+i+'" type="button">Abonar</button></div></article>').join('')+
-      '<h4 class="cobranza-sub">Detalle por venta</h4>';
-    out.insertBefore(box,out.firstChild);
+      '';
+    out.appendChild(box);
     box.querySelectorAll('.cobranza-wa').forEach(b=>b.onclick=()=>sendReminder(list[Number(b.dataset.i)]));
     box.querySelectorAll('.cobranza-pay').forEach(b=>b.onclick=()=>{if(typeof addDebtPayment==='function')addDebtPayment(list[Number(b.dataset.i)].id)});
   }

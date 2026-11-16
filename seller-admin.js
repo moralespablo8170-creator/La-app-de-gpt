@@ -11,12 +11,13 @@ const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),O
 const provisioningApp=initializeApp(firebaseConfig,'zipper-seller-provisioning'),provisioningAuth=getAuth(provisioningApp);
 const SELLER_ACCOUNT_CREATION_READY=true;
 const SELLER_ACCESS_SERVER_READY=true;
-const $=id=>document.getElementById(id);
+// Elementos que ya no están en la página reciben un reemplazo invisible (así las funciones antiguas no fallan).
+const ghosts={};const $=id=>document.getElementById(id)||(ghosts[id]||(ghosts[id]=document.createElement(id==='reportPeriod'||id==='compMode'?'select':'input')));
 let owner=null,sellers=[],sessions=[],sales=[],visits=[],cash=[],clients=[],compensationBySeller={},selectedSellerId=null,loading=false;
 const localDate=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
 const safe=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=value=>'$'+Math.round(Number(value)||0).toLocaleString('es-CL');
-function status(message,state=''){const el=$('adminStatus');el.textContent=message;el.className='admin-status'+(state?' '+state:'')}
+let statusTimer=null;function status(message,state=''){const el=$('adminStatus');el.textContent=message;el.className='admin-toast'+(state?' '+state:'');clearTimeout(statusTimer);statusTimer=setTimeout(()=>el.classList.add('fade'),state==='error'?8000:3500)}
 function dateValue(value){
  if(value&&typeof value.toDate==='function')return value.toDate();
  if(value instanceof Date)return value;
@@ -70,13 +71,24 @@ function renderPeriodReport(){
   return '<tr><td>'+safe(sellerLabel(row.sellerUid))+'</td><td>'+safe(row.zone)+'</td><td>'+safe(row.route)+'</td><td>'+row.count+'</td><td>'+money(row.total)+'</td><td>'+share.toLocaleString('es-CL',{minimumFractionDigits:1,maximumFractionDigits:1})+'%</td></tr>';
  }).join(''):'<tr><td colspan="6">No hay ventas registradas en este período.</td></tr>';
 }
+const digits=v=>{const d=String(v??'').replace(/\D/g,'');return d===''?'':Number(d)};
+const pct=v=>{const t=String(v??'').trim().replace('%','').replace(',','.');return t===''?'':Number(t)};
+function tierText(tiers,i){const t=tiers[i],next=tiers.slice().map(x=>x.threshold).filter(x=>x!==''&&x>t.threshold).sort((a,b)=>a-b)[0];if(t.threshold===''||t.ratePct==='')return 'Completa el monto y el %.';return (next!=null?'De '+money(t.threshold)+' a '+money(next-1):'Desde '+money(t.threshold)+' en adelante')+' → '+t.ratePct.toLocaleString('es-CL')+' %'}
 function renderCompTiers(tiers){
- const tbody=$('compTiers');
- tbody.innerHTML=(tiers.length?tiers:[{threshold:0,ratePct:''}]).map((tier,index)=>'<tr><td><input data-comp-threshold="'+index+'" type="number" min="0" step="10000" inputmode="numeric" value="'+safe(tier.threshold??'')+'" aria-label="Meta inicial del tramo '+(index+1)+'"></td><td><input data-comp-rate="'+index+'" type="number" min="0" max="100" step="0.1" inputmode="decimal" value="'+safe(tier.ratePct??'')+'" aria-label="Porcentaje del tramo '+(index+1)+'"></td><td><button class="admin-btn secondary" type="button" data-comp-remove="'+index+'">Quitar</button></td></tr>').join('');
- document.querySelectorAll('[data-comp-remove]').forEach(button=>button.onclick=()=>{const current=readCompTiers();current.splice(Number(button.dataset.compRemove),1);renderCompTiers(current)});
+ const list=tiers.length?tiers:[{threshold:0,ratePct:''}];
+ $('compTiers').innerHTML=list.map((tier,index)=>'<div class="comp-tier"><div class="comp-tier-head">Tramo '+(index+1)+(list.length>1?'<button class="admin-btn secondary" type="button" data-comp-remove="'+index+'">Quitar</button>':'')+'</div><div class="comp-tier-fields"><label>Desde ventas de ($)<input data-comp-threshold="'+index+'" type="text" inputmode="numeric" value="'+safe(tier.threshold===''?'':Number(tier.threshold).toLocaleString('es-CL'))+'"'+(index===0?' placeholder="0"':' placeholder="Ej: 2.000.000"')+'></label><label>Comisión (%)<input data-comp-rate="'+index+'" type="text" inputmode="decimal" value="'+safe(tier.ratePct===''?'':String(tier.ratePct).replace('.',','))+'" placeholder="Ej: 3"></label></div><small data-comp-text="'+index+'">'+safe(tierText(list,index))+'</small></div>').join('');
+ document.querySelectorAll('[data-comp-remove]').forEach(button=>button.onclick=()=>{const current=readCompTiers();current.splice(Number(button.dataset.compRemove),1);renderCompTiers(current);renderCompSim()});
+ document.querySelectorAll('[data-comp-threshold],[data-comp-rate]').forEach(input=>input.oninput=()=>{const t=readCompTiers();t.forEach((_,i)=>{const el=document.querySelector('[data-comp-text="'+i+'"]');if(el)el.textContent=tierText(t,i)});renderCompSim()});
 }
 function readCompTiers(){
- return [...document.querySelectorAll('[data-comp-threshold]')].map((input,index)=>({threshold:input.value===''?'':Number(input.value),ratePct:document.querySelector('[data-comp-rate="'+index+'"]')?.value===''?'':Number(document.querySelector('[data-comp-rate="'+index+'"]')?.value)}));
+ return [...document.querySelectorAll('[data-comp-threshold]')].map((input,index)=>({threshold:digits(input.value),ratePct:pct(document.querySelector('[data-comp-rate="'+index+'"]')?.value)}));
+}
+function renderCompSim(){
+ const box=$('compSimResult');if(!box)return;
+ const salesTotal=digits($('compSimSales').value),base=digits($('compBaseSalary').value)||0,tiers=readCompTiers().filter(t=>t.threshold!==''&&t.ratePct!==''&&Number.isFinite(t.ratePct));
+ if(salesTotal===''||!tiers.length){box.innerHTML='Escribe un monto de ventas para ver cuánto ganaría.';return}
+ const calc=commissionBreakdown(salesTotal,tiers,$('compMode').value);
+ box.innerHTML='Si vende <b>'+money(salesTotal)+'</b>: comisión <b>'+money(calc.total)+'</b> + sueldo base '+money(base)+' = <b>'+money(calc.total+base)+'</b> bruto.<br><small>'+safe(calc.breakdown)+'</small>';
 }
 function compensationFor(uid,month){
  if(!uid||!month)return null;
@@ -88,42 +100,47 @@ function renderCompForm(){
  const next=sellers.some(s=>s.uid===previous)?previous:(sellers.some(s=>s.uid===selectedSellerId)?selectedSellerId:'');
  select.value=next;
  const policy=compensationFor(next,month);
- $('compBaseSalary').value=policy?String(policy.monthlyBaseSalary??''):'';
- renderCompTiers(policy?.tiers?.length?policy.tiers:[{threshold:0,ratePct:''}]);
+ $('compBaseSalary').value=policy?Number(policy.monthlyBaseSalary||0).toLocaleString('es-CL'):'';$('compMode').value=policy?.mode==='total'?'total':'marginal';
+ renderCompTiers(policy?.tiers?.length?policy.tiers:[{threshold:0,ratePct:''}]);renderCompSim();
  $('compStatus').textContent=next?(policy?'Condiciones vigentes desde '+policy.effectiveMonth+'. Guardar crea o corrige las condiciones desde '+month+' y no cambia meses anteriores.':'Sin condiciones vigentes para ese vendedor y mes.'):'Selecciona un vendedor para definir sus condiciones.';
 }
-function commissionBreakdown(salesTotal,tiers){
+// Escalonada (marginal): cada % se aplica solo a la parte vendida dentro de su tramo.
+// Por meta alcanzada (total): el % del tramo más alto alcanzado se aplica a todo lo vendido.
+function commissionBreakdown(salesTotal,tiers,mode='marginal'){
  const sorted=tiers.slice().sort((a,b)=>a.threshold-b.threshold);let total=0;const pieces=[];
- sorted.forEach((tier,index)=>{
-  const next=sorted[index+1],upper=next?Math.min(salesTotal,next.threshold):salesTotal;
-  const segment=Math.max(0,upper-tier.threshold),amount=segment*tier.ratePct/100;
-  total+=amount;
-  if(segment>0)pieces.push(money(segment)+' × '+tier.ratePct.toLocaleString('es-CL')+'% = '+money(amount));
- });
  const reached=sorted.filter(t=>salesTotal>=t.threshold).at(-1)||sorted[0];
  const next=sorted.find(t=>t.threshold>salesTotal);
- const targetLabel='Meta vigente '+money(reached.threshold)+' · '+reached.ratePct.toLocaleString('es-CL')+'% sobre el excedente'+(next?' · próxima '+money(next.threshold):' · último tramo');
- return {total:Math.round(total),effective:salesTotal>0?Math.round(total)/salesTotal*100:0,targetLabel,breakdown:pieces.length?pieces.join(' · '):'Sin comisión variable por ventas en este mes.'};
+ if(mode==='total'){
+  total=salesTotal*(reached?reached.ratePct:0)/100;
+  pieces.push(money(salesTotal)+' × '+(reached?reached.ratePct:0).toLocaleString('es-CL')+' % = '+money(total));
+ }else sorted.forEach((tier,index)=>{
+  const nx=sorted[index+1],upper=nx?Math.min(salesTotal,nx.threshold):salesTotal;
+  const segment=Math.max(0,upper-tier.threshold),amount=segment*tier.ratePct/100;
+  total+=amount;
+  if(segment>0)pieces.push('Tramo '+(index+1)+': '+money(segment)+' × '+tier.ratePct.toLocaleString('es-CL')+' % = '+money(amount));
+ });
+ return {total:Math.round(total),effective:salesTotal>0?Math.round(total)/salesTotal*100:0,reached,next,breakdown:pieces.length?pieces.join(' · '):'Sin comisión por ventas.'};
 }
 function renderCompResults(){
  const month=$('commissionMonth').value;
  const monthSales=sales.filter(s=>dateKey(s.date||s.fecha||s.occurredAt).slice(0,7)===month),totals=new Map();
  monthSales.forEach(s=>{const uid=String(s.sellerUid||'');if(uid)totals.set(uid,(totals.get(uid)||0)+(Number(s.total)||0))});
- const rows=sellers.map(s=>{
-  const policy=compensationFor(s.uid,month),salesTotal=totals.get(s.uid)||0;
-  if(!policy||!Array.isArray(policy.tiers)||!policy.tiers.length)return '<tr><td>'+safe(s.displayName||s.email||s.uid)+'</td><td>'+money(salesTotal)+'</td><td colspan="5">Falta configurar sueldo base y metas.</td></tr>';
-  const calc=commissionBreakdown(salesTotal,policy.tiers),base=Number(policy.monthlyBaseSalary)||0;
-  return '<tr><td>'+safe(s.displayName||s.email||s.uid)+'</td><td>'+money(salesTotal)+'</td><td>'+safe(calc.targetLabel)+'<small>Condiciones desde '+safe(policy.effectiveMonth||'sin fecha')+'</small><details><summary>Ver cálculo por tramo</summary>'+safe(calc.breakdown)+'</details></td><td>'+calc.effective.toLocaleString('es-CL',{minimumFractionDigits:2,maximumFractionDigits:2})+'%</td><td>'+money(calc.total)+'</td><td>'+money(base)+'</td><td>'+money(calc.total+base)+'</td></tr>';
+ const cards=sellers.map(s=>{
+  const policy=compensationFor(s.uid,month),salesTotal=totals.get(s.uid)||0,name=safe(s.displayName||s.email||'Vendedor');
+  if(!policy||!Array.isArray(policy.tiers)||!policy.tiers.length)return '<div class="comp-card"><div class="comp-card-head">'+name+'<span>'+money(salesTotal)+' vendido</span></div><small>Falta configurar su sueldo base y tramos (arriba).</small></div>';
+  const calc=commissionBreakdown(salesTotal,policy.tiers,policy.mode),base=Number(policy.monthlyBaseSalary)||0;
+  const prog=calc.next?Math.min(100,Math.round((salesTotal-calc.reached.threshold)/(calc.next.threshold-calc.reached.threshold)*100)):100;
+  return '<div class="comp-card"><div class="comp-card-head">'+name+'<span>'+money(calc.total+base)+'</span></div><div class="comp-lines"><span>Ventas del mes</span><b>'+money(salesTotal)+'</b><span>Comisión ('+calc.effective.toLocaleString('es-CL',{maximumFractionDigits:2})+' % efectivo)</span><b>'+money(calc.total)+'</b><span>Sueldo base</span><b>'+money(base)+'</b><span><strong>Total bruto estimado</strong></span><b>'+money(calc.total+base)+'</b></div><div class="comp-bar"><i style="width:'+prog+'%"></i></div><small>'+(calc.next?'Le faltan '+money(calc.next.threshold-salesTotal)+' para el tramo de '+calc.next.ratePct.toLocaleString('es-CL')+' %':'Está en el tramo más alto ('+calc.reached.ratePct.toLocaleString('es-CL')+' %)')+' · '+(policy.mode==='total'?'por meta alcanzada':'escalonada')+'</small><details><summary>Ver cálculo</summary><small>'+safe(calc.breakdown)+'</small></details></div>';
  });
- $('compResults').innerHTML=rows.join('')||'<tr><td colspan="7">Aún no hay vendedores registrados.</td></tr>';
+ $('compResults').innerHTML=cards.join('')||'<p class="admin-muted">Aún no hay vendedores registrados.</p>';
 }
 async function saveCompensation(){
  const uid=$('compSeller').value,baseRaw=$('compBaseSalary').value,month=$('commissionMonth').value;
  if(!owner||!uid){$('compStatus').textContent='Selecciona un vendedor.';return}
  if(!month){$('compStatus').textContent='Selecciona el mes desde el que aplicarán estas condiciones.';return}
  if(navigator.onLine===false){$('compStatus').textContent='Conéctate a internet para guardar las condiciones.';return}
- const base=Number(baseRaw),tiers=readCompTiers();
- if(baseRaw===''||!Number.isInteger(base)||base<0){$('compStatus').textContent='Ingresa un sueldo base en pesos enteros; puede ser cero si corresponde.';return}
+ const base=digits(baseRaw),tiers=readCompTiers();
+ if(base===''){$('compStatus').textContent='Ingresa el sueldo base bruto en pesos (puede ser 0 si solo gana comisión).';$('compBaseSalary').focus();return}
  if(!tiers.length||tiers.some(t=>t.threshold===''||t.ratePct===''||!Number.isFinite(t.threshold)||!Number.isFinite(t.ratePct)||!Number.isInteger(t.threshold)||t.threshold<0||t.ratePct<0||t.ratePct>100)){
   $('compStatus').textContent='Completa cada meta y porcentaje entre 0% y 100%.';return
  }
@@ -133,12 +150,12 @@ async function saveCompensation(){
  }
  const button=$('compSave');button.disabled=true;$('compStatus').textContent='Guardando condiciones…';
  try{
-  const policy={sellerUid:uid,effectiveMonth:month,monthlyBaseSalary:Math.round(base),tiers,updatedBy:owner.uid,updatedAt:new Date().toISOString()};
+  const policy={sellerUid:uid,effectiveMonth:month,monthlyBaseSalary:Math.round(base),mode:$('compMode').value==='total'?'total':'marginal',tiers,updatedBy:owner.uid,updatedAt:new Date().toISOString()};
   const policyId=uid+'_'+month;
   await setDoc(doc(db,'orgs',ORG,'sellerCompensation',policyId),policy);
   compensationBySeller[policyId]=policy;
-  $('compStatus').textContent='Condiciones guardadas desde '+month+'. Los meses anteriores conservan sus propias condiciones.';
   renderCompForm();renderCompResults();
+  $('compStatus').textContent='✅ Sueldo y tramos guardados desde '+month+'. Los meses anteriores conservan sus propias condiciones.';status('Sueldo de vendedor guardado.','ok');
  }catch(error){console.error(error);$('compStatus').textContent=error.message||'No se pudieron guardar las condiciones.'}
  finally{button.disabled=false}
 }
@@ -349,12 +366,13 @@ async function refreshSellerModeState(){
  if(!button||!owner)return;
  try{
   const snap=await getDoc(doc(db,'orgs',ORG,'settings','sellerMode')),data=snap.exists()?snap.data():null;
-  if(!data||Number(data.catalogVersion)<1){button.disabled=true;button.textContent='Activar acceso de vendedores';label.textContent='Primero prepara el catálogo seguro (paso anterior).';return}
+  const det=document.getElementById('catalogDetails');if(det){const ready=data&&Number(data.catalogVersion)>=1;det.open=!ready;det.querySelector('summary').textContent=ready?'Catálogo para vendedores ✓ protegido':'Catálogo para vendedores (falta prepararlo)'}
+  if(!data||Number(data.catalogVersion)<1){button.disabled=true;button.textContent='Activar acceso de vendedores';label.textContent='Primero prepara el catálogo (abajo).';return}
   const enabled=data.enabled===true;
   button.disabled=false;
   button.textContent=enabled?'Pausar acceso de todos los vendedores':'Activar acceso de vendedores';
   button.dataset.enabled=enabled?'1':'0';
-  label.textContent=enabled?'Acceso de vendedores ACTIVO. Cada vendedor entra con su cuenta en vendedor.html.':'Acceso de vendedores en pausa: ningún vendedor puede ver ni registrar datos.';
+  label.textContent=enabled?'✅ Acceso activo: los vendedores pueden entrar.':'⏸ En pausa: ningún vendedor puede entrar.';button.textContent=enabled?'⏸ Pausar acceso de todos los vendedores':'▶ Activar acceso de vendedores';
  }catch(error){label.textContent=error.message||'No se pudo revisar el acceso de vendedores.';button.disabled=true}
 }
 async function toggleSellerMode(){
@@ -369,7 +387,7 @@ async function toggleSellerMode(){
  await refreshSellerModeState();
 }
 async function logout(){await signOut(auth);owner=null;sellers=[];sessions=[];sales=[];visits=[];cash=[]}
-$('adminLoginButton').onclick=login;$('adminLogout').onclick=logout;$('adminDate').onchange=render;$('reportPeriod').onchange=render;$('reportReference').onchange=render;$('commissionMonth').onchange=()=>{renderCompForm();renderCompResults()};$('compSeller').onchange=renderCompForm;$('compAddTier').onclick=()=>{const tiers=readCompTiers();tiers.push({threshold:'',ratePct:''});renderCompTiers(tiers)};$('compSave').onclick=saveCompensation;$('sellerCreateAccount').onclick=createSellerAccount;updateSellerCreationState();
+$('adminLoginButton').onclick=login;$('adminLogout').onclick=logout;$('adminDate').onchange=render;$('reportPeriod').onchange=render;$('reportReference').onchange=render;$('commissionMonth').onchange=()=>{renderCompForm();renderCompResults()};$('compSeller').onchange=renderCompForm;$('compAddTier').onclick=()=>{const tiers=readCompTiers();tiers.push({threshold:'',ratePct:''});renderCompTiers(tiers)};$('compMode').onchange=renderCompSim;$('compSimSales').oninput=renderCompSim;$('compBaseSalary').oninput=renderCompSim;$('compSave').onclick=saveCompensation;$('sellerCreateAccount').onclick=createSellerAccount;updateSellerCreationState();
 $('catalogBackupConfirm').onchange=refreshCatalogPrepState;
 $('catalogPrepareButton').onclick=prepareCatalog;
 if($('sellerModeToggle'))$('sellerModeToggle').onclick=toggleSellerMode;

@@ -11,16 +11,22 @@
 </script>
 <style>
 .admin-shell{max-width:900px;margin:0 auto;padding:16px 16px 80px}.admin-card{background:#fff;border-radius:22px;padding:20px;margin:14px 0;box-shadow:0 8px 24px #0002}.admin-card h1,.admin-card h2{margin:0 0 12px;color:#10233c}.admin-muted{color:#697381}.admin-shell label{display:block;font-weight:700;margin:12px 0}.admin-shell input[type=checkbox]{display:inline;width:auto}.admin-shell input:not([type=checkbox]),.admin-shell select{display:block;width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:12px;padding:13px;font:inherit;margin-top:6px}.admin-btn{display:block;width:100%;border:0;border-radius:14px;padding:14px 16px;font:inherit;font-weight:800;margin:10px 0;background:#1265e8;color:white}.admin-btn.secondary{background:#e5e7eb;color:#111827}.admin-status{padding:12px;border-radius:12px;background:#e8f1ff;color:#174476;font-weight:700}.admin-status.ok{background:#dcfce7;color:#166534}.admin-status.error{background:#fee2e2;color:#991b1b}.admin-hidden{display:none!important}.admin-list{display:grid;gap:10px}.admin-row{border:1px solid #e5e7eb;border-radius:14px;padding:13px}.admin-row strong{display:block;color:#10233c}.admin-row small{display:block;color:#687381;margin-top:5px}.admin-table{width:100%;border-collapse:collapse;min-width:680px}.admin-table th,.admin-table td{padding:10px;border-bottom:1px solid #e5e7eb;text-align:left;white-space:nowrap}.admin-table th{color:#334155;background:#f1f5f9}.admin-table td:last-child{text-align:right;font-weight:800}.admin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.admin-stat{background:#f1f5f9;border-radius:13px;padding:12px}.admin-stat strong{display:block;font-size:19px;color:#10233c}.admin-stat span{font-size:12px;color:#64748b}.admin-toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between}.admin-toolbar button{width:auto}@media(max-width:600px){.admin-grid{grid-template-columns:1fr 1fr}.admin-shell{padding:12px 12px 80px}.admin-card{padding:16px}.admin-toolbar{display:block}}
+.admin-toast{position:fixed;left:12px;right:12px;bottom:14px;z-index:50;max-width:876px;margin:auto;padding:13px 14px;border-radius:13px;background:#10233c;color:#fff;font-weight:750;box-shadow:0 8px 24px #0005;transition:opacity .35s}.admin-toast.ok{background:#166534}.admin-toast.error{background:#b91c1c}.admin-toast.fade{opacity:0;pointer-events:none}
+.admin-head{padding-bottom:14px}.admin-access-row{display:grid;gap:6px;margin-top:14px}.admin-advanced{margin-top:12px;border-top:1px solid #e5e7eb;padding-top:10px}.admin-advanced summary{cursor:pointer;font-weight:800;color:#334155}
+.comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.comp-grid label{margin:8px 0}
+.comp-tiers{display:grid;gap:8px}.comp-tier{border:2px solid #c7d2fe;background:#eef2ff;border-radius:14px;padding:10px}.comp-tier-head{display:flex;justify-content:space-between;align-items:center;font-weight:900;color:#312e81}.comp-tier-head button{width:auto;margin:0;padding:6px 10px;font-size:13px}.comp-tier-fields{display:grid;grid-template-columns:3fr 2fr;gap:8px}.comp-tier-fields label{margin:6px 0 0;font-size:13px}.comp-tier small{display:block;color:#4338ca;font-weight:700;margin-top:6px}
+.comp-sim{margin:14px 0;padding:12px;border-radius:14px;background:#f0fdf4;border:2px solid #86efac}.comp-sim label{margin:0}.comp-sim-result{margin-top:8px;font-size:14px;color:#14532d}.comp-sim-result b{font-size:18px}
+.comp-results{display:grid;gap:10px}.comp-card{border:1px solid #e5e7eb;border-radius:14px;padding:12px;background:#fff}.comp-card-head{display:flex;justify-content:space-between;gap:8px;font-weight:900}.comp-card-head span{color:#166534}.comp-lines{display:grid;grid-template-columns:1fr auto;gap:4px 10px;margin:8px 0;font-size:14px}.comp-lines b{text-align:right}.comp-bar{height:10px;border-radius:999px;background:#e5e7eb;overflow:hidden}.comp-bar i{display:block;height:100%;background:linear-gradient(90deg,#22c55e,#16a34a)}.comp-card small{display:block;color:#475569;margin-top:5px}
+@media(max-width:420px){.comp-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <main class="admin-shell">
-<section class="admin-card">
+<section class="admin-card admin-head">
 <a href="./index.html" style="font-weight:800">← Volver a la aplicación principal</a>
-<div style="display:flex;align-items:center;gap:12px;margin:12px 0;padding:12px;border-radius:18px;background:linear-gradient(135deg,#0e7490,#22d3ee)"><img src="assets/ilustraciones/vendedores.svg" alt="" width="84" height="67" style="border-radius:12px;background:#fff3;padding:3px"><h1 style="color:#fff;margin:0;font-size:24px">Control de vendedores</h1></div>
-<p class="admin-muted">Panel de consulta de jornadas, ventas, visitas y caja. La preparación del catálogo es una acción separada del dueño.</p>
-<div id="adminStatus" class="admin-status" role="status" aria-live="polite">Verificando cuenta propietaria…</div>
+<div style="display:flex;align-items:center;gap:12px;margin:12px 0 0;padding:12px;border-radius:18px;background:linear-gradient(135deg,#0e7490,#22d3ee)"><img src="assets/ilustraciones/vendedores.svg" alt="" width="84" height="67" style="border-radius:12px;background:#fff3;padding:3px"><h1 style="color:#fff;margin:0;font-size:24px">Control de vendedores</h1></div>
 </section>
+<div id="adminStatus" class="admin-toast" role="status" aria-live="polite">Verificando cuenta propietaria…</div>
 <section id="adminLogin" class="admin-card admin-hidden">
 <h2>Acceso del dueño</h2>
 <label>Correo electrónico<input id="adminEmail" type="email" autocomplete="username"></label>
@@ -28,75 +34,58 @@
 <button id="adminLoginButton" class="admin-btn" type="button">Ingresar</button>
 </section>
 <section id="adminApp" class="admin-hidden">
-<section class="admin-card" id="adminCatalogPrep">
-<h2>Preparar inventario para vendedores</h2>
-<p class="admin-muted">Esta acción mueve los precios de compra a una zona privada del dueño y deja el catálogo visible sin esos costos. No crea cuentas ni activa el acceso vendedor.</p>
-<label><input id="catalogBackupConfirm" type="checkbox"> Confirmo que guardé y revisé un respaldo local antes de preparar el catálogo.</label>
-<button id="catalogPrepareButton" class="admin-btn" type="button" disabled>Preparar catálogo seguro</button>
-<p id="catalogPrepStatus" class="admin-status" role="status" aria-live="polite"></p>
-<h2>Activar acceso de vendedores</h2>
-<p class="admin-muted">Interruptor general: con el acceso activo, cada vendedor con perfil activo puede entrar a su ruta. Al pausarlo, ningún vendedor ve ni registra datos.</p>
-<button id="sellerModeToggle" class="admin-btn" type="button" disabled>Activar acceso de vendedores</button>
-<p id="sellerModeStatus" class="admin-status" role="status" aria-live="polite"></p>
-</section>
+
 <section class="admin-card">
-<div class="admin-toolbar"><div><h2 id="adminOwnerName">Propietario</h2><p id="adminCount" class="admin-muted"></p></div><button id="adminLogout" class="admin-btn secondary" type="button">Salir</button></div>
-<div class="admin-grid">
-<div class="admin-stat"><strong id="statSales">0</strong><span>Ventas del día</span></div>
-<div class="admin-stat"><strong id="statTotal">$0</strong><span>Total vendido</span></div>
-<div class="admin-stat"><strong id="statCash">$0</strong><span>Pagos recibidos</span></div>
-<div class="admin-stat"><strong id="statVisits">0</strong><span>Visitas registradas</span></div>
-</div>
-<label>Fecha<input id="adminDate" type="date"></label>
-</section>
-<section class="admin-card">
-<h2>Historial de ventas por período, zona y ruta</h2>
-<label>Período<select id="reportPeriod"><option value="week">Semana</option><option value="month" selected>Mes</option><option value="semester">Semestre</option><option value="year">Año</option></select></label>
-<label>Fecha de referencia<input id="reportReference" type="date"></label>
-<p id="reportPeriodLabel" class="admin-muted"></p>
-<p class="admin-muted">La participación indica qué parte del total vendido en una zona corresponde a cada vendedor. Las ventas antiguas sin zona guardada usan la comuna actual del cliente y se marcan como estimadas.</p>
-<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Vendedor</th><th>Zona</th><th>Ruta</th><th>Ventas</th><th>Total vendido</th><th>Participación zona</th></tr></thead><tbody id="periodSellerRows"><tr><td colspan="6">Sin datos del período.</td></tr></tbody></table></div>
-</section>
-<section class="admin-card">
-<h2>Remuneración mensual estimada</h2>
-<p class="admin-muted">Configura sueldo base y metas para cada vendedor. Se suman las ventas que registró en el mes, aunque su pago esté pendiente. Cada tasa progresiva se aplica solo al monto que supera su meta; luego se suma el sueldo base. La estimación es bruta, antes de descuentos u otros pagos.</p>
-<label>Mes de cálculo<input id="commissionMonth" type="month"></label>
-<label>Vendedor a configurar<select id="compSeller"><option value="">Seleccionar vendedor</option></select></label>
-<label>Sueldo base mensual (CLP)<input id="compBaseSalary" type="number" min="0" step="1000" inputmode="numeric"></label>
-<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Desde esta meta mensual (CLP)</th><th>Porcentaje de este tramo</th><th></th></tr></thead><tbody id="compTiers"></tbody></table></div>
-<div class="admin-toolbar"><button id="compAddTier" class="admin-btn secondary" type="button">Añadir meta / tramo</button><button id="compSave" class="admin-btn" type="button">Guardar remuneración</button></div>
-<p id="compStatus" class="admin-status" role="status" aria-live="polite">Selecciona un vendedor para definir sus condiciones.</p>
-<h3>Estimación de pago del mes</h3>
-<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Vendedor</th><th>Ventas generadas</th><th>Meta / tasa del siguiente tramo</th><th>Tasa efectiva</th><th>Comisión</th><th>Sueldo base</th><th>Pago bruto estimado</th></tr></thead><tbody id="compResults"><tr><td colspan="7">Sin datos configurados.</td></tr></tbody></table></div>
-</section>
-<section class="admin-card">
-<h2>Acceso de vendedores</h2>
-<p><a class="admin-btn" style="text-align:center;text-decoration:none" href="./simulacion-vendedor.html">Abrir simulación de vendedor (Spark)</a></p>
-<p class="admin-muted">Esta prueba utiliza datos ficticios y no accede a Firebase.</p>
-<p class="admin-status ok" role="status"><strong>Funciona en el plan gratuito (Spark):</strong> crear cuentas, activar y desactivar vendedores no requiere Blaze ni Cloud Functions.</p>
-<p class="admin-muted">Crea una cuenta personal para cada vendedor con su nombre, correo de acceso y clave inicial. La clave no se guarda en la app ni en Firestore: entrégala directamente al vendedor.</p>
+<h2>Crear acceso a vendedores</h2>
 <label>Nombre del vendedor<input id="sellerDisplayName" type="text" autocomplete="name" maxlength="80" placeholder="Nombre visible"></label>
 <label>Correo de acceso<input id="sellerEmail" type="email" autocomplete="email" maxlength="254" placeholder="correo@ejemplo.cl"></label>
-<label>Clave inicial (mínimo 8 caracteres)<input id="sellerPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="Clave temporal para entregar al vendedor"></label>
+<label>Clave inicial (mínimo 8 caracteres)<input id="sellerPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="Clave inicial"></label>
 <button id="sellerCreateAccount" class="admin-btn" type="button" disabled>Crear cuenta de vendedor</button>
-<p id="sellerProfileStatus" class="admin-status" role="status" aria-live="polite">Inicia sesión como propietario.</p>
-<h2>Vendedores registrados</h2>
+<p id="sellerProfileStatus" class="admin-status" role="status" aria-live="polite"></p>
+<h2 style="margin-top:18px">Vendedores registrados</h2>
 <div id="adminSellers" class="admin-list"></div>
+<div class="admin-access-row"><button id="sellerModeToggle" class="admin-btn secondary" type="button" disabled>Activar acceso de vendedores</button><small id="sellerModeStatus" class="admin-muted"></small></div>
+<details id="catalogDetails" class="admin-advanced"><summary>Catálogo para vendedores</summary>
+<p class="admin-muted">Se hace una sola vez: esconde tus precios de compra para que los vendedores no los vean. Los productos nuevos quedan protegidos solos.</p>
+<label><input id="catalogBackupConfirm" type="checkbox"> Confirmo que guardé un respaldo antes de preparar el catálogo.</label>
+<button id="catalogPrepareButton" class="admin-btn" type="button" disabled>Preparar catálogo seguro</button>
+<p id="catalogPrepStatus" class="admin-status" role="status" aria-live="polite"></p>
+</details>
 </section>
+
 <section class="admin-card">
-<h2 id="adminDetailTitle">Detalle diario</h2>
+<h2>Sueldo de vendedores</h2>
+<div class="comp-grid"><label>Mes<input id="commissionMonth" type="month"></label><label>Vendedor<select id="compSeller"><option value="">Seleccionar vendedor</option></select></label></div>
+<label>Sueldo base mensual bruto<input id="compBaseSalary" type="text" inputmode="numeric" placeholder="Ej: 500000 (o 0 si solo gana comisión)"></label>
+<small class="admin-muted">Monto fijo antes de descuentos legales. Escribe solo números, sin puntos.</small>
+<label>¿Cómo se calcula la comisión?<select id="compMode"><option value="marginal">Escalonada: cada % solo sobre lo vendido dentro de su tramo</option><option value="total">Por meta alcanzada: el % del tramo logrado se aplica a todo lo vendido</option></select></label>
+<h3>Tramos de comisión</h3>
+<p class="admin-muted">El % se escribe como número: <b>3</b> = 3 %. El primer tramo parte en $0.</p>
+<div id="compTiers" class="comp-tiers"></div>
+<button id="compAddTier" class="admin-btn secondary" type="button">＋ Agregar tramo</button>
+<div class="comp-sim"><label>Probar con ventas del mes de<input id="compSimSales" type="text" inputmode="numeric" placeholder="Ej: 3000000"></label><div id="compSimResult" class="comp-sim-result"></div></div>
+<button id="compSave" class="admin-btn" type="button">Guardar sueldo y tramos</button>
+<p id="compStatus" class="admin-status" role="status" aria-live="polite">Selecciona un vendedor para definir sus condiciones.</p>
+<h3>Estimación de pago del mes</h3>
+<p class="admin-muted">Ventas = total de los tickets que el vendedor registró en el mes. Resultado bruto, antes de descuentos.</p>
+<div id="compResults" class="comp-results"></div>
+</section>
+
+<section class="admin-card">
+<h2 id="adminDetailTitle">Detalle diario del vendedor</h2>
+<label>Fecha<input id="adminDate" type="date"></label>
 <div class="admin-grid">
 <div class="admin-stat"><strong id="detailOpened">—</strong><span>Inicio jornada</span></div>
 <div class="admin-stat"><strong id="detailFirstSale">—</strong><span>Primera venta</span></div>
 <div class="admin-stat"><strong id="detailClosed">—</strong><span>Cierre jornada</span></div>
 <div class="admin-stat"><strong id="detailSales">0</strong><span>Ventas</span></div>
 </div>
-<h3>Movimientos de caja</h3><div id="adminCash" class="admin-list"></div>
 <h3>Ventas</h3><div id="adminSales" class="admin-list"></div>
 <h3>Visitas</h3><div id="adminVisits" class="admin-list"></div>
+<h3>Movimientos de caja</h3><div id="adminCash" class="admin-list"></div>
 </section>
 </section>
 </main>
-<script type="module" src="./seller-admin.js?v=zipper-seller-access-20261115-v2"></script>
+<script type="module" src="./seller-admin.js?v=zipper-seller-admin-20261116-v3"></script>
 </body>
 </html>
