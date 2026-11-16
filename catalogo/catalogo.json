@@ -522,21 +522,12 @@
    "color": "#db2777",
    "items": [
     {
-     "key": "gomitas-ambrosoli-chubi",
-     "name": "Gomitas Ambrosoli · Chubi",
+     "key": "gomitas-ambrosoli-flipy",
+     "name": "Gomitas Ambrosoli · Flipy",
      "fmt": "Display x 20 unidades",
      "price": 4300,
      "per": "display",
-     "img": "catalogo/img/gomitas-ambrosoli-chubi.jpg",
-     "units": 20
-    },
-    {
-     "key": "gomitas-ambrosoli-frutilla",
-     "name": "Gomitas Ambrosoli · frutilla",
-     "fmt": "Display x 20 unidades",
-     "price": 4300,
-     "per": "display",
-     "img": "catalogo/img/gomitas-ambrosoli-frutilla.jpg",
+     "img": "catalogo/img/gomitas-ambrosoli-flipy.jpg",
      "units": 20
     },
     {
@@ -549,6 +540,15 @@
      "units": 20
     },
     {
+     "key": "gomitas-ambrosoli-ambrosito",
+     "name": "Gomitas Ambrosoli · Ambrosito",
+     "fmt": "Display x 20 unidades",
+     "price": 4300,
+     "per": "display",
+     "img": "catalogo/img/gomitas-ambrosoli-ambrosito.jpg",
+     "units": 20
+    },
+    {
      "key": "gomitas-ambrosoli-amberries",
      "name": "Gomitas Ambrosoli · Amberries",
      "fmt": "Display x 20 unidades",
@@ -558,12 +558,12 @@
      "units": 20
     },
     {
-     "key": "gomitas-ambrosoli-ambrosito",
-     "name": "Gomitas Ambrosoli · Ambrosito",
+     "key": "gomitas-ambrosoli-frutillas-con-crema",
+     "name": "Gomitas Ambrosoli · Frutillas con crema",
      "fmt": "Display x 20 unidades",
      "price": 4300,
      "per": "display",
-     "img": "catalogo/img/gomitas-ambrosoli-ambrosito.jpg",
+     "img": "catalogo/img/gomitas-ambrosoli-frutillas-con-crema.jpg",
      "units": 20
     }
    ]
