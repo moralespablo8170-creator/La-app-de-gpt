@@ -24,7 +24,7 @@
       const days=new Map();
       const day=d=>{if(!days.has(d))days.set(d,{date:d,session:null,sales:[],visits:[]});return days.get(d)};
       cache.sessions.filter(s=>s.sellerUid===seller.uid&&inRange(sessionDay(s))).forEach(s=>day(sessionDay(s)).session=s);
-      cache.sales.filter(s=>s.sellerUid===seller.uid&&inRange(saleDay(s))).forEach(s=>day(saleDay(s)).sales.push(s));
+      cache.sales.filter(s=>s.sellerUid===seller.uid&&s.collectionStatus!=='cancelled'&&inRange(saleDay(s))).forEach(s=>day(saleDay(s)).sales.push(s));
       cache.visits.filter(v=>v.sellerUid===seller.uid&&inRange(String(v.date||'').slice(0,10))).forEach(v=>day(String(v.date).slice(0,10)).visits.push(v));
       const rows=[...days.values()].sort((a,b)=>b.date.localeCompare(a.date)).map(r=>{
         const s=r.session||{},open=s.openedAtLocal||null,close=s.closedAtLocal||null;
@@ -46,7 +46,7 @@
     const from=$('historyFrom').value||'0000-01-01',to=$('historyTo').value||'9999-12-31';
     const rows=(typeof getSales==='function'?getSales():[]).filter(s=>String(s.sellerUid)===String(x.seller.uid)&&saleDay(s)>=from&&saleDay(s)<=to).sort((a,b)=>String(b.occurredAt||saleDay(b)).localeCompare(String(a.occurredAt||saleDay(a))));
     if(!rows.length)return '';
-    const st=s=>s.collectionStatus==='collected'?'<b class="sv-ok">✓ Entregado y pagado</b>':'<b class="sv-wait">⏳ Por entregar</b>';
+    const st=s=>s.collectionStatus==='cancelled'?'<b class="sv-wait" style="color:#b91c1c">✖ Anulada por el vendedor</b>':s.collectionStatus==='collected'?'<b class="sv-ok">✓ Entregado y pagado</b>':'<b class="sv-wait">⏳ Por entregar</b>';
     return '<details class="seller-sales"><summary>🧾 Ventas de '+esc(x.seller.displayName||'este vendedor')+' ('+rows.length+')</summary>'+rows.map(s=>'<article class="history-row"><div><strong>#'+esc(s.folio||'')+' · '+esc(s.cliente||'Cliente')+'</strong><span>'+esc(nice(saleDay(s)))+' · '+((s.paymentMethod==='transfer')?'Transferencia':'Efectivo')+' · '+st(s)+'</span></div><div class="actions-small"><strong>'+money(s.total)+'</strong><button class="secondary history-reprint" data-sale-id="'+esc(String(s.id))+'" type="button">🧾 Ver ticket</button></div></article>').join('')+'</details>';
   }
   function renderSellers(){

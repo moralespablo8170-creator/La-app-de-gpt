@@ -57,7 +57,8 @@ const norm=s=>String(s||'').toLocaleLowerCase('es').normalize('NFD').replace(/[�
 function routeFor(client,week){return client?.sellerRoutes?.[profile.uid]?.[week]||null}
 function selectedRoute(){return {week:$('sellerWeek').value||'A',day:$('sellerDay').value||''}}
 function routeClients(){const {week,day}=selectedRoute();return clients.filter(c=>c.active!==false&&routeFor(c,week)?.day===day).sort((a,b)=>(Number(routeFor(a,week)?.position)||999999)-(Number(routeFor(b,week)?.position)||999999)||String(a.name).localeCompare(String(b.name),'es'))}
-const todaySales=()=>sales.filter(s=>String(s.fecha||s.date||'').slice(0,10)===localDate());
+const todaySalesAll=()=>sales.filter(s=>String(s.fecha||s.date||'').slice(0,10)===localDate());
+const todaySales=()=>todaySalesAll().filter(s=>s.collectionStatus!=='cancelled');
 const todayVisits=()=>visits.filter(v=>String(v.date||'').slice(0,10)===localDate());
 const todayQueue=()=>queueRead().filter(s=>String(s.fecha||s.date||'').slice(0,10)===localDate());
 // Horario: la jornada se puede abrir hasta las 19:00; a las 18:50 se avisa y a las 19:00 se cierra sola.
@@ -91,12 +92,12 @@ function pendingRow(c,i,total,open){
  return '<article class="route-client"><div><strong>'+(i+1)+'. '+safeText(c.name)+'</strong><span>'+safeText(c.address||'Sin dirección')+'</span><span>'+safeText(routeLabelOf(c))+'</span></div>'+
   '<div class="actions-small"><button class="primary select-client" type="button" data-sale="'+safeText(c.id)+'"'+(open?'':' disabled')+'>🛒 Vender</button><button class="secondary mark-visited" type="button" data-visit="'+safeText(c.id)+'"'+(open?'':' disabled')+'>Visitado</button></div><div class="route-mini"><button class="secondary" type="button" data-up="'+safeText(c.id)+'"'+(i===0?' disabled':'')+'>↑ Subir</button><button class="secondary" type="button" data-down="'+safeText(c.id)+'"'+(i===total-1?' disabled':'')+'>↓ Bajar</button><button class="secondary" type="button" data-move="'+safeText(c.id)+'">📅 Cambiar día</button></div></article>';
 }
-// Visitados: igual que la app del dueño (sin las funciones de administrador como anular).
+// Visitados: igual que la app del dueño. Modificar/anular solo para ventas de hoy sin entregar.
 function visitedRow(c){
  const list=clientSalesToday(c.id),total=list.reduce((a,x)=>a+Number(x.total||0),0);
  return '<article class="route-client visited-row"><div><strong>'+safeText(c.name)+'</strong><span>'+safeText(c.address||'Sin dirección')+'</span><span>'+safeText(routeLabelOf(c))+'</span></div><div class="actions-small"><span class="sale-status-badge '+(list.length?'has-sale':'no-sale')+'">'+(list.length?'VENTA · '+money(total):'VISITADO · SIN VENTA')+'</span>'+
   '<button class="primary review-visited" data-review="'+safeText(c.id)+'" type="button">Revisar</button><button class="primary edit-visited-sale" data-reopen="'+safeText(c.id)+'" type="button">Agregar venta</button>'+
-  '<button class="secondary reprint-last" data-resend="'+safeText(c.id)+'" type="button"'+(list.length?'':' disabled')+'>Reenviar último</button><button class="ghost view-client-sales" data-history="'+safeText(c.id)+'" type="button">Ventas anteriores</button></div></article>';
+  (()=>{const last=list.filter(canChangeSale).sort((a,b)=>String(b.occurredAt||'').localeCompare(String(a.occurredAt||'')))[0];return last?'<button class="secondary" data-modsale="'+safeText(last.id)+'" type="button">✏️ Modificar venta</button><button class="danger" data-annul="'+safeText(last.id)+'" type="button">✖ Anular venta</button>':''})()+'<button class="secondary reprint-last" data-resend="'+safeText(c.id)+'" type="button"'+(list.length?'':' disabled')+'>Reenviar último</button><button class="ghost view-client-sales" data-history="'+safeText(c.id)+'" type="button">Ventas anteriores</button></div></article>';
 }
 function attendedClients(){const ids=[...new Set([...todaySales().map(s=>String(s.clienteId)),...todayQueue().map(s=>String(s.clienteId)),...todayVisits().map(v=>String(v.clientId))])];return ids.map(id=>clients.find(c=>String(c.id)===id)).filter(Boolean)}
 function renderClients(){
@@ -116,10 +117,14 @@ function renderAttended(){
  b.classList.toggle('hide',!away);
  if(away){$('dailyRouteText').textContent='Ruta inicial de hoy: Semana '+s0.routeWeek+' · '+s0.routeDay;$('returnDailyRoute').textContent='Semana '+s0.routeWeek+' · '+s0.routeDay}
 }
-function saleDetailHTML(x){return '<div class="sales-row"><strong>#'+safeText(x.folio||'—')+' · '+safeText(String(x.fecha||'').slice(0,10))+' · '+money(x.total)+'</strong><small>'+(x.paymentMethod==='transfer'?'Transferencia':'Efectivo')+' · '+(x.collectionStatus==='collected'?'✓ Entregado y pagado':'⏳ Por entregar')+'</small><small>'+(x.items||[]).map(i=>safeText(i.qty+' × '+i.desc+(i.promotion?' (oferta)':'')+' — '+money(i.qty*i.price))).join('<br>')+'</small><div class="actions"><button class="wa wide" type="button" data-wa="'+safeText(x.id)+'">📲 Enviar por WhatsApp</button></div></div>'}
+function saleStateText(x){return x.collectionStatus==='cancelled'?'✖ Anulada':x.collectionStatus==='collected'?'✓ Entregado y pagado':x.collectionStatus==='delivery_rejected'?'↩ Rechazada en la entrega':'⏳ Por entregar'}
+// Solo ventas propias de hoy que aún no se entregan, y antes del cierre de las 19:00.
+function canChangeSale(x){return !!x&&String(x.fecha||x.date||'').slice(0,10)===localDate()&&(x.collectionStatus||'awaiting_delivery')==='awaiting_delivery'&&!afterHours()&&String(x.sellerUid||profile?.uid)===String(profile?.uid)}
+function changeButtons(x){return canChangeSale(x)?'<div class="actions sale-change"><button class="secondary" type="button" data-modsale="'+safeText(x.id)+'">✏️ Modificar venta</button><button class="danger" type="button" data-annul="'+safeText(x.id)+'">✖ Anular venta</button></div>':''}
+function saleDetailHTML(x){if(x.collectionStatus==='cancelled')return '<div class="sales-row cancelled"><strong><s>#'+safeText(x.folio||'—')+' · '+money(x.total)+'</s></strong><small>✖ Anulada'+(x.replacedBy?' · reemplazada por una venta modificada':'')+'</small></div>';return '<div class="sales-row"><strong>#'+safeText(x.folio||'—')+' · '+safeText(String(x.fecha||'').slice(0,10))+' · '+money(x.total)+'</strong><small>'+(x.paymentMethod==='transfer'?'Transferencia':'Efectivo')+' · '+saleStateText(x)+'</small><small>'+(x.items||[]).map(i=>safeText(i.qty+' × '+i.desc+(i.promotion?' (oferta)':'')+' — '+money(i.qty*i.price))).join('<br>')+'</small><div class="actions"><button class="wa wide" type="button" data-wa="'+safeText(x.id)+'">📲 Enviar por WhatsApp</button></div>'+changeButtons(x)+'</div>'}
 function showClientSales(id,todayOnly){
  const c=clients.find(x=>String(x.id)===String(id));if(!c)return;
- const list=todayOnly?clientSalesToday(id):clientSalesAll(id).slice(0,15);
+ const list=todayOnly?[...clientSalesToday(id),...todaySalesAll().filter(s=>s.collectionStatus==='cancelled'&&String(s.clienteId)===String(id))]:clientSalesAll(id).slice(0,15);
  const box=$('visitedSales');box.classList.remove('hide');
  box.innerHTML='<h2>'+(todayOnly?'🔎 Revisión de hoy':'🧾 Ventas anteriores')+' · '+safeText(c.name)+'</h2>'+(list.length?list.map(saleDetailHTML).join(''):'<p class="muted">'+(todayOnly?'Visitado sin venta hoy.':'Este cliente aún no tiene ventas tuyas registradas.')+'</p>')+'<button class="secondary wide" type="button" data-closesales="1">Cerrar</button>';
  box.scrollIntoView({behavior:'smooth',block:'start'});
@@ -129,7 +134,9 @@ function searchScore(text,q){const t=norm(text),x=norm(q);if(!x)return 99;if(t==
 const promoGroup=p=>p?.variantKey==='bigtime-ultra'?'bigtime-ultra':null;
 function effectivePrice(p,qty){let price=Number(p.price)||0,applied=null;const g=promoGroup(p);let q=qty;if(g)q=cart.reduce((a,i)=>{const x=productOf(i.productId);return a+(x&&promoGroup(x)===g?i.qty:0)},0);(Array.isArray(p.promotions)?p.promotions:[]).slice().sort((a,b)=>Number(b.minQty)-Number(a.minQty)).some(pr=>{if(q>=Number(pr.minQty)&&Number(pr.price)>=0){price=Number(pr.price);applied=pr;return true}return false});return {price,applied}}
 const productOf=id=>products.find(p=>String(p.id)===String(id));
-function availableStock(p){const inCart=cart.filter(i=>String(i.productId)===String(p.id)).reduce((n,i)=>n+i.qty,0);return Math.max(0,Number(p.stock||0)-inCart)}
+function availableStock(p){const inCart=cart.filter(i=>String(i.productId)===String(p.id)).reduce((n,i)=>n+i.qty,0);return Math.max(0,Number(p.stock||0)+editBack(p)-inCart)}
+// Mientras se modifica una venta, lo que ya tenía apartado vuelve a estar disponible.
+function editBack(p){if(!editingSale)return 0;const k=String(p.baseProductId||p.id);return (editingSale.items||[]).filter(i=>String(i.baseProductId||i.productId)===k).reduce((n,i)=>n+Number(i.qty||0),0)}
 function stockBadge(n){n=Math.max(0,Number(n)||0);return n===0?'<b class="stock-badge stock-zero">0 · SIN STOCK</b>':n<=5?'<b class="stock-badge stock-low">'+n+' · STOCK BAJO</b>':'<b class="stock-badge stock-ok">'+n+' · STOCK OK</b>'}
 const colorDot=p=>'<span class="dot"'+(p?.barColorHex||COLORS[p?.barColor]?' style="background:'+(p.barColorHex||COLORS[p.barColor])+'"':'')+'></span>';
 const dot=p=>window.zipperProductPhotos?window.zipperProductPhotos.thumb(p,colorDot(p)):colorDot(p);
@@ -147,7 +154,7 @@ function renderSale(){
  const has=!!selectedClient;$('saleEmpty').classList.toggle('hide',has);$('saleCard').classList.toggle('hide',!has);
  if(!has)return;
  const c=selectedClient,r=routeFor(c,'A')||routeFor(c,'B');
- $('cartClientName').textContent=c.name;$('cartClientMeta').textContent=(c.address||'Sin dirección')+(r?' · '+(routeFor(c,'A')?'Sem A':'Sem B')+' · '+r.day:'');
+ $('cartClientName').textContent=(editingSale?'✏️ Modificando #'+(editingSale.folio||'')+' · ':'')+c.name;$('cartClientMeta').textContent=(c.address||'Sin dirección')+(r?' · '+(routeFor(c,'A')?'Sem A':'Sem B')+' · '+r.day:'');
  // Lo que suele llevar
  const sug=suggestedFor(c),box=$('cartSuggested');box.classList.toggle('hide',!sug.length);
  box.innerHTML=sug.length?'<h3>🔁 Lo que suele llevar</h3>'+sug.map((x,i)=>{const inCart=cart.some(k=>String(k.productId)===String(x.p.id)),st=availableStock(x.p);return '<div class="sug-row"><div><strong>'+safeText(x.p.name)+'</strong><small>Lleva ~'+x.qty+' · en '+x.times+' de '+x.of+' compras · stock '+Number(x.p.stock||0)+'</small></div>'+(inCart?'<span class="badge ok">✓ En carrito</span>':st<=0?'<span class="badge warn">Sin stock</span>':'<button type="button" class="sug-add" data-sug="'+i+'">+ '+Math.min(x.qty,st)+'</button>')+'</div>'}).join('')+'<button type="button" id="sugAll" class="full" style="margin-top:8px;background:#7c3aed">＋ Agregar todo lo sugerido</button>':'';
@@ -167,16 +174,17 @@ function renderSale(){
  $('chosenProducts').innerHTML=cart.length?cart.map(i=>{const p=productOf(i.productId),ep=p?effectivePrice(p,i.qty):{price:i.price};const promos=p&&Array.isArray(p.promotions)?p.promotions.filter(pr=>Number(pr.minQty)>1):[];const g=p&&promoGroup(p);const groupQty=g?cart.reduce((a,k)=>{const x=productOf(k.productId);return a+(x&&promoGroup(x)===g?k.qty:0)},0):i.qty;const next=!ep.applied&&promos.length?promos.slice().sort((a,b)=>a.minQty-b.minQty).find(pr=>groupQty<Number(pr.minQty)):null;
    return '<div class="chosen-line"><div>'+(p?dot(p):'')+'<div style="display:flex;flex-direction:column;gap:3px;min-width:0"><strong>'+safeText(i.name)+'</strong><span>'+i.qty+' × '+(ep.applied?'<s>'+money(p.price)+'</s> <b class="offer-line">'+money(ep.price)+'</b> <span class="offer">OFERTA</span>':money(ep.price))+' = <b>'+money(i.qty*ep.price)+'</b></span>'+(next?'<span class="offer-hint">🏷️ Oferta: llevando '+next.minQty+(g?' (sumando colores)':'')+' quedan a '+money(next.price)+' c/u · faltan '+(Number(next.minQty)-groupQty)+'</span>':'')+(p?'<span>Stock disponible: '+stockBadge(availableStock(p))+'</span>':'')+'</div></div><div class="chosen-actions"><button class="qty-btn" type="button" data-minus="'+safeText(i.productId)+'">−</button><b>'+i.qty+'</b><button class="qty-btn" type="button" data-plus="'+safeText(i.productId)+'">＋</button><button class="delete-line" type="button" data-del="'+safeText(i.productId)+'">✕</button></div></div>'}).join(''):'<p class="muted">Todavía no hay productos. Búscalos arriba por nombre.</p>';
  $('cartTotal').textContent=money(cartTotal());
- const canSave=sessionOpen()&&cart.length>0;$('saveOnly').disabled=!canSave;$('saveAndWhatsApp').disabled=!canSave;$('saveSummary').textContent=!sessionOpen()?'Inicia la jornada para poder guardar.':!cart.length?'Agrega productos para guardar.':'Queda anotado para que quien entrega sepa cómo cobrar.';
+ const canSave=sessionOpen()&&cart.length>0;$('saveOnly').disabled=!canSave;$('saveAndWhatsApp').disabled=!canSave;$('saveSummary').textContent=!sessionOpen()?'Inicia la jornada para poder guardar.':!cart.length?(editingSale?'Si el cliente ya no quiere nada, vuelve y usa «Anular venta».':'Agrega productos para guardar.'):editingSale?'Al guardar, la venta #'+(editingSale.folio||'')+' se reemplaza por esta (el stock se ajusta solo).':'Queda anotado para que quien entrega sepa cómo cobrar.';
+ $('saveOnly').textContent=editingSale?'💾 Guardar cambios':'💾 Guardar';
 }
 function renderInventory(){
  if(!$('inventorySearch'))return;const iq=norm($('inventorySearch').value);
  $('sellerInventory').innerHTML=sellable().filter(p=>!iq||norm(p.name).includes(iq)).map(p=>'<div class="product"><span>'+safeText(p.name)+'</span><b style="color:'+(Number(p.stock||0)>0?'#166534':'#b91c1c')+'">'+Number(p.stock||0)+' und · '+money(p.price)+'</b></div>').join('')||'<p class="muted">Inventario aún no disponible. Conéctate a internet para cargarlo la primera vez.</p>';
 }
 function renderSales(){
- const pending=queueRead(),today=todaySales().sort((a,b)=>String(b.occurredAt||'').localeCompare(String(a.occurredAt||'')));
+ const pending=queueRead(),today=todaySalesAll().sort((a,b)=>String(b.occurredAt||'').localeCompare(String(a.occurredAt||'')));
  const rows=[...pending.map(s=>({...s,_pending:true})),...today.filter(s=>!pending.some(p=>String(p.id)===String(s.id)))];
- $('sellerSalesToday').innerHTML=rows.map(s=>'<div class="sales-row"><strong>#'+safeText(s.folio||'—')+' · '+safeText(s.cliente)+'</strong><small>'+money(s.total)+' · '+(s.paymentMethod==='transfer'?'Transferencia':'Efectivo')+' · '+(s._pending?'⏳ Pendiente de enviar':'✓ Guardada en Firebase')+'</small><div class="actions"><button class="wa wide" type="button" data-wa="'+safeText(s.id)+'">📲 Enviar por WhatsApp</button></div></div>').join('')||'<p class="muted">Todavía no hay ventas hoy.</p>';
+ $('sellerSalesToday').innerHTML=rows.map(s=>s.collectionStatus==='cancelled'?'<div class="sales-row cancelled"><strong><s>#'+safeText(s.folio||'—')+' · '+safeText(s.cliente)+' · '+money(s.total)+'</s></strong><small>✖ Anulada</small></div>':'<div class="sales-row"><strong>#'+safeText(s.folio||'—')+' · '+safeText(s.cliente)+'</strong><small>'+money(s.total)+' · '+(s.paymentMethod==='transfer'?'Transferencia':'Efectivo')+' · '+(s._pending?'⏳ Pendiente de enviar':'✓ Guardada en Firebase')+'</small><div class="actions"><button class="wa wide" type="button" data-wa="'+safeText(s.id)+'">📲 Enviar por WhatsApp</button></div>'+changeButtons(s)+'</div>').join('')||'<p class="muted">Todavía no hay ventas hoy.</p>';
 }
 // ===== Clientes (como en la app del dueño, sin funciones de administración) =====
 const DAY3={Lunes:'Lun',Martes:'Mar','Miércoles':'Mié',Jueves:'Jue',Viernes:'Vie','Sábado':'Sáb'};
@@ -398,8 +406,9 @@ function changeClientDay(id){
 }
 
 // ===== Pedido =====
-let draftId='',draftQty='';
+let draftId='',draftQty='',editingSale=null;
 function openOrder(id){
+ if(editingSale){if(cart.length&&!window.confirm('Estás modificando la venta #'+(editingSale.folio||'')+'. ¿Dejar la modificación sin guardar?'))return;editingSale=null;cart=[];selectedClient=null}
  if(afterHours()){status('Después de las '+CLOSE_HOUR+':00 no se toman pedidos. Vuelve mañana.','error');return}
  if(!sessionOpen()){status('Inicia la jornada primero (en Inicio).','error');tab('route');return}
  const next=clients.find(c=>String(c.id)===String(id))||null;if(!next)return;
@@ -428,8 +437,57 @@ function saleClick(e){
  if(b.id==='cancelDraft'){draftId='';draftQty='';renderSale();return}
  if(d.plus)changeQty(d.plus,1);else if(d.minus)changeQty(d.minus,-1);else if(d.del){const i=cart.find(x=>String(x.productId)===String(d.del));if(i&&window.confirm('¿Eliminar '+i.name+' del carrito?')){cart=cart.filter(x=>x!==i);renderSale()}}
 }
-function closeCart(){if(cart.length&&!window.confirm('¿Descartar el pedido de '+selectedClient.name+'?'))return;selectedClient=null;cart=[];draftId='';tab('route');render()}
-async function visitedNoSale(){if(!selectedClient)return;if(cart.length&&!window.confirm('¿Marcar como visitado sin venta y descartar el carrito?'))return;const id=selectedClient.id;selectedClient=null;cart=[];await markVisited(id);tab('route');render()}
+function closeCart(){if(cart.length&&!window.confirm(editingSale?'¿Salir sin guardar los cambios? La venta #'+(editingSale.folio||'')+' queda como estaba.':'¿Descartar el pedido de '+selectedClient.name+'?'))return;selectedClient=null;cart=[];draftId='';editingSale=null;tab('route');render()}
+// ===== Modificar / anular una venta del día =====
+const findSale=id=>[...queueRead(),...sales].find(x=>String(x.id)===String(id));
+const isQueued=id=>queueRead().some(x=>String(x.id)===String(id));
+function dedOf(sale){const d={};(sale.items||[]).forEach(i=>{const k=String(i.baseProductId||i.productId);d[k]=(d[k]||0)+Number(i.qty||0)});return d}
+function restoreLocal(sale){const d=dedOf(sale);products=products.map(p=>d[p.id]?{...p,stock:Number(p.stock||0)+d[p.id]}:p);cacheWrite('products',products)}
+// El cliente sigue como visitado hoy aunque se anule la venta.
+function keepVisited(sale){if(!todayVisits().some(v=>String(v.clientId)===String(sale.clienteId)))visits=[...visits,{id:profile.uid+'_'+localDate()+'_'+sale.clienteId,sellerUid:profile.uid,clientId:String(sale.clienteId),date:localDate(),status:'visited'}]}
+function markLocalCancelled(sale,replacedBy){sales=sales.map(x=>String(x.id)===String(sale.id)?{...x,collectionStatus:'cancelled',...(replacedBy?{replacedBy}:{})}:x);cacheWrite('sales',sales)}
+function startEdit(id){
+ const old=findSale(id);
+ if(!canChangeSale(old)){status('Solo puedes modificar ventas de hoy que aún no se entregan (hasta las '+CLOSE_HOUR+':00).','error');return}
+ if(!sessionOpen()){status('La jornada está cerrada: ya no se pueden modificar ventas hoy. Puedes anularla si el cliente ya no la quiere.','error');return}
+ const c=clients.find(x=>String(x.id)===String(old.clienteId));if(!c){status('No encuentro a este cliente en tu lista.','error');return}
+ if(cart.length&&selectedClient&&!window.confirm('Tienes un carrito abierto de '+selectedClient.name+'. ¿Descartarlo para modificar la venta #'+old.folio+'?'))return;
+ editingSale=old;selectedClient=c;draftId='';draftQty='';
+ cart=(old.items||[]).map(i=>{const p=productOf(i.productId)||productOf(i.baseProductId);return {productId:String(p?.id||i.productId),baseProductId:String(i.baseProductId||p?.baseProductId||i.productId),name:String(p?.name||i.desc||''),qty:Number(i.qty||0),price:Number(p?.price??i.price??0)}}).filter(i=>i.qty>0);
+ $('sellerPayment').value=old.paymentMethod||'';document.querySelectorAll('.pay-opt').forEach(x=>x.classList.toggle('on',x.dataset.pay===old.paymentMethod));
+ $('visitedSales').classList.add('hide');$('cartSearchName').value='';$('cartCategory').value='';tab('sale');render();window.scrollTo({top:0});
+ status('✏️ Modificando la venta #'+old.folio+' de '+c.name+'. Agrega, quita o cambia cantidades y guarda.','warn');
+}
+// Transacción: devuelve el stock de la venta anterior, descuenta el de la nueva y deja la anterior como anulada.
+async function commitSaleChange(oldId,newSale){
+ const oldRef=doc(db,'orgs',ORG,'sales',String(oldId)),newRef=newSale?doc(db,'orgs',ORG,'sales',String(newSale.id)):null;
+ const newDed=newSale?dedOf(newSale):{};
+ await runTransaction(db,async tx=>{
+  const oldSnap=await tx.get(oldRef);
+  if(!oldSnap.exists())throw new Error('La venta ya no existe.');
+  const old=oldSnap.data();
+  if(old.collectionStatus!=='awaiting_delivery')throw new Error(old.collectionStatus==='cancelled'?'Esa venta ya estaba anulada.':'Esa venta ya fue entregada: no se puede cambiar.');
+  const oldDed=old.stockDeductions||{};
+  const ids=[...new Set([...Object.keys(oldDed),...Object.keys(newDed)])];
+  const refs=ids.map(id=>doc(db,'orgs',ORG,'products',id)),snaps=[];
+  for(const r of refs)snaps.push(await tx.get(r));
+  snaps.forEach((snap,i)=>{const id=ids[i];if(!snap.exists()){if(newDed[id])throw new Error('Un producto ya no está en el catálogo.');return}const next=Number(snap.data().stock||0)+Number(oldDed[id]||0)-Number(newDed[id]||0);if(next<0)throw new Error('Stock insuficiente de '+(snap.data().name||'un producto')+': quedan '+(Number(snap.data().stock||0)+Number(oldDed[id]||0))+'.')});
+  snaps.forEach((snap,i)=>{const id=ids[i];if(!snap.exists())return;const o=Number(oldDed[id]||0),n=Number(newDed[id]||0);const data={stock:Number(snap.data().stock||0)+o-n};if(o)data.lastSellerReturnId=String(oldId);if(n)data.lastSellerSaleId=String(newSale.id);tx.update(refs[i],data)});
+  tx.update(oldRef,{collectionStatus:'cancelled',cancelledAt:serverTimestamp(),cancelledBy:profile.uid,...(newSale?{replacedBy:String(newSale.id)}:{})});
+  if(newSale)tx.set(newRef,{...newSale,stockDeductions:newDed,createdAt:serverTimestamp()});
+ });
+}
+async function annulSale(id){
+ const x=findSale(id);
+ if(!canChangeSale(x)){status('Solo puedes anular ventas de hoy que aún no se entregan (hasta las '+CLOSE_HOUR+':00).','error');return}
+ if(!window.confirm('¿Anular la venta #'+x.folio+' de '+x.cliente+' por '+money(x.total)+'?\n\nEl repartidor ya no la verá y el stock vuelve al inventario.'))return;
+ if(isQueued(id)){queueWrite(queueRead().filter(q=>String(q.id)!==String(id)));restoreLocal(x);keepVisited(x);$('visitedSales').classList.add('hide');render();status('✖ Venta #'+x.folio+' anulada (no alcanzó a enviarse).','ok');return}
+ if(!navigator.onLine){status('Para anular una venta ya enviada necesitas internet.','error');return}
+ status('Anulando venta #'+x.folio+'…','warn');
+ try{await commitSaleChange(id,null);markLocalCancelled(x);restoreLocal(x);keepVisited(x);$('visitedSales').classList.add('hide');render();status('✖ Venta #'+x.folio+' anulada · '+x.cliente+'. El repartidor ya no la verá.','ok')}
+ catch(e){console.error(e);status('No se pudo anular: '+(isPermission(e)?'Firebase rechazó el permiso (solo ventas de hoy sin entregar).':(e.message||'revisa la conexión.')),'error')}
+}
+async function visitedNoSale(){if(!selectedClient)return;if(cart.length&&!window.confirm('¿Marcar como visitado sin venta y descartar el carrito?'))return;const id=selectedClient.id;selectedClient=null;cart=[];editingSale=null;await markVisited(id);tab('route');render()}
 // Transacción: descuenta stock y guarda la venta. No lee documentos que aún no existen
 // (las reglas rechazan leer una venta o jornada nueva), así funciona con las reglas publicadas.
 async function commitSale(sale){
@@ -471,13 +529,21 @@ async function saveSale(withWhatsApp){
  if(!day){closeSaveOptions();status(client.name+' no tiene día en tu ruta. Edítalo en Clientes y elige un día antes de venderle.','error');return}
  const items=cart.map(i=>{const p=productOf(i.productId),ep=p?effectivePrice(p,i.qty):{price:i.price};return {productId:i.productId,baseProductId:i.baseProductId,desc:i.name,qty:i.qty,price:ep.price,...(ep.applied?{promotion:true}:{})}});
  const total=items.reduce((a,i)=>a+i.qty*i.price,0);
- const sale={id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(36).slice(2),folio:Math.max(0,...sales.map(s=>Number(s.folio)||0),...queueRead().map(s=>Number(s.folio)||0))+1,fecha:localDate(),date:localDate(),occurredAt:new Date().toISOString(),clienteId:String(client.id),cliente:client.name,clientZone:String(client.comuna||client.zone||'').trim(),ruta:client.route||'',routeWeek:week,routeDay:day,items,total,paymentMethod,paymentStatus:'paid',collectionStatus:'awaiting_delivery',sellerUid:profile.uid};
+ const editing=editingSale;
+ if(editing&&!canChangeSale(editing)){status('Esta venta ya no se puede modificar (ya se entregó o pasó el horario).','error');return}
+ const sale={id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(36).slice(2),folio:editing?editing.folio:Math.max(0,...sales.map(s=>Number(s.folio)||0),...queueRead().map(s=>Number(s.folio)||0))+1,fecha:localDate(),date:localDate(),occurredAt:new Date().toISOString(),clienteId:String(client.id),cliente:client.name,clientZone:String(client.comuna||client.zone||'').trim(),ruta:client.route||'',routeWeek:week,routeDay:day,items,total,paymentMethod,paymentStatus:'paid',collectionStatus:'awaiting_delivery',sellerUid:profile.uid};
  closeSaveOptions();
  // WhatsApp se abre en el mismo toque (si no, el teléfono lo bloquea).
  if(withWhatsApp)sendWhatsApp(sale);
  status(navigator.onLine?'Guardando venta…':'Sin internet · guardando la venta en este teléfono.','warn');
- const finish=msg=>{cart=[];selectedClient=null;draftId='';$('sellerPayment').value='';document.querySelectorAll('.pay-opt').forEach(x=>x.classList.remove('on'));tab('route');render();status(msg,'ok');window.scrollTo({top:0,behavior:'smooth'})};
+ const finish=msg=>{cart=[];selectedClient=null;draftId='';editingSale=null;$('sellerPayment').value='';document.querySelectorAll('.pay-opt').forEach(x=>x.classList.remove('on'));tab('route');render();status(msg,'ok');window.scrollTo({top:0,behavior:'smooth'})};
  try{
+  if(editing&&!isQueued(editing.id)){
+   if(!navigator.onLine){status('Para modificar una venta ya enviada necesitas internet.','error');return}
+   await commitSaleChange(editing.id,sale);markLocalCancelled(editing,sale.id);restoreLocal(editing);applyLocalSale(sale);
+   finish('✏️ Venta #'+sale.folio+' modificada · '+client.name+' · '+money(total)+'.');return;
+  }
+  if(editing){queueWrite(queueRead().filter(q=>String(q.id)!==String(editing.id)));restoreLocal(editing)}
   if(!navigator.onLine)throw Object.assign(new Error('offline'),{code:'unavailable'});
   await commitSale(sale);applyLocalSale(sale);
   const vId=profile.uid+'_'+localDate()+'_'+client.id;
@@ -512,8 +578,8 @@ function wire(){
  $('otherRoute').onclick=()=>{changingRoute=!changingRoute;render();if(changingRoute)$('routeSetup').scrollIntoView({behavior:'smooth',block:'start'})};
  $('visitedButton').onclick=()=>{visitedMode=!visitedMode;renderClients()};
  $('sellerWeek').onchange=()=>{renderRouteDays();render()};$('sellerDay').onchange=render;
- $('sellerClients').onclick=e=>{const b=e.target.closest('button');if(!b||b.disabled)return;const d=b.dataset;if(d.review)return showClientSales(d.review,true);if(d.history)return showClientSales(d.history,false);if(d.resend){const x=clientSalesToday(d.resend).sort((a,b)=>String(b.occurredAt||'').localeCompare(String(a.occurredAt||'')))[0];if(x)sendWhatsApp(x);return}if(d.reopen)return openOrder(d.reopen);if(d.visit)markVisited(d.visit);else if(d.sale)openOrder(d.sale);else if(d.up)moveClient(d.up,-1);else if(d.down)moveClient(d.down,1);else if(d.move)changeClientDay(d.move)};
- $('visitedSales').onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.closesales){$('visitedSales').classList.add('hide');return}if(b.dataset.wa){const x=[...queueRead(),...sales].find(y=>String(y.id)===String(b.dataset.wa));if(x)sendWhatsApp(x)}};
+ $('sellerClients').onclick=e=>{const b=e.target.closest('button');if(!b||b.disabled)return;const d=b.dataset;if(d.modsale)return startEdit(d.modsale);if(d.annul)return annulSale(d.annul);if(d.review)return showClientSales(d.review,true);if(d.history)return showClientSales(d.history,false);if(d.resend){const x=clientSalesToday(d.resend).sort((a,b)=>String(b.occurredAt||'').localeCompare(String(a.occurredAt||'')))[0];if(x)sendWhatsApp(x);return}if(d.reopen)return openOrder(d.reopen);if(d.visit)markVisited(d.visit);else if(d.sale)openOrder(d.sale);else if(d.up)moveClient(d.up,-1);else if(d.down)moveClient(d.down,1);else if(d.move)changeClientDay(d.move)};
+ $('visitedSales').onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.modsale)return startEdit(b.dataset.modsale);if(b.dataset.annul)return annulSale(b.dataset.annul);if(b.dataset.closesales){$('visitedSales').classList.add('hide');return}if(b.dataset.wa){const x=[...queueRead(),...sales].find(y=>String(y.id)===String(b.dataset.wa));if(x)sendWhatsApp(x)}};
  $('routeName').oninput=renderClients;$('routeAddress').oninput=renderClients;
  $('visitedBackBtn').onclick=()=>{visitedMode=false;renderClients();$('activeRouteBox').scrollIntoView({behavior:'smooth',block:'start'})};
  $('returnDailyRoute').onclick=()=>{changingRoute=false;if(session){$('sellerWeek').value=session.routeWeek;renderRouteDays();$('sellerDay').value=session.routeDay}render()};
@@ -530,7 +596,7 @@ function wire(){
  $('cartSearchName').oninput=()=>{if(draftId&&!draftQty)draftId='';renderSale()};$('cartCategory').onchange=renderSale;
   $('closeCart').onclick=closeCart;$('cartVisitedNoSale').onclick=visitedNoSale;
  document.querySelectorAll('.pay-opt').forEach(b=>b.onclick=()=>{$('sellerPayment').value=b.dataset.pay;document.querySelectorAll('.pay-opt').forEach(x=>x.classList.toggle('on',x===b))});$('saveOnly').onclick=()=>saveSale(false);$('saveAndWhatsApp').onclick=()=>saveSale(true);
- $('sellerSalesToday').onclick=e=>{const b=e.target.closest('[data-wa]');if(!b)return;const s=[...queueRead(),...sales].find(x=>String(x.id)===String(b.dataset.wa));if(s)sendWhatsApp(s)};
+ $('sellerSalesToday').onclick=e=>{const m=e.target.closest('[data-modsale],[data-annul]');if(m){if(m.dataset.modsale)startEdit(m.dataset.modsale);else annulSale(m.dataset.annul);return}const b=e.target.closest('[data-wa]');if(!b)return;const s=[...queueRead(),...sales].find(x=>String(x.id)===String(b.dataset.wa));if(s)sendWhatsApp(s)};
  document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{tab(b.dataset.tab);window.scrollTo({top:0})});
  window.addEventListener('online',async()=>{status('Conexión recuperada · sincronizando…','warn');await flushPendingSales();if(navigator.onLine)await refreshFromServer();render()});
  window.addEventListener('offline',()=>{status('Sin internet · los cambios quedarán pendientes.','warn');render()});

@@ -266,7 +266,7 @@ async function refresh(){
   hideRemediesFromSellers().catch(e=>console.warn('Remedios:',e));
   if(docs.sellerCompensation!==null)compensationBySeller=Object.fromEntries(docs.sellerCompensation.map(d=>[d.id,d.data()]));
   if(docs.sessions!==null)sessions=docs.sessions.map(d=>({id:d.id,...d.data()}));
-  if(docs.sales!==null)sales=docs.sales.map(d=>({id:d.id,...d.data()}));
+  if(docs.sales!==null)sales=docs.sales.map(d=>({id:d.id,...d.data()})).filter(s=>s.collectionStatus!=='cancelled');
   if(docs.visits!==null)visits=docs.visits.map(d=>({id:d.id,...d.data()}));
   if(docs.cashMovements!==null)cash=docs.cashMovements.map(d=>({id:d.id,...d.data()}));
   if(docs.clients!==null)clients=docs.clients.map(d=>({id:d.id,...d.data()}));

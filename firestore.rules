@@ -154,6 +154,35 @@ service cloud.firestore {
       allow read, write: if isOwner(orgId);
     }
 
+    // Devolución de stock cuando el vendedor anula o modifica una venta suya del día.
+    function sellerReturnOk(orgId, productId) {
+      let retPath = sellerSalePath(orgId, request.resource.data.lastSellerReturnId);
+      let before = get(retPath).data;
+      let after = getAfter(retPath).data;
+      return request.resource.data.lastSellerReturnId is string
+        && before.sellerUid == request.auth.uid
+        && before.collectionStatus == 'awaiting_delivery'
+        && after.collectionStatus == 'cancelled'
+        && before.stockDeductions is map
+        && before.stockDeductions[productId] is number;
+    }
+    function sellerReturnQty(orgId, productId) {
+      return get(sellerSalePath(orgId, request.resource.data.lastSellerReturnId)).data.stockDeductions[productId];
+    }
+    function sellerNewSaleOk(orgId, productId) {
+      let salePath = sellerSalePath(orgId, request.resource.data.lastSellerSaleId);
+      let sale = getAfter(salePath).data;
+      return request.resource.data.lastSellerSaleId is string
+        && request.auth.uid == sale.sellerUid
+        && existsAfter(salePath)
+        && !exists(salePath)
+        && sale.stockDeductions is map
+        && sale.stockDeductions[productId] is number;
+    }
+    function sellerNewSaleQty(orgId, productId) {
+      return getAfter(sellerSalePath(orgId, request.resource.data.lastSellerSaleId)).data.stockDeductions[productId];
+    }
+
     match /orgs/{orgId}/sellerSaleCosts/{saleId} {
       allow read, write: if isOwner(orgId);
     }
@@ -171,7 +200,23 @@ service cloud.firestore {
           && request.resource.data.stock is number
           && request.resource.data.stock < resource.data.stock
           && request.resource.data.lastSellerSaleId is string
-          && sellerStockReduction(orgId, productId));
+          && sellerStockReduction(orgId, productId))
+        // Anular venta del día: el stock vuelve.
+        || (isSeller(orgId)
+          && resource.data.sellerVisible == true
+          && request.resource.data.sellerVisible == true
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock', 'lastSellerReturnId'])
+          && sellerReturnOk(orgId, productId)
+          && request.resource.data.stock == resource.data.stock + sellerReturnQty(orgId, productId))
+        // Modificar venta del día: vuelve lo de la venta anterior y se descuenta lo de la nueva.
+        || (isSeller(orgId)
+          && resource.data.sellerVisible == true
+          && request.resource.data.sellerVisible == true
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock', 'lastSellerReturnId', 'lastSellerSaleId'])
+          && sellerReturnOk(orgId, productId)
+          && sellerNewSaleOk(orgId, productId)
+          && request.resource.data.stock >= 0
+          && request.resource.data.stock == resource.data.stock + sellerReturnQty(orgId, productId) - sellerNewSaleQty(orgId, productId));
     }
 
     function canReadClient(orgId) {
@@ -209,6 +254,14 @@ service cloud.firestore {
           || (request.resource.data.stockDeductions is map
             && request.resource.data.stockDeductions.size() > 0));
       allow update: if isOwner(orgId)
+        // El vendedor puede anular (o reemplazar al modificar) su venta del mismo día que aún no se entrega.
+        || (isSeller(orgId)
+          && resource.data.sellerUid == request.auth.uid
+          && resource.data.collectionStatus == 'awaiting_delivery'
+          && request.resource.data.collectionStatus == 'cancelled'
+          && (request.time - duration.value(4, 'h')).date() == (resource.data.createdAt - duration.value(4, 'h')).date()
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['collectionStatus', 'cancelledAt', 'cancelledBy', 'replacedBy']))
         || (isDriver(orgId)
           && resource.data.collectionStatus == 'awaiting_delivery'
           && request.resource.data.collectionStatus in ['collected', 'delivery_rejected']
