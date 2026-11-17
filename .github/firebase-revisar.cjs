@@ -40,6 +40,9 @@ const col=name=>db.collection('orgs').doc(ORG).collection(name);
   line('Costos privados (productCosts)',(await col('productCosts').get()).size);
   line('Ventas en Firebase',(await col('sales').count().get()).data().count);
   line('  · registradas por vendedores',(await col('sales').where('sellerUid','in',sellers.length?sellers.slice(0,10).map(s=>s.uid):['-']).count().get()).data().count);
+  {const all=(await col('sales').get()).docs.map(d=>d.data());const own=all.filter(x=>!x.sellerUid&&!x.stockDeductions);
+   ['2026-11-14','2026-11-15','2026-11-16','2026-11-17'].forEach(d=>line('  · ventas del dueño con fecha '+d,own.filter(x=>String(x.fecha||'').slice(0,10)===d).length));
+   line('  · folio más alto del dueño',Math.max(0,...own.map(x=>Number(x.folio)||0)));}
   let authUsers=0,token;do{const r=await auth.listUsers(1000,token);authUsers+=r.users.length;token=r.pageToken}while(token);
   line('Cuentas de acceso totales (Authentication)',authUsers);
   console.log('\n===== Estado de Firebase (solo cantidades) =====\n'+out.join('\n')+'\n');
