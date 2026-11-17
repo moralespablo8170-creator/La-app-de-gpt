@@ -168,3 +168,11 @@ test('sales are blocked when the session recovery lock is active', () => {
   assert.equal(c.alerts.length, 1);
   assert.equal(c.storage.getItem('zipperComprobantes'), null);
 });
+
+// Ningún módulo puede reemplazar localStorage.setItem/removeItem en la instancia:
+// eso salta el enganche de Firebase (Storage.prototype) y los cambios dejan de subir a la nube.
+test('no script overrides localStorage.setItem on the instance (would bypass cloud sync)', () => {
+  const files = fs.readdirSync('.').filter(f => f.endsWith('.js') && f !== 'sw.js');
+  const offenders = files.filter(f => /localStorage\s*\.\s*(setItem|removeItem)\s*=(?!=)/.test(fs.readFileSync(f, 'utf8')));
+  assert.deepEqual(offenders, []);
+});

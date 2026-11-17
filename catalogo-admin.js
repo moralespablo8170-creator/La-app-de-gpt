@@ -111,10 +111,11 @@
     }catch(e){console.warn('Catálogo: publicación automática',e)}
     finally{autoBusy=false}
   }
+  // Revisa cada pocos segundos si cambiaron tus productos (precio, oferta, stock).
+  // IMPORTANTE: no reemplazar localStorage.setItem aquí: eso desconectaba la sincronización con Firebase.
   function watchProducts(){
-    const real=localStorage.setItem.bind(localStorage);
-    try{localStorage.setItem=function(k,v){const r=real(k,v);if(k==='zipperProductos'&&v!==lastProducts){lastProducts=v;scheduleAuto()}return r}}catch(_){}
     lastProducts=localStorage.getItem('zipperProductos');
+    setInterval(()=>{const v=localStorage.getItem('zipperProductos');if(v!==lastProducts){lastProducts=v;scheduleAuto()}},5000);
     setTimeout(()=>scheduleAuto(1000),15000); // al abrir la app también revisa
   }
   function paintCardStatus(t){const el=$('catalogCardStatus');if(el)el.textContent=t}
