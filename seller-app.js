@@ -179,12 +179,24 @@ function renderSales(){
  $('sellerSalesToday').innerHTML=rows.map(s=>'<div class="sales-row"><strong>#'+safeText(s.folio||'—')+' · '+safeText(s.cliente)+'</strong><small>'+money(s.total)+' · '+(s.paymentMethod==='transfer'?'Transferencia':'Efectivo')+' · '+(s._pending?'⏳ Pendiente de enviar':'✓ Guardada en Firebase')+'</small><div class="actions"><button class="wa wide" type="button" data-wa="'+safeText(s.id)+'">📲 Enviar por WhatsApp</button></div></div>').join('')||'<p class="muted">Todavía no hay ventas hoy.</p>';
 }
 // ===== Clientes (como en la app del dueño, sin funciones de administración) =====
-function clientRouteChips(c){return ['A','B'].map(w=>{const r=routeFor(c,w);if(!r)return '';const list=clients.filter(x=>routeFor(x,w)?.day===r.day).sort((a,b)=>(Number(routeFor(a,w)?.position)||999999)-(Number(routeFor(b,w)?.position)||999999));return '<span class="chip">Sem '+w+' · '+safeText(r.day)+' · N° '+(list.findIndex(x=>String(x.id)===String(c.id))+1)+' de '+list.length+'</span>'}).join('')||'<span class="chip" style="background:#fee2e2;color:#991b1b">Sin día en mi ruta</span>'}
+const DAY3={Lunes:'Lun',Martes:'Mar','Miércoles':'Mié',Jueves:'Jue',Viernes:'Vie','Sábado':'Sáb'};
+function routeList(w,day){return clients.filter(x=>x.active!==false&&routeFor(x,w)?.day===day).sort((a,b)=>(Number(routeFor(a,w)?.position)||999999)-(Number(routeFor(b,w)?.position)||999999))}
+// Igual que la app del dueño: Semana A en azul y Semana B en naranja.
+function clientRouteChips(c){const chips=['A','B'].map(w=>{const r=routeFor(c,w);if(!r)return '';const list=routeList(w,r.day);return '<span class="route-chip week-'+w+'">Sem '+w+' · '+(DAY3[r.day]||r.day)+' · <b>N° '+(list.findIndex(x=>String(x.id)===String(c.id))+1)+'</b><small> de '+list.length+'</small></span>'}).join('');return '<span class="route-chips">'+(chips||'<span class="route-chip no-route">Sin día en mi ruta</span>')+'</span>'}
+function renderRouteCounts(){
+ const box=$('routeCounts');if(!box)return;const days=DAYS.filter(d=>d!=='Sábado'||clients.some(c=>['A','B'].some(w=>routeFor(c,w)?.day==='Sábado')));
+ const fw=$('filterWeek').value,fd=$('filterDay').value;
+ let html='<div class="route-counts-head"><strong>📍 Clientes por día de ruta</strong><span>Toca un día para ver su orden</span></div><div class="route-counts-table" style="grid-template-columns:auto repeat('+days.length+',minmax(0,1fr))"><span></span>'+days.map(d=>'<span class="rc-day">'+(DAY3[d]||d)+'</span>').join('');
+ ['A','B'].forEach(w=>{const tot=clients.filter(c=>c.active!==false&&routeFor(c,w)).length;html+='<span class="rc-week week-'+w+'">Sem '+w+'<small>'+tot+'</small></span>'+days.map(d=>{const n=routeList(w,d).length;return '<button type="button" class="rc-cell week-'+w+(n?'':' empty')+(fw===w&&fd===d?' active':'')+'" data-week="'+w+'" data-day="'+d+'">'+n+'</button>'}).join('')});
+ box.innerHTML=html+'</div>';
+}
 function renderClientsTab(){
- const qn=norm($('clientSearchName').value),qa=norm($('clientSearchAddress').value);
- const list=clients.filter(c=>(!qn||norm(c.name).includes(qn))&&(!qa||norm(c.address).includes(qa))).sort((a,b)=>String(a.name).localeCompare(String(b.name),'es'));
+ const qn=norm($('clientSearchName').value),qa=norm($('clientSearchAddress').value),fw=$('filterWeek').value,fd=$('filterDay').value;
+ renderRouteCounts();
+ let list=clients.filter(c=>(!qn||norm(c.name).includes(qn))&&(!qa||norm(c.address).includes(qa))&&(!fw||routeFor(c,fw))&&(!fd||['A','B'].some(w=>(!fw||w===fw)&&routeFor(c,w)?.day===fd)));
+ if(fw&&fd)list=routeList(fw,fd).filter(c=>list.includes(c));else list.sort((a,b)=>String(a.name).localeCompare(String(b.name),'es'));
  $('clientsCount').textContent=String(clients.length);
- $('clientsList').innerHTML=list.length?list.map(c=>'<article class="route-client"><div><strong>'+safeText(c.name)+(c.active===false?' · inactivo':'')+'</strong><span>'+safeText(c.address||'Sin dirección')+'</span><span>Tel: '+safeText(c.phone||'Sin teléfono')+' · RUT: '+safeText(c.rut||'Sin RUT')+'</span>'+((!c.rut||!c.phone||!c.razonSocial||!c.comuna)?'<span class="client-status warn">⚠ Faltan datos: edítalo</span>':'')+clientRouteChips(c)+'</div><div class="actions-small"><button class="primary select-client" type="button" data-reopen="'+safeText(c.id)+'">🛒 Vender</button><button class="secondary" type="button" data-edit="'+safeText(c.id)+'">Editar</button></div></article>').join(''):'<p class="muted">'+(clients.length?'Sin resultados.':'Aún no tienes clientes. Crea el primero con "＋ Nuevo cliente".')+'</p>';
+ $('clientsList').innerHTML=list.length?list.map((c,i)=>'<article class="client-row no-number"><div class="client-details"><strong>'+(fw&&fd?(i+1)+'. ':'')+safeText(c.name)+(c.active===false?' · inactivo':'')+'</strong>'+clientRouteChips(c)+'<span>'+safeText(c.address||'')+'</span><span>Tel: '+safeText(c.phone||'Sin teléfono')+' · RUT: '+safeText(c.rut||'Sin RUT')+'</span>'+((!c.rut||!c.phone||!c.razonSocial||!c.comuna)?'<span class="client-status warn">⚠ Faltan datos: edítalo</span>':'')+'</div><div class="actions-small"><button class="secondary edit-client" type="button" data-edit="'+safeText(c.id)+'">Editar</button><button class="primary client-sale" type="button" data-reopen="'+safeText(c.id)+'">Vender</button></div></article>').join(''):'<p class="muted">'+(clients.length?'Sin resultados.':'Aún no tienes clientes. Crea el primero con "＋ Nuevo cliente".')+'</p>';
 }
 const TITLES={route:'Inicio',sale:'Vender',clients:'Clientes'};
 function tab(name){currentTab=name;['route','sale','clients'].forEach(t=>$(t+'Tab').classList.toggle('hide',t!==name));$('catalogTab')?.classList.add('hide');$('vcTabBtn')?.classList.remove('active');document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===name||(name==='sale'&&b.dataset.tab==='route')));$('pageTitle').textContent=TITLES[name]||'Zipper Vendedor'}
@@ -509,7 +521,8 @@ function wire(){
  $('cfPhone').oninput=e=>{const d=e.target.value.replace(/\D/g,'').replace(/^569(?=\d{8})/,'').slice(0,8);e.target.value=d.length>4?d.slice(0,4)+' '+d.slice(4):d};
  $('cfRut').onblur=e=>{const r=rutCheck(e.target.value);if(r)e.target.value=r};
  $('cfSave').onclick=saveClientForm;$('cfCancel').onclick=closeClientEditor;
- $('clientSearchName').oninput=renderClientsTab;$('clientSearchAddress').oninput=renderClientsTab;
+ $('clientSearchName').oninput=renderClientsTab;$('clientSearchAddress').oninput=renderClientsTab;$('filterWeek').onchange=renderClientsTab;$('filterDay').onchange=renderClientsTab;
+ $('routeCounts').onclick=e=>{const b=e.target.closest('.rc-cell');if(!b)return;const same=$('filterWeek').value===b.dataset.week&&$('filterDay').value===b.dataset.day;$('filterWeek').value=same?'':b.dataset.week;$('filterDay').value=same?'':b.dataset.day;renderClientsTab();if(!same)$('clientsList').scrollIntoView({behavior:'smooth',block:'start'})};
  $('clientsList').onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.edit)openClientEditor(b.dataset.edit);else if(b.dataset.reopen)openOrder(b.dataset.reopen)};
  $('saleCard').addEventListener('click',saleClick);
  $('saleCard').addEventListener('input',e=>{if(e.target.id==='draftQty'){draftQty=String(e.target.value||'').replace(/\D/g,'');e.target.value=draftQty;$('assignDraft').disabled=!(Number(draftQty)>=1)}});
