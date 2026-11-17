@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zipper-app-pwa-20261117-68';
+const CACHE_NAME = 'zipper-app-pwa-20261117-69';
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -35,7 +35,7 @@ const APP_SHELL = [
   "./driver-app.js?v=zipper-driver-20261116-v3",
   "./vendedor-manifest.json?v=1",
   "./seller-app.js?v=zipper-seller-v12-20261117",
-  "./vendedor-catalogo.js?v=20261117-2",
+  "./vendedor-catalogo.js?v=20261117-3",
   "./seller-admin.html",
   "./seller-admin.js?v=zipper-seller-admin-20261116-v8",
   "./route-position-migration.js?v=1.2",
