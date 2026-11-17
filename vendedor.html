@@ -10,184 +10,135 @@
 <script type="importmap">
 {"imports":{"firebase/app":"https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js","firebase/auth":"https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js","firebase/firestore":"https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js"}}
 </script>
+<link rel="stylesheet" href="styles.css?v=zipper-version-firebase-20261101-2">
+<link rel="stylesheet" href="tema-colores.css?v=20261116-19">
 <style>
-:root{font-family:system-ui,Arial;color:#16263c;background:#edf2f7}*{box-sizing:border-box}body{margin:0}
-header{background:#102b48;color:#fff;padding:16px 17px calc(14px);padding-top:max(16px,env(safe-area-inset-top));position:sticky;top:0;z-index:5;box-shadow:0 3px 15px #0002;display:flex;align-items:center;justify-content:space-between;gap:10px}
-header h1{font-size:22px;margin:0}header small{display:block;color:#c8d9eb;margin-top:2px}
-header button{background:#ffffff1f;color:#fff;padding:9px 12px;font-size:13px}
-.shell{max-width:760px;margin:auto;padding:14px 14px 150px}
-.card{background:#fff;border-radius:17px;padding:17px;margin-bottom:13px;box-shadow:0 3px 14px #15294312}
-h2{font-size:19px;margin:0 0 12px}h3{margin:0 0 8px;font-size:17px;color:#153c67}
-.muted{color:#64748b;font-size:13px}
-.badge{display:inline-block;padding:5px 9px;border-radius:8px;background:#dbeafe;color:#1d4ed8;font-size:12px;font-weight:800}
-.badge.ok,.client-status.ok{background:#dcfce7;color:#166534}.badge.warn,.client-status.warn{background:#fee2e2;color:#b91c1c}
-.client-status{display:inline-block;border-radius:9px;padding:6px 10px;font-weight:800;font-size:13px}
-.section-heading{border-bottom:2px solid #dbeafe;padding-bottom:10px;color:#153c67;display:flex;align-items:center;gap:9px}.section-heading .symbol{font-size:23px;line-height:1}
-.line{border-top:1px solid #e4eaf0;padding:12px 0}.line:first-child{border-top:0}.line strong{display:block;font-size:16px}.line small{display:block;color:#64748b;margin:4px 0}
-.actions{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap}.actions>*{flex:1}
-button{font:inherit;font-weight:750;border:0;border-radius:11px;padding:11px 14px;background:#1265e8;color:#fff;cursor:pointer}button:disabled{opacity:.45;cursor:default}
-.secondary{background:#e8eef5;color:#20344e}.danger{background:#fee2e2;color:#b91c1c}.full{width:100%}
-.mini{background:#f8fafc;color:#334155;border:1px solid #cbd5e1;padding:8px 6px;font-size:13px}
-input,select{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:11px;background:#fff;font:inherit}
-label{display:block;margin:12px 0;font-size:14px;font-weight:700}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.stat{background:#f1f5f9;padding:12px;border-radius:11px}.stat strong{display:block;font-size:20px}.stat small{color:#64748b}
+/* Solo lo propio de la app del vendedor; el resto viene de la app del dueño (mismo aspecto). */
 .hide{display:none!important}
-.sum{font-size:26px;font-weight:850;color:#15803d;text-align:right}
-.pill{padding:10px;background:#eff6ff;border-radius:10px;margin:10px 0;font-weight:700}
-.nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:#fff;box-shadow:0 -4px 18px #0002;padding:8px 10px;padding-bottom:max(8px,env(safe-area-inset-bottom));z-index:6}
-.nav button{flex:1;font-size:14px;padding:12px 4px;margin:0 3px}.nav button.active{background:#1265e8;color:#fff}.nav button:not(.active){background:#edf2f7;color:#34455c}
-.stock-inline{display:block;margin-top:7px;padding:9px 12px;border-radius:10px;background:#dcfce7;color:#166534;font-weight:800}.stock-inline.empty{background:#fee2e2;color:#b91c1c}
-.field-heading{font-weight:800;color:#153c67}
-.toast{position:fixed;left:12px;right:12px;bottom:84px;z-index:7;max-width:736px;margin:auto;padding:13px 14px;border-radius:13px;background:#102b48;color:#fff;font-weight:750;box-shadow:0 8px 24px #0005;transition:opacity .3s,transform .3s}
+.app{padding-bottom:120px}
+.seller-titlebar{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#fff;margin:-4px 2px 12px}
+.seller-titlebar small{color:#9fc3e6;font-size:13px;font-weight:700}
+.seller-titlebar button{min-height:0;padding:8px 14px;font-size:13px}
+.tabs #navHome.active{color:#60a5fa!important;background:#1d4ed833!important;box-shadow:inset 0 -3px #60a5fa!important}
+.tabs #navClients.active{color:#c4b5fd!important;background:#7c3aed33!important;box-shadow:inset 0 -3px #c4b5fd!important}
+.tabs #vcTabBtn.active{color:#fdba74!important;background:#ea580c33!important;box-shadow:inset 0 -3px #fdba74!important}
+.tabs .navbadge{background:#ef4444;color:#fff;border-radius:999px;font-size:10px;padding:1px 6px;margin-left:3px}
+.toast{position:fixed;left:12px;right:12px;bottom:96px;z-index:30;max-width:736px;margin:auto;padding:13px 14px;border-radius:13px;background:#102b48;color:#fff;font-weight:750;box-shadow:0 8px 24px #0005;transition:opacity .3s,transform .3s}
 .toast.ok{background:#166534}.toast.warn{background:#92400e}.toast.error{background:#b91c1c}.toast.fade{opacity:0;transform:translateY(10px);pointer-events:none}
 .login-status{padding:12px;border-radius:12px;background:#e8f1ff;color:#174476;font-weight:700;margin-top:10px}.login-status.ok{background:#dcfce7;color:#166534}.login-status.error{background:#fee2e2;color:#991b1b}.login-status.warn{background:#fef3c7;color:#92400e}
-.hint{background:#fef3c7;color:#92400e;border-radius:10px;padding:10px;font-weight:700;font-size:13px;margin:8px 0}
-.newclient{border:2px solid #93c5fd;background:#eff6ff;border-radius:14px;padding:12px;margin:10px 0}
-.qty{padding:12px;font-weight:800;flex:0 0 auto!important}
-.product{display:flex;justify-content:space-between;gap:8px;border-top:1px solid #eef2f6;padding:9px 0;font-size:14px}.product:first-child{border-top:0}
-.big{min-height:54px;font-size:17px;margin-top:10px}
-.cart-banner{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;background:linear-gradient(135deg,#f97316,#f59e0b);color:#fff;border-radius:17px;padding:14px 16px;margin-bottom:13px;box-shadow:0 3px 14px #15294322}
-.cart-banner .cart-label{display:block;font-size:12px;font-weight:900;letter-spacing:.06em}.cart-banner h2{margin:2px 0;font-size:23px;color:#fff}.cart-banner p{margin:0;font-size:13px;font-weight:700;color:#fffbeb}
-.cart-banner-actions{display:flex;gap:6px;flex-wrap:wrap}.cart-banner-actions button{background:#ffffff2e;color:#fff;border:1px solid #ffffff66;padding:9px 11px;font-size:13px}
-.cart-search-box{background:#f8fafc;border-radius:12px;padding:10px;margin-bottom:10px;display:grid;gap:9px}.cart-search-box label{margin:0}
-.product-suggestions{display:grid;gap:5px}.product-suggestions:empty{display:none}
-.suggestion{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:8px;text-align:left;border:1px solid #cbd5e1;background:#fff;color:#16263c;border-radius:10px;padding:9px 10px}
-.suggestion strong{display:block;font-size:14px}.suggestion small{color:#6b7280;font-size:12px}
-.dot{width:14px;height:14px;border-radius:50%;background:#94a3b8;display:inline-block;flex:none}
-.stock-badge{display:inline-flex;align-items:center;margin-left:4px;padding:3px 7px;border-radius:999px;font-size:10px;font-weight:900;white-space:nowrap}.stock-ok{background:#dcfce7;color:#166534}.stock-low{background:#fef3c7;color:#92400e}.stock-zero{background:#fee2e2;color:#991b1b}
-.draft-product{display:grid;gap:9px;padding:10px;border:2px solid #fb923c;border-radius:12px;background:#fff7ed}.draft-product strong{display:block}.draft-product small{color:#6b7280;font-size:12px}
-.draft-controls{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center}
-.chosen-list{display:grid;gap:8px;margin-top:8px}
-.chosen-line{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px;border-radius:10px;background:#fff;border:1px solid #e5e7eb}.chosen-line>div:first-child{display:flex;flex-direction:column;gap:3px;min-width:0}.chosen-line span{font-size:13px;color:#6b7280}
-.chosen-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}.qty-btn{width:40px;height:40px;padding:0;background:#e5e7eb;color:#111;font-size:22px}.delete-line{background:#fee2e2;color:#991b1b;padding:8px 10px}
-.offer{background:#dc2626;color:#fff;border-radius:6px;padding:1px 6px;font-size:11px;font-weight:900;margin-left:4px}
-.cart-footer{display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-weight:800}.cart-footer strong{font-size:26px;color:#15803d}
-.cart-suggested{margin:0 0 12px;border-radius:16px;background:#f5f3ff;border:2px solid #c4b5fd;padding:10px 12px}.cart-suggested h3{color:#4c1d95}.sug-row{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#fff;border-radius:12px;padding:8px 10px;border:1px solid #ddd6fe;margin-top:6px}.sug-row small{display:block;font-size:11px;color:#475569}.sug-add{background:#7c3aed;min-width:58px}
-.modal{position:fixed;inset:0;z-index:20;background:#041a2cb3;display:grid;place-items:center;padding:14px}.modal-card{width:min(430px,100%);background:#fff;border-radius:18px;padding:18px;display:grid;gap:8px}.modal-card h3{margin:0}.kicker{font-size:12px;font-weight:900;color:#1265e8;letter-spacing:.06em}
-.pay-box{display:block;font-size:17px;font-weight:900;padding:12px;background:#fef3c7;border:3px solid #f59e0b;border-radius:14px;margin:4px 0}.pay-box select{margin-top:8px;font-size:18px;font-weight:900}
-.wa{background:#25d366;color:#053b1d}.ghost{background:transparent;color:#20344e}
-.attended{margin-top:12px}.attended summary{cursor:pointer;font-weight:800;color:#153c67;padding:8px 0}
-.check{display:flex;align-items:center;gap:8px}.check input{width:auto}
+.badge{display:inline-block;padding:4px 9px;border-radius:8px;background:#dbeafe;color:#1d4ed8;font-size:12px;font-weight:800}.badge.ok{background:#dcfce7;color:#166534}.badge.warn{background:#fee2e2;color:#b91c1c}
+.client-status{display:inline-block;border-radius:9px;padding:5px 10px;font-weight:800;font-size:13px}.client-status.ok{background:#dcfce7;color:#166534}.client-status.warn{background:#fee2e2;color:#b91c1c}
 .chip{display:inline-block;margin:4px 4px 0 0;padding:3px 8px;border-radius:999px;background:#e0e7ff;color:#3730a3;font-size:12px;font-weight:800}
-.nav button{font-size:13px}
-.pay-choice{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.pay-opt{background:#fff;color:#20344e;border:2px solid #cbd5e1;padding:14px 6px;font-size:16px}.pay-opt.on{background:#1265e8;color:#fff;border-color:#1265e8}
-/* ===== Tema igual a la app del dueño ===== */
-:root{background:#051a2e}
-body{background:radial-gradient(ellipse at top,#153b58 0,#071f35 48%,#041321 100%);min-height:100vh;color:#16263c}
-header.brandbar{position:relative;z-index:1;background:transparent;padding:max(8px,env(safe-area-inset-top)) 12px 6px;display:block;box-shadow:none}
-.brand-img{width:100%;max-width:736px;margin:0 auto;aspect-ratio:670/205;background:url('./assets/zipper-compact.webp') no-repeat;background-size:152.8358% auto;background-position:50% 9.241%;border-radius:12px;box-shadow:0 6px 20px #0006}
-.titlebar{max-width:736px;margin:8px auto 0;display:flex;align-items:center;justify-content:space-between;gap:10px;color:#fff}
-.titlebar h1{margin:0;font-size:21px;font-weight:900;letter-spacing:.01em}.titlebar small{display:block;color:#9fc3e6;font-size:12.5px;margin-top:1px}
-.titlebar button{background:#ffffff1f;color:#fff;border:1px solid #ffffff33;padding:8px 12px;font-size:13px}
-.shell{padding-top:8px}
-.section-heading{color:#102b48}
-.nav{background:linear-gradient(180deg,#0b2945,#04192c);border:1px solid #285579;box-shadow:0 8px 30px #0007;border-radius:18px;left:8px;right:8px;bottom:8px;max-width:744px;margin:auto;padding:7px 6px;height:auto}
-.nav button{background:transparent!important;color:#b7cde2!important;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11.5px;font-weight:800;padding:8px 2px;border-radius:12px;margin:0 2px}
-.nav button svg{width:23px;height:23px}
-.nav button.active{box-shadow:inset 0 -3px currentColor}
-.nav button[data-tab=route].active{color:#60a5fa!important;background:#1d4ed833!important}
-.nav button[data-tab=clients].active{color:#c4b5fd!important;background:#7c3aed33!important}
-.nav #vcTabBtn.active{color:#fdba74!important;background:#ea580c33!important}
-.nav .navbadge{background:#ef4444;color:#fff;border-radius:999px;font-size:10px;padding:1px 6px;margin-left:2px}
-.toast{bottom:96px}
-.cart-banner{background:linear-gradient(135deg,#c2410c,#f59e0b)}
-.cart-lines{display:grid;gap:8px;margin-top:8px}
-.subtotal-bar{display:flex;justify-content:space-between;align-items:center;background:#0f172a;color:#fff;border-radius:14px;padding:14px 16px;margin-top:12px}.subtotal-bar span{font-size:16px}.subtotal-bar strong{font-size:28px;font-weight:900}
-.save-row{display:grid;gap:8px;margin-top:10px}.save-row button{min-height:52px;font-size:16.5px}
-.offer-line{color:#dc2626;font-weight:900}
-.offer-hint{display:block;color:#b45309;font-size:12px;font-weight:800;margin-top:2px}
-.suggestion .pthumb{width:46px;height:46px}.chosen-line .pthumb{width:42px;height:42px}
-.chosen-line>div:first-child{flex-direction:row!important;align-items:center;gap:10px!important}
-.wa-orders{border:2px solid #22c55e;background:#f0fdf4}.wa-orders h2{color:#166534}
-.wa-order{background:#fff;border:1px solid #bbf7d0;border-radius:12px;padding:10px;margin-top:8px}.wa-order ul{margin:6px 0 4px 18px;font-size:14px}.wa-order small{color:#64748b;display:block}
-.phone-field{display:flex;align-items:stretch}.phone-field span{display:flex;align-items:center;padding:0 10px;background:#e2e8f0;border:1px solid #cbd5e1;border-right:0;border-radius:11px 0 0 11px;font-weight:800;color:#334155;white-space:nowrap}.phone-field input{border-radius:0 11px 11px 0}
-.req{color:#dc2626}
-.field-error{border-color:#dc2626!important;box-shadow:0 0 0 3px #fecaca}
+.route-mini{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;width:100%}.route-mini button{min-height:0;padding:7px 10px;font-size:12.5px}
+.route-stats{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 10px}.route-stats span{background:#eef4ff;color:#1e3a8a;border-radius:10px;padding:6px 10px;font-weight:800;font-size:13px}
+.newclient{border:2px solid #93c5fd;background:#eff6ff;border-radius:14px;padding:12px;margin:10px 0}
+.req{color:#dc2626}.field-error{border-color:#dc2626!important;box-shadow:0 0 0 3px #fecaca!important}
 .cf-msg{color:#b91c1c;font-weight:800;background:#fee2e2;border-radius:10px;padding:10px}.cf-msg:empty{display:none}
+.phone-field{display:flex;align-items:stretch}.phone-field span{display:flex;align-items:center;padding:0 10px;background:#e2e8f0;border:1px solid #cbd5e1;border-right:0;border-radius:11px 0 0 11px;font-weight:800;color:#334155;white-space:nowrap}.phone-field input{border-radius:0 11px 11px 0!important}
+.cart-lines{display:grid;gap:8px;margin-top:8px}
+.chosen-line>div:first-child{display:flex;flex-direction:row!important;align-items:center;gap:10px!important;min-width:0;flex:1}
+.offer{background:#dc2626;color:#fff;border-radius:6px;padding:1px 6px;font-size:11px;font-weight:900;margin-left:4px}.offer-line{color:#dc2626;font-weight:900}
+.offer-hint{display:block;color:#b45309;font-size:12px;font-weight:800;margin-top:2px}
+.stock-badge{display:inline-flex;align-items:center;margin-left:4px;padding:3px 7px;border-radius:999px;font-size:10px;font-weight:900;white-space:nowrap}.stock-ok{background:#dcfce7;color:#166534}.stock-low{background:#fef3c7;color:#92400e}.stock-zero{background:#fee2e2;color:#991b1b}
+.dot{width:14px;height:14px;border-radius:50%;background:#94a3b8;display:inline-block;flex:none}
+.pay-box{display:block;font-size:16px;font-weight:900;padding:12px;background:#fef3c7;border:3px solid #f59e0b;border-radius:14px;margin:12px 0 4px;color:#78350f}
+.pay-choice{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.pay-opt{background:#fff!important;color:#20344e!important;border:2px solid #cbd5e1!important;padding:14px 6px;font-size:16px}.pay-opt.on{background:#1265e8!important;color:#fff!important;border-color:#1265e8!important}
+.save-row{display:grid;gap:8px;margin-top:10px}.save-row button{min-height:52px;font-size:16.5px}
+.wa{background:#25d366!important;color:#053b1d!important}
+.cart-suggested{margin:0 0 12px;border-radius:16px;background:#f5f3ff;border:2px solid #c4b5fd;padding:10px 12px}.cart-suggested h3{color:#4c1d95;margin:0 0 4px}.sug-row{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#fff;border-radius:12px;padding:8px 10px;border:1px solid #ddd6fe;margin-top:6px}.sug-row small{display:block;font-size:11px;color:#475569}.sug-add{background:#7c3aed!important;color:#fff!important;min-width:58px}
+.draft-product{display:grid;gap:9px;padding:10px;border:2px solid #fb923c;border-radius:12px;background:#fff7ed}.draft-product small{color:#6b7280;font-size:12px}.draft-controls{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center}
+.suggestion .pthumb{width:46px;height:46px}.chosen-line .pthumb{width:42px;height:42px}
+.wa-orders{border:2px solid #22c55e!important;background:#f0fdf4!important}.wa-orders:not(.hide){display:block!important}.wa-orders strong{color:#166534}
+.wa-order,.vc-order{background:#fff;border:1px solid #bbf7d0;border-radius:12px;padding:10px;margin-top:8px}.wa-order ul,.vc-order ul{margin:6px 0 4px 18px;font-size:14px}.vc-order small{color:#64748b;display:block}.vc-head{display:flex;justify-content:space-between;gap:8px}
+.sales-row{border-top:1px solid #e4eaf0;padding:10px 0}.sales-row:first-child{border-top:0}.sales-row strong{display:block}.sales-row small{display:block;color:#64748b;margin:3px 0}
+.client-route-list{display:grid;gap:10px;margin:0}
+.client-route-list .route-client{background:#fff;border:1px solid #dce6f0;border-radius:16px;padding:14px 16px;display:block}
+.client-route-list .route-client strong{display:block;font-size:18px;color:#071d39}
+.client-route-list .route-client>div:first-child span{display:block;color:#607d9f;font-size:14px;margin-top:2px}
+.client-route-list .route-client .actions-small{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.client-route-list .route-client .actions-small button{min-height:46px;font-size:15px;font-weight:800;border-radius:12px}
+.client-route-list .select-client{background:#e0f3ff!important;color:#004c91!important}
+.client-route-list .mark-visited{background:#052039!important;color:#fff!important}
+.client-route-list>.muted{color:#dbeafe;padding:12px}
+.hint{background:#fef3c7;color:#92400e;border-radius:10px;padding:10px;font-weight:700;font-size:13px;margin:8px 0}
 </style>
 </head>
 <body>
-<header class="brandbar"><div class="brand-img" role="img" aria-label="Distribuidora Zipper"></div><div class="titlebar"><div><h1 id="pageTitle">Zipper Vendedor</h1><small id="sellerWelcome">Distribuidora Zipper</small></div><button id="sellerLogout" class="hide" type="button">Salir</button></div></header>
-<main class="shell">
+<main class="app">
+<header class="topbar brand-header"><div class="compact-brand" role="img" aria-label="Distribuidora Zipper"></div><h1 id="pageTitle" class="sr-only">Inicio</h1></header>
+<div class="seller-titlebar"><small id="sellerWelcome">Zipper Vendedor</small><button id="sellerLogout" class="secondary hide" type="button">Salir</button></div>
 
 <section id="sellerLogin">
- <div class="card"><h2 class="section-heading"><span class="symbol">🔐</span> Iniciar sesión</h2>
-  <p class="muted">Ingresa con la cuenta que te entregó el dueño. Solo verás tus clientes y el inventario para consulta.</p>
+ <section class="card"><h2>🔐 Iniciar sesión</h2>
+  <p class="muted">Ingresa con la cuenta que te entregó el dueño.</p>
   <label>Correo electrónico<input id="sellerEmail" type="email" autocomplete="username" inputmode="email"></label>
   <label>Contraseña<input id="sellerPassword" type="password" autocomplete="current-password"></label>
-  <button id="sellerLoginButton" class="full" type="button">Ingresar</button>
-  <button id="sellerForgot" class="secondary full" style="margin-top:8px" type="button">¿Olvidaste tu clave?</button>
+  <button id="sellerLoginButton" class="primary wide" type="button">Ingresar</button>
+  <button id="sellerForgot" class="secondary wide" style="margin-top:8px" type="button">¿Olvidaste tu clave?</button>
   <div id="sellerLoginStatus" class="login-status">Esperando conexión…</div>
- </div>
- <div id="sellerInstall" class="card"><h2 class="section-heading"><span class="symbol">📲</span> Instalar en tu teléfono</h2><p class="muted">Así queda el ícono "Zipper Vendedor" en tu pantalla y se abre como aplicación.</p><button id="sellerInstallButton" class="full" type="button" hidden>Instalar Zipper Vendedor</button><p class="muted">En Chrome: toca el menú <b>⋮</b> → <b>Agregar a pantalla principal</b> o <b>Instalar app</b>.</p></div>
+ </section>
+ <section id="sellerInstall" class="card"><h2>📲 Instalar en tu teléfono</h2><p class="muted">Así queda el ícono "Zipper Vendedor" en tu pantalla y se abre como aplicación.</p><button id="sellerInstallButton" class="primary wide" type="button" hidden>Instalar Zipper Vendedor</button><p class="muted">En Chrome: toca el menú <b>⋮</b> → <b>Agregar a pantalla principal</b> o <b>Instalar app</b>.</p></section>
 </section>
 
 <section id="sellerApp" class="hide">
  <section id="routeTab">
-  <div id="waOrdersCard" class="card wa-orders hide"><h2 class="section-heading"><span class="symbol">🛒</span> Pedidos por WhatsApp <span id="waOrdersCount" class="badge ok" style="margin-left:auto">0</span></h2><p class="muted">Clientes que te pidieron desde tu catálogo. Toca <b>Vender</b> para cargar el pedido.</p><div id="waOrders"></div></div>
-  <div class="card"><h2 class="section-heading"><span class="symbol">🕘</span> Jornada</h2>
-   <div class="two"><div class="stat"><small>Estado</small><strong id="state">Sin iniciar</strong></div><div class="stat"><small>Ventas del día</small><strong id="count">0</strong></div></div>
+  <div class="home-alerts"><div id="waOrdersCard" class="home-alert wa-orders hide"><div style="width:100%"><strong>🛒 <span id="waOrdersCount">0</span> pedidos por WhatsApp</strong><span>Clientes que te pidieron desde tu catálogo. Toca <b>Vender</b> para cargar el pedido.</span><div id="waOrders"></div></div></div></div>
+  <div class="page-banner banner-home"><img class="page-art" src="assets/ilustraciones/ruta.svg" alt="" width="96" height="77"><div class="banner-text"><h2>Ruta de hoy</h2><p id="routeBannerText">Elige semana y día · comienza tu jornada</p></div></div>
+  <section id="routeSetup" class="card">
+   <div class="grid two"><label>Semana<select id="sellerWeek"><option value="A">Semana A</option><option value="B">Semana B</option></select></label><label>Día<select id="sellerDay"></select></label></div>
+   <button id="sellerStart" class="primary wide route-start" type="button">Comenzar ruta</button>
    <p id="sessionInfo" class="muted"></p>
-   <div class="actions"><button id="sellerStart" type="button">Iniciar jornada</button><button id="sellerClose" class="secondary" type="button" disabled>Cerrar jornada</button></div>
-  </div>
-  <div class="card"><h2 class="section-heading"><span class="symbol">🗺️</span> Mi ruta</h2>
-   <div class="two"><label>📅 Semana<select id="sellerWeek"><option value="A">A</option><option value="B">B</option></select></label><label>🗓️ Día<select id="sellerDay"></select></label></div>
-   <p class="muted" id="routeSummary"></p>
-   <p id="routeHint" class="hint hide">Toca "Iniciar jornada" para marcar visitas y tomar pedidos.</p>
-   <div id="sellerClients"></div>
-   <button id="sellerNewClientOpen" class="secondary full" style="margin-top:10px" type="button">＋ Nuevo cliente en mi ruta</button>
-   <details id="attendedBox" class="attended"><summary>Atendidos hoy (<span id="attendedCount">0</span>)</summary><div id="attended"></div></details>
-  </div>
+  </section>
+  <section id="activeRouteBox" class="card hide"><div class="route-summary"><div class="route-header"><div><h2 id="activeRouteLabel">Semana A · Lunes</h2></div><div class="route-tools"><button id="visitedToggle" class="secondary" type="button">Visitados (<span id="attendedCount">0</span>)</button><button id="changeRoute" class="primary" type="button">Cambiar ruta</button></div></div></div>
+   <div class="route-stats"><span>Jornada: <b id="state">Sin iniciar</b></span><span>Ventas del día: <b id="count">0</b></span><span id="routeSummary"></span></div>
+   <p id="routeHint" class="hint hide">Toca "Comenzar ruta" para marcar visitas y vender.</p>
+   <div id="routeClients"><div id="sellerClients" class="client-route-list"></div></div>
+   <div id="attendedBox" class="hide"><h3 style="margin:12px 0 6px">✅ Visitados hoy</h3><div id="routeClients2"><div id="attended"></div></div></div>
+   <button id="sellerNewClientOpen" class="secondary wide" style="margin-top:10px" type="button">＋ Nuevo cliente en mi ruta</button>
+   <button id="sellerClose" class="secondary wide" style="margin-top:8px" type="button" disabled>Cerrar jornada</button>
+  </section>
+  <section class="card"><h2>🧾 Ventas de hoy</h2><div id="sellerSalesToday"></div></section>
  </section>
 
  <section id="saleTab" class="hide">
-  <div id="saleEmpty" class="card"><h2 class="section-heading"><span class="symbol">🛒</span> Vender</h2><p class="muted">Elige un cliente con el botón <b>Vender</b> en Inicio o en Clientes.</p></div>
-  <div id="saleCard" class="hide">
-   <div class="cart-banner"><div><span class="cart-label">🛒 VENDIENDO A</span><h2 id="cartClientName">Cliente</h2><p id="cartClientMeta"></p></div><div class="cart-banner-actions"><button id="cartVisitedNoSale" type="button">👣 Visitado sin venta</button><button id="closeCart" type="button">Cambiar cliente</button></div></div>
+  <section id="saleEmpty" class="card"><h2>🛒 Vender</h2><p class="muted">Elige un cliente con el botón <b>Vender</b> en Inicio o en Clientes.</p></section>
+  <section id="saleCard" class="card hide"><div class="cart-banner"><img class="page-art" src="assets/ilustraciones/carrito.svg" alt="" width="84" height="67"><div class="banner-text"><span class="cart-label">🛒 VENDIENDO A</span><h2 id="cartClientName">Cliente</h2><p id="cartClientMeta" class="muted-inline"></p></div><div class="cart-banner-actions"><button id="cartVisitedNoSale" class="banner-action visited-action" type="button">👣 Visitado sin venta</button><button id="closeCart" class="banner-action" type="button">Cambiar cliente</button></div></div>
    <div id="cartSuggested" class="cart-suggested hide"></div>
-   <div class="card">
-    <div class="cart-search-box"><label>Buscar producto por nombre<input id="cartSearchName" autocomplete="off" placeholder="Escribe 2 letras o más..."></label><div id="productDraft"></div><div id="productSuggestions" class="product-suggestions"></div><label>Categoría<select id="cartCategory"><option value="">Todas las categorías</option></select></label></div>
-    <h3 style="margin-top:6px">🧺 Productos del pedido <span id="cartUnits" class="badge" style="margin-left:6px">0</span></h3>
-    <div id="chosenProducts" class="cart-lines"></div>
-    <div class="subtotal-bar"><span>Subtotal / total</span><strong id="cartTotal">$0</strong></div>
-    <div class="pay-box">💳 ¿CÓMO PAGA EL CLIENTE?<div class="pay-choice"><button type="button" class="pay-opt" data-pay="cash">💵 Efectivo</button><button type="button" class="pay-opt" data-pay="transfer">🏦 Transferencia</button></div><input type="hidden" id="sellerPayment" value=""></div>
-    <p id="saveSummary" class="muted">Queda anotado para que quien entrega sepa cómo cobrar.</p>
-    <div class="save-row"><button id="saveOnly" type="button">💾 Guardar</button><button id="saveAndWhatsApp" class="wa" type="button">📲 Guardar y enviar por WhatsApp</button></div>
-   </div>
-  </div>
-  <div class="card"><h2 class="section-heading"><span class="symbol">🧾</span> Ventas de hoy</h2><div id="sellerSalesToday"></div></div>
+   <div class="cart-search-box"><label>Buscar producto por nombre<input id="cartSearchName" autocomplete="off" placeholder="Escribe 2 letras o más..."></label><div id="productDraft" class="product-draft"></div><div id="productSuggestions" class="product-suggestions"></div><label>Categoría<select id="cartCategory"><option value="">Todas las categorías</option></select></label></div>
+   <section class="chosen-products"><h3>🧺 Productos del pedido <span id="cartUnits" class="badge">0</span></h3><div id="chosenProducts" class="cart-lines"></div></section>
+   <div class="cart-footer"><div class="cart-total"><span>Subtotal / total</span><strong id="cartTotal">$0</strong></div></div>
+   <div class="pay-box">💳 ¿CÓMO PAGA EL CLIENTE?<div class="pay-choice"><button type="button" class="pay-opt" data-pay="cash">💵 Efectivo</button><button type="button" class="pay-opt" data-pay="transfer">🏦 Transferencia</button></div><input type="hidden" id="sellerPayment" value=""></div>
+   <p id="saveSummary" class="muted"></p>
+   <div class="save-row"><button id="saveOnly" class="primary wide" type="button">💾 Guardar</button><button id="saveAndWhatsApp" class="wa wide" type="button">📲 Guardar y enviar por WhatsApp</button></div>
+  </section>
  </section>
 
  <section id="clientsTab" class="hide">
-  <div class="card"><h2 class="section-heading"><span class="symbol">👥</span> Mis clientes <span id="clientsCount" class="badge" style="margin-left:auto">0</span></h2>
-   <div class="two"><label>Buscar por nombre<input id="clientSearchName" placeholder="Nombre"></label><label>Buscar por dirección<input id="clientSearchAddress" placeholder="Dirección"></label></div>
-   <button id="newClientButton" class="secondary full" type="button">＋ Nuevo cliente</button>
-   <div id="clientEditor" class="newclient hide"><h3 id="clientFormTitle">Nuevo cliente</h3>
+  <div class="page-banner banner-clients"><img class="page-art" src="assets/ilustraciones/clientes.svg" alt="" width="96" height="77"><div class="banner-text"><h2>Clientes</h2><p>Tus clientes y tu ruta · <span id="clientsCount">0</span> clientes</p></div><button id="newClientButton" class="banner-action" type="button">＋ Nuevo cliente</button></div>
+  <section id="clientEditor" class="card hide"><h2 id="clientFormTitle">Nuevo cliente</h2>
     <p class="muted">Todos los datos con <span class="req">*</span> son obligatorios (todas las ventas van con factura).</p>
     <label>Nombre del local o cliente <span class="req">*</span><input id="cfName" maxlength="120"></label>
     <label>Dirección <span class="req">*</span><input id="cfAddress" maxlength="200"></label>
     <label>Teléfono (WhatsApp) <span class="req">*</span><div class="phone-field"><span>+56 9</span><input id="cfPhone" inputmode="numeric" maxlength="9" placeholder="1234 5678" autocomplete="tel-local"></div></label>
-    <div class="two"><label>RUT <span class="req">*</span><input id="cfRut" maxlength="12" placeholder="12.345.678-K" autocapitalize="characters"></label><label>Comuna <span class="req">*</span><input id="cfComuna" maxlength="80"></label></div>
+    <div class="grid two"><label>RUT <span class="req">*</span><input id="cfRut" maxlength="12" placeholder="12.345.678-K" autocapitalize="characters"></label><label>Comuna <span class="req">*</span><input id="cfComuna" maxlength="80"></label></div>
     <label>Razón social <span class="req">*</span><input id="cfBusiness" maxlength="180"></label>
     <label>Observaciones (opcional)<input id="cfNotes" maxlength="200"></label>
     <h3 style="margin-top:12px">Mi ruta para este cliente</h3>
-    <div class="two"><label>Semana A · día<select id="cfDayA"></select></label><label>Semana A · posición<input id="cfPosA" type="number" min="1" inputmode="numeric" placeholder="Al final"></label></div>
-    <div class="two"><label>Semana B · día<select id="cfDayB"></select></label><label>Semana B · posición<input id="cfPosB" type="number" min="1" inputmode="numeric" placeholder="Al final"></label></div>
+    <div class="grid two"><label>Semana A · día<select id="cfDayA"></select></label><label>Semana A · posición<input id="cfPosA" type="number" min="1" inputmode="numeric" placeholder="Al final"></label></div>
+    <div class="grid two"><label>Semana B · día<select id="cfDayB"></select></label><label>Semana B · posición<input id="cfPosB" type="number" min="1" inputmode="numeric" placeholder="Al final"></label></div>
     <p id="cfMsg" class="cf-msg" role="alert"></p>
-    <button id="cfSave" class="full" type="button">Guardar cliente</button><button id="cfCancel" class="secondary full" style="margin-top:8px" type="button">Cancelar</button>
-   </div>
-   <div id="clientsList"></div>
-  </div>
+    <button id="cfSave" class="primary wide" type="button">Guardar cliente</button><button id="cfCancel" class="secondary wide" style="margin-top:8px" type="button">Cancelar</button>
+  </section>
+  <section class="card"><div class="grid two"><label>Buscar cliente por nombre<input id="clientSearchName" placeholder="Escribe el nombre"></label><label>Buscar por dirección<input id="clientSearchAddress" placeholder="Dirección"></label></div></section>
+  <div id="routeClients3"><div id="clientsList" class="client-route-list"></div></div>
  </section>
-</section>
 </section>
 </main>
 <div id="sellerStatus" class="toast fade" role="status" aria-live="polite"></div>
-<nav class="nav hide" id="sellerNav"><button data-tab="route" class="active" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 11 9-8 9 8M5 10v11h5v-7h4v7h5V10"></path></svg><span>Inicio</span></button><button data-tab="clients" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="7" r="3"></circle><circle cx="17" cy="8" r="2.5"></circle><path d="M2 21v-3a6 6 0 0 1 12 0v3M15 14a5 5 0 0 1 7 5v2"></path></svg><span>Clientes</span></button></nav>
-<script src="./fotos-productos.js?v=20261117-2"></script>
-<script type="module" src="./seller-app.js?v=zipper-seller-v11-20261117"></script>
-<script src="./vendedor-catalogo.js?v=20261117-1"></script>
+<nav class="tabs hide" id="sellerNav" aria-label="Navegación principal"><button class="tab active" id="navHome" data-tab="route" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 11 9-8 9 8M5 10v11h5v-7h4v7h5V10"></path></svg><span>Inicio</span></button><button class="tab" id="navClients" data-tab="clients" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="7" r="3"></circle><circle cx="17" cy="8" r="2.5"></circle><path d="M2 21v-3a6 6 0 0 1 12 0v3M15 14a5 5 0 0 1 7 5v2"></path></svg><span>Clientes</span></button></nav>
+<script src="./fotos-productos.js?v=20261117-3"></script>
+<script type="module" src="./seller-app.js?v=zipper-seller-v12-20261117"></script>
+<script src="./vendedor-catalogo.js?v=20261117-2"></script>
 <script>
 (function(){
  var deferred=null,btn=document.getElementById('sellerInstallButton'),box=document.getElementById('sellerInstall');

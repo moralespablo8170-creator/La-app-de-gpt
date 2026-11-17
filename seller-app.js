@@ -62,24 +62,37 @@ const todayVisits=()=>visits.filter(v=>String(v.date||'').slice(0,10)===localDat
 function attendedState(clientId){const id=String(clientId);if(todaySales().some(s=>String(s.clienteId)===id)||queueRead().some(s=>String(s.clienteId)===id))return 'sale';if(todayVisits().some(v=>String(v.clientId)===id))return 'visited';return ''}
 const sessionOpen=()=>!!session&&session.status==='open'&&!session.closedAt;
 function renderRouteDays(){const week=$('sellerWeek').value||'A',select=$('sellerDay'),current=select.value;const count=d=>clients.filter(c=>c.active!==false&&routeFor(c,week)?.day===d).length;select.innerHTML=DAYS.map(d=>'<option value="'+d+'">'+d+(count(d)?' ('+count(d)+')':'')+'</option>').join('');if(DAYS.includes(current))select.value=current;else{const withClients=DAYS.filter(count);const today=DAYS[(new Date().getDay()+6)%7];select.value=withClients.includes(today)?today:(withClients[0]||today||'Lunes')}}
+let changingRoute=false;
 function renderSession(){
  const open=sessionOpen(),closed=!!session&&(session.status==='closed'||!!session.closedAt);
+ if(open&&!changingRoute){if(session.routeWeek&&$('sellerWeek').value!==session.routeWeek){$('sellerWeek').value=session.routeWeek;renderRouteDays()}if(session.routeDay&&$('sellerDay').value!==session.routeDay&&[...$('sellerDay').options].some(o=>o.value===session.routeDay))$('sellerDay').value=session.routeDay}
  $('state').textContent=open?'Abierta':closed?'Cerrada':'Sin iniciar';
  $('count').textContent=String(todaySales().length+queueRead().length);
- $('sessionInfo').textContent=open?'Jornada de Semana '+session.routeWeek+' · '+session.routeDay+(session.openedAtLocal?' · desde las '+new Date(session.openedAtLocal).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}):''):closed?'Jornada cerrada hoy. Puedes volver a abrirla si necesitas seguir.':'';
- $('sellerStart').disabled=open;$('sellerStart').textContent=closed?'Reabrir jornada':'Iniciar jornada';$('sellerClose').disabled=!open;
+ $('sessionInfo').textContent=open?'Jornada abierta desde las '+(session.openedAtLocal?new Date(session.openedAtLocal).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}):'—')+'. Elige el día que quieres ver.':closed?'Jornada cerrada hoy. Puedes volver a abrirla si necesitas seguir.':'Al comenzar la ruta se inicia tu jornada (hora de entrada).';
+ $('sellerStart').classList.toggle('hide',open);$('sellerStart').textContent=closed?'Reabrir jornada':'Comenzar ruta';$('sellerClose').disabled=!open;
  $('routeHint').classList.toggle('hide',open);
+ $('routeSetup').classList.toggle('hide',open&&!changingRoute);
+ $('activeRouteBox').classList.toggle('hide',!open);
+ const {week,day}=selectedRoute();$('activeRouteLabel').textContent='Semana '+week+' · '+(day||'—');
+ $('changeRoute').textContent=changingRoute?'Listo':'Cambiar ruta';
+ $('routeBannerText').textContent=open?'Semana '+week+' · '+(day||'—')+' · jornada abierta':'Elige semana y día · comienza tu jornada';
+}
+function clientRow(c,i,total,open,pending){
+ return '<article class="route-client"><div><strong>'+(pending?(i+1)+'. ':'')+safeText(c.name)+'</strong><span>'+safeText(c.address||'Sin dirección')+'</span>'+(c.phone?'<span>📞 '+safeText(c.phone)+'</span>':'')+(pending?'':'<span class="client-status '+(attendedState(c.id)==='sale'?'ok':'warn')+'">'+(attendedState(c.id)==='sale'?'✓ Venta registrada':'● Visitado sin venta')+'</span>')+'</div>'+
+  (pending?'<div class="actions-small"><button class="primary select-client" type="button" data-sale="'+safeText(c.id)+'"'+(open?'':' disabled')+'>🛒 Vender</button><button class="secondary mark-visited" type="button" data-visit="'+safeText(c.id)+'"'+(open?'':' disabled')+'>Visitado</button></div><div class="route-mini"><button class="secondary" type="button" data-up="'+safeText(c.id)+'"'+(i===0?' disabled':'')+'>↑ Subir</button><button class="secondary" type="button" data-down="'+safeText(c.id)+'"'+(i===total-1?' disabled':'')+'>↓ Bajar</button><button class="secondary" type="button" data-move="'+safeText(c.id)+'">📅 Cambiar día</button></div>'
+  :'<div class="actions-small"><button class="primary select-client" type="button" data-reopen="'+safeText(c.id)+'">🛒 Atender nuevamente</button></div>')+'</article>';
 }
 function renderClients(){
- const {week}=selectedRoute(),open=sessionOpen(),all=routeClients(),pending=all.filter(c=>!attendedState(c.id));
- $('routeSummary').textContent=(all.length-pending.length)+' atendidos · '+pending.length+' pendientes';
- $('sellerClients').innerHTML=pending.length?pending.map((c,i)=>'<div class="line"><strong>'+(i+1)+'. '+safeText(c.name)+'</strong><small>'+safeText(c.address||'Sin dirección')+(c.phone?' · '+safeText(c.phone):'')+'</small><span class="badge">Pendiente</span><div class="actions"><button class="secondary" type="button" data-visit="'+safeText(c.id)+'"'+(open?'':' disabled')+'>Visitado</button><button type="button" data-sale="'+safeText(c.id)+'"'+(open?'':' disabled')+'>🛒 Vender</button></div><div class="actions"><button class="mini" type="button" data-up="'+safeText(c.id)+'"'+(i===0?' disabled':'')+'>↑ Subir</button><button class="mini" type="button" data-down="'+safeText(c.id)+'"'+(i===pending.length-1?' disabled':'')+'>↓ Bajar</button><button class="mini" type="button" data-move="'+safeText(c.id)+'">📅 Cambiar día</button></div></div>').join(''):'<p class="muted">'+(all.length?'🎉 Atendiste a todos los clientes de este día.':'Aún no tienes clientes este día. Agrégalos con "＋ Nuevo cliente en mi ruta".')+'</p>';
+ const open=sessionOpen(),all=routeClients(),pending=all.filter(c=>!attendedState(c.id)),done=all.length-pending.length;
+ $('routeSummary').textContent=pending.length+' por atender · '+done+' atendidos';
+ $('sellerClients').innerHTML=pending.length?pending.map((c,i)=>clientRow(c,i,pending.length,open,true)).join(''):'<p class="muted">'+(all.length?'🎉 Atendiste a todos los clientes de este día. Toca <b>Visitados</b> para verlos o volver a atender a alguno.':'Aún no tienes clientes este día. Agrégalos con "＋ Nuevo cliente en mi ruta".')+'</p>';
 }
 function renderAttended(){
  const ids=[...new Set([...todaySales().map(s=>String(s.clienteId)),...queueRead().map(s=>String(s.clienteId)),...todayVisits().map(v=>String(v.clientId))])];
  const rows=ids.map(id=>clients.find(c=>String(c.id)===id)).filter(Boolean);
  $('attendedCount').textContent=String(rows.length);
- $('attended').innerHTML=rows.length?rows.map(c=>{const st=attendedState(c.id);return '<div class="line"><strong>'+safeText(c.name)+'</strong><span class="client-status '+(st==='sale'?'ok':'warn')+'">'+(st==='sale'?'✓ Venta registrada':'● Visitado sin venta')+'</span><div class="actions"><button class="secondary" type="button" data-reopen="'+safeText(c.id)+'">Atender nuevamente</button></div></div>'}).join(''):'<p class="muted">Todavía no hay clientes atendidos hoy.</p>';
+ $('attended').className='client-route-list';
+ $('attended').innerHTML=rows.length?rows.map((c,i)=>clientRow(c,i,rows.length,true,false)).join(''):'<p class="muted">Todavía no hay clientes atendidos hoy.</p>';
 }
 // ===== Precios y búsqueda como en la app del dueño =====
 function searchScore(text,q){const t=norm(text),x=norm(q);if(!x)return 99;if(t===x)return 0;if(t.startsWith(x))return 1;const words=t.split(/[^a-z0-9]+/).filter(Boolean);if(words.some(w=>w.startsWith(x)))return 2;if(t.includes(x))return 3;return 99}
@@ -117,7 +130,7 @@ function renderSale(){
  const list=(q.length>=2||catv)?sellable().filter(p=>(!catv||(p.category||'Otros')===catv)&&(!q||searchScore(p.name,q)<99)).sort((a,b)=>searchScore(a.name,q)-searchScore(b.name,q)||String(a.name).localeCompare(String(b.name),'es')).slice(0,q?10:40):[];
  $('productSuggestions').innerHTML=draftId?'':list.map(p=>'<button type="button" class="suggestion" data-pick="'+safeText(p.id)+'">'+dot(p)+'<span><strong>'+safeText(p.name)+'</strong><small>'+money(p.price)+((p.promotions||[]).length?' <span class="offer">OFERTA</span>':'')+'</small>'+stockBadge(availableStock(p))+'</span></button>').join('')||(q.length>=2?'<p class="muted">Sin coincidencias.</p>':'');
  const d=draftId?productOf(draftId):null;
- $('productDraft').innerHTML=d?'<div class="draft-product"><div style="display:flex;gap:10px;align-items:center">'+dot(d)+'<div><strong>'+safeText(d.name)+'</strong><small>'+money(d.price)+' · Stock: '+stockBadge(availableStock(d))+((d.promotions||[]).length?' · Oferta: '+d.promotions.map(pr=>'desde '+pr.minQty+' a '+money(pr.price)).join(', '):'')+'</small></div></div><div class="draft-controls"><input id="draftQty" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="Cantidad" value="'+safeText(draftQty)+'"><button id="assignDraft" type="button"'+(Number(draftQty)>=1?'':' disabled')+'>Asignar</button><button id="cancelDraft" class="secondary" type="button">✕</button></div></div>':'';
+ $('productDraft').innerHTML=d?'<div class="draft-product"><div style="display:flex;gap:10px;align-items:center">'+dot(d)+'<div><strong>'+safeText(d.name)+'</strong><small>'+money(d.price)+' · Stock: '+stockBadge(availableStock(d))+((d.promotions||[]).length?' · Oferta: '+d.promotions.map(pr=>'desde '+pr.minQty+' a '+money(pr.price)).join(', '):'')+'</small></div></div><div class="draft-controls"><input id="draftQty" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="Cantidad" value="'+safeText(draftQty)+'"><button id="assignDraft" class="primary" type="button"'+(Number(draftQty)>=1?'':' disabled')+'>Asignar</button><button id="cancelDraft" class="secondary" type="button">✕</button></div></div>':'';
  // bandeja
  const units=cart.reduce((a,i)=>a+i.qty,0);
  $('cartUnits').textContent=String(units);
@@ -133,7 +146,7 @@ function renderInventory(){
 function renderSales(){
  const pending=queueRead(),today=todaySales().sort((a,b)=>String(b.occurredAt||'').localeCompare(String(a.occurredAt||'')));
  const rows=[...pending.map(s=>({...s,_pending:true})),...today.filter(s=>!pending.some(p=>String(p.id)===String(s.id)))];
- $('sellerSalesToday').innerHTML=rows.map(s=>'<div class="line"><strong>#'+safeText(s.folio||'—')+' · '+safeText(s.cliente)+'</strong><small>'+money(s.total)+' · '+(s.paymentMethod==='transfer'?'Transferencia':'Efectivo')+' · '+(s._pending?'⏳ Pendiente de enviar':'✓ Guardada en Firebase')+'</small><div class="actions"><button class="wa" type="button" data-wa="'+safeText(s.id)+'">📲 Enviar por WhatsApp</button></div></div>').join('')||'<p class="muted">Todavía no hay ventas hoy.</p>';
+ $('sellerSalesToday').innerHTML=rows.map(s=>'<div class="sales-row"><strong>#'+safeText(s.folio||'—')+' · '+safeText(s.cliente)+'</strong><small>'+money(s.total)+' · '+(s.paymentMethod==='transfer'?'Transferencia':'Efectivo')+' · '+(s._pending?'⏳ Pendiente de enviar':'✓ Guardada en Firebase')+'</small><div class="actions"><button class="wa wide" type="button" data-wa="'+safeText(s.id)+'">📲 Enviar por WhatsApp</button></div></div>').join('')||'<p class="muted">Todavía no hay ventas hoy.</p>';
 }
 // ===== Clientes (como en la app del dueño, sin funciones de administración) =====
 function clientRouteChips(c){return ['A','B'].map(w=>{const r=routeFor(c,w);if(!r)return '';const list=clients.filter(x=>routeFor(x,w)?.day===r.day).sort((a,b)=>(Number(routeFor(a,w)?.position)||999999)-(Number(routeFor(b,w)?.position)||999999));return '<span class="chip">Sem '+w+' · '+safeText(r.day)+' · N° '+(list.findIndex(x=>String(x.id)===String(c.id))+1)+' de '+list.length+'</span>'}).join('')||'<span class="chip" style="background:#fee2e2;color:#991b1b">Sin día en mi ruta</span>'}
@@ -141,7 +154,7 @@ function renderClientsTab(){
  const qn=norm($('clientSearchName').value),qa=norm($('clientSearchAddress').value);
  const list=clients.filter(c=>(!qn||norm(c.name).includes(qn))&&(!qa||norm(c.address).includes(qa))).sort((a,b)=>String(a.name).localeCompare(String(b.name),'es'));
  $('clientsCount').textContent=String(clients.length);
- $('clientsList').innerHTML=list.length?list.map(c=>'<div class="line"><strong>'+safeText(c.name)+(c.active===false?' · inactivo':'')+'</strong><small>'+safeText(c.address||'Sin dirección')+'</small><small>Tel: '+safeText(c.phone||'Sin teléfono')+' · RUT: '+safeText(c.rut||'Sin RUT')+'</small>'+clientRouteChips(c)+'<div class="actions"><button class="secondary" type="button" data-edit="'+safeText(c.id)+'">Editar</button><button type="button" data-reopen="'+safeText(c.id)+'">Vender</button></div></div>').join(''):'<p class="muted">'+(clients.length?'Sin resultados.':'Aún no tienes clientes. Crea el primero con "＋ Nuevo cliente".')+'</p>';
+ $('clientsList').innerHTML=list.length?list.map(c=>'<article class="route-client"><div><strong>'+safeText(c.name)+(c.active===false?' · inactivo':'')+'</strong><span>'+safeText(c.address||'Sin dirección')+'</span><span>Tel: '+safeText(c.phone||'Sin teléfono')+' · RUT: '+safeText(c.rut||'Sin RUT')+'</span>'+((!c.rut||!c.phone||!c.razonSocial||!c.comuna)?'<span class="client-status warn">⚠ Faltan datos: edítalo</span>':'')+clientRouteChips(c)+'</div><div class="actions-small"><button class="primary select-client" type="button" data-reopen="'+safeText(c.id)+'">🛒 Vender</button><button class="secondary" type="button" data-edit="'+safeText(c.id)+'">Editar</button></div></article>').join(''):'<p class="muted">'+(clients.length?'Sin resultados.':'Aún no tienes clientes. Crea el primero con "＋ Nuevo cliente".')+'</p>';
 }
 const TITLES={route:'Inicio',sale:'Vender',clients:'Clientes'};
 function tab(name){currentTab=name;['route','sale','clients'].forEach(t=>$(t+'Tab').classList.toggle('hide',t!==name));$('catalogTab')?.classList.add('hide');$('vcTabBtn')?.classList.remove('active');document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===name||(name==='sale'&&b.dataset.tab==='route')));$('pageTitle').textContent=TITLES[name]||'Zipper Vendedor'}
@@ -450,6 +463,8 @@ async function logout(){if(cart.length&&!window.confirm('Tienes un pedido sin gu
 function wire(){
  $('sellerLoginButton').onclick=signIn;$('sellerForgot').onclick=resetPassword;$('sellerPassword').onkeydown=e=>{if(e.key==='Enter')signIn()};
  $('sellerLogout').onclick=logout;$('sellerStart').onclick=startSession;$('sellerClose').onclick=closeSession;
+ $('changeRoute').onclick=()=>{changingRoute=!changingRoute;render();if(changingRoute)$('routeSetup').scrollIntoView({behavior:'smooth',block:'start'})};
+ $('visitedToggle').onclick=()=>{const box=$('attendedBox');box.classList.toggle('hide');if(!box.classList.contains('hide'))box.scrollIntoView({behavior:'smooth',block:'start'})};
  $('sellerWeek').onchange=()=>{renderRouteDays();render()};$('sellerDay').onchange=render;
  $('sellerClients').onclick=e=>{const b=e.target.closest('button');if(!b||b.disabled)return;const d=b.dataset;if(d.visit)markVisited(d.visit);else if(d.sale)openOrder(d.sale);else if(d.up)moveClient(d.up,-1);else if(d.down)moveClient(d.down,1);else if(d.move)changeClientDay(d.move)};
  $('attended').onclick=e=>{const b=e.target.closest('[data-reopen]');if(b)openOrder(b.dataset.reopen)};
