@@ -59,17 +59,22 @@ function selectedRoute(){return {week:$('sellerWeek').value||'A',day:$('sellerDa
 function routeClients(){const {week,day}=selectedRoute();return clients.filter(c=>c.active!==false&&routeFor(c,week)?.day===day).sort((a,b)=>(Number(routeFor(a,week)?.position)||999999)-(Number(routeFor(b,week)?.position)||999999)||String(a.name).localeCompare(String(b.name),'es'))}
 const todaySales=()=>sales.filter(s=>String(s.fecha||s.date||'').slice(0,10)===localDate());
 const todayVisits=()=>visits.filter(v=>String(v.date||'').slice(0,10)===localDate());
-function attendedState(clientId){const id=String(clientId);if(todaySales().some(s=>String(s.clienteId)===id)||queueRead().some(s=>String(s.clienteId)===id))return 'sale';if(todayVisits().some(v=>String(v.clientId)===id))return 'visited';return ''}
-const sessionOpen=()=>!!session&&session.status==='open'&&!session.closedAt;
+const todayQueue=()=>queueRead().filter(s=>String(s.fecha||s.date||'').slice(0,10)===localDate());
+// Horario: la jornada se puede abrir hasta las 19:00; a las 18:50 se avisa y a las 19:00 se cierra sola.
+const CLOSE_HOUR=19;
+const afterHours=()=>new Date().getHours()>=CLOSE_HOUR;
+const closedToday=()=>!!session&&session.id===sessionId()&&(session.status==='closed'||!!session.closedAt);
+function attendedState(clientId){const id=String(clientId);if(todaySales().some(s=>String(s.clienteId)===id)||todayQueue().some(s=>String(s.clienteId)===id))return 'sale';if(todayVisits().some(v=>String(v.clientId)===id))return 'visited';return ''}
+const sessionOpen=()=>!!session&&session.id===sessionId()&&session.status==='open'&&!session.closedAt&&!afterHours();
 function renderRouteDays(){const week=$('sellerWeek').value||'A',select=$('sellerDay'),current=select.value;const count=d=>clients.filter(c=>c.active!==false&&routeFor(c,week)?.day===d).length;select.innerHTML=DAYS.map(d=>'<option value="'+d+'">'+d+(count(d)?' ('+count(d)+')':'')+'</option>').join('');if(DAYS.includes(current))select.value=current;else{const withClients=DAYS.filter(count);const today=DAYS[(new Date().getDay()+6)%7];select.value=withClients.includes(today)?today:(withClients[0]||today||'Lunes')}}
 let changingRoute=false;
 function renderSession(){
- const open=sessionOpen(),closed=!!session&&(session.status==='closed'||!!session.closedAt);
+ const open=sessionOpen(),closed=closedToday();
  if(open&&!changingRoute){if(session.routeWeek&&$('sellerWeek').value!==session.routeWeek){$('sellerWeek').value=session.routeWeek;renderRouteDays()}if(session.routeDay&&$('sellerDay').value!==session.routeDay&&[...$('sellerDay').options].some(o=>o.value===session.routeDay))$('sellerDay').value=session.routeDay}
  $('state').textContent=open?'Abierta':closed?'Cerrada':'Sin iniciar';
- $('count').textContent=String(todaySales().length+queueRead().length);
- $('sessionInfo').textContent=open?'Jornada abierta desde las '+(session.openedAtLocal?new Date(session.openedAtLocal).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}):'—')+'. Elige el día que quieres ver.':closed?'Jornada cerrada hoy. Puedes volver a abrirla si necesitas seguir.':'Al comenzar la ruta se inicia tu jornada (hora de entrada).';
- $('sellerStart').classList.toggle('hide',open);$('sellerStart').textContent=closed?'Reabrir jornada':'Comenzar ruta';$('sellerClose').disabled=!open;
+ $('count').textContent=String(todaySales().length+todayQueue().filter(q=>!todaySales().some(x=>String(x.id)===String(q.id))).length);
+ $('sessionInfo').textContent=afterHours()&&!open?'⏰ Después de las '+CLOSE_HOUR+':00 no se toman pedidos. Mañana puedes comenzar una nueva ruta.':closed?'✅ Jornada de hoy cerrada. Mañana puedes comenzar una nueva ruta.':open?'Jornada abierta desde las '+(session.openedAtLocal?new Date(session.openedAtLocal).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}):'—')+'. Elige el día que quieres ver.':closed?'Jornada cerrada hoy. Puedes volver a abrirla si necesitas seguir.':'Al comenzar la ruta se inicia tu jornada (hora de entrada).';
+ $('sellerStart').classList.toggle('hide',open);$('sellerStart').textContent=closed?'Jornada cerrada · vuelve mañana':afterHours()?'Fuera de horario · vuelve mañana':'Comenzar ruta';$('sellerStart').disabled=closed||afterHours();$('sellerClose').disabled=!open;
  $('routeHint').classList.toggle('hide',open);
  $('routeSetup').classList.toggle('hide',open&&!changingRoute);
  $('activeRouteBox').classList.toggle('hide',!open);
@@ -235,6 +240,8 @@ async function refreshFromServer(){
 
 // ===== Jornada =====
 async function startSession(){
+ if(closedToday()){status('La jornada de hoy ya se cerró. Mañana puedes comenzar una nueva ruta.','error');return}
+ if(afterHours()){status('Después de las '+CLOSE_HOUR+':00 no se puede abrir la jornada. Vuelve mañana.','error');return}
  const {week,day}=selectedRoute();if(!day){status('Elige semana y día antes de iniciar la jornada.','error');return}
  const button=$('sellerStart');button.disabled=true;
  const now=new Date().toISOString(),prev=session||{};
@@ -245,10 +252,10 @@ async function startSession(){
  catch(error){console.error(error);session=null;saveSessionLocal();render();status('No se pudo iniciar la jornada en Firebase: '+(isPermission(error)?'permiso denegado. Avisa al dueño para que revise tu acceso.':(error.message||'')),'error')}
  finally{button.disabled=sessionOpen()}
 }
-async function closeSession(){
+async function closeSession(auto){
  if(!session)return;
  const pending=routeClients().filter(c=>!attendedState(c.id));
- if(pending.length&&!window.confirm('Quedan '+pending.length+' clientes sin atender en esta ruta. ¿Cerrar la jornada igual?'))return;
+ if(auto!==true&&!window.confirm((pending.length?'Quedan '+pending.length+' clientes sin atender en esta ruta.\n\n':'')+'Al cerrar la jornada no podrás volver a abrirla hasta mañana. ¿Cerrar igual?'))return;
  const now=new Date().toISOString();
  session={...session,status:'closed',closedAt:now,closedAtLocal:now};saveSessionLocal();render();
  status('Jornada cerrada · '+todaySales().length+' ventas hoy.','ok');
@@ -356,6 +363,7 @@ function changeClientDay(id){
 // ===== Pedido =====
 let draftId='',draftQty='';
 function openOrder(id){
+ if(afterHours()){status('Después de las '+CLOSE_HOUR+':00 no se toman pedidos. Vuelve mañana.','error');return}
  if(!sessionOpen()){status('Inicia la jornada primero (en Inicio).','error');tab('route');return}
  const next=clients.find(c=>String(c.id)===String(id))||null;if(!next)return;
  if(selectedClient&&String(selectedClient.id)!==String(next.id)&&cart.length&&!window.confirm('Tienes productos en el carrito de '+selectedClient.name+'. ¿Descartarlos y atender a '+next.name+'?'))return;
@@ -418,6 +426,7 @@ function waPhone(c){let d=String(c?.phone||'').replace(/\D/g,'');if(d.length===8
 function saleText(s){return ['*Distribuidora Zipper*','Comprobante #'+s.folio+' · '+s.fecha,'Cliente: '+s.cliente,'',...(s.items||[]).map(i=>'• '+i.qty+' x '+i.desc+(i.promotion?' (oferta)':'')+' — '+money(Math.round(i.qty*i.price))),'','*TOTAL: '+money(s.total)+'*','Pago: '+(s.paymentMethod==='transfer'?'Transferencia':'Efectivo')+' (al entregar)','','¡Gracias por su compra!'].join('\n')}
 function sendWhatsApp(s){const c=clients.find(x=>String(x.id)===String(s.clienteId));const url='https://wa.me/'+waPhone(c)+'?text='+encodeURIComponent(saleText(s));const w=window.open(url,'_blank');if(!w)location.href=url}
 async function saveSale(withWhatsApp){
+ if(afterHours()){status('Son más de las '+CLOSE_HOUR+':00: ya no se reciben pedidos hasta mañana.','error');return}
  if(!sessionOpen()||!selectedClient||!cart.length){closeSaveOptions();return}
  const paymentMethod=$('sellerPayment').value;if(!['cash','transfer'].includes(paymentMethod)){status('Elige si el cliente paga en efectivo o transferencia.','error');document.querySelector('.pay-box')?.scrollIntoView({behavior:'smooth',block:'center'});return}
  const client=selectedClient;
@@ -485,6 +494,29 @@ function wire(){
  window.addEventListener('online',async()=>{status('Conexión recuperada · sincronizando…','warn');await flushPendingSales();if(navigator.onLine)await refreshFromServer();render()});
  window.addEventListener('offline',()=>{status('Sin internet · los cambios quedarán pendientes.','warn');render()});
 }
+// Reloj de la jornada: revisa cada 30 segundos.
+let clockDay=localDate(),warnedDay='';
+async function clockTick(){
+ if(!profile)return;
+ const today=localDate(),d=new Date(),mins=d.getHours()*60+d.getMinutes();
+ if(today!==clockDay){
+  clockDay=today;selectedClient=null;cart=[];changingRoute=false;
+  session=null;try{localStorage.removeItem(prefix()+'session')}catch(_){}
+  const remote=await readSession();if(remote)session=remote;
+  tab('route');render();status('🌅 Nuevo día: tu ruta se reinició. Toca "Comenzar ruta" para empezar la jornada.','ok');
+  return;
+ }
+ if(mins>=CLOSE_HOUR*60-10&&mins<CLOSE_HOUR*60&&warnedDay!==today&&sessionOpen()){
+  warnedDay=today;status('⏰ A las '+CLOSE_HOUR+':00 se cierra la app y no recibe más pedidos hasta mañana. Termina y guarda tus ventas.','warn');
+  try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(_){}
+  setTimeout(()=>{try{window.alert('⏰ Faltan 10 minutos: a las '+CLOSE_HOUR+':00 se cierra la app y no recibe más pedidos hasta mañana.')}catch(_){}},50);
+ }
+ if(afterHours()&&session&&session.id===sessionId()&&session.status==='open'&&!session.closedAt){
+  await closeSession(true);selectedClient=null;cart=[];tab('route');render();status('🔒 Son las '+CLOSE_HOUR+':00: la jornada se cerró sola. Mañana puedes comenzar una nueva ruta.','warn');
+ }
+}
+setInterval(()=>{clockTick().catch(e=>console.warn(e))},30000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)clockTick().catch(()=>{})});
 wire();
 onAuthStateChanged(auth,async user=>{
  if(!user){if(!profile)status('Ingresa con tu correo y clave.');return}
