@@ -106,6 +106,8 @@
     const st=$('productStatus');try{const data=await resizePhoto(f);b.innerHTML='<img src="'+data+'" alt="">';if(st)st.textContent='Guardando foto de '+p.name+'…';await syncCatalog(id,{photo:data,inCatalog:true});if(st)st.textContent='✅ Foto de '+p.name+' guardada (también en el catálogo).'}catch(err){if(st)st.textContent='⚠ No se pudo guardar la foto: '+(err.message||err)}
   });
   window.zipperProductPhotos?.onChange(()=>{try{if(document.querySelector('#inventoryList')){document.querySelectorAll('#inventoryList .inv-thumb').forEach(x=>{const id=x.dataset.photoFor,p=productById(id),u=p&&window.zipperProductPhotos.url(p);if(u)x.innerHTML='<img src="'+e(u)+'" alt="">'})}}catch(_){}});
-  function start(){mountForm();wrapForm();fillForm(null);try{renderInventory()}catch(_){}}
+  // La lista se vuelve a dibujar desde varios lugares (buscar, categoría, stock): se ponen las fotos cada vez.
+  function watchList(){const list=$('inventoryList');if(!list||list.__photoObs)return;let busy=false;const obs=new MutationObserver(()=>{if(busy)return;busy=true;try{decorateList()}catch(_){}busy=false});obs.observe(list,{childList:true});list.__photoObs=true}
+  function start(){mountForm();wrapForm();watchList();fillForm(null);try{renderInventory()}catch(_){}}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(start,0),{once:true});else setTimeout(start,0);
 })();
