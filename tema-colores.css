@@ -419,3 +419,26 @@ body.buy-mode .buy-dock{display:block;position:sticky;bottom:92px;z-index:5;marg
 .seller-cash-done{font-size:13px;margin-top:6px}.seller-cash-done summary{cursor:pointer;font-weight:800;color:#4c1d95}
 .seller-sales{margin-top:10px}.seller-sales summary{cursor:pointer;font-weight:900;color:#312e81;padding:6px 0}.sv-ok{color:#15803d}.sv-wait{color:#b45309}
 .seller-cash-rej{margin-top:8px;padding:8px;border-radius:10px;background:#fef2f2;border:1px solid #fecaca}.seller-cash-rej>strong{color:#991b1b}
+/* Avisos de Inicio compactos (avisos-inicio.js) */
+.avisos-compactos-on #homeAlerts,.avisos-compactos-on #catOrdersAlert,.avisos-compactos-on #poHomeAlert{display:none!important}
+.avisos-compactos{box-sizing:border-box;margin:0 0 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:8px}
+.avisos-compactos[hidden]{display:none}
+.avisos-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.aviso-btn{width:100%;min-width:0;box-sizing:border-box;margin:0;display:flex;align-items:center;gap:5px;min-height:50px;padding:6px 8px;border-radius:14px;border:2px solid transparent;color:#fff;font-weight:900;font-size:14px;text-align:left;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.aviso-btn.abierto{outline:3px solid #fff;outline-offset:1px}
+.aviso-ico{font-size:17px;line-height:1}
+.aviso-txt{flex:1;min-width:0;line-height:1.1;overflow-wrap:anywhere}
+.aviso-num{background:rgba(255,255,255,.95);border-radius:999px;padding:2px 6px;font-size:12px;white-space:nowrap;font-weight:900;color:#111827}
+.aviso-flecha{font-size:12px;opacity:.85}
+.aviso-btn.aviso-pedidos{background:#16a34a;border-color:#15803d}
+.aviso-btn.aviso-cobranza{background:#ea580c;border-color:#c2410c}
+.aviso-btn.aviso-cobranza.aviso-urgente{background:#dc2626;border-color:#b91c1c}
+.aviso-btn.aviso-stock{background:#be185d;border-color:#9d174d}
+.aviso-btn.aviso-proveedor{background:#2563eb;border-color:#1d4ed8}
+.aviso-btn.aviso-respaldo{background:#475569;border-color:#334155}
+.aviso-detalle{margin-top:8px;border-radius:14px;padding:10px 12px;background:#fff;color:#1f2937;border-left:6px solid #94a3b8}
+.aviso-detalle strong{display:block;font-size:15px}
+.aviso-detalle p{margin:4px 0 8px;font-size:13px;color:#374151}
+.aviso-detalle.aviso-pedidos{border-color:#16a34a}.aviso-detalle.aviso-cobranza{border-color:#ea580c}.aviso-detalle.aviso-stock{border-color:#be185d}.aviso-detalle.aviso-proveedor{border-color:#2563eb}.aviso-detalle.aviso-respaldo{border-color:#475569}
+.aviso-acciones{display:flex;flex-wrap:wrap;gap:6px}
+.aviso-acciones button{min-height:44px;border-radius:12px;font-weight:900;flex:1 1 auto}
