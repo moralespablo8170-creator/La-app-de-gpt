@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#102b48">
+<meta name="theme-color" content="#041321">
 <title>Zipper Vendedor · Distribuidora Zipper</title>
 <link rel="manifest" href="./vendedor-manifest.json?v=1">
 <link rel="apple-touch-icon" href="./assets/icono-512.png?v=20261015-icono-exterior-v2">
@@ -72,10 +72,43 @@ label{display:block;margin:12px 0;font-size:14px;font-weight:700}
 .chip{display:inline-block;margin:4px 4px 0 0;padding:3px 8px;border-radius:999px;background:#e0e7ff;color:#3730a3;font-size:12px;font-weight:800}
 .nav button{font-size:13px}
 .pay-choice{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.pay-opt{background:#fff;color:#20344e;border:2px solid #cbd5e1;padding:14px 6px;font-size:16px}.pay-opt.on{background:#1265e8;color:#fff;border-color:#1265e8}
+/* ===== Tema igual a la app del dueño ===== */
+:root{background:#051a2e}
+body{background:radial-gradient(ellipse at top,#153b58 0,#071f35 48%,#041321 100%);min-height:100vh;color:#16263c}
+header.brandbar{position:relative;z-index:1;background:transparent;padding:max(8px,env(safe-area-inset-top)) 12px 6px;display:block;box-shadow:none}
+.brand-img{width:100%;max-width:736px;margin:0 auto;aspect-ratio:670/205;background:url('./assets/zipper-compact.webp') no-repeat;background-size:152.8358% auto;background-position:50% 9.241%;border-radius:12px;box-shadow:0 6px 20px #0006}
+.titlebar{max-width:736px;margin:8px auto 0;display:flex;align-items:center;justify-content:space-between;gap:10px;color:#fff}
+.titlebar h1{margin:0;font-size:21px;font-weight:900;letter-spacing:.01em}.titlebar small{display:block;color:#9fc3e6;font-size:12.5px;margin-top:1px}
+.titlebar button{background:#ffffff1f;color:#fff;border:1px solid #ffffff33;padding:8px 12px;font-size:13px}
+.shell{padding-top:8px}
+.section-heading{color:#102b48}
+.nav{background:linear-gradient(180deg,#0b2945,#04192c);border:1px solid #285579;box-shadow:0 8px 30px #0007;border-radius:18px;left:8px;right:8px;bottom:8px;max-width:744px;margin:auto;padding:7px 6px;height:auto}
+.nav button{background:transparent!important;color:#b7cde2!important;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11.5px;font-weight:800;padding:8px 2px;border-radius:12px;margin:0 2px}
+.nav button svg{width:23px;height:23px}
+.nav button.active{box-shadow:inset 0 -3px currentColor}
+.nav button[data-tab=route].active{color:#60a5fa!important;background:#1d4ed833!important}
+.nav button[data-tab=clients].active{color:#c4b5fd!important;background:#7c3aed33!important}
+.nav #vcTabBtn.active{color:#fdba74!important;background:#ea580c33!important}
+.nav .navbadge{background:#ef4444;color:#fff;border-radius:999px;font-size:10px;padding:1px 6px;margin-left:2px}
+.toast{bottom:96px}
+.cart-banner{background:linear-gradient(135deg,#c2410c,#f59e0b)}
+.cart-lines{display:grid;gap:8px;margin-top:8px}
+.subtotal-bar{display:flex;justify-content:space-between;align-items:center;background:#0f172a;color:#fff;border-radius:14px;padding:14px 16px;margin-top:12px}.subtotal-bar span{font-size:16px}.subtotal-bar strong{font-size:28px;font-weight:900}
+.save-row{display:grid;gap:8px;margin-top:10px}.save-row button{min-height:52px;font-size:16.5px}
+.offer-line{color:#dc2626;font-weight:900}
+.offer-hint{display:block;color:#b45309;font-size:12px;font-weight:800;margin-top:2px}
+.suggestion .pthumb{width:46px;height:46px}.chosen-line .pthumb{width:42px;height:42px}
+.chosen-line>div:first-child{flex-direction:row!important;align-items:center;gap:10px!important}
+.wa-orders{border:2px solid #22c55e;background:#f0fdf4}.wa-orders h2{color:#166534}
+.wa-order{background:#fff;border:1px solid #bbf7d0;border-radius:12px;padding:10px;margin-top:8px}.wa-order ul{margin:6px 0 4px 18px;font-size:14px}.wa-order small{color:#64748b;display:block}
+.phone-field{display:flex;align-items:stretch}.phone-field span{display:flex;align-items:center;padding:0 10px;background:#e2e8f0;border:1px solid #cbd5e1;border-right:0;border-radius:11px 0 0 11px;font-weight:800;color:#334155;white-space:nowrap}.phone-field input{border-radius:0 11px 11px 0}
+.req{color:#dc2626}
+.field-error{border-color:#dc2626!important;box-shadow:0 0 0 3px #fecaca}
+.cf-msg{color:#b91c1c;font-weight:800;background:#fee2e2;border-radius:10px;padding:10px}.cf-msg:empty{display:none}
 </style>
 </head>
 <body>
-<header><div><h1>◉ DZ · Zipper Vendedor</h1><small id="sellerWelcome">Distribuidora Zipper</small></div><button id="sellerLogout" class="hide" type="button">Salir</button></header>
+<header class="brandbar"><div class="brand-img" role="img" aria-label="Distribuidora Zipper"></div><div class="titlebar"><div><h1 id="pageTitle">Zipper Vendedor</h1><small id="sellerWelcome">Distribuidora Zipper</small></div><button id="sellerLogout" class="hide" type="button">Salir</button></div></header>
 <main class="shell">
 
 <section id="sellerLogin">
@@ -92,6 +125,7 @@ label{display:block;margin:12px 0;font-size:14px;font-weight:700}
 
 <section id="sellerApp" class="hide">
  <section id="routeTab">
+  <div id="waOrdersCard" class="card wa-orders hide"><h2 class="section-heading"><span class="symbol">🛒</span> Pedidos por WhatsApp <span id="waOrdersCount" class="badge ok" style="margin-left:auto">0</span></h2><p class="muted">Clientes que te pidieron desde tu catálogo. Toca <b>Vender</b> para cargar el pedido.</p><div id="waOrders"></div></div>
   <div class="card"><h2 class="section-heading"><span class="symbol">🕘</span> Jornada</h2>
    <div class="two"><div class="stat"><small>Estado</small><strong id="state">Sin iniciar</strong></div><div class="stat"><small>Ventas del día</small><strong id="count">0</strong></div></div>
    <p id="sessionInfo" class="muted"></p>
@@ -105,19 +139,21 @@ label{display:block;margin:12px 0;font-size:14px;font-weight:700}
    <button id="sellerNewClientOpen" class="secondary full" style="margin-top:10px" type="button">＋ Nuevo cliente en mi ruta</button>
    <details id="attendedBox" class="attended"><summary>Atendidos hoy (<span id="attendedCount">0</span>)</summary><div id="attended"></div></details>
   </div>
-  <div class="card"><h2 class="section-heading"><span class="symbol">📦</span> Inventario <span class="badge" style="margin-left:auto">Solo consulta</span></h2><input id="inventorySearch" placeholder="Buscar producto"><div id="sellerInventory" style="margin-top:8px"></div></div>
  </section>
 
  <section id="saleTab" class="hide">
-  <div id="saleEmpty" class="card"><h2 class="section-heading"><span class="symbol">🛒</span> Vender</h2><p class="muted">Elige un cliente con el botón <b>Pedido</b> en Mi ruta o con <b>Vender</b> en Clientes.</p></div>
+  <div id="saleEmpty" class="card"><h2 class="section-heading"><span class="symbol">🛒</span> Vender</h2><p class="muted">Elige un cliente con el botón <b>Vender</b> en Inicio o en Clientes.</p></div>
   <div id="saleCard" class="hide">
    <div class="cart-banner"><div><span class="cart-label">🛒 VENDIENDO A</span><h2 id="cartClientName">Cliente</h2><p id="cartClientMeta"></p></div><div class="cart-banner-actions"><button id="cartVisitedNoSale" type="button">👣 Visitado sin venta</button><button id="closeCart" type="button">Cambiar cliente</button></div></div>
    <div id="cartSuggested" class="cart-suggested hide"></div>
    <div class="card">
     <div class="cart-search-box"><label>Buscar producto por nombre<input id="cartSearchName" autocomplete="off" placeholder="Escribe 2 letras o más..."></label><div id="productDraft"></div><div id="productSuggestions" class="product-suggestions"></div><label>Categoría<select id="cartCategory"><option value="">Todas las categorías</option></select></label></div>
-    <button id="toggleCartTray" class="secondary full" type="button">Ver bandeja (0)</button><div id="chosenProducts" class="chosen-list hide"></div>
-    <div class="cart-footer"><span>Total</span><strong id="cartTotal">$0</strong></div>
-    <button id="saveSale" class="full big" type="button">Guardar venta</button>
+    <h3 style="margin-top:6px">🧺 Productos del pedido <span id="cartUnits" class="badge" style="margin-left:6px">0</span></h3>
+    <div id="chosenProducts" class="cart-lines"></div>
+    <div class="subtotal-bar"><span>Subtotal / total</span><strong id="cartTotal">$0</strong></div>
+    <div class="pay-box">💳 ¿CÓMO PAGA EL CLIENTE?<div class="pay-choice"><button type="button" class="pay-opt" data-pay="cash">💵 Efectivo</button><button type="button" class="pay-opt" data-pay="transfer">🏦 Transferencia</button></div><input type="hidden" id="sellerPayment" value=""></div>
+    <p id="saveSummary" class="muted">Queda anotado para que quien entrega sepa cómo cobrar.</p>
+    <div class="save-row"><button id="saveOnly" type="button">💾 Guardar</button><button id="saveAndWhatsApp" class="wa" type="button">📲 Guardar y enviar por WhatsApp</button></div>
    </div>
   </div>
   <div class="card"><h2 class="section-heading"><span class="symbol">🧾</span> Ventas de hoy</h2><div id="sellerSalesToday"></div></div>
@@ -128,16 +164,17 @@ label{display:block;margin:12px 0;font-size:14px;font-weight:700}
    <div class="two"><label>Buscar por nombre<input id="clientSearchName" placeholder="Nombre"></label><label>Buscar por dirección<input id="clientSearchAddress" placeholder="Dirección"></label></div>
    <button id="newClientButton" class="secondary full" type="button">＋ Nuevo cliente</button>
    <div id="clientEditor" class="newclient hide"><h3 id="clientFormTitle">Nuevo cliente</h3>
-    <label>Nombre del local o cliente<input id="cfName" maxlength="120"></label>
-    <label>Dirección<input id="cfAddress" maxlength="200"></label>
-    <div class="two"><label>Teléfono (WhatsApp)<input id="cfPhone" inputmode="numeric" maxlength="15" value="569 "></label><label>RUT<input id="cfRut" maxlength="12" placeholder="12.345.678-K"></label></div>
-    <div class="two"><label>Razón social<input id="cfBusiness" maxlength="180"></label><label>Comuna<input id="cfComuna" maxlength="80"></label></div>
-    <label>Observaciones<input id="cfNotes" maxlength="200"></label>
-    <label class="check"><input id="cfInvoice" type="checkbox"> Enviar factura a este cliente</label>
+    <p class="muted">Todos los datos con <span class="req">*</span> son obligatorios (todas las ventas van con factura).</p>
+    <label>Nombre del local o cliente <span class="req">*</span><input id="cfName" maxlength="120"></label>
+    <label>Dirección <span class="req">*</span><input id="cfAddress" maxlength="200"></label>
+    <label>Teléfono (WhatsApp) <span class="req">*</span><div class="phone-field"><span>+56 9</span><input id="cfPhone" inputmode="numeric" maxlength="9" placeholder="1234 5678" autocomplete="tel-local"></div></label>
+    <div class="two"><label>RUT <span class="req">*</span><input id="cfRut" maxlength="12" placeholder="12.345.678-K" autocapitalize="characters"></label><label>Comuna <span class="req">*</span><input id="cfComuna" maxlength="80"></label></div>
+    <label>Razón social <span class="req">*</span><input id="cfBusiness" maxlength="180"></label>
+    <label>Observaciones (opcional)<input id="cfNotes" maxlength="200"></label>
     <h3 style="margin-top:12px">Mi ruta para este cliente</h3>
     <div class="two"><label>Semana A · día<select id="cfDayA"></select></label><label>Semana A · posición<input id="cfPosA" type="number" min="1" inputmode="numeric" placeholder="Al final"></label></div>
     <div class="two"><label>Semana B · día<select id="cfDayB"></select></label><label>Semana B · posición<input id="cfPosB" type="number" min="1" inputmode="numeric" placeholder="Al final"></label></div>
-    <p id="cfMsg" class="muted" style="color:#b91c1c;font-weight:700"></p>
+    <p id="cfMsg" class="cf-msg" role="alert"></p>
     <button id="cfSave" class="full" type="button">Guardar cliente</button><button id="cfCancel" class="secondary full" style="margin-top:8px" type="button">Cancelar</button>
    </div>
    <div id="clientsList"></div>
@@ -146,11 +183,11 @@ label{display:block;margin:12px 0;font-size:14px;font-weight:700}
 </section>
 </section>
 </main>
-<div id="saveOptions" class="modal hide" role="dialog" aria-modal="true"><div class="modal-card"><div class="kicker">VENTA LISTA</div><h3>¿Qué deseas hacer?</h3><p id="saveSummary" class="muted"></p><div class="pay-box">💳 ¿CÓMO VA A PAGAR EL CLIENTE?<div class="pay-choice"><button type="button" class="pay-opt" data-pay="cash">💵 Efectivo</button><button type="button" class="pay-opt" data-pay="transfer">🏦 Transferencia</button></div><input type="hidden" id="sellerPayment" value=""></div><p class="muted">Queda anotado en el pedido para que quien lo entrega sepa cómo cobrar. El cliente puede cambiarlo al recibir.</p><button id="saveOnly" class="secondary full" type="button">Solo guardar</button><button id="saveAndWhatsApp" class="wa full" type="button">📲 Guardar y enviar por WhatsApp</button><button id="cancelSave" class="ghost full" type="button">Cancelar</button></div></div>
 <div id="sellerStatus" class="toast fade" role="status" aria-live="polite"></div>
-<nav class="nav hide" id="sellerNav"><button data-tab="route" class="active" type="button">⌖ Mi ruta</button><button data-tab="sale" type="button">🛒 Vender</button><button data-tab="clients" type="button">👥 Clientes</button></nav>
-<script type="module" src="./seller-app.js?v=zipper-seller-v10-20261116"></script>
-<script src="./vendedor-catalogo.js?v=20261116-2"></script>
+<nav class="nav hide" id="sellerNav"><button data-tab="route" class="active" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 11 9-8 9 8M5 10v11h5v-7h4v7h5V10"></path></svg><span>Inicio</span></button><button data-tab="clients" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="7" r="3"></circle><circle cx="17" cy="8" r="2.5"></circle><path d="M2 21v-3a6 6 0 0 1 12 0v3M15 14a5 5 0 0 1 7 5v2"></path></svg><span>Clientes</span></button></nav>
+<script src="./fotos-productos.js?v=20261117-1"></script>
+<script type="module" src="./seller-app.js?v=zipper-seller-v11-20261117"></script>
+<script src="./vendedor-catalogo.js?v=20261117-1"></script>
 <script>
 (function(){
  var deferred=null,btn=document.getElementById('sellerInstallButton'),box=document.getElementById('sellerInstall');

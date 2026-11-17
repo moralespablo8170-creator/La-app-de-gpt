@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zipper-app-pwa-20261117-63';
+const CACHE_NAME = 'zipper-app-pwa-20261117-64';
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -21,6 +21,7 @@ const APP_SHELL = [
   "./vendedores-caja.js?v=20261116-2",
   "./catalogo-admin.js?v=20261117-1",
   "./pedidos-catalogo.js?v=20261116-1",
+  "./fotos-productos.js?v=20261117-1",
   "./rutas-clientes.js?v=20261115-2",
   "./proyecciones.js?v=20261116-7",
   "./firebase-cloud.js?v=20261116-catalogo-3",
@@ -32,8 +33,8 @@ const APP_SHELL = [
   "./repartidor-manifest.json?v=1",
   "./driver-app.js?v=zipper-driver-20261116-v3",
   "./vendedor-manifest.json?v=1",
-  "./seller-app.js?v=zipper-seller-v10-20261116",
-  "./vendedor-catalogo.js?v=20261116-2",
+  "./seller-app.js?v=zipper-seller-v11-20261117",
+  "./vendedor-catalogo.js?v=20261117-1",
   "./seller-admin.html",
   "./seller-admin.js?v=zipper-seller-admin-20261116-v8",
   "./route-position-migration.js?v=1.2",

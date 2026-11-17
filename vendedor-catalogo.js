@@ -33,17 +33,26 @@
   const nrm=v=>String(v??'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
   const digits=v=>String(v||'').replace(/\D/g,'').slice(-8);
   let orders=[];
+  // Inicio: pedidos por WhatsApp pendientes, arriba de todo para que no se olviden.
+  function renderHome(nuevos,row){
+    const card=$('waOrdersCard'),box=$('waOrders');if(!card||!box)return;
+    card.classList.toggle('hide',!nuevos.length);$('waOrdersCount').textContent=String(nuevos.length);
+    box.innerHTML=nuevos.map(row).join('');
+    box.querySelectorAll('.vc-load').forEach(b=>b.onclick=()=>pickClient(orders.find(o=>o.id===b.dataset.id)));
+    box.querySelectorAll('.vc-del').forEach(b=>b.onclick=async()=>{if(!confirm('¿Borrar este pedido?'))return;try{await window.zipperSellerOrders.remove(b.dataset.id);loadOrders()}catch(e){alert('No se pudo borrar: '+(e.message||e))}});
+  }
   async function loadOrders(){
-    const box=$('vcOrders');if(!box)return;const api=window.zipperSellerOrders;
+    const box=$('vcOrders')||document.createElement('div');const api=window.zipperSellerOrders;
     if(!api){box.innerHTML='<p class="muted">Inicia sesión para ver tus pedidos.</p>';return}
     try{orders=await api.list()}catch(e){box.innerHTML='<p class="muted">No se pudieron leer los pedidos: '+esc(e.message||e)+'</p>';return}
     const when=iso=>{const d=new Date(iso);return Number.isNaN(d.getTime())?'':d.toLocaleDateString('es-CL',{weekday:'short',day:'numeric',month:'short'})+' '+d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'})};
-    const row=o=>'<article class="vc-order'+(o.status!=='nuevo'?' done':'')+'"><div class="vc-head"><strong>'+esc(o.who||'Cliente sin nombre')+'</strong><b>'+money(o.total)+'</b></div><small>'+esc(when(o.createdAt))+' · #'+esc(o.code||'')+(o.tel?' · 📞 '+esc(o.tel):'')+(o.status==='cargado'?' · ✅ cargado':'')+'</small><ul>'+(o.lines||[]).map(l=>'<li>'+esc(l.q)+' × '+esc(l.name)+(l.flavor?' · '+esc(l.flavor):'')+(l.box?' (caja de '+esc(l.units)+')':'')+'</li>').join('')+'</ul>'+(o.msg?'<small>💬 '+esc(o.msg)+'</small>':'')+'<div class="actions"><button class="vc-load" data-id="'+esc(o.id)+'" type="button">🛒 '+(o.status==='nuevo'?'Cargar en venta':'Cargar otra vez')+'</button><button class="secondary vc-del" data-id="'+esc(o.id)+'" type="button">🗑 Borrar</button></div></article>';
+    const row=o=>'<article class="vc-order'+(o.status!=='nuevo'?' done':'')+'"><div class="vc-head"><strong>'+esc(o.who||'Cliente sin nombre')+'</strong><b>'+money(o.total)+'</b></div><small>'+esc(when(o.createdAt))+' · #'+esc(o.code||'')+(o.tel?' · 📞 '+esc(o.tel):'')+(o.status==='cargado'?' · ✅ cargado':'')+'</small><ul>'+(o.lines||[]).map(l=>'<li>'+esc(l.q)+' × '+esc(l.name)+(l.flavor?' · '+esc(l.flavor):'')+(l.box?' (caja de '+esc(l.units)+')':'')+'</li>').join('')+'</ul>'+(o.msg?'<small>💬 '+esc(o.msg)+'</small>':'')+'<div class="actions"><button class="vc-load" data-id="'+esc(o.id)+'" type="button">🛒 '+(o.status==='nuevo'?'Vender':'Vender otra vez')+'</button><button class="secondary vc-del" data-id="'+esc(o.id)+'" type="button">🗑 Borrar</button></div></article>';
     const nuevos=orders.filter(o=>o.status==='nuevo'),hechos=orders.filter(o=>o.status!=='nuevo').slice(0,10);
+    renderHome(nuevos,row);
     box.innerHTML=(nuevos.length?nuevos.map(row).join(''):'<p class="muted">No tienes pedidos nuevos.</p>')+(hechos.length?'<details><summary>Ya cargados ('+hechos.length+')</summary>'+hechos.map(row).join('')+'</details>':'');
     box.querySelectorAll('.vc-load').forEach(b=>b.onclick=()=>pickClient(orders.find(o=>o.id===b.dataset.id)));
     box.querySelectorAll('.vc-del').forEach(b=>b.onclick=async()=>{if(!confirm('¿Borrar este pedido?'))return;try{await window.zipperSellerOrders.remove(b.dataset.id);loadOrders()}catch(e){alert('No se pudo borrar: '+(e.message||e))}});
-    const btn=$('vcTabBtn');if(btn)btn.textContent='📒 Catálogo'+(nuevos.length?' ('+nuevos.length+')':'');
+    const badge=$('vcTabBadge');if(badge){badge.textContent=String(nuevos.length);badge.classList.toggle('hide',!nuevos.length)}
   }
   function pickClient(o){
     if(!o)return;const list=window.zipperSellerOrders.clients(),tel=digits(o.tel),who=nrm(o.who);
@@ -58,17 +67,18 @@
   function show(on){
     ['routeTab','saleTab','clientsTab'].forEach(id=>{if(on)$(id)?.classList.add('hide')});
     $('catalogTab')?.classList.toggle('hide',!on);
-    if(on){document.querySelectorAll('#sellerNav [data-tab]').forEach(b=>b.classList.remove('active'));$('vcTabBtn')?.classList.add('active');render();window.scrollTo({top:0})}
+    if(on){document.querySelectorAll('#sellerNav [data-tab]').forEach(b=>b.classList.remove('active'));$('vcTabBtn')?.classList.add('active');if($('pageTitle'))$('pageTitle').textContent='Catálogo';render();window.scrollTo({top:0})}
     else $('vcTabBtn')?.classList.remove('active');
   }
   function mount(){
     const css=document.createElement('style');css.textContent='.vc-order{border:1px solid #e2e8f0;border-radius:12px;padding:10px;margin:8px 0;background:#fff}.vc-order.done{opacity:.7}.vc-head{display:flex;justify-content:space-between;gap:8px}.vc-order ul{margin:6px 0 6px 18px;font-size:14px}.vc-order small{color:#64748b;display:block}.vc-modal{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9999;display:flex;align-items:flex-end;justify-content:center}.vc-panel{background:#fff;width:100%;max-width:560px;max-height:85vh;overflow:auto;border-radius:18px 18px 0 0;padding:16px}.vc-q{width:100%;margin:8px 0}.vc-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}.vc-item{display:flex;flex-direction:column;align-items:flex-start;text-align:left;padding:10px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;color:#0f172a}.vc-item span{font-size:12.5px;color:#64748b;font-weight:400}.vc-item.on{border-color:#16a34a;background:#f0fdf4}';document.head.appendChild(css);
-    setTimeout(()=>{if(window.zipperSellerOrders?.uid?.())loadOrders()},6000);
     const nav=$('sellerNav'),app=$('sellerApp');if(!nav||!app||$('vcTabBtn'))return;
     const sec=document.createElement('section');sec.id='catalogTab';sec.className='hide';app.appendChild(sec);
-    const b=document.createElement('button');b.id='vcTabBtn';b.type='button';b.textContent='📒 Catálogo';nav.appendChild(b);
+    const b=document.createElement('button');b.id='vcTabBtn';b.type='button';b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h11a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3V4Z"/><path d="M4 17a3 3 0 0 1 3-3h11M8 8h6"/></svg><span>Catálogo <b id="vcTabBadge" class="navbadge hide">0</b></span>';nav.appendChild(b);
     b.onclick=()=>show(true);
     nav.querySelectorAll('[data-tab]').forEach(x=>x.addEventListener('click',()=>show(false)));
+    const tick=()=>{if(window.zipperSellerOrders?.uid?.())loadOrders()};setTimeout(tick,4000);setTimeout(tick,10000);setInterval(tick,120000);
+    nav.addEventListener('click',e=>{if(e.target.closest('[data-tab="route"]'))setTimeout(tick,100)});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});else mount();
 })();
