@@ -3,6 +3,9 @@
 //   cada cambio de precio u oferta en la app se publica solo (unos segundos después).
 // - Fotos: se cambian, quitan o vuelven a la original desde "Editar catálogo".
 // - Productos: puedes agregar productos de tu app al catálogo o dejar de mostrar alguno.
+// Copia de seguridad única (17-11-2026): antes de que Firebase vuelva a sincronizar, guarda lo que hay
+// en el teléfono, por si quedó algún cambio sin subir mientras la sincronización estuvo desconectada.
+(function(){try{if(localStorage.getItem('zipperCopiaArregloSync'))return;const keys=['zipperProductos','zipperClientes','zipperComprobantes','zipperPagos','zipperGastosCaja'];const data={};keys.forEach(k=>data[k]=localStorage.getItem(k));localStorage.setItem('zipperCopiaArregloSync',JSON.stringify({date:new Date().toISOString(),data}))}catch(_){try{localStorage.setItem('zipperCopiaArregloSync',JSON.stringify({date:new Date().toISOString(),error:'sin espacio'}))}catch(__){}}})();
 (function(){
   const URL_CAT='https://moralespablo8170-creator.github.io/La-app-de-gpt/catalogo.html';
   const LINKS='zipperCatalogoEnlaces';
