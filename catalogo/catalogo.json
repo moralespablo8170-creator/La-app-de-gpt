@@ -236,17 +236,17 @@
    "items": [
     {
      "key": "pipa-con-moledor",
-     "name": "Pipa con moledor",
-     "fmt": "Sachet con pipa, malla y moledor pequeño",
-     "price": 1800,
+     "name": "Pipa con malla",
+     "fmt": "Sachet con pipa y malla lateral",
+     "price": 1500,
      "per": "sachet",
      "img": "catalogo/img/pipa-con-moledor.jpg"
     },
     {
      "key": "pipa-con-malla",
-     "name": "Pipa con malla",
-     "fmt": "Sachet con pipa y malla lateral",
-     "price": 1500,
+     "name": "Pipa con moledor",
+     "fmt": "Sachet con pipa, malla y moledor pequeño",
+     "price": 1800,
      "per": "sachet",
      "img": "catalogo/img/pipa-con-malla.jpg"
     },
