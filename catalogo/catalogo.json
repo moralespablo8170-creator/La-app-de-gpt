@@ -280,17 +280,7 @@
   {
    "title": "Tabaco Bristol",
    "color": "#7c3aed",
-   "items": [
-    {
-     "key": "tabaco-bristol",
-     "name": "Tabaco Bristol",
-     "fmt": "Sabores: chocolate · cherry · caramelo · vainilla · original · mango · uva · arándano · menta · sandía · mango maracuyá · coco · Virginia · café turco",
-     "price": 4800,
-     "per": "unidad",
-     "img": "catalogo/img/tabaco-bristol.jpg",
-     "wide": true
-    }
-   ]
+   "items": []
   },
   {
    "title": "Filtros Verso",
@@ -737,8 +727,8 @@
     },
     {
      "key": "alka-2-menta-cherry-y-manzana",
-     "name": "Alka 2 · menta, cherry y manzana",
-     "fmt": "Display x 12 · tres sabores",
+     "name": "Alka 2 azul menta",
+     "fmt": "Display x 12",
      "price": 4100,
      "per": "display",
      "img": "catalogo/img/alka-2-menta-cherry-y-manzana.jpg",

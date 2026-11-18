@@ -96,5 +96,5 @@
     setTimeout(()=>load(true),7000);setInterval(()=>load(true),180000);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(mount,0),{once:true});else setTimeout(mount,0);
-  window.zipperCatalogOrders={open,load};
+  window.zipperCatalogOrders={open,load,pending};
 })();

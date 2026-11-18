@@ -16,6 +16,29 @@
   const $=id=>document.getElementById(id);
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
+  const money=v=>typeof window.money==='function'?window.money(v):'$'+Math.round(Number(v)||0).toLocaleString('es-CL');
+  const days=d=>d?d+(d===1?' día':' días'):'hoy';
+  const niceDate=d=>typeof window.historyNiceDate==='function'?window.historyNiceDate(d):d;
+  const readArr=k=>{try{const a=JSON.parse(localStorage.getItem(k)||'[]');return Array.isArray(a)?a:[]}catch(_){return []}};
+  // Lista de nombres destacados (cliente / proveedor / producto) para el detalle.
+  function rows(key,detail){
+    try{
+      if(key==='cobranza'&&window.zipperCobranza?.debtors)return window.zipperCobranza.debtors().map(x=>({name:x.client?.name||x.name,info:money(x.debt)+' · debe hace '+days(x.days)}));
+      if(key==='proveedor')return readArr('zipperPedidosProveedor').filter(o=>o.status==='pendiente').map(o=>({name:o.supplier||'Proveedor',info:'Pedido del '+niceDate(o.date)+(Array.isArray(o.lines)?' · '+o.lines.length+(o.lines.length===1?' producto':' productos'):'')}));
+      if(key==='pedidos'&&window.zipperCatalogOrders?.pending)return window.zipperCatalogOrders.pending().map(o=>({name:o.who||'Cliente sin nombre',info:money(o.total)+(o.tel?' · 📞 '+o.tel:'')}));
+      if(key==='stock'){const out=[];detail.replace(/(.+?) \((\d+)\)(?:, |$| y )/g,(_,n,q)=>{out.push({name:n.trim(),info:q==='0'?'Sin stock':'Quedan '+q});return ''});return out}
+    }catch(e){console.error('Avisos:',e)}
+    return null;
+  }
+  const NOTE={pedidos:'Cárgalo en la app el día que lo entregues.',proveedor:'Cuando llegue, márcalo y el stock se suma solo.'};
+  function detailHTML(o){
+    const list=rows(o.kind.key,o.detail);
+    if(!list||!list.length)return '<p>'+esc(o.detail)+'</p>';
+    const max=8,more=list.length-max;
+    return '<ul class="aviso-lista">'+list.slice(0,max).map(r=>'<li><b>'+esc(r.name)+'</b><small>'+esc(r.info)+'</small></li>').join('')+'</ul>'+
+      (more>0?'<p>y '+more+' más…</p>':'')+(NOTE[o.kind.key]?'<p>'+esc(NOTE[o.kind.key])+'</p>':'');
+  }
+
   function sources(){return [$('homeAlerts'),$('catOrdersAlert'),$('poHomeAlert')].filter(Boolean)}
 
   function badge(kind,title){
@@ -53,9 +76,9 @@
     if(sig===lastSig)return;lastSig=sig;
     box.innerHTML='<div class="avisos-grid">'+items.map(i=>
       '<button type="button" class="aviso-btn aviso-'+i.kind.key+(i.late?' aviso-urgente':'')+(i.kind.key===openKey?' abierto':'')+'" data-k="'+i.kind.key+'" aria-expanded="'+(i.kind.key===openKey)+'">'+
-      '<span class="aviso-ico">'+i.kind.icon+'</span><span class="aviso-txt">'+esc(i.kind.title)+'</span>'+
+      '<span class="aviso-top"><span class="aviso-ico">'+i.kind.icon+'</span><span class="aviso-txt">'+esc(i.kind.title)+'</span></span>'+
       (badge(i.kind,i.title)?'<span class="aviso-num">'+esc(badge(i.kind,i.title))+'</span>':'')+'</button>').join('')+'</div>'+
-      (open?'<div class="aviso-detalle aviso-'+open.kind.key+'"><strong>'+esc(open.title)+'</strong><p>'+esc(open.detail)+'</p><div class="aviso-acciones">'+
+      (open?'<div class="aviso-detalle aviso-'+open.kind.key+'"><strong>'+esc(open.title)+'</strong>'+detailHTML(open)+'<div class="aviso-acciones">'+
         open.buttons.map(b=>'<button type="button" class="'+(b.ghost?'ghost':'primary')+'" data-go="'+esc(b.id)+'">'+esc(b.text)+'</button>').join('')+
       '</div></div>':'');
   }
