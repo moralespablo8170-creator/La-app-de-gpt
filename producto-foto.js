@@ -13,7 +13,7 @@
 
   function resizePhoto(file){return new Promise((resolve,reject)=>{const url=URL.createObjectURL(file),img=new Image();img.onload=()=>{const S=420,c=document.createElement('canvas');c.width=S;c.height=S;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,S,S);const k=Math.min((S*.94)/img.width,(S*.94)/img.height),w=img.width*k,h=img.height*k;g.drawImage(img,(S-w)/2,(S-h)/2,w,h);URL.revokeObjectURL(url);resolve(c.toDataURL('image/jpeg',.82))};img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('No se pudo leer la imagen'))};img.src=url})}
   function pickFile(){return new Promise(res=>{const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=()=>res(i.files&&i.files[0]||null);i.click()})}
-  async function sections(){if(baseSections)return baseSections;try{const r=await fetch('catalogo/catalogo.json',{cache:'no-cache'});const j=await r.json();baseSections=j.sections.filter(s=>!s.table).map(s=>s.title)}catch(_){baseSections=[]}return baseSections}
+  async function sections(){if(baseSections)return baseSections;try{const r=await fetch('catalogo/catalogo.json',{cache:'no-cache'});const j=await r.json();baseSections=j.sections.map(s=>s.title)}catch(_){baseSections=[]}return baseSections}
   function catalogKeyOf(pub,id){id=String(id);const k=Object.entries(pub?.links||{}).find(([,v])=>String(v)===id)?.[0];if(k)return {key:k,linked:true};const x=(pub?.extra||[]).find(x=>String(x.productId)===id);return x?{key:x.key,linked:false,extra:x}:null}
 
   // Publica en el catálogo: foto y/o producto agregado.
@@ -84,6 +84,8 @@
       pendingPhoto=null;removePhoto=false;
       if(id&&needs){const st=$('productStatus');syncCatalog(id,opts).then(f=>{if(st)st.textContent=(st.textContent?st.textContent+' ':'')+(f?'📒 Catálogo actualizado'+(opts.photo?' con la foto':'')+'.':'');try{renderInventory()}catch(_){}}).catch(err=>{if(st)st.textContent=(st.textContent?st.textContent+' ':'')+'⚠ '+(err.message||err)})}
       return r};window.saveProduct.__withPhoto=true}
+    // El botón Guardar quedó enlazado a la función original al cargar la app: se enlaza a la nueva para que el producto nuevo sí llegue al catálogo.
+    const btn=$('saveProduct');if(btn&&!btn.__withPhoto){btn.onclick=()=>window.saveProduct();btn.__withPhoto=true}
     if(typeof reset==='function'&&!reset.__withPhoto){window.resetProductForm=function(){const r=reset.apply(this,arguments);try{fillForm(null)}catch(_){}return r};window.resetProductForm.__withPhoto=true}
     if(typeof edit==='function'&&!edit.__withPhoto){window.editProduct=function(id){const r=edit.apply(this,arguments);try{fillForm(id)}catch(_){}return r};window.editProduct.__withPhoto=true}
     const inv=window.renderInventory;

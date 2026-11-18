@@ -32,7 +32,7 @@
   const escH=v=>typeof esc==='function'?esc(v):String(v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const read=k=>{try{return JSON.parse(localStorage.getItem(k)||'null')}catch(_){return null}};
   const cloud=()=>localStorage.getItem('zipperStorageMode')==='cloud'&&typeof window.zipperFirebaseCloud?.publishCatalog==='function';
-  let base=null,published=null,rows=null,extra=[],photos={},photoCache={},sections=[];
+  let base=null,published=null,rows=null,extra=[],photos={},photoCache={},sections=[],names={},removedExtra=new Set();
 
   function products(){return (typeof getProducts==='function'?getProducts():[]).filter(p=>p.active!==false)}
   function label(p){return p.name+(p.color&&!n(p.name).includes(n(p.color))?' ('+p.color+')':'')}
@@ -52,7 +52,7 @@
     const saved={...(published?.links||{}),...(read(LINKS)||{})};
     const ps=products(),byId=new Map(ps.map(p=>[String(p.id),p]));
     extra=(published?.extra||[]).filter(x=>x&&x.key&&x.name);
-    photos={...(published?.photos||{})};
+    photos={...(published?.photos||{})};names={...(published?.names||{})};
     sections=base.sections.map(s=>s.title);
     const all=base.sections.flatMap(sec=>sec.items),fixed={};
     all.forEach(it=>{const l=saved[it.key];if(l==='none'||(l&&byId.has(String(l))))fixed[it.key]=l});
@@ -85,15 +85,21 @@
       if(promo)x.promo={min:Number(promo.minQty),price:Number(promo.price)};else if(r.p)x.promo=null;
       if(r.hidden){x.hidden=true;x.userHidden=true}
       else if(hideNoStock&&r.p&&Number(r.p.stock)<=0){x.hidden=true;x.autoHidden=true}
-      if(r.mode==='dual'&&r.boxUnits>1){x.mode='dual';x.box={units:r.boxUnits,price:boxPrice(r)};if(r.boxManual!=null)x.box.manual=true}
+      if((r.mode==='dual'||r.mode==='boxonly')&&r.boxUnits>1){x.mode=r.mode;x.box={units:r.boxUnits,price:boxPrice(r)};if(r.boxManual!=null)x.box.manual=true}
       else if(r.modeSet||r.mode==='single'&&r.p&&unitsOf(r.it)>1)x.mode='single';
       items[r.it.key]=x;
       if(!r.extra)links[r.it.key]=r.p?String(r.p.id):(r.none?'none':undefined);
     });
-    return {version:2,items,links,extra,photos,settings:{hideNoStock}};
+    const nm={};Object.entries(names).forEach(([k,v])=>{if(v&&rows.some(r=>r.it.key===k&&!r.extra))nm[k]=v});
+    return {version:2,items,links,extra,photos,names:nm,settings:{hideNoStock}};
   }
-  const same=(a,b)=>JSON.stringify({i:a.items,e:a.extra,p:a.photos,s:a.settings})===JSON.stringify({i:b?.items,e:b?.extra,p:b?.photos,s:b?.settings});
+  const same=(a,b)=>JSON.stringify({i:a.items,e:a.extra,p:a.photos,n:a.names||{},s:a.settings})===JSON.stringify({i:b?.items,e:b?.extra,p:b?.photos,n:b?.names||{},s:b?.settings});
   async function send(data){
+    // Si otro lugar de la app (formulario de producto) agregó productos o fotos al catálogo mientras tanto, se conservan.
+    try{const cur=await window.zipperFirebaseCloud.readPublishedCatalog();
+      (cur?.extra||[]).forEach(x=>{if(!x||!x.key||removedExtra.has(x.key)||data.extra.some(y=>y.key===x.key))return;data.extra.push(x);extra.push(x);if(cur.items?.[x.key])data.items[x.key]=cur.items[x.key];if(cur.photos?.[x.key]){data.photos[x.key]=cur.photos[x.key];photos[x.key]=cur.photos[x.key]}});
+      Object.entries(cur?.photos||{}).forEach(([k,v])=>{if(!(k in data.photos)&&!removedExtra.has(k)){data.photos[k]=v;photos[k]=v}});
+    }catch(_){}
     const full={...data,updatedAt:new Date().toISOString()};
     await window.zipperFirebaseCloud.publishCatalog(full);
     published=full;
@@ -215,13 +221,13 @@
       const price=rowPrice(r),src=photoSrc(r),custom=photos[r.it.key]&&photos[r.it.key]!=='none';
       html+='<div class="cat-row'+(r.p?'':' cat-unlinked')+(r.hidden?' cat-hidden':'')+'" data-i="'+i+'" data-q="'+escH(n(r.it.name+' '+r.sec))+'">'+
         '<div class="cat-top"><div class="cat-photo">'+(src||custom?'<img data-photo="'+escH(r.it.key)+'" src="'+escH(src)+'" alt="" draggable="false"'+(src?'':' style="visibility:hidden"')+'>':'<span>Sin foto</span>')+'</div>'+
-        '<div class="cat-main"><strong>'+escH(r.it.name)+(r.extra?' <em class="cat-new">agregado</em>':'')+'</strong><small>'+escH(r.it.fmt)+'</small><button class="cat-photo-btn" type="button">📷 Cambiar foto</button></div></div>'+
+        '<div class="cat-main"><strong>'+escH(names[r.it.key]||r.it.name)+(r.extra?' <em class="cat-new">agregado</em>':'')+'</strong><small>'+escH(r.it.fmt)+'</small><button class="cat-photo-btn" type="button">📷 Cambiar foto</button><button class="cat-name-btn" type="button">✏️ Cambiar nombre</button></div></div>'+
         (r.extra?'<div class="cat-linkline"><span>🔗 '+escH(r.p?label(r.p):'producto borrado de la app')+'</span><button class="cat-remove" type="button">Quitar del catálogo</button></div>':
          '<button class="cat-linkbtn'+(r.p?'':' warn')+'" type="button">'+(r.p?'🔗 '+escH(label(r.p))+' · stock '+Number(r.p.stock||0)+' <u>cambiar</u>':'⚠ Sin enlazar · toca para elegir tu producto')+'</button>')+
-        (r.p&&!r.extra&&r.mode!=='dual'&&!priceOk(r.it.price,Number(r.p.price))?'<small class="cat-diff">⚠ El precio de tu producto ('+fmt(Number(r.p.price))+') es muy distinto al del catálogo ('+fmt(r.it.price)+'). ¿Lo vendes por unidad? Revisa el enlace.</small>':'')+
-        (r.p&&!r.extra?'<div class="cat-mode"><select class="cat-modesel"><option value="single"'+(r.mode!=='dual'?' selected':'')+'>Se vende por '+escH(r.it.per)+' ('+escH(r.it.fmt)+')</option><option value="dual"'+(r.mode==='dual'?' selected':'')+'>Se vende por unidad y por caja</option></select>'+
-          (r.mode==='dual'?'<div class="cat-boxline">📦 Caja de <input class="cat-boxu" inputmode="numeric" value="'+r.boxUnits+'"> und a $<input class="cat-boxp" inputmode="numeric" value="'+boxPrice(r)+'">'+(r.boxManual!=null?' <small class="cat-diff">fijado a mano</small>':' <small>(calculado)</small>')+'</div>':'')+'</div>':'')+
-        '<div class="cat-bottom"><label>'+(r.mode==='dual'?'Precio unidad $':'Precio $')+'<input class="cat-price" inputmode="numeric" value="'+price+'"></label><label class="cat-vis"><input class="cat-hide" type="checkbox"'+(r.hidden?' checked':'')+'> No mostrar</label></div></div>';
+        (r.p&&!r.extra&&r.mode==='single'&&!priceOk(r.it.price,Number(r.p.price))?'<small class="cat-diff">⚠ El precio de tu producto ('+fmt(Number(r.p.price))+') es muy distinto al del catálogo ('+fmt(r.it.price)+'). ¿Lo vendes por unidad? Revisa el enlace.</small>':'')+
+        (r.p&&!r.extra?'<div class="cat-mode"><select class="cat-modesel"><option value="single"'+(r.mode==='single'||!r.mode?' selected':'')+'>Se vende por '+escH(r.it.per)+' ('+escH(r.it.fmt)+')</option><option value="dual"'+(r.mode==='dual'?' selected':'')+'>Se vende por unidad y por caja</option><option value="boxonly"'+(r.mode==='boxonly'?' selected':'')+'>Se vende solo por caja</option></select>'+
+          ((r.mode==='dual'||r.mode==='boxonly')?'<div class="cat-boxline">📦 Caja de <input class="cat-boxu" inputmode="numeric" value="'+r.boxUnits+'"> und a $<input class="cat-boxp" inputmode="numeric" value="'+boxPrice(r)+'">'+(r.boxManual!=null?' <small class="cat-diff">fijado a mano</small>':' <small>(calculado)</small>')+'</div>':'')+'</div>':'')+
+        '<div class="cat-bottom"><label>'+(r.mode==='dual'||r.mode==='boxonly'?'Precio unidad $':'Precio $')+'<input class="cat-price" inputmode="numeric" value="'+price+'"></label><label class="cat-vis"><input class="cat-hide" type="checkbox"'+(r.hidden?' checked':'')+'> No mostrar</label></div></div>';
     });
     html+='</div>';
     $('catalogAdminBody').innerHTML=html;
@@ -242,12 +248,15 @@
     box.addEventListener('click',e=>{
       const row=e.target.closest('.cat-row');if(!row)return;const r=rows[Number(row.dataset.i)];
       if(e.target.closest('.cat-photo-btn')||e.target.closest('.cat-photo'))photoMenu(r);
+      else if(e.target.closest('.cat-name-btn')){const now=names[r.it.key]||r.it.name;const v=prompt('Nombre que ven los clientes en el catálogo:',now);if(v==null)return;const t=v.trim().slice(0,80);if(!t||t===now)return;
+        if(r.extra){const x=extra.find(y=>y.key===r.it.key);if(x)x.name=t;r.it.name=t}else{if(t===r.it.name)delete names[r.it.key];else names[r.it.key]=t}
+        repaint();saveSoon('Nombre cambiado a "'+t+'". Guardando…')}
       else if(e.target.closest('.cat-linkbtn'))pickProduct(r,p=>{r.p=p;r.none=!p;r.manual=null;repaint();saveSoon(p?'Enlazado con '+label(p)+'. Guardando…':'Quedó sin enlazar. Guardando…')});
-      else if(e.target.closest('.cat-remove')){if(!confirm('¿Quitar "'+r.it.name+'" del catálogo?'))return;extra=extra.filter(x=>x.key!==r.it.key);rows=rows.filter(x=>x!==r);delete photos[r.it.key];repaint();saveSoon()}
+      else if(e.target.closest('.cat-remove')){if(!confirm('¿Quitar "'+r.it.name+'" del catálogo?'))return;removedExtra.add(r.it.key);extra=extra.filter(x=>x.key!==r.it.key);rows=rows.filter(x=>x!==r);delete photos[r.it.key];repaint();saveSoon()}
     });
     box.addEventListener('change',e=>{
       const row=e.target.closest('.cat-row');if(!row)return;const r=rows[Number(row.dataset.i)];
-      if(e.target.classList.contains('cat-modesel')){r.mode=e.target.value;r.modeSet=true;if(r.mode==='dual'&&!(r.boxUnits>1))r.boxUnits=unitsOf(r.it)||12;repaint();saveSoon(r.mode==='dual'?'Ahora se ofrece por unidad y por caja. Guardando…':'Se ofrece solo por '+r.it.per+'. Guardando…');return}
+      if(e.target.classList.contains('cat-modesel')){r.mode=e.target.value;r.modeSet=true;if(r.mode!=='single'&&!(r.boxUnits>1))r.boxUnits=unitsOf(r.it)||12;repaint();saveSoon(r.mode==='dual'?'Ahora se ofrece por unidad y por caja. Guardando…':r.mode==='boxonly'?'Ahora se ofrece solo por caja. Guardando…':'Se ofrece solo por '+r.it.per+'. Guardando…');return}
       if(e.target.classList.contains('cat-boxu')){const u=Math.round(Number(String(e.target.value).replace(/\D/g,'')));if(!(u>1)){e.target.value=r.boxUnits;return}r.boxUnits=u;repaint();saveSoon('Caja de '+u+' unidades. Guardando…');return}
       if(e.target.classList.contains('cat-boxp')){const v=Math.round(Number(String(e.target.value).replace(/\D/g,'')));if(!(v>0)){e.target.value=boxPrice(r);return}const calc=(()=>{const keep=r.boxManual;r.boxManual=null;const c=boxPrice(r);r.boxManual=keep;return c})();r.boxManual=v===calc?null:v;repaint();saveSoon('Precio de la caja: '+fmt(v)+'. Guardando…');return}
       if(e.target.classList.contains('cat-price')){
