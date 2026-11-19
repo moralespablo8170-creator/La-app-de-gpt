@@ -30,7 +30,7 @@ button{font:inherit;border:0;background:none;color:inherit;cursor:pointer}
 .chips{display:flex;gap:6px;overflow-x:auto;margin-top:8px;padding-bottom:2px;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
 .chips button{white-space:nowrap;font-size:12.5px;font-weight:600;background:#fff;border:1px solid var(--line);padding:6px 11px;border-radius:30px}
-.chips button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.sec.ofertas h2{color:#dc2626}.chips button[data-s="Of"]{background:#dc2626;color:#fff;border-color:#dc2626}.chips button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 main{padding:4px 12px;max-width:1100px;margin:0 auto}
 .sec{margin-top:18px}
 .sec h2{font-family:Poppins;font-size:16px;text-transform:uppercase;letter-spacing:.02em;display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:2px solid var(--ink);margin-bottom:10px}
@@ -172,8 +172,11 @@ function card(it,c){const flv=it.wide&&it.fmt.includes(':')?it.fmt.split(': ')[1
     '<div class="opt box"><div class="optl">📦 Caja x '+bx.units+'</div>'+(NOPRICE?'':'<div class="pr boxpr"><b>'+money(bx.price)+'</b><span>la caja</span></div>'+(each<it.price?'<span class="unit">sale a '+money(each)+' c/u</span>':''))+stepHTML(it.key+'|caja')+'</div></div></article>'}
   const body=flv?'<div class="flv">'+flv.map(f=>'<div><span>'+esc(f)+'</span>'+stepHTML(it.key+'::'+f)+'</div>').join('')+'</div>':stepHTML(it.key);
   return '<article class="card'+(flv?' wide':'')+'" style="--c:'+c+'" data-card="'+esc(it.key)+'">'+(it.new?'<span class="new">NUEVO</span>':'')+'<div class="ph">'+(it.img?'<img src="'+esc(it.img)+'" alt="'+esc(it.name)+'">':'<span class="noph">'+esc(it.name)+'</span>')+'</div><div class="info"><h3>'+esc(it.name)+'</h3><p class="fmt">'+esc(flv?'Elige sabores y cantidad':it.fmt)+'</p>'+(NOPRICE?'':'<div class="pr"><b>'+money(it.price)+'</b><span>por '+esc(it.per)+'</span></div>'+unit+promo)+body+'</div></article>'}
+// ⭐ Ofertas: productos con precio por cantidad o caja con descuento, juntos al principio del catálogo.
+function offers(){if(PRINT||NOPRICE)return [];const seen=new Set(),l=[];data.sections.forEach(s=>s.items.forEach(it=>{if(it.hidden||seen.has(it.key))return;const box=it.box&&Math.round(it.box.price/it.box.units)<it.price;if(it.promo||box){seen.add(it.key);l.push(it)}}));return l}
 function render(){
   const q=norm(filter.trim());const out=[];
+  const of=q?[]:offers();if(of.length)out.push('<section class="sec ofertas" id="sOf" style="--c:#dc2626"><h2>⭐ Ofertas<span>'+of.length+' producto'+(of.length>1?'s':'')+'</span></h2><div class="grid">'+of.map(it=>card(it,'#dc2626')).join('')+'</div></section>');
   data.sections.forEach((s,i)=>{const list=s.items.filter(it=>!it.hidden&&(!q||norm(it.name+' '+it.fmt+' '+s.title).includes(q)));if(!list.length)return;
     if(s.table){out.push('<section class="sec" id="s'+i+'" style="--c:'+s.color+'"><h2>'+esc(s.title)+'<span>'+list.length+' productos</span></h2><table>'+list.map(it=>(it.boxOnly?'':'<tr'+(it.box?' class="con-caja"':'')+' data-card="'+esc(it.key)+'"><td>'+esc(it.name)+'<small>'+esc(it.box?'por unidad':it.fmt)+'</small></td>'+(NOPRICE?'':'<td class="p">'+money(it.price)+'</td>')+(PRINT?'':'<td>'+stepHTML(it.key)+'</td>')+'</tr>')+(it.box?'<tr data-card="'+esc(it.key)+'"><td>'+esc(it.name)+'<small>📦 caja de '+it.box.units+(NOPRICE?'':' · oferta: unidad a '+money(Math.round(it.box.price/it.box.units)))+'</small></td>'+(NOPRICE?'':'<td class="p">'+money(it.box.price)+'</td>')+(PRINT?'':'<td>'+stepHTML(it.key+'|caja')+'</td>')+'</tr>':'')).join('')+'</table></section>');return}
     out.push('<section class="sec" id="s'+i+'" style="--c:'+s.color+'"><h2>'+esc(s.title)+'<span>'+list.length+' producto'+(list.length>1?'s':'')+'</span></h2><div class="grid">'+list.map(it=>card(it,s.color)).join('')+'</div></section>')});
@@ -208,7 +211,7 @@ $('send').onclick=async()=>{const l=lineList();if(!l.length)return;const who=$('
   await saveOrder(order);
   b.disabled=false;b.textContent='Enviar pedido por WhatsApp';
   location.href='https://wa.me/'+data.whatsapp+'?text='+encodeURIComponent(txt.join('\n'))};
-function chips(){$('chips').innerHTML=data.sections.map((s,i)=>'<button data-s="'+i+'">'+esc(s.title)+'</button>').join('');$('chips').onclick=e=>{const b=e.target.closest('[data-s]');if(!b)return;filter='';$('q').value='';render();document.getElementById('s'+b.dataset.s)?.scrollIntoView({behavior:'smooth'})}}
+function chips(){$('chips').innerHTML=(offers().length?'<button data-s="Of">⭐ Ofertas</button>':'')+data.sections.map((s,i)=>'<button data-s="'+i+'">'+esc(s.title)+'</button>').join('');$('chips').onclick=e=>{const b=e.target.closest('[data-s]');if(!b)return;filter='';$('q').value='';render();document.getElementById('s'+b.dataset.s)?.scrollIntoView({behavior:'smooth'})}}
 // Precios publicados desde la app del dueño (si existen) reemplazan los del archivo base.
 function photoURL(k){return FIRESTORE.replace('/publico/catalogo?','/publico/foto-'+String(k).toLowerCase().replace(/[^a-z0-9-]/g,'-').slice(0,80)+'?')}
 async function customPhotos(){const list=[];data.sections.forEach(s=>s.items.forEach(it=>{if(it.custom&&!it.hidden)list.push(it)}));
