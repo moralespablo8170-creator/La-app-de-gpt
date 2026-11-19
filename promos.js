@@ -45,21 +45,21 @@
     bg(c,W,H);await header(c,W,70,150);
     if(isOffer(it)){c.save();c.translate(W-90,140);c.rotate(.12);c.fillStyle='#dc2626';rr(c,-230,-60,260,110,24);c.fill();c.fillStyle='#fff';c.font='900 56px Poppins, system-ui, sans-serif';c.textAlign='center';c.fillText('OFERTA',-100,14);c.restore()}
     // Tarjeta blanca con la foto
-    c.fillStyle='#fff';rr(c,60,300,W-120,980,48);c.fill();
-    const img=await loadImg(it.img);if(img)fit(c,img,110,340,W-220,700);else{c.fillStyle='#94a3b8';c.font='700 60px Poppins, system-ui';c.textAlign='center';c.fillText('📦',W/2,700)}
-    c.fillStyle='#0f172a';c.font='800 74px Poppins, system-ui, sans-serif';const used=wrap(c,it.name,W/2,1110,W-200,84,2,'center');
-    c.fillStyle='#64748b';c.font='500 44px Inter, system-ui, sans-serif';if(it.fmt&&used<160)wrap(c,it.fmt,W/2,1110+used+10,W-200,52,1,'center');
+    c.fillStyle='#fff';rr(c,60,300,W-120,1060,48);c.fill();
+    const img=await loadImg(it.img);if(img)fit(c,img,110,350,W-220,760);else{c.fillStyle='#94a3b8';c.font='700 60px Poppins, system-ui';c.textAlign='center';c.fillText('📦',W/2,700)}
+    c.fillStyle='#0f172a';c.font='800 74px Poppins, system-ui, sans-serif';const used=wrap(c,it.name,W/2,1190,W-200,84,2,'center');
+    c.fillStyle='#64748b';c.font='500 44px Inter, system-ui, sans-serif';if(it.fmt&&used<160)wrap(c,it.fmt,W/2,1190+used+10,W-200,52,1,'center');
     // Precio
-    c.fillStyle='#fff';c.textAlign='center';c.font='900 170px Poppins, system-ui, sans-serif';c.fillText(money(it.price),W/2,1480);
-    c.font='600 50px Inter, system-ui, sans-serif';c.fillStyle='#cbd5e1';c.fillText(it.box?'por unidad':'por '+(it.per||'unidad'),W/2,1550);
-    const off=offerLine(it,money);if(off){c.font='800 50px Poppins, system-ui, sans-serif';const w=Math.min(W-120,c.measureText(off).width+80);c.fillStyle='#dc2626';rr(c,(W-w)/2,1590,w,96,48);c.fill();c.fillStyle='#fff';wrap(c,off,W/2,1655,w-60,56,1,'center')}
-    footer(c,W,H,150);return cv}
+    c.fillStyle='#fff';c.textAlign='center';c.font='900 170px Poppins, system-ui, sans-serif';c.fillText(money(it.price),W/2,1590);
+    c.font='600 50px Inter, system-ui, sans-serif';c.fillStyle='#cbd5e1';c.fillText(it.box?'por unidad':'por '+(it.per||'unidad'),W/2,1660);
+    const off=isOffer(it)||it.box?offerLine(it,money):'';if(off){c.font='800 50px Poppins, system-ui, sans-serif';const w=Math.min(W-120,c.measureText(off).width+80);c.fillStyle='#dc2626';rr(c,(W-w)/2,1710,w,96,48);c.fill();c.fillStyle='#fff';wrap(c,off,W/2,1775,w-60,56,1,'center')}
+    return cv}
 
   async function collage(list){
     const W=1080,H=1350,cv=document.createElement('canvas');cv.width=W;cv.height=H;const c=cv.getContext('2d'),money=api.money;
     bg(c,W,H);await header(c,W,40,110);
-    c.fillStyle='#facc15';c.font='900 64px Poppins, system-ui, sans-serif';c.textAlign='right';c.fillText('⭐ OFERTAS',W-60,120);
-    const n=list.length,cols=n<=2?n:n<=4?2:3,rows=Math.ceil(n/cols),top=180,bottom=150,gap=24;
+    const allOff=list.every(isOffer);if(allOff){c.fillStyle='#facc15';c.font='900 64px Poppins, system-ui, sans-serif';c.textAlign='right';c.fillText('⭐ OFERTAS',W-60,120)}
+    const n=list.length,cols=n<=2?n:n<=4?2:3,rows=Math.ceil(n/cols),top=180,bottom=30,gap=24;
     const cw=(W-120-(cols-1)*gap)/cols,ch=(H-top-bottom-30-(rows-1)*gap)/rows;
     for(let i=0;i<n;i++){const it=list[i],x=60+(i%cols)*(cw+gap),y=top+Math.floor(i/cols)*(ch+gap);
       c.fillStyle='#fff';rr(c,x,y,cw,ch,28);c.fill();
@@ -69,8 +69,9 @@
       fit(c,await loadImg(it.img),x+16,y+14,cw-32,nameFirst-fs-14-(y+14));
       c.fillStyle='#0f172a';wrap(c,it.name,x+cw/2,nameFirst,cw-30,lh,2,'center');
       c.fillStyle='#dc2626';c.font='900 '+(fs+18)+'px Poppins, system-ui, sans-serif';c.textAlign='center';c.fillText(money(it.price),x+cw/2,priceY);
+      if(!allOff&&isOffer(it)){c.fillStyle='#dc2626';rr(c,x+12,y+12,150,46,14);c.fill();c.fillStyle='#fff';c.font='900 26px Poppins, system-ui, sans-serif';c.textAlign='center';c.fillText('OFERTA',x+87,y+45)}
       if(off){c.fillStyle='#334155';c.font='700 '+(fs-10)+'px Inter, system-ui, sans-serif';wrap(c,off,x+cw/2,offY,cw-24,fs-6,1,'center')}}
-    footer(c,W,H,110);return cv}
+    return cv}
 
   // ---------- Pantalla ----------
   function css(){const s=document.createElement('style');s.textContent=
@@ -107,7 +108,7 @@
       const blob=await new Promise(r=>canvases[i].toBlob(r,'image/jpeg',.92));const url=URL.createObjectURL(blob);const file=new File([blob],'zipper-'+names[i]+'.jpg',{type:'image/jpeg'});
       const card=document.createElement('div');card.className='pm-card';card.innerHTML='<img src="'+url+'" alt=""><div class="pm-act"><button type="button" data-share>📲 Compartir</button><button type="button" class="sec" data-dl>⬇ Descargar</button></div>';
       card.querySelector('[data-dl]').onclick=()=>{const a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove()};
-      card.querySelector('[data-share]').onclick=async()=>{try{if(navigator.canShare&&navigator.canShare({files:[file]}))await navigator.share({files:[file],text});else{card.querySelector('[data-dl]').click();alert('Tu teléfono no permite compartir directo: la imagen se descargó. Súbela desde la galería a tu estado.')}}catch(_){}}
+      card.querySelector('[data-share]').onclick=async()=>{try{if(navigator.canShare&&navigator.canShare({files:[file]}))await navigator.share({files:[file]});else{card.querySelector('[data-dl]').click();alert('Tu teléfono no permite compartir directo: la imagen se descargó. Súbela desde la galería a tu estado.')}}catch(_){}}
       out.appendChild(card)}
     const tip=document.createElement('p');tip.style.cssText='color:#fff;text-align:center;max-width:520px;margin:0 auto';tip.textContent='Toca "Compartir" y elige WhatsApp → Mi estado, o Instagram. Si la descargas, queda en tu galería.';out.appendChild(tip)}
   async function build(kind){

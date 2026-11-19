@@ -236,7 +236,7 @@ Promise.all([fetch('catalogo/catalogo.json',{cache:'no-cache'}).then(r=>r.json()
   for(const k of Object.keys(cart)){const it=items.get(baseOf(k));if(!it||it.hidden||(k.endsWith('|caja')&&!it.box)||(!k.endsWith('|caja')&&it.boxOnly))delete cart[k]}
   data.sections.forEach(s=>s.items=s.items.filter(it=>it.price>0||it.hidden));
   chips();render();save();const photosReady=customPhotos();
-  if(MODE==='promos'){const sc=document.createElement('script');sc.src='promos.js?v=20261119-2';sc.onload=()=>window.zipperPromos.start({data,money,photosReady});document.head.appendChild(sc)}
+  if(MODE==='promos'){const sc=document.createElement('script');sc.src='promos.js?v=20261119-3';sc.onload=()=>window.zipperPromos.start({data,money,photosReady});document.head.appendChild(sc)}
 }).catch(()=>{$('list').innerHTML='<p class="empty">No se pudo cargar el catálogo. Revisa tu conexión o escríbenos por WhatsApp.</p>'});
 })();
 </script>
