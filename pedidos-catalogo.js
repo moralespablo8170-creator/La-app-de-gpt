@@ -19,7 +19,10 @@
     finally{loading=false;renderAlert();if(!$('catOrders')?.classList.contains('hidden'))renderList()}
   }
   const mine=()=>orders.filter(o=>!o.seller&&!o.sellerPhone);
-  const pending=()=>mine().filter(o=>o.status==='nuevo');
+  // Si el mismo teléfono/celular del cliente envió el pedido varias veces seguidas (volvió atrás, corrigió y reenvió),
+  // solo cuenta el último: los anteriores quedan como "reemplazado" y no aparecen como pedidos nuevos.
+  const replacedBy=o=>{if(!o.device)return null;const t=Date.parse(o.createdAt)||0;return mine().find(x=>x!==o&&x.device===o.device&&(Date.parse(x.createdAt)||0)>t&&(Date.parse(x.createdAt)||0)-t<3*3600e3)||null};
+  const pending=()=>mine().filter(o=>o.status==='nuevo'&&!replacedBy(o));
 
   function renderAlert(){
     const home=$('homeAlerts');if(!home)return;
@@ -30,7 +33,7 @@
   }
   function orderHTML(o,canLoad){
     return '<article class="cat-order'+(o.status!=='nuevo'?' done':'')+'"><div class="cat-order-head"><strong>'+e(o.who||'Cliente sin nombre')+'</strong><span>'+m(o.total)+'</span></div>'+
-      '<small>'+e(when(o.createdAt))+' · Pedido web #'+e(o.code||'')+(o.tel?' · 📞 '+e(o.tel):'')+(o.seller?' · para '+e(o.sellerName||'vendedor'):'')+(o.status==='cargado'?' · ✅ cargado '+e(when(o.loadedAt)):'')+'</small>'+
+      '<small>'+(o.status==='nuevo'&&replacedBy(o)?'<b style="color:#b45309">↻ Reemplazado por el pedido #'+e(replacedBy(o).code||'')+' del mismo cliente</b><br>':'')+(!o.who&&!o.tel?'<b style="color:#dc2626">⚠ Llegó sin nombre ni teléfono: búscalo en tu WhatsApp por el código #'+e(o.code||'')+'</b><br>':'')+e(when(o.createdAt))+' · Pedido web #'+e(o.code||'')+(o.tel?' · 📞 '+e(o.tel):'')+(o.seller?' · para '+e(o.sellerName||'vendedor'):'')+(o.status==='cargado'?' · ✅ cargado '+e(when(o.loadedAt)):'')+'</small>'+
       '<ul>'+(o.lines||[]).map(l=>'<li>'+e(l.q)+' × '+e(l.name)+(l.flavor?' · '+e(l.flavor):'')+(l.box?' <b>(caja de '+e(l.units)+')</b>':'')+' — '+m(l.sub)+'</li>').join('')+'</ul>'+
       (o.msg?'<p class="muted">💬 '+e(o.msg)+'</p>':'')+
       '<div class="actions-small">'+(canLoad?'<button class="primary cat-order-load" data-id="'+e(o.id)+'" type="button">🛒 '+(o.status==='nuevo'?'Cargar en venta':'Cargar otra vez')+'</button>':'')+'<button class="danger cat-order-del" data-id="'+e(o.id)+'" type="button">🗑 Borrar</button></div></article>';
@@ -96,5 +99,5 @@
     setTimeout(()=>load(true),7000);setInterval(()=>load(true),180000);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(mount,0),{once:true});else setTimeout(mount,0);
-  window.zipperCatalogOrders={open,load,pending};
+  window.zipperCatalogOrders={open,load,pending,when};
 })();

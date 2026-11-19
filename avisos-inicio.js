@@ -25,7 +25,7 @@
     try{
       if(key==='cobranza'&&window.zipperCobranza?.debtors)return window.zipperCobranza.debtors().map(x=>({name:x.client?.name||x.name,info:money(x.debt)+' · debe hace '+days(x.days)}));
       if(key==='proveedor')return readArr('zipperPedidosProveedor').filter(o=>o.status==='pendiente').map(o=>({name:o.supplier||'Proveedor',info:'Pedido del '+niceDate(o.date)+(Array.isArray(o.lines)?' · '+o.lines.length+(o.lines.length===1?' producto':' productos'):'')}));
-      if(key==='pedidos'&&window.zipperCatalogOrders?.pending)return window.zipperCatalogOrders.pending().map(o=>({name:o.who||'Cliente sin nombre',info:money(o.total)+(o.tel?' · 📞 '+o.tel:'')}));
+      if(key==='pedidos'&&window.zipperCatalogOrders?.pending)return window.zipperCatalogOrders.pending().map(o=>({name:o.who||'Cliente sin nombre',info:money(o.total)+(o.tel?' · 📞 '+o.tel:'')+' · '+(window.zipperCatalogOrders.when?window.zipperCatalogOrders.when(o.createdAt)+' · ':'')+'#'+(o.code||'')}));
       if(key==='stock'){const out=[];detail.replace(/(.+?) \((\d+)\)(?:, |$| y )/g,(_,n,q)=>{out.push({name:n.trim(),info:q==='0'?'Sin stock':'Quedan '+q});return ''});return out}
     }catch(e){console.error('Avisos:',e)}
     return null;
