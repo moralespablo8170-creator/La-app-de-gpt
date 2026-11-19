@@ -44,6 +44,11 @@ const col=name=>db.collection('orgs').doc(ORG).collection(name);
     rowsA.forEach(r=>{const i=(x.items||{})[r.key]||{};const pid=(x.links||{})[r.key]||extraLink(r.key);if(i.hidden&&!/tapsin/i.test(r.name))return;
       console.log((r.sec+' | '+r.name).slice(0,60).padEnd(60)+' → '+(pid&&pid!=='none'?(pn[pid]||'¿producto borrado? '+pid):'(sin enlace)')+' · $'+(Number(i.price)||0)+(i.mode&&i.mode!=='single'?' · '+i.mode:'')+(i.hidden?' · OCULTO':'')+(x.photos&&x.photos[r.key]?' · foto propia':''))});
   }catch(e){console.log('Revisión de catálogo falló:',e.message)}
+  // Últimos pedidos del catálogo (sin datos del cliente: solo si trae nombre/teléfono, de qué enlace vino, total y hora).
+  try{const ps=await db.collection('pedidosCatalogo').orderBy('createdAt','desc').limit(12).get();console.log('\n===== Últimos pedidos del catálogo =====');
+    ps.docs.forEach(d=>{const v=d.data();let o={};try{o=JSON.parse(v.data||'{}')}catch(_){}
+      console.log(new Date(v.createdAt||o.createdAt).toLocaleString('es-CL',{timeZone:'America/Santiago'})+' · #'+(o.code||'?')+' · estado '+(v.status||'?')+' · nombre '+(o.who?'SÍ':'NO')+' · tel '+(o.tel?'SÍ':'NO')+' · enlace '+(o.sellerName?'vendedor '+o.sellerName:(o.sellerPhone?'vendedor (sin nombre)':'tuyo'))+' · $'+(o.total||0)+' · '+((o.lines||[]).length)+' productos')})
+  }catch(e){console.log('Últimos pedidos: no se pudo leer',e.message)}
   line('Pedidos del catálogo (pedidosCatalogo)',(await db.collection('pedidosCatalogo').count().get()).data().count);
   line('Pedidos a proveedor en la nube',(await col('supplierOrders').count().get()).data().count);
   line('Costos privados (productCosts)',(await col('productCosts').get()).size);
