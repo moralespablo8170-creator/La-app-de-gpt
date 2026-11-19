@@ -919,8 +919,10 @@ async function connectUi() {
     try {await useExistingCloudData();if(status)status.textContent='Modo nube activado. Los datos de Firebase se cargarán en esta app.';cloudLabel();}
     catch(error){if(status)status.textContent=error.message||'No se pudo activar el modo nube.'}
   });
-  document.getElementById('cloudLogout')?.addEventListener('click',async()=>{
-    stopSync();localStorage.setItem('zipperStorageMode','local');await signOut(auth);activeProfile=null;announceProfile(null);cloudLabel();close();
+  document.getElementById('cloudLogout')?.addEventListener('click',()=>{
+    const run=async()=>{    stopSync();localStorage.setItem('zipperStorageMode','local');await signOut(auth);activeProfile=null;announceProfile(null);cloudLabel();close();};
+    const msg='¿Estás seguro que quieres desconectar la nube? La app deja de sincronizar con Firebase hasta que vuelvas a conectar tu cuenta.';
+    if(typeof window.confirmDelete==='function')window.confirmDelete('Desconectar nube',msg,run);else if(window.confirm(msg))run();
   });
   cloudLabel();
   window.addEventListener('online',async()=>{

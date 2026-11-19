@@ -158,6 +158,7 @@
           input.onchange=async()=>{const f=input.files&&input.files[0];if(!f)return;st.textContent='Guardando foto…';try{const data=await resizePhoto(f);await window.zipperFirebaseCloud.publishCatalogPhoto(r.it.key,data);photoCache[r.it.key]=data;photos[r.it.key]=Date.now();await send(payload());close();repaint();toast('✅ Foto guardada. Los clientes ya la ven.')}catch(err){st.textContent='No se pudo guardar: '+(err.message||err)}};
           input.click();return;
         }
+        if(!confirm(a==='none'?'¿Estás seguro que quieres quitar la foto de "'+(names[r.it.key]||r.it.name)+'"? Los clientes lo verán sin foto.':'¿Volver a la foto original? Se borra la foto que subiste.'))return;
         st.textContent='Guardando…';
         if(hasCustom){try{await window.zipperFirebaseCloud.deleteCatalogPhoto(r.it.key)}catch(_){}}
         delete photoCache[r.it.key];

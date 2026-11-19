@@ -125,7 +125,7 @@ async function startSession(){
  catch(e){status('No se pudo guardar la jornada: '+(isPerm(e)?'permiso denegado (faltan reglas nuevas).':e.message),'error')}
 }
 async function closeSession(){
- const left=toDeliver().length;if(left&&!confirm('Quedan '+left+' pedidos sin entregar. ¿Cerrar la jornada igual?'))return;
+ const left=toDeliver().length;if(!confirm(left?'Quedan '+left+' pedidos sin entregar. ¿Estás seguro que quieres cerrar la jornada igual?':'¿Estás seguro que quieres cerrar la jornada?'))return;
  const now=new Date().toISOString();
  try{await sendGps(true);stopGps();const p=saveSession({status:'closed',closedAt:serverTimestamp(),closedAtLocal:now});status('Jornada cerrada. Efectivo a rendir: '+$('cashTotal').textContent,'ok');await p}
  catch(e){status('No se pudo cerrar la jornada: '+e.message,'error')}

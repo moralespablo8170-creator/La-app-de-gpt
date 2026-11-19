@@ -101,7 +101,7 @@
       $('clientPos'+week)?.addEventListener('input',()=>previewWeek(week));
     });
     $('clientName')?.addEventListener('input',renderClientRoutePreview);
-    document.querySelectorAll('.rw-clear').forEach(b=>b.addEventListener('click',()=>{const w=b.dataset.week;$('clientDay'+w).value='';$('clientPos'+w).value='';previewWeek(w)}));
+    document.querySelectorAll('.rw-clear').forEach(b=>b.addEventListener('click',()=>{const w=b.dataset.week;const run=()=>{$('clientDay'+w).value='';$('clientPos'+w).value='';previewWeek(w)};const msg='¿Estás seguro que quieres quitar la visita de la Semana '+w+' a este cliente? (Se aplica al guardar el cliente)';if(typeof confirmDelete==='function')confirmDelete('Quitar visita',msg,run);else if(confirm(msg))run()}));
     $('newClient')?.addEventListener('click',()=>setTimeout(()=>fillClientRouteEditor(null),0));
     renderClientRoutePreview();
   }
