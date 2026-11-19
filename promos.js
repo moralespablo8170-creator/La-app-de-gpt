@@ -38,7 +38,7 @@
   function footer(c,W,H,h){
     c.fillStyle='#facc15';rr(c,60,H-h-60,W-120,h,36);c.fill();
     c.fillStyle='#0b1630';c.textAlign='center';c.font='800 '+Math.round(h*.3)+'px Poppins, system-ui, sans-serif';c.fillText('📲 Pide por WhatsApp',W/2,H-60-h*.55);
-    c.font='600 '+Math.round(h*.2)+'px Inter, system-ui, sans-serif';c.fillText('Pídeme el enlace del catálogo y marca lo que necesitas',W/2,H-60-h*.2)}
+    c.font='600 '+Math.round(h*.2)+'px Inter, system-ui, sans-serif';c.fillText('Responde este estado y te envío el catálogo',W/2,H-60-h*.2)}
 
   async function story(it){
     const W=1080,H=1920,cv=document.createElement('canvas');cv.width=W;cv.height=H;const c=cv.getContext('2d'),money=api.money;
@@ -101,7 +101,8 @@
   async function showResults(canvases,names){
     const out=document.createElement('div');out.className='pm-out';out.innerHTML='<button class="pm-close" type="button">✕ Cerrar y volver</button>';document.body.appendChild(out);
     out.querySelector('.pm-close').onclick=()=>out.remove();
-    const text='🛒 Distribuidora Zipper · ¡Ofertas! Haz tu pedido aquí: '+CAT_URL;
+    // Sin enlace largo: en un estado no se puede poner botón y el enlace confunde. El cliente responde el estado y se le manda el catálogo.
+    const text='🛒 ¡Ofertas Distribuidora Zipper! Respóndeme este estado y te envío el catálogo para hacer tu pedido.';
     for(let i=0;i<canvases.length;i++){
       const blob=await new Promise(r=>canvases[i].toBlob(r,'image/jpeg',.92));const url=URL.createObjectURL(blob);const file=new File([blob],'zipper-'+names[i]+'.jpg',{type:'image/jpeg'});
       const card=document.createElement('div');card.className='pm-card';card.innerHTML='<img src="'+url+'" alt=""><div class="pm-act"><button type="button" data-share>📲 Compartir</button><button type="button" class="sec" data-dl>⬇ Descargar</button></div>';
