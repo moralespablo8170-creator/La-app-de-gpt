@@ -35,6 +35,15 @@ const col=name=>db.collection('orgs').doc(ORG).collection(name);
   line('  · con unidad de compra caja/display (buyUnit)',products.docs.filter(d=>{const u=d.data().buyUnit;return u&&u!=='unidad'}).length);
   line('  · actualizados en las últimas 24 h (updatedAt)',products.docs.filter(d=>{const t=Date.parse(d.data().updatedAt||'');return t&&Date.now()-t<864e5}).length);
   try{const pub=await db.collection('publico').doc('catalogo').get();const x=pub.exists?JSON.parse(pub.data().data||'{}'):{};const it=Object.values(x.items||{});line('Catálogo publicado: productos',it.length);line('  · por unidad y caja',it.filter(i=>i.mode==='dual').length);line('  · enlazados',Object.values(x.links||{}).filter(v=>v&&v!=='none').length);line('  · publicado',pub.exists?String(pub.data().updatedAt||'').slice(0,16):'no');/* El catálogo publicado ya es público (se ve en la página del catálogo): se pueden listar sus productos agregados. */(x.extra||[]).forEach(e=>{const i=(x.items||{})[e.key]||{};line('  · agregado: '+String(e.name).slice(0,40),(e.section||'sin sección')+' · $'+(Number(i.price)||0)+(i.hidden?' · oculto':''))})}catch(e){line('Catálogo publicado','error '+e.message)}
+  // Revisión del catálogo: nombre que ve el cliente ↔ producto de la app al que está enlazado (lo que se carga al pedido).
+  try{const pub=await db.collection('publico').doc('catalogo').get();const x=pub.exists?JSON.parse(pub.data().data||'{}'):{};
+    const base=require(require('path').join(__dirname,'..','catalogo','catalogo.json'));const pn={};products.docs.forEach(d=>{const v=d.data();pn[d.id]=[v.name,v.flavor].filter(Boolean).join(' · ')});
+    const rowsA=[];base.sections.forEach(sec=>sec.items.forEach(it=>rowsA.push({key:it.key,name:(x.names||{})[it.key]||it.name,sec:sec.title})));(x.extra||[]).forEach(e=>rowsA.push({key:e.key,name:e.name,sec:e.section||'Otros',extra:true}));
+    const extraLink=k=>{const e=(x.extra||[]).find(y=>y.key===k);return e&&(e.productId||e.pid||e.id)};
+    console.log('\n===== Catálogo: nombre del cliente → producto enlazado =====');
+    rowsA.forEach(r=>{const i=(x.items||{})[r.key]||{};const pid=(x.links||{})[r.key]||extraLink(r.key);if(i.hidden&&!/tapsin/i.test(r.name))return;
+      console.log((r.sec+' | '+r.name).slice(0,60).padEnd(60)+' → '+(pid&&pid!=='none'?(pn[pid]||'¿producto borrado? '+pid):'(sin enlace)')+' · $'+(Number(i.price)||0)+(i.mode&&i.mode!=='single'?' · '+i.mode:'')+(i.hidden?' · OCULTO':'')+(x.photos&&x.photos[r.key]?' · foto propia':''))});
+  }catch(e){console.log('Revisión de catálogo falló:',e.message)}
   line('Pedidos del catálogo (pedidosCatalogo)',(await db.collection('pedidosCatalogo').count().get()).data().count);
   line('Pedidos a proveedor en la nube',(await col('supplierOrders').count().get()).data().count);
   line('Costos privados (productCosts)',(await col('productCosts').get()).size);
