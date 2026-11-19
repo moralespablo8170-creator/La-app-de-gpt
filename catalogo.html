@@ -69,7 +69,7 @@ main{padding:4px 12px;max-width:1100px;margin:0 auto}
 .flv .step button{width:32px;height:30px;font-size:18px}
 .flv .step input{width:30px;font-size:14px}
 table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:13px}
-td{padding:6px 8px;border-bottom:1px solid #eee9de}
+td{padding:8px;border-bottom:2px solid #1f2937}tr.con-caja td{border-bottom:1px dashed #cbd5e1}
 td.p{font-family:Poppins;font-weight:600;color:var(--red);white-space:nowrap;text-align:right}
 td small{color:var(--muted);display:block;font-size:11px}
 td .step{margin:0;background:none}
@@ -175,7 +175,7 @@ function card(it,c){const flv=it.wide&&it.fmt.includes(':')?it.fmt.split(': ')[1
 function render(){
   const q=norm(filter.trim());const out=[];
   data.sections.forEach((s,i)=>{const list=s.items.filter(it=>!it.hidden&&(!q||norm(it.name+' '+it.fmt+' '+s.title).includes(q)));if(!list.length)return;
-    if(s.table){out.push('<section class="sec" id="s'+i+'" style="--c:'+s.color+'"><h2>'+esc(s.title)+'<span>'+list.length+' productos</span></h2><table>'+list.map(it=>(it.boxOnly?'':'<tr data-card="'+esc(it.key)+'"><td>'+esc(it.name)+'<small>'+esc(it.box?'por unidad':it.fmt)+'</small></td>'+(NOPRICE?'':'<td class="p">'+money(it.price)+'</td>')+(PRINT?'':'<td>'+stepHTML(it.key)+'</td>')+'</tr>')+(it.box?'<tr data-card="'+esc(it.key)+'"><td>'+esc(it.name)+'<small>📦 caja de '+it.box.units+(NOPRICE?'':' · oferta: unidad a '+money(Math.round(it.box.price/it.box.units)))+'</small></td>'+(NOPRICE?'':'<td class="p">'+money(it.box.price)+'</td>')+(PRINT?'':'<td>'+stepHTML(it.key+'|caja')+'</td>')+'</tr>':'')).join('')+'</table></section>');return}
+    if(s.table){out.push('<section class="sec" id="s'+i+'" style="--c:'+s.color+'"><h2>'+esc(s.title)+'<span>'+list.length+' productos</span></h2><table>'+list.map(it=>(it.boxOnly?'':'<tr'+(it.box?' class="con-caja"':'')+' data-card="'+esc(it.key)+'"><td>'+esc(it.name)+'<small>'+esc(it.box?'por unidad':it.fmt)+'</small></td>'+(NOPRICE?'':'<td class="p">'+money(it.price)+'</td>')+(PRINT?'':'<td>'+stepHTML(it.key)+'</td>')+'</tr>')+(it.box?'<tr data-card="'+esc(it.key)+'"><td>'+esc(it.name)+'<small>📦 caja de '+it.box.units+(NOPRICE?'':' · oferta: unidad a '+money(Math.round(it.box.price/it.box.units)))+'</small></td>'+(NOPRICE?'':'<td class="p">'+money(it.box.price)+'</td>')+(PRINT?'':'<td>'+stepHTML(it.key+'|caja')+'</td>')+'</tr>':'')).join('')+'</table></section>');return}
     out.push('<section class="sec" id="s'+i+'" style="--c:'+s.color+'"><h2>'+esc(s.title)+'<span>'+list.length+' producto'+(list.length>1?'s':'')+'</span></h2><div class="grid">'+list.map(it=>card(it,s.color)).join('')+'</div></section>')});
   $('list').innerHTML=out.join('')||'<p class="empty">No encontramos “'+esc(filter)+'”. Pregúntanos por WhatsApp.</p>';
   document.querySelectorAll('[data-k]').forEach(el=>paintStep(el,el.dataset.k));
