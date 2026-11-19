@@ -480,7 +480,7 @@
     },
     {
      "key": "rocklets",
-     "name": "Rocklets",
+     "name": "Rocklets chocolate",
      "fmt": "Display x 18",
      "price": 6500,
      "per": "display",
@@ -718,7 +718,7 @@
     },
     {
      "key": "alka-ace-mentol-azul",
-     "name": "Alka Ace mentol azul",
+     "name": "Alka Ice mentol azul",
      "fmt": "Display x 100",
      "price": 2800,
      "per": "display",

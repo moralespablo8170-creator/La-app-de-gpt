@@ -70,6 +70,12 @@
       extra.filter(x=>x.section===sec.title).forEach(x=>rows.push(extraRow(x,byId)));
     });
     extra.filter(x=>!sections.includes(x.section)).forEach(x=>rows.push(extraRow(x,byId)));
+    // Mismo orden que ve el cliente: los agregados sin sección conocida van a la sección de su marca y Remedios va en orden alfabético.
+    const first=t=>n(String(t||'')).split(/[^a-z0-9]+/).filter(Boolean)[0]||'';
+    rows.forEach(r=>{if(!r.extra||sections.includes(r.sec))return;const w=first(r.it.name);if(w.length<3)return;let best=null,c=0;base.sections.forEach(sec=>{if(sec.table)return;const k=sec.items.filter(it=>first(it.name)===w).length;if(k>c){c=k;best=sec.title}});if(best)r.sec=best});
+    const order=sections.concat(['Otros productos']),tables=new Set(base.sections.filter(x=>x.table).map(x=>x.title));
+    const pos=r=>{const i=order.indexOf(r.sec);return i<0?order.length:i};
+    rows=rows.map((r,i)=>({r,i})).sort((a,b)=>pos(a.r)-pos(b.r)||(tables.has(a.r.sec)?n(names[a.r.it.key]||a.r.it.name).localeCompare(n(names[b.r.it.key]||b.r.it.name),'es',{numeric:true}):0)||a.i-b.i).map(x=>x.r);
   }
   function extraRow(x,byId){const p=byId.get(String(x.productId))||null;const pub=published?.items?.[x.key];return {it:{key:x.key,name:x.name,fmt:x.fmt||'',per:x.per||'unidad',price:p?Number(p.price):Number(pub?.price||0)},sec:x.section||'Otros productos',p,extra:true,hidden:!!pub?.userHidden,manual:pub?.manual?pub.price:null}}
   // Precio de la caja: el que pusiste a mano, o la oferta de tu producto para esa cantidad, o unidad × cantidad.
@@ -183,13 +189,13 @@
   // Al redibujar se mantiene todo como estaba: búsqueda, filtros, "Agregar" abierto y el producto que estabas editando en el mismo lugar de la pantalla.
   let lastRow=null;
   function repaint(){
-    const pn=panel(),y=pn.scrollTop,q=$('catalogAdminSearch')?.value||'',only=!!$('catalogOnlyUnlinked')?.checked,addOpen=!!document.querySelector('#catalogAdminBody .cat-add')?.open;
+    const pn=panel(),y=pn.scrollTop,cat=$('catalogAdminCat')?.value||'',q=$('catalogAdminSearch')?.value||'',only=!!$('catalogOnlyUnlinked')?.checked,addOpen=!!document.querySelector('#catalogAdminBody .cat-add')?.open;
     const anchorKey=lastRow?.it?.key,old=anchorKey&&[...document.querySelectorAll('#catalogAdminRows .cat-row')].find(x=>rows[Number(x.dataset.i)]?.it.key===anchorKey);
     const delta=old?old.getBoundingClientRect().top-pn.getBoundingClientRect().top:null;
     paint();
     if($('catalogAdminSearch'))$('catalogAdminSearch').value=q;if($('catalogOnlyUnlinked'))$('catalogOnlyUnlinked').checked=only;
     const add=document.querySelector('#catalogAdminBody .cat-add');if(add&&addOpen)add.open=true;
-    if(q||only)$('catalogAdminSearch')?.dispatchEvent(new Event('input'));
+    if($('catalogAdminCat'))$('catalogAdminCat').value=cat;if(q||only||cat)$('catalogAdminSearch')?.dispatchEvent(new Event('input'));
     const now=anchorKey&&[...document.querySelectorAll('#catalogAdminRows .cat-row')].find(x=>rows[Number(x.dataset.i)]?.it.key===anchorKey);
     if(now&&delta!=null)pn.scrollTop+=now.getBoundingClientRect().top-pn.getBoundingClientRect().top-delta;else pn.scrollTop=y;
     loadCustomPhotos()}
@@ -221,17 +227,19 @@
     const linked=rows.filter(r=>r.p).length,noStock=rows.filter(r=>r.p&&Number(r.p.stock)<=0).length;
     const free=ps.filter(p=>!linkedIds.has(String(p.id)));
     let html='<datalist id="catalogFreeNames">'+free.map(p=>'<option value="'+escH(label(p))+'">').join('')+'</datalist>'+
-      '<div class="cat-help"><b>Cómo funciona</b><br>• Los cambios se guardan solos.<br>• <b>📷 Foto:</b> toca el botón "Cambiar foto" de cada producto.<br>• <b>🔗 Enlazar</b> = decirle a la app qué producto de tu inventario es. Así el precio sale de tus productos y se actualiza solo. Los que están en amarillo no tienen enlace: toca "Enlazar" y elige el producto.<br>• Si cambias el precio aquí, también se cambia en tus productos.</div>'+
+      '<label class="search-field">🔍 Buscar producto<input id="catalogAdminSearch" type="search" placeholder="Escribe el nombre…"></label>'+
+      '<label class="search-field">📂 Categoría<select id="catalogAdminCat"><option value="">Todas las categorías</option>'+[...new Set(rows.map(r=>r.sec))].map(t=>'<option>'+escH(t)+'</option>').join('')+'</select></label>'+
+      '<details class="cat-help"><summary><b>Cómo funciona</b></summary><br>• Los cambios se guardan solos.<br>• <b>📷 Foto:</b> toca el botón "Cambiar foto" de cada producto.<br>• <b>🔗 Enlazar</b> = decirle a la app qué producto de tu inventario es. Así el precio sale de tus productos y se actualiza solo. Los que están en amarillo no tienen enlace: toca "Enlazar" y elige el producto.<br>• Si cambias el precio aquí, también se cambia en tus productos.</details>'+
       '<p class="muted">'+linked+' de '+rows.length+' productos enlazados.</p>'+
       '<details class="cat-add"><summary>➕ Agregar un producto de tu app al catálogo</summary><label>Producto<input id="catAddProduct" list="catalogFreeNames" placeholder="Busca en tu inventario…"></label><label>Sección<select id="catAddSection">'+sections.concat(['Otros productos']).map(s=>'<option>'+escH(s)+'</option>').join('')+'</select></label><label>Formato (lo que lee el cliente)<input id="catAddFmt" placeholder="Ej: Display x 24"></label><label>Precio por<select id="catAddPer">'+PERS.map(p=>'<option>'+p+'</option>').join('')+'</select></label><button id="catAddBtn" class="primary" type="button">Agregar al catálogo</button></details>'+
       '<label class="check-row"><input id="catalogHideNoStock" type="checkbox"'+(payload().settings.hideNoStock?' checked':'')+'> No mostrar a los clientes los productos sin stock'+(noStock?' ('+noStock+')':'')+'</label>'+
       '<label class="check-row"><input id="catalogOnlyUnlinked" type="checkbox"> Ver solo los que faltan por enlazar ('+(rows.length-linked)+')</label>'+
-      '<label class="search-field">🔍 Buscar<input id="catalogAdminSearch" type="search" placeholder="Producto…"></label><div id="catalogAdminRows">';
+      '<div id="catalogAdminRows">';
     let last='';
     rows.forEach((r,i)=>{
-      if(r.sec!==last){html+='<h3 class="cat-sec">'+escH(r.sec)+'</h3>';last=r.sec}
+      if(r.sec!==last){html+='<h3 class="cat-sec" data-sec="'+escH(r.sec)+'">'+escH(r.sec)+'</h3>';last=r.sec}
       const price=rowPrice(r),src=photoSrc(r),custom=photos[r.it.key]&&photos[r.it.key]!=='none';
-      html+='<div class="cat-row'+(r.p?'':' cat-unlinked')+(r.hidden?' cat-hidden':'')+'" data-i="'+i+'" data-q="'+escH(n(r.it.name+' '+r.sec))+'">'+
+      html+='<div class="cat-row'+(r.p?'':' cat-unlinked')+(r.hidden?' cat-hidden':'')+'" data-i="'+i+'" data-sec="'+escH(r.sec)+'" data-q="'+escH(n((names[r.it.key]||r.it.name)+' '+r.it.name+' '+(r.p?label(r.p):'')))+'">'+
         '<div class="cat-top"><div class="cat-photo">'+(src||custom?'<img data-photo="'+escH(r.it.key)+'" src="'+escH(src)+'" alt="" draggable="false"'+(src?'':' style="visibility:hidden"')+'>':'<span>Sin foto</span>')+'</div>'+
         '<div class="cat-main"><strong>'+escH(names[r.it.key]||r.it.name)+(r.extra?' <em class="cat-new">agregado</em>':'')+'</strong><small>'+escH(r.it.fmt)+'</small><button class="cat-photo-btn" type="button">📷 Cambiar foto</button><button class="cat-name-btn" type="button">✏️ Cambiar nombre</button></div></div>'+
         (r.extra?'<div class="cat-linkline"><span>🔗 '+escH(r.p?label(r.p):'producto borrado de la app')+'</span><button class="cat-remove" type="button">Quitar del catálogo</button></div>':
@@ -244,8 +252,12 @@
     html+='</div>';
     $('catalogAdminBody').innerHTML=html;
     const box=$('catalogAdminRows');
-    const filter=()=>{const q=n($('catalogAdminSearch').value.trim()),only=$('catalogOnlyUnlinked').checked;box.querySelectorAll('.cat-row').forEach(x=>x.style.display=(!q||x.dataset.q.includes(q))&&(!only||x.classList.contains('cat-unlinked'))?'':'none')};
-    $('catalogAdminSearch').oninput=filter;$('catalogOnlyUnlinked').onchange=filter;
+    // Al buscar se ven solo los productos que coinciden (y el título de su sección), justo debajo del buscador.
+    const filter=()=>{const q=n($('catalogAdminSearch').value.trim()),only=$('catalogOnlyUnlinked').checked,cat=$('catalogAdminCat').value,seen=new Set();
+      box.querySelectorAll('.cat-row').forEach(x=>{const ok=(!q||x.dataset.q.includes(q))&&(!only||x.classList.contains('cat-unlinked'))&&(!cat||x.dataset.sec===cat);x.style.display=ok?'':'none';if(ok)seen.add(x.dataset.sec)});
+      box.querySelectorAll('.cat-sec').forEach(h=>h.style.display=seen.has(h.dataset.sec)?'':'none');
+      let msg=box.querySelector('.cat-none');if(!seen.size){if(!msg){msg=document.createElement('p');msg.className='muted cat-none';box.appendChild(msg)}msg.textContent='No hay productos con ese nombre.'}else if(msg)msg.remove()};
+    $('catalogAdminSearch').oninput=filter;$('catalogOnlyUnlinked').onchange=filter;$('catalogAdminCat').onchange=()=>{filter();$('catalogAdminSearch').scrollIntoView({block:'start'})};
     $('catalogHideNoStock').onchange=e=>{try{localStorage.setItem('zipperCatalogoOcultarSinStock',e.target.checked?'true':'false')}catch(_){}saveSoon()};
     $('catAddProduct').onchange=e=>{const p=products().find(x=>n(label(x))===n(e.target.value)||n(x.name)===n(e.target.value));if(p&&!$('catAddFmt').value)$('catAddFmt').value=p.buyUnit&&p.buyUnit!=='unidad'&&p.buyPack>1?(p.buyUnit[0].toUpperCase()+p.buyUnit.slice(1))+' x '+p.buyPack:''};
     $('catAddBtn').onclick=()=>{
