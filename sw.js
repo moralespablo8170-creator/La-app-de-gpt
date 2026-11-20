@@ -60,23 +60,34 @@ self.addEventListener('activate', event => {
     await self.clients.claim();
   })());
 });
+// Carga rápida con señal débil: se intenta internet, pero si no responde en
+// 3 segundos se usa la copia guardada en el teléfono. La descarga sigue por
+// detrás y deja la copia al día para la próxima vez.
+const NETWORK_TIMEOUT_MS = 3000;
 self.addEventListener('fetch', event => {
   const request = event.request;
   const url = new URL(request.url);
   if (request.method !== 'GET' || url.origin !== self.location.origin || !url.href.startsWith(self.registration.scope)) return;
+  const network = (async () => {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      await cache.put(request, response.clone());
+    }
+    return response;
+  })();
+  event.waitUntil(network.catch(() => {}));
   event.respondWith((async () => {
     const cache = await caches.open(CACHE_NAME);
+    const cached = await cache.match(request);
+    if (cached) {
+      const timeout = new Promise(resolve => setTimeout(() => resolve(cached), NETWORK_TIMEOUT_MS));
+      const fresh = network.then(r => (r.ok ? r : cached), () => cached);
+      return Promise.race([fresh, timeout]);
+    }
     try {
-      const response = await fetch(request);
-      if (response.ok) {
-        await cache.put(request, response.clone());
-        return response;
-      }
-      const cached = await cache.match(request);
-      return cached || response;
+      return await network;
     } catch (error) {
-      const cached = await cache.match(request);
-      if (cached) return cached;
       if (request.mode === 'navigate') return (await cache.match('./index.html')) || Response.error();
       return Response.error();
     }
