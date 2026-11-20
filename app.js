@@ -1067,7 +1067,7 @@ async function createReceiptPdfFile(asImage){
   const lineH=r=>r.rule?4.5:r.size*1.32;
   const pageH=margin+rows.reduce((sum,r)=>sum+lineH(r),0)+margin;
   if(asImage){
-   // Ticket como imagen PNG de 384 puntos de ancho (58 mm a 203 ppp): Fun Print la recibe y la imprime mucho más rápido que un PDF.
+   // Ticket dibujado como imagen de 384 puntos de ancho (58 mm a 203 ppp).
    const scale=384/pageW, canvas=document.createElement('canvas');
    canvas.width=384;canvas.height=Math.ceil(pageH*scale);
    const ctx=canvas.getContext('2d');
@@ -1089,9 +1089,24 @@ async function createReceiptPdfFile(asImage){
     }
     yy+=lineH(row);
    }
-   const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));
+   const blob=await new Promise(r=>canvas.toBlob(r,'image/jpeg',0.95));
    if(!blob)throw new Error('No se pudo crear la imagen del ticket');
-   return new File([blob],'Zipper-ticket-'+String(sale.folio||'venta').replace(/[^a-zA-Z0-9_-]/g,'')+'.png',{type:'image/png'});
+   // Se entrega igual como PDF (Fun Print solo aparece para PDF), pero por dentro es una sola imagen: sin fuentes que dibujar, se procesa al tiro.
+   const jpg=new Uint8Array(await blob.arrayBuffer());
+   const enc=new TextEncoder(), parts=[], offs=[];let len=0;
+   const add=x=>{const b=typeof x==='string'?enc.encode(x):x;parts.push(b);len+=b.length};
+   const draw='q '+pageW.toFixed(2)+' 0 0 '+pageH.toFixed(2)+' 0 0 cm /Im0 Do Q\n';
+   add('%PDF-1.4\n');
+   const obj=(n,body)=>{offs[n]=len;add(n+' 0 obj\n');body();add('\nendobj\n')};
+   obj(1,()=>add('<< /Type /Catalog /Pages 2 0 R >>'));
+   obj(2,()=>add('<< /Type /Pages /Kids [3 0 R] /Count 1 >>'));
+   obj(3,()=>add('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+pageW.toFixed(2)+' '+pageH.toFixed(2)+'] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>'));
+   obj(4,()=>{add('<< /Type /XObject /Subtype /Image /Width '+canvas.width+' /Height '+canvas.height+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+jpg.length+' >>\nstream\n');add(jpg);add('\nendstream')});
+   obj(5,()=>add('<< /Length '+draw.length+' >>\nstream\n'+draw+'endstream'));
+   const xref=len;add('xref\n0 6\n0000000000 65535 f \n');
+   for(let i=1;i<=5;i++)add(String(offs[i]).padStart(10,'0')+' 00000 n \n');
+   add('trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF');
+   return new File(parts,'Zipper-ticket-'+String(sale.folio||'venta').replace(/[^a-zA-Z0-9_-]/g,'')+'.pdf',{type:'application/pdf'});
   }
   let y=margin, commands=['0.35 w'];
   const draw=(t,size,x)=>commands.push('BT /F2 '+size.toFixed(2)+' Tf 2 Tr 1 0 0 1 '+x.toFixed(2)+' '+(pageH-y-size).toFixed(2)+' Tm ('+esc(t)+') Tj ET');
@@ -1132,7 +1147,7 @@ async function sendReceiptToSystem(){
  if(typeof File!=='undefined'&&navigator.share){
   try{
    let file=null;
-   try{file=await createReceiptPdfFile(true)}catch(e){console.warn('Ticket como imagen no disponible, se usa PDF',e)}
+   try{file=await createReceiptPdfFile(true)}catch(e){console.warn('Ticket de imagen no disponible, se usa el PDF de texto',e)}
    if(!file||(navigator.canShare&&!navigator.canShare({files:[file]})))file=await createReceiptPdfFile();
    if(!navigator.canShare||navigator.canShare({files:[file]})){
     await navigator.share({files:[file]});
