@@ -1028,7 +1028,7 @@ function receiptFormat(){return '80'}
 function applyReceiptFormat(){const f='80';$('receiptFormat').value=f;localStorage.setItem('zipperPrintFormat',f);const width=f==='58'?'48mm':f==='80'?'72mm':'190mm';const receipt=$('printArea').querySelector('.receipt');if(receipt)receipt.style.width=width;$('receiptPreview').innerHTML=$('printArea').innerHTML;const preview=$('receiptPreview').querySelector('.receipt');if(preview){preview.style.maxWidth='100%';preview.style.margin='0 auto'}let style=$('receiptPageStyle');if(!style){style=document.createElement('style');style.id='receiptPageStyle';document.head.appendChild(style)}const chars=f==='58'?16:28;const lines=(preparedReceipt?.items||[]).reduce((sum,i)=>sum+Math.ceil((String(i.desc||'')+(i.promotion?' · OFERTA':'')).length/chars)+1,0);let height=Math.max(65,50+lines*5);if(f!=='letter'&&receipt){const measure=document.createElement('div');measure.className='print-area';measure.style.cssText='position:fixed;left:-10000px;top:0;visibility:hidden;display:block;pointer-events:none';const copy=receipt.cloneNode(true);copy.style.cssText='width:'+width+';max-width:none;margin:0;font-size:11px;overflow-wrap:anywhere';measure.appendChild(copy);document.body.appendChild(measure);try{const actual=copy.getBoundingClientRect().height;if(actual>0)height=Math.max(65,Math.ceil(actual*25.4/96)+10)}finally{measure.remove()}}style.textContent='@media print{@page{size:'+(f==='letter'?'letter':f+'mm '+height+'mm')+';margin:3mm}.print-area .receipt{width:'+width+';max-width:100%;margin:0;font-size:11px;overflow-wrap:anywhere}.receipt .line{gap:6px}.receipt .line strong{white-space:nowrap;flex:none}}';$('receiptFormatNote').textContent=f==='letter'?'Papel carta. Selecciona también carta en el diálogo de impresión.':'Rollo de '+f+' mm. En el diálogo de Android, selecciona el servicio de impresión y el mismo ancho de papel. Desactiva encabezados y pies del navegador si aparecen.'}
 function openReceiptPreview(){if(!preparedReceipt)return;$('receiptFormat').value=receiptFormat();applyReceiptFormat();$('receiptPrintModal').classList.remove('hidden')}
 function closeReceiptPreview(){$('receiptPrintModal').classList.add('hidden')}
-async function createReceiptPdfFile(){
+async function createReceiptPdfFile(asImage){
  if(!preparedReceipt){alert('Primero selecciona un comprobante.');return}
  {
   const sale=preparedReceipt, pt=72/25.4, width=58, pageW=width*pt, margin=3*pt, usable=pageW-2*margin;
@@ -1066,6 +1066,33 @@ async function createReceiptPdfFile(){
   rows.push({total:true,label:'TOTAL',text:totalText,size:fit('TOTAL  '+totalText,14,9)});
   const lineH=r=>r.rule?4.5:r.size*1.32;
   const pageH=margin+rows.reduce((sum,r)=>sum+lineH(r),0)+margin;
+  if(asImage){
+   // Ticket como imagen PNG de 384 puntos de ancho (58 mm a 203 ppp): Fun Print la recibe y la imprime mucho más rápido que un PDF.
+   const scale=384/pageW, canvas=document.createElement('canvas');
+   canvas.width=384;canvas.height=Math.ceil(pageH*scale);
+   const ctx=canvas.getContext('2d');
+   ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+   ctx.fillStyle='#000';ctx.strokeStyle='#000';ctx.textBaseline='top';
+   const put=(t,size,x,top)=>{ctx.font='bold '+(size*scale).toFixed(1)+'px Helvetica, Arial, sans-serif';ctx.fillText(t,x*scale,top*scale)};
+   let yy=margin;
+   for(const row of rows){
+    if(row.rule){
+     const ly=(yy+2.2)*scale;ctx.lineWidth=(row.rule==='dotted'?0.7:0.9)*scale;ctx.setLineDash(row.rule==='dotted'?[1*scale,1.8*scale]:[]);
+     ctx.beginPath();ctx.moveTo(margin*scale,ly);ctx.lineTo((margin+usable)*scale,ly);ctx.stroke();ctx.setLineDash([]);
+    }else if(row.total){
+     put(row.label,row.size,margin,yy);
+     ctx.textAlign='right';put(row.text,row.size,margin+usable,yy);ctx.textAlign='left';
+    }else{
+     ctx.textAlign=row.align==='right'?'right':row.align==='center'?'center':'left';
+     put(row.text,row.size,row.align==='right'?margin+usable:row.align==='center'?margin+usable/2:margin,yy);
+     ctx.textAlign='left';
+    }
+    yy+=lineH(row);
+   }
+   const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));
+   if(!blob)throw new Error('No se pudo crear la imagen del ticket');
+   return new File([blob],'Zipper-ticket-'+String(sale.folio||'venta').replace(/[^a-zA-Z0-9_-]/g,'')+'.png',{type:'image/png'});
+  }
   let y=margin, commands=['0.35 w'];
   const draw=(t,size,x)=>commands.push('BT /F2 '+size.toFixed(2)+' Tf 2 Tr 1 0 0 1 '+x.toFixed(2)+' '+(pageH-y-size).toFixed(2)+' Tm ('+esc(t)+') Tj ET');
   for(const row of rows){
@@ -1104,7 +1131,9 @@ async function sendReceiptToSystem(){
  if(!preparedReceipt){alert('Primero selecciona un comprobante.');return}
  if(typeof File!=='undefined'&&navigator.share){
   try{
-   const file=await createReceiptPdfFile();
+   let file=null;
+   try{file=await createReceiptPdfFile(true)}catch(e){console.warn('Ticket como imagen no disponible, se usa PDF',e)}
+   if(!file||(navigator.canShare&&!navigator.canShare({files:[file]})))file=await createReceiptPdfFile();
    if(!navigator.canShare||navigator.canShare({files:[file]})){
     await navigator.share({files:[file]});
     closeReceiptPreview();
