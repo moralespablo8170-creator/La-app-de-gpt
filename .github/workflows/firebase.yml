@@ -8,7 +8,7 @@ on:
       accion:
         description: Qué hacer
         type: choice
-        options: [revisar, publicar-reglas]
+        options: [revisar, publicar-reglas, arreglar-tapsin]
         default: revisar
   push:
     branches: [main]
@@ -39,6 +39,12 @@ jobs:
       - name: Publicar reglas de Firestore
         if: github.event_name == 'push' || inputs.accion == 'publicar-reglas'
         run: npx --yes firebase-tools@13 deploy --only firestore:rules --project zipper-a12f1 --non-interactive
+
+      - name: Arreglo puntual de Tapsin en el catálogo
+        if: inputs.accion == 'arreglar-tapsin'
+        run: |
+          npm install --no-save --no-package-lock firebase-admin@12 >/dev/null
+          node .github/firebase-arreglo-tapsin.cjs
 
       - name: Revisar estado (solo cantidades)
         run: |
