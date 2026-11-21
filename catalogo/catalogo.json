@@ -961,203 +961,232 @@
      "name": "Ácido mefenámico",
      "fmt": "10 unidades",
      "price": 1000,
-     "per": "caja"
+     "per": "caja",
+     "img": "catalogo/img/remedios.jpg"
     },
     {
      "key": "rem-amoxicilina",
      "name": "Amoxicilina",
      "fmt": "21 unidades",
      "price": 2500,
-     "per": "caja"
+     "per": "caja",
+     "img": "catalogo/img/remedios.jpg"
     },
     {
      "key": "rem-cefalmin",
      "name": "Cefalmin",
      "fmt": "10 unidades",
      "price": 1600,
-     "per": "caja"
+     "per": "caja",
+     "img": "catalogo/img/remedios.jpg"
     },
     {
      "key": "rem-clorfenamina",
      "name": "Clorfenamina",
      "fmt": "10 unidades",
      "price": 600,
-     "per": "caja"
+     "per": "caja",
+     "img": "catalogo/img/remedios.jpg"
     },
     {
      "key": "rem-colmax",
      "name": "Colmax",
      "fmt": "10 unidades",
      "price": 1800,
-     "per": "caja"
+     "per": "caja",
+     "img": "catalogo/img/remedios.jpg"
     },
     {
      "key": "rem-diclofenaco-sodico",
      "name": "Diclofenaco sódico",
      "fmt": "8 unidades",
      "price": 1800,
-     "per": "caja"
+     "per": "caja",
+     "img": "catalogo/img/remedios.jpg"
     },
     {
      "key": "rem-domperidona-10-mg",
      "name": "Domperidona 10 mg",
      "fmt": "20 unidades",
      "price": 1200,
-     "per": "caja"
+     "per": "caja",
+     "img": "catalogo/img/remedios.jpg"
     },
     {
      "key": "rem-famotidina",
      "name": "Famotidina",
      "fmt": "10 unidades",
      "price": 950,
-     "per": "caja"
+     "per": "caja",
+     "img": "catalogo/img/remedios.jpg"
     },
     {
      "key": "rem-ibuprofeno-600-mg",
      "name": "Ibuprofeno 600 mg",
      "fmt": "20 unidades",
      "price": 1600,
-     "per": "caja"
+     "per": "caja",
+     "img": "catalogo/img/remedios.jpg"
     },
     {
      "key": "rem-ketoprofeno-200-mg",
      "name": "Ketoprofeno 200 mg",
      "fmt": "10 unidades",
      "price": 1600,
-     "per": "caja"
+     "per": "caja",
+     "img": "catalogo/img/remedios.jpg"
     },
     {
      "key": "rem-ketorolaco-10-mg",
      "name": "Ketorolaco 10 mg",
      "fmt": "10 unidades",
      "price": 1200,
-     "per": "caja"
+     "per": "caja",
+     "img": "catalogo/img/remedios.jpg"
     },
     {
      "key": "rem-loratadina-10-mg",
      "name": "Loratadina 10 mg",
      "fmt": "30 unidades",
      "price": 1200,
-     "per": "caja"
+     "per": "caja",
+     "img": "catalogo/img/remedios.jpg"
     },
     {
      "key": "rem-loperamida",
      "name": "Loperamida",
      "fmt": "6 unidades",
      "price": 800,
-     "per": "caja"
+     "per": "caja",
+     "img": "catalogo/img/remedios.jpg"
     },
     {
      "key": "rem-desloratadina-5-mg",
      "name": "Desloratadina 5 mg",
      "fmt": "30 unidades",
      "price": 2500,
-     "per": "caja"
+     "per": "caja",
+     "img": "catalogo/img/remedios.jpg"
     },
     {
      "key": "rem-migranol",
      "name": "Migranol",
      "fmt": "10 unidades",
      "price": 1800,
-     "per": "caja"
+     "per": "caja",
+     "img": "catalogo/img/remedios.jpg"
     },
     {
      "key": "rem-naproxeno",
      "name": "Naproxeno",
      "fmt": "10 unidades",
      "price": 1800,
-     "per": "caja"
+     "per": "caja",
+     "img": "catalogo/img/remedios.jpg"
     },
     {
      "key": "rem-en-hora",
      "name": "En Hora",
      "fmt": "6 unidades",
      "price": 5000,
-     "per": "caja"
+     "per": "caja",
+     "img": "catalogo/img/remedios.jpg"
     },
     {
      "key": "rem-test-de-embarazo",
      "name": "Test de embarazo",
      "fmt": "1 unidad",
      "price": 1000,
-     "per": "caja"
+     "per": "caja",
+     "img": "catalogo/img/remedios.jpg"
     },
     {
      "key": "rem-omeprazol",
      "name": "Omeprazol",
      "fmt": "30 unidades",
      "price": 1500,
-     "per": "caja"
+     "per": "caja",
+     "img": "catalogo/img/remedios.jpg"
     },
     {
      "key": "rem-paracetamol-adulto",
      "name": "Paracetamol adulto",
      "fmt": "16 unidades",
      "price": 700,
-     "per": "caja"
+     "per": "caja",
+     "img": "catalogo/img/remedios.jpg"
     },
     {
      "key": "rem-parches-curita",
      "name": "Parches curita",
      "fmt": "100 unidades",
      "price": 1850,
-     "per": "caja"
+     "per": "caja",
+     "img": "catalogo/img/remedios.jpg"
     },
     {
      "key": "rem-pastilla-de-carbon",
      "name": "Pastilla de carbón",
      "fmt": "10 unidades",
      "price": 1000,
-     "per": "caja"
+     "per": "caja",
+     "img": "catalogo/img/remedios.jpg"
     },
     {
      "key": "rem-preservativos",
      "name": "Preservativos",
      "fmt": "3 unidades",
      "price": 1100,
-     "per": "caja"
+     "per": "caja",
+     "img": "catalogo/img/remedios.jpg"
     },
     {
      "key": "rem-eno",
      "name": "ENO",
      "fmt": "60 unidades",
      "price": 6000,
-     "per": "caja"
+     "per": "caja",
+     "img": "catalogo/img/remedios.jpg"
     },
     {
      "key": "rem-tapsin-caliente-dia",
      "name": "Tapsin caliente día",
      "fmt": "1 unidad",
      "price": 550,
-     "per": "caja"
+     "per": "caja",
+     "img": "catalogo/img/remedios.jpg"
     },
     {
      "key": "rem-tapsin-caliente-noche",
      "name": "Tapsin caliente noche",
      "fmt": "1 unidad",
      "price": 550,
-     "per": "caja"
+     "per": "caja",
+     "img": "catalogo/img/remedios.jpg"
     },
     {
      "key": "rem-tapsin-caliente-x-caja",
      "name": "Tapsin caliente x caja",
      "fmt": "60 unidades",
      "price": 27500,
-     "per": "caja"
+     "per": "caja",
+     "img": "catalogo/img/remedios.jpg"
     },
     {
      "key": "rem-tapsin-dia",
      "name": "Tapsin día",
      "fmt": "3 unidades",
      "price": 400,
-     "per": "caja"
+     "per": "caja",
+     "img": "catalogo/img/remedios.jpg"
     },
     {
      "key": "rem-tapsin-noche",
      "name": "Tapsin noche",
      "fmt": "3 unidades",
      "price": 400,
-     "per": "caja"
+     "per": "caja",
+     "img": "catalogo/img/remedios.jpg"
     }
    ]
   }

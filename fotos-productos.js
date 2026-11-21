@@ -10,8 +10,9 @@
   try{const c=JSON.parse(localStorage.getItem(CACHE)||'null');if(c&&c.byProduct){byProduct=c.byProduct;loaded=true}}catch(_){}
   function build(pub){
     const map={};const photos=pub?.photos||{};
-    Object.entries(pub?.links||{}).forEach(([key,pid])=>{if(!pid||pid==='none'||map[pid])return;const ph=photos[key];if(ph==='none')return;map[String(pid)]={key,custom:!!ph}});
-    (pub?.extra||[]).forEach(x=>{if(!x?.productId||map[x.productId])return;const ph=photos[x.key];if(ph&&ph!=='none')map[String(x.productId)]={key:x.key,custom:true}});
+    Object.entries(pub?.links||{}).forEach(([key,pid])=>{if(!pid||pid==='none'||map[pid])return;const ph=photos[key];if(ph==='none')return;map[String(pid)]={key,custom:!!ph,remedio:/^rem-/.test(key)}});
+    // Remedios sin foto propia usan la imagen común de farmacia.
+    (pub?.extra||[]).forEach(x=>{if(!x?.productId||map[x.productId])return;const ph=photos[x.key];if(ph&&ph!=='none')map[String(x.productId)]={key:x.key,custom:true};else if(x.section==='Remedios'&&ph!=='none')map[String(x.productId)]={key:x.key,custom:false,remedio:true}});
     return map;
   }
   async function load(){
@@ -34,6 +35,7 @@
     const hit=byProduct[String(p.id)]||(p.baseProductId!=null?byProduct[String(p.baseProductId)]:null);
     if(!hit)return '';
     if(hit.custom){loadCustom(hit.key);return custom[hit.key]||''}
+    if(hit.remedio)return 'catalogo/img/remedios.jpg';
     return 'catalogo/img/'+hit.key+'.jpg';
   }
   // HTML de la miniatura; si no hay foto devuelve el respaldo (por ejemplo el punto de color).

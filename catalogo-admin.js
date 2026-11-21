@@ -77,7 +77,7 @@
     const pos=r=>{const i=order.indexOf(r.sec);return i<0?order.length:i};
     rows=rows.map((r,i)=>({r,i})).sort((a,b)=>pos(a.r)-pos(b.r)||(tables.has(a.r.sec)?n(names[a.r.it.key]||a.r.it.name).localeCompare(n(names[b.r.it.key]||b.r.it.name),'es',{numeric:true}):0)||a.i-b.i).map(x=>x.r);
   }
-  function extraRow(x,byId){const p=byId.get(String(x.productId))||null;const pub=published?.items?.[x.key];return {it:{key:x.key,name:x.name,fmt:x.fmt||'',per:x.per||'unidad',price:p?Number(p.price):Number(pub?.price||0)},sec:x.section||'Otros productos',p,extra:true,hidden:!!pub?.userHidden,manual:pub?.manual?pub.price:null}}
+  function extraRow(x,byId){const p=byId.get(String(x.productId))||null;const pub=published?.items?.[x.key];return {it:{key:x.key,name:x.name,fmt:x.fmt||'',per:x.per||'unidad',img:x.section==='Remedios'?'catalogo/img/remedios.jpg':'',price:p?Number(p.price):Number(pub?.price||0)},sec:x.section||'Otros productos',p,extra:true,hidden:!!pub?.userHidden,manual:pub?.manual?pub.price:null}}
   // Precio de la caja: el que pusiste a mano, o la oferta de tu producto para esa cantidad, o unidad × cantidad.
   function boxPrice(r){if(r.boxManual!=null)return r.boxManual;const u=r.boxUnits,unit=rowPrice(r);const promo=r.p&&Array.isArray(r.p.promotions)?r.p.promotions.filter(x=>Number(x.minQty)>1&&Number(x.minQty)<=u&&Number(x.price)>0).sort((a,b)=>b.minQty-a.minQty)[0]:null;return Math.round((promo?Math.min(unit,Number(promo.price)):unit)*u)}
   function rowPrice(r){return r.manual!=null?r.manual:r.p&&Number(r.p.price)>0?Number(r.p.price):r.it.price}
