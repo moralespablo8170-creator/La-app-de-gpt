@@ -40,6 +40,7 @@ const col=name=>db.collection('orgs').doc(ORG).collection(name);
     const base=require(require('path').join(__dirname,'..','catalogo','catalogo.json'));const pn={};products.docs.forEach(d=>{const v=d.data();pn[d.id]=[v.name,v.flavor].filter(Boolean).join(' · ')});
     const rowsA=[];base.sections.forEach(sec=>sec.items.forEach(it=>rowsA.push({key:it.key,name:(x.names||{})[it.key]||it.name,sec:sec.title})));(x.extra||[]).forEach(e=>rowsA.push({key:e.key,name:e.name,sec:e.section||'Otros',extra:true}));
     const extraLink=k=>{const e=(x.extra||[]).find(y=>y.key===k);return e&&(e.productId||e.pid||e.id)};
+    Object.keys(x.items||{}).filter(k=>/tapsin/.test(k)).forEach(k=>console.log('DETALLE '+k+' '+JSON.stringify(x.items[k])+' nombre='+((x.names||{})[k]||'')+' enlace='+((x.links||{})[k]||'')+' foto='+((x.photos||{})[k]?'sí':'no')));
     console.log('\n===== Catálogo: nombre del cliente → producto enlazado =====');
     rowsA.forEach(r=>{const i=(x.items||{})[r.key]||{};const pid=(x.links||{})[r.key]||extraLink(r.key);if(i.hidden&&!/tapsin/i.test(r.name))return;
       console.log((r.sec+' | '+r.name).slice(0,60).padEnd(60)+' → '+(pid&&pid!=='none'?(pn[pid]||'¿producto borrado? '+pid):'(sin enlace)')+' · $'+(Number(i.price)||0)+(i.mode&&i.mode!=='single'?' · '+i.mode:'')+(i.hidden?' · OCULTO':'')+(x.photos&&x.photos[r.key]?' · foto propia':''))});
