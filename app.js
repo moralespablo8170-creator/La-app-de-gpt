@@ -45,26 +45,41 @@ function clientById(id){return getClients().find(c=>String(c.id)===String(id))}
 function productById(id){const ps=getProducts();const visible=ps.find(p=>String(p.id)===String(id));if(visible)return visible;const raw=getRawProducts().find(p=>String(p.id)===String(id)&&p.variantKey&&String(p.flavor||p.color||'').trim());if(raw)return{...raw,name:String(raw.name).trim(),category:raw.category||'Otros',pricePurchase:Math.max(0,Number(raw.pricePurchase??raw.purchasePrice)||0),price:Math.max(0,Number(raw.price??raw.priceSale)||0),stock:Math.max(0,Number(raw.stock)||0),active:raw.active!==false,promotions:Array.isArray(raw.promotions)&&raw.promotions.length?raw.promotions:defaultPromos(raw.name)};return String(id).startsWith('ultra-display-')?ps.find(p=>p.variantKey==='bigtime-ultra'&&p.color===String(id).slice(14)):null}
 function saleItemStockId(i){const id=i.baseProductId||i.productId;const p=productById(id);return p?(p.baseProductId||p.id):id}
 function saleTotal(s){return(s.items||[]).reduce((a,i)=>a+Math.round(Number(i.qty||0)*Number(i.price||0)),0)}
-// ===== Facturación SII: los productos de la categoría Remedios NO se facturan =====
+// ===== Facturación SII =====
+// Remedios: NO se facturan. Tabacos: van en factura EXENTA (aparte). El resto: factura normal (afecta a IVA).
+const SII_URL={afecta:'https://www1.sii.cl/cgi-bin/Portal001/mipeLaunchPage.cgi?OPCION=33&TIPO=4',exenta:'https://www1.sii.cl/cgi-bin/Portal001/mipeLaunchPage.cgi?OPCION=34&TIPO=4'};
 function remedyProductIds(){const set=new Set();getProducts().forEach(p=>{if(norm(p.category).includes('remedio'))set.add(String(p.id))});return set}
+function productForItem(i){const ps=getProducts();return ps.find(x=>String(x.id)===String(i?.productId))||ps.find(x=>String(x.id)===String(i?.baseProductId))||null}
 function isRemedyItem(i,ids){if(norm(i?.category).includes('remedio'))return true;ids=ids||remedyProductIds();return ids.has(String(i?.productId))||ids.has(String(i?.baseProductId))}
-function splitInvoiceItems(items,ids){ids=ids||remedyProductIds();const yes=[],no=[];(items||[]).forEach(i=>(isRemedyItem(i,ids)?no:yes).push(i));return{yes,no}}
+function isTobaccoItem(i){const p=productForItem(i);return /\btabaco\b/.test(norm(i?.desc))||/\btabaco\b/.test(norm(p?.name))}
+function splitInvoiceItems(items,ids){ids=ids||remedyProductIds();const afecta=[],exenta=[],no=[];(items||[]).forEach(i=>(isRemedyItem(i,ids)?no:isTobaccoItem(i)?exenta:afecta).push(i));return{afecta,exenta,no,yes:afecta.concat(exenta)}}
 function itemsTotal(items){return(items||[]).reduce((a,i)=>a+Math.round(Number(i.qty||0)*Number(i.price||0)),0)}
 function invoiceSaleTotal(s,ids){return itemsTotal(splitInvoiceItems(s.items,ids).yes)}
-function siiUnitNet(gross){return(Number(gross||0)/1.19).toLocaleString('es-CL',{maximumFractionDigits:2})}
+function siiNum(n){return String(Math.round(Number(n||0)*100)/100).replace('.',',')}
 function groupInvoiceLines(items){const lines={};(items||[]).forEach(i=>{const k=(i.desc||'Producto')+'|'+Number(i.price||0);if(!lines[k])lines[k]={desc:i.desc||'Producto',price:Number(i.price)||0,qty:0};lines[k].qty+=Number(i.qty)||0});return Object.values(lines).sort((a,b)=>a.desc.localeCompare(b.desc))}
-// Arma la ventana "para facturar" solo con lo facturable y un botón para copiar los datos al sistema gratuito del SII.
+function copyChip(value,label){return '<button type="button" class="sii-chip" data-copy="'+esc(value)+'">'+esc(label??value)+' <span>📋</span></button>'}
+// Copia un dato suelto (RUT, producto, cantidad o precio) para pegarlo en el formulario del SII.
+function copySiiValue(btn){const v=btn.dataset.copy||'';const ok=()=>{const old=btn.innerHTML;btn.classList.add('copied');btn.innerHTML='✓ Copiado';setTimeout(()=>{btn.classList.remove('copied');btn.innerHTML=old},1300)};
+ if(navigator.clipboard?.writeText)navigator.clipboard.writeText(v).then(ok).catch(()=>prompt('Copia este dato:',v));else prompt('Copia este dato:',v)}
+function siiSection(kind,items){
+ if(!items.length)return '';
+ const ex=kind==='exenta',lines=groupInvoiceLines(items),total=itemsTotal(items),net=Math.round(total/1.19);
+ const rows=lines.map(l=>{const unit=ex?l.price:l.price/1.19;return '<tr><td>'+copyChip(l.desc)+'</td><td>'+copyChip(String(l.qty))+'</td><td>'+copyChip(siiNum(unit),'$'+siiNum(unit))+'</td><td>'+money(Math.round(l.qty*unit))+'</td></tr>'}).join('');
+ return '<section class="sii-box sii-'+kind+'"><h3>'+(ex?'🍂 Factura EXENTA (tabacos)':'🧾 Factura normal (con IVA)')+'</h3>'
+  +'<a class="primary wide sii-open" href="'+SII_URL[kind]+'" target="_blank" rel="noopener">🔗 Abrir SII · '+(ex?'Factura exenta':'Factura electrónica')+'</a>'
+  +'<div class="invoice-table-scroll"><table class="invoice-table"><thead><tr><th>Producto</th><th>Cant.</th><th>'+(ex?'Precio unit.':'Precio unit. neto')+'</th><th>'+(ex?'Total':'Neto')+'</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+  +(ex?'<p><strong>Total exento: '+money(total)+'</strong> (sin IVA)</p>':'<p><strong>Total con IVA: '+money(total)+'</strong></p><p>Neto referencial: '+money(net)+' · IVA referencial: '+money(total-net)+'</p>')
+  +'</section>';
+}
+// Arma la ventana "para facturar": factura normal y factura exenta por separado; los remedios quedan fuera.
 function renderInvoiceBody(title,headHtml,info,allItems){
- const {yes,no}=splitInvoiceItems(allItems),lines=groupInvoiceLines(yes),total=itemsTotal(yes),net=Math.round(total/1.19),noTotal=itemsTotal(no);
- const rows=lines.map(l=>'<tr><td>'+esc(l.desc)+'</td><td>'+esc(l.qty)+'</td><td>'+money(Math.round(l.price/1.19))+'</td><td>'+money(Math.round(l.qty*l.price/1.19))+'</td></tr>').join('');
- const excluded=no.length?'<p class="muted">💊 No se facturan (Remedios): '+plural(groupInvoiceLines(no).length,'producto','productos')+' · '+money(noTotal)+'. Ya están fuera de esta factura.</p>':'';
- const body=lines.length?'<div class="invoice-table-scroll"><table class="invoice-table"><thead><tr><th>Producto</th><th>Cant.</th><th>Unit. neto aprox.</th><th>Neto línea aprox.</th></tr></thead><tbody>'+rows+'</tbody></table></div><p><strong>Total a facturar con IVA: '+money(total)+'</strong></p><p>Neto referencial: '+money(net)+' · IVA referencial: '+money(total-net)+'</p>'+excluded+'<div class="actions"><button id="copySiiInvoice" class="secondary wide" type="button">📋 Copiar datos para el SII</button></div><p class="muted">Los valores netos son referenciales y pueden diferir por redondeos del SII.</p>':'<p><strong>Esta venta es solo de remedios: no se factura.</strong></p>'+excluded;
- $('invoiceDetailBody').innerHTML='<h2>'+esc(title)+'</h2>'+headHtml+body;
- const btn=$('copySiiInvoice');if(btn)btn.onclick=()=>{
-  const text='FACTURA ELECTRÓNICA (SII)\nRUT receptor: '+info.rut+'\nRazón social: '+info.business+'\n'+info.ref+'\n\nDETALLE (precio unitario NETO):\n'+lines.map((l,n)=>(n+1)+') '+l.desc+'\n   Cantidad: '+l.qty+' · Precio unit. neto: $'+siiUnitNet(l.price)+' · Total neto: '+money(Math.round(l.qty*l.price/1.19))).join('\n')+'\n\nNeto: '+money(net)+'\nIVA 19%: '+money(total-net)+'\nTOTAL: '+money(total)+(no.length?'\n\n(No incluye remedios: no se facturan)':'');
-  const done=()=>alert('Datos copiados. Ábrelos junto al sistema de facturación gratuito del SII para llenar la factura.');
-  if(navigator.clipboard?.writeText)navigator.clipboard.writeText(text).then(done).catch(()=>prompt('Copia los datos:',text));else prompt('Copia los datos:',text);
- };
+ const {afecta,exenta,no}=splitInvoiceItems(allItems),noTotal=itemsTotal(no);
+ const excluded=no.length?'<p class="muted">💊 No se facturan (Remedios): '+plural(groupInvoiceLines(no).length,'producto','productos')+' · '+money(noTotal)+'.</p>':'';
+ const both=afecta.length&&exenta.length?'<p class="sii-note">Este cliente lleva <strong>2 facturas</strong>: una normal y una exenta por los tabacos.</p>':'';
+ const help='<p class="muted">Toca cualquier dato para copiarlo y pégalo en su casilla del SII (mantén apretada la casilla → Pegar). Por seguridad, el SII no deja que otra app llene su formulario.</p>';
+ const body=afecta.length||exenta.length?both+help+siiSection('afecta',afecta)+siiSection('exenta',exenta)+excluded+'<p class="muted">Los valores netos son referenciales y pueden diferir por redondeos del SII.</p>':'<p><strong>Esta venta es solo de remedios: no se factura.</strong></p>'+excluded;
+ $('invoiceDetailBody').innerHTML='<h2>'+esc(title)+'</h2>'+headHtml.replace(/RUT: <strong>([^<]*)<\/strong>/,(m,r)=>'RUT: '+(info.rut&&info.rut!=='Sin RUT'?copyChip(info.rut):'<strong>'+r+'</strong>'))+body;
+ $('invoiceDetailBody').querySelectorAll('.sii-chip').forEach(b=>b.onclick=()=>copySiiValue(b));
 }
 function saleCost(s){return(s.items||[]).reduce((a,i)=>a+Math.round(Number(i.qty||0)*Number(i.purchasePrice||0)),0)}
 function saleProfit(s){return saleTotal(s)-saleCost(s)}
@@ -1024,8 +1039,8 @@ function openClientInvoiceSummary(e){
  showInvoiceDetail();
 }
 function copyAttendedClients(rows){
- const ids=remedyProductIds(),fact=e=>e.sales.reduce((a,s)=>a+invoiceSaleTotal(s,ids),0);
- const text='Clientes atendidos · '+historyRangeLabel($('historyFrom').value,$('historyTo').value)+' (montos a facturar, sin remedios)\n\n'+rows.filter(e=>e.sales.length).map(e=>'• '+e.name+' · RUT '+(e.client?.rut||'sin RUT')+(e.client?.razonSocial?' · '+e.client.razonSocial:'')+'\n  '+plural(e.sales.length,'venta','ventas')+' · A facturar '+money(fact(e))+' · Neto '+money(Math.round(fact(e)/1.19))+(e.pending?' · ENVIAR FACTURA':'')).join('\n');
+ const ids=remedyProductIds(),fact=e=>e.sales.reduce((a,s)=>a+invoiceSaleTotal(s,ids),0),part=(e,k)=>e.sales.reduce((a,s)=>a+itemsTotal(splitInvoiceItems(s.items,ids)[k]),0);
+ const text='Clientes atendidos · '+historyRangeLabel($('historyFrom').value,$('historyTo').value)+' (montos a facturar, sin remedios)\n\n'+rows.filter(e=>e.sales.length).map(e=>'• '+e.name+' · RUT '+(e.client?.rut||'sin RUT')+(e.client?.razonSocial?' · '+e.client.razonSocial:'')+'\n  '+plural(e.sales.length,'venta','ventas')+' · Factura normal '+money(part(e,'afecta'))+(part(e,'exenta')?' · Factura exenta (tabacos) '+money(part(e,'exenta')):'')+(e.pending?' · ENVIAR FACTURA':'')).join('\n');
  const done=()=>alert('Lista copiada. Puedes pegarla en WhatsApp, correo o el sistema de facturación.');
  if(navigator.clipboard?.writeText)navigator.clipboard.writeText(text).then(done).catch(()=>prompt('Copia la lista:',text));else prompt('Copia la lista:',text);
 }
