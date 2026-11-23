@@ -45,6 +45,27 @@ function clientById(id){return getClients().find(c=>String(c.id)===String(id))}
 function productById(id){const ps=getProducts();const visible=ps.find(p=>String(p.id)===String(id));if(visible)return visible;const raw=getRawProducts().find(p=>String(p.id)===String(id)&&p.variantKey&&String(p.flavor||p.color||'').trim());if(raw)return{...raw,name:String(raw.name).trim(),category:raw.category||'Otros',pricePurchase:Math.max(0,Number(raw.pricePurchase??raw.purchasePrice)||0),price:Math.max(0,Number(raw.price??raw.priceSale)||0),stock:Math.max(0,Number(raw.stock)||0),active:raw.active!==false,promotions:Array.isArray(raw.promotions)&&raw.promotions.length?raw.promotions:defaultPromos(raw.name)};return String(id).startsWith('ultra-display-')?ps.find(p=>p.variantKey==='bigtime-ultra'&&p.color===String(id).slice(14)):null}
 function saleItemStockId(i){const id=i.baseProductId||i.productId;const p=productById(id);return p?(p.baseProductId||p.id):id}
 function saleTotal(s){return(s.items||[]).reduce((a,i)=>a+Math.round(Number(i.qty||0)*Number(i.price||0)),0)}
+// ===== Facturación SII: los productos de la categoría Remedios NO se facturan =====
+function remedyProductIds(){const set=new Set();getProducts().forEach(p=>{if(norm(p.category).includes('remedio'))set.add(String(p.id))});return set}
+function isRemedyItem(i,ids){if(norm(i?.category).includes('remedio'))return true;ids=ids||remedyProductIds();return ids.has(String(i?.productId))||ids.has(String(i?.baseProductId))}
+function splitInvoiceItems(items,ids){ids=ids||remedyProductIds();const yes=[],no=[];(items||[]).forEach(i=>(isRemedyItem(i,ids)?no:yes).push(i));return{yes,no}}
+function itemsTotal(items){return(items||[]).reduce((a,i)=>a+Math.round(Number(i.qty||0)*Number(i.price||0)),0)}
+function invoiceSaleTotal(s,ids){return itemsTotal(splitInvoiceItems(s.items,ids).yes)}
+function siiUnitNet(gross){return(Number(gross||0)/1.19).toLocaleString('es-CL',{maximumFractionDigits:2})}
+function groupInvoiceLines(items){const lines={};(items||[]).forEach(i=>{const k=(i.desc||'Producto')+'|'+Number(i.price||0);if(!lines[k])lines[k]={desc:i.desc||'Producto',price:Number(i.price)||0,qty:0};lines[k].qty+=Number(i.qty)||0});return Object.values(lines).sort((a,b)=>a.desc.localeCompare(b.desc))}
+// Arma la ventana "para facturar" solo con lo facturable y un botón para copiar los datos al sistema gratuito del SII.
+function renderInvoiceBody(title,headHtml,info,allItems){
+ const {yes,no}=splitInvoiceItems(allItems),lines=groupInvoiceLines(yes),total=itemsTotal(yes),net=Math.round(total/1.19),noTotal=itemsTotal(no);
+ const rows=lines.map(l=>'<tr><td>'+esc(l.desc)+'</td><td>'+esc(l.qty)+'</td><td>'+money(Math.round(l.price/1.19))+'</td><td>'+money(Math.round(l.qty*l.price/1.19))+'</td></tr>').join('');
+ const excluded=no.length?'<p class="muted">💊 No se facturan (Remedios): '+plural(groupInvoiceLines(no).length,'producto','productos')+' · '+money(noTotal)+'. Ya están fuera de esta factura.</p>':'';
+ const body=lines.length?'<div class="invoice-table-scroll"><table class="invoice-table"><thead><tr><th>Producto</th><th>Cant.</th><th>Unit. neto aprox.</th><th>Neto línea aprox.</th></tr></thead><tbody>'+rows+'</tbody></table></div><p><strong>Total a facturar con IVA: '+money(total)+'</strong></p><p>Neto referencial: '+money(net)+' · IVA referencial: '+money(total-net)+'</p>'+excluded+'<div class="actions"><button id="copySiiInvoice" class="secondary wide" type="button">📋 Copiar datos para el SII</button></div><p class="muted">Los valores netos son referenciales y pueden diferir por redondeos del SII.</p>':'<p><strong>Esta venta es solo de remedios: no se factura.</strong></p>'+excluded;
+ $('invoiceDetailBody').innerHTML='<h2>'+esc(title)+'</h2>'+headHtml+body;
+ const btn=$('copySiiInvoice');if(btn)btn.onclick=()=>{
+  const text='FACTURA ELECTRÓNICA (SII)\nRUT receptor: '+info.rut+'\nRazón social: '+info.business+'\n'+info.ref+'\n\nDETALLE (precio unitario NETO):\n'+lines.map((l,n)=>(n+1)+') '+l.desc+'\n   Cantidad: '+l.qty+' · Precio unit. neto: $'+siiUnitNet(l.price)+' · Total neto: '+money(Math.round(l.qty*l.price/1.19))).join('\n')+'\n\nNeto: '+money(net)+'\nIVA 19%: '+money(total-net)+'\nTOTAL: '+money(total)+(no.length?'\n\n(No incluye remedios: no se facturan)':'');
+  const done=()=>alert('Datos copiados. Ábrelos junto al sistema de facturación gratuito del SII para llenar la factura.');
+  if(navigator.clipboard?.writeText)navigator.clipboard.writeText(text).then(done).catch(()=>prompt('Copia los datos:',text));else prompt('Copia los datos:',text);
+ };
+}
 function saleCost(s){return(s.items||[]).reduce((a,i)=>a+Math.round(Number(i.qty||0)*Number(i.purchasePrice||0)),0)}
 function saleProfit(s){return saleTotal(s)-saleCost(s)}
 function saleDate(s){return String(s.fecha||s.date||'').slice(0,10)}
@@ -835,8 +856,7 @@ function markPendingPaid(id){const sale=getSales().find(s=>String(s.id)===String
 function openInvoiceDetail(id){
  const s=getSales().find(x=>String(x.id)===String(id));if(!s)return;
  const c=clientById(s.clienteId),rut=c?.rut||s.invoiceRut||'Sin RUT',business=c?.razonSocial||s.invoiceBusinessName||'Sin razón social registrada';
- const items=(s.items||[]).map(i=>{const qty=Number(i.qty)||0,gross=Number(i.price)||0,net=gross/1.19;return '<tr><td>'+esc(i.desc)+'</td><td>'+esc(qty)+'</td><td>'+money(Math.round(net))+'</td><td>'+money(Math.round(qty*gross/1.19))+'</td></tr>'}).join('');
- $('invoiceDetailBody').innerHTML='<h2>Datos para facturar</h2><p><strong>'+esc(s.cliente)+'</strong></p><p>RUT: <strong>'+esc(rut)+'</strong></p><p>Razón social: '+esc(business)+'</p><p>Fecha: '+esc(s.fecha)+' · Ticket #'+esc(s.folio)+'</p><div class="invoice-table-scroll"><table class="invoice-table"><thead><tr><th>Producto</th><th>Cant.</th><th>Unit. neto aprox.</th><th>Neto línea aprox.</th></tr></thead><tbody>'+items+'</tbody></table></div><p><strong>Total con IVA: '+money(saleTotal(s))+'</strong></p><p>Neto referencial: '+money(Math.round(saleTotal(s)/1.19))+' · IVA referencial: '+money(saleTotal(s)-Math.round(saleTotal(s)/1.19))+'</p><p class="muted">Los valores netos son referenciales y pueden diferir por redondeos del SII. Confirma el tratamiento tributario de cada producto.</p>';
+ renderInvoiceBody('Datos para facturar','<p><strong>'+esc(s.cliente)+'</strong></p><p>RUT: <strong>'+esc(rut)+'</strong></p><p>Razón social: '+esc(business)+'</p><p>Fecha: '+esc(s.fecha)+' · Ticket #'+esc(s.folio)+'</p>',{rut,business,ref:'Fecha: '+(s.fecha||'')+' · Ticket #'+(s.folio||'')},s.items);
  showInvoiceDetail();
 }
 // Al cerrar "Datos para facturar" se vuelve exactamente al cliente/venta que se estaba revisando.
@@ -975,10 +995,10 @@ function renderHistory(){
   out.innerHTML=rows.length?[...groups].map(([date,list])=>'<div class="history-day"><div class="history-day-head"><strong>📅 '+esc(historyNiceDate(date,true))+'</strong><span>'+plural(list.length,'venta','ventas')+' · '+plural(new Set(list.map(s=>s.clienteId||s.cliente)).size,'cliente','clientes')+' · '+money(list.reduce((a,s)=>a+saleTotal(s),0))+'</span></div>'+list.map(historySaleRow).join('')+'</div>').join(''):'<p class="muted empty-state">🔍 No hay ventas en este período.</p>';
   bindHistoryReprint();
  }else if(historyType==='clients'){
-  const rows=attendedClients();
+  const rows=attendedClients(),remIds=remedyProductIds();
   out.innerHTML=rows.length?'<div class="actions history-tools"><button id="historyCopyClients" class="secondary" type="button">📋 Copiar lista para facturar</button></div>'+rows.map((e,i)=>{
    const c=e.client,dates=[...e.dates].sort().map(d=>historyNiceDate(d)),visits=[...e.visitedOnly].sort().map(d=>historyNiceDate(d));
-   return '<article class="history-row client-attended'+(e.pending?' needs-invoice':'')+'"><div><strong>'+esc(e.name)+' '+(e.pending?'<span class="badge badge-red">Enviar factura'+(e.pending>1?' ('+e.pending+')':'')+'</span>':e.done&&e.done===e.sales.length?'<span class="badge badge-green">Factura enviada</span>':'')+(e.sales.length?'':'<span class="badge badge-gray">Visitado sin venta</span>')+'</strong><span>RUT: '+esc(c?.rut||'Sin RUT')+(c?.razonSocial?' · '+esc(c.razonSocial):'')+'</span><span>'+(dates.length?'🛒 '+esc(dates.join(', ')):'')+(visits.length?(dates.length?' · ':'')+'👣 Visitado: '+esc(visits.join(', ')):'')+'</span></div><div class="actions-small">'+(e.sales.length?'<strong>'+money(e.total)+'</strong><span class="muted">'+plural(e.sales.length,'venta','ventas')+' · Neto '+money(Math.round(e.total/1.19))+'</span>':'<span class="muted">Sin venta en este período</span>')+(e.sales.length?'<button class="secondary client-invoice" data-index="'+i+'" type="button">📄 Resumen para facturar</button><button class="secondary client-sales" data-index="'+i+'" type="button">Ver ventas</button>':'')+'</div></article>';
+   return '<article class="history-row client-attended'+(e.pending?' needs-invoice':'')+'"><div><strong>'+esc(e.name)+' '+(e.pending?'<span class="badge badge-red">Enviar factura'+(e.pending>1?' ('+e.pending+')':'')+'</span>':e.done&&e.done===e.sales.length?'<span class="badge badge-green">Factura enviada</span>':'')+(e.sales.length?'':'<span class="badge badge-gray">Visitado sin venta</span>')+'</strong><span>RUT: '+esc(c?.rut||'Sin RUT')+(c?.razonSocial?' · '+esc(c.razonSocial):'')+'</span><span>'+(dates.length?'🛒 '+esc(dates.join(', ')):'')+(visits.length?(dates.length?' · ':'')+'👣 Visitado: '+esc(visits.join(', ')):'')+'</span></div><div class="actions-small">'+(e.sales.length?'<strong>'+money(e.total)+'</strong><span class="muted">'+plural(e.sales.length,'venta','ventas')+' · Neto a facturar '+money(Math.round(e.sales.reduce((a,s)=>a+invoiceSaleTotal(s,remIds),0)/1.19))+'</span>':'<span class="muted">Sin venta en este período</span>')+(e.sales.length?'<button class="secondary client-invoice" data-index="'+i+'" type="button">📄 Resumen para facturar</button><button class="secondary client-sales" data-index="'+i+'" type="button">Ver ventas</button>':'')+'</div></article>';
   }).join(''):'<p class="muted empty-state">👥 No se atendieron clientes en este período.</p>';
   document.querySelectorAll('.client-invoice').forEach(b=>b.onclick=()=>openClientInvoiceSummary(rows[Number(b.dataset.index)]));
   document.querySelectorAll('.client-sales').forEach(b=>b.onclick=()=>{const e=rows[Number(b.dataset.index)];$('historySearch').value=e.client?.rut||e.name;setHistoryType('sales')});
@@ -999,15 +1019,13 @@ function renderHistory(){
 function setHistoryType(type){historyType=type;document.querySelectorAll('#historyType button').forEach(x=>x.classList.toggle('active',x.dataset.history===type));renderHistory()}
 function openClientInvoiceSummary(e){
  if(!e||!e.sales.length)return;
- const c=e.client,lines={};
- e.sales.forEach(s=>(s.items||[]).forEach(i=>{const k=(i.desc||'Producto')+'|'+Number(i.price||0);if(!lines[k])lines[k]={desc:i.desc||'Producto',price:Number(i.price)||0,qty:0};lines[k].qty+=Number(i.qty)||0}));
- const items=Object.values(lines).sort((a,b)=>a.desc.localeCompare(b.desc)).map(l=>'<tr><td>'+esc(l.desc)+'</td><td>'+esc(l.qty)+'</td><td>'+money(Math.round(l.price/1.19))+'</td><td>'+money(Math.round(l.qty*l.price/1.19))+'</td></tr>').join('');
- const total=e.total,net=Math.round(total/1.19);
- $('invoiceDetailBody').innerHTML='<h2>Resumen para facturar</h2><p><strong>'+esc(e.name)+'</strong></p><p>RUT: <strong>'+esc(c?.rut||'Sin RUT')+'</strong></p><p>Razón social: '+esc(c?.razonSocial||'Sin razón social registrada')+'</p><p>Período: '+esc(historyRangeLabel($('historyFrom').value,$('historyTo').value))+'</p><p>Tickets: '+e.sales.map(s=>'#'+esc(s.folio)+' ('+esc(historyNiceDate(saleDate(s)))+')').join(', ')+'</p><div class="invoice-table-scroll"><table class="invoice-table"><thead><tr><th>Producto</th><th>Cant.</th><th>Unit. neto aprox.</th><th>Neto línea aprox.</th></tr></thead><tbody>'+items+'</tbody></table></div><p><strong>Total con IVA: '+money(total)+'</strong></p><p>Neto referencial: '+money(net)+' · IVA referencial: '+money(total-net)+'</p><p class="muted">Valores netos referenciales; pueden diferir por redondeos del SII.</p>';
+ const c=e.client,rut=c?.rut||'Sin RUT',business=c?.razonSocial||'Sin razón social registrada',period=historyRangeLabel($('historyFrom').value,$('historyTo').value),tickets=e.sales.map(s=>'#'+s.folio+' ('+historyNiceDate(saleDate(s))+')').join(', ');
+ renderInvoiceBody('Resumen para facturar','<p><strong>'+esc(e.name)+'</strong></p><p>RUT: <strong>'+esc(rut)+'</strong></p><p>Razón social: '+esc(business)+'</p><p>Período: '+esc(period)+'</p><p>Tickets: '+esc(tickets)+'</p>',{rut,business,ref:'Período: '+period+' · Tickets: '+tickets},e.sales.flatMap(s=>s.items||[]));
  showInvoiceDetail();
 }
 function copyAttendedClients(rows){
- const text='Clientes atendidos · '+historyRangeLabel($('historyFrom').value,$('historyTo').value)+'\n\n'+rows.filter(e=>e.sales.length).map(e=>'• '+e.name+' · RUT '+(e.client?.rut||'sin RUT')+(e.client?.razonSocial?' · '+e.client.razonSocial:'')+'\n  '+plural(e.sales.length,'venta','ventas')+' · Total '+money(e.total)+' · Neto '+money(Math.round(e.total/1.19))+(e.pending?' · ENVIAR FACTURA':'')).join('\n');
+ const ids=remedyProductIds(),fact=e=>e.sales.reduce((a,s)=>a+invoiceSaleTotal(s,ids),0);
+ const text='Clientes atendidos · '+historyRangeLabel($('historyFrom').value,$('historyTo').value)+' (montos a facturar, sin remedios)\n\n'+rows.filter(e=>e.sales.length).map(e=>'• '+e.name+' · RUT '+(e.client?.rut||'sin RUT')+(e.client?.razonSocial?' · '+e.client.razonSocial:'')+'\n  '+plural(e.sales.length,'venta','ventas')+' · A facturar '+money(fact(e))+' · Neto '+money(Math.round(fact(e)/1.19))+(e.pending?' · ENVIAR FACTURA':'')).join('\n');
  const done=()=>alert('Lista copiada. Puedes pegarla en WhatsApp, correo o el sistema de facturación.');
  if(navigator.clipboard?.writeText)navigator.clipboard.writeText(text).then(done).catch(()=>prompt('Copia la lista:',text));else prompt('Copia la lista:',text);
 }
