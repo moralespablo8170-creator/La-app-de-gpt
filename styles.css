@@ -359,3 +359,21 @@
 /* Indicador compacto de versión para identificar la compilación Firebase instalada. */
 .brand-header{position:relative}
 .app-version-badge{position:absolute;right:8px;bottom:8px;z-index:2;padding:5px 8px;border:1px solid rgba(255,255,255,.72);border-radius:999px;background:rgba(17,24,39,.94);box-shadow:0 1px 4px rgba(0,0,0,.25);color:#fff;font:800 11px/1.2 system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:.02em;white-space:nowrap}
+/* Facturación SII: datos para copiar uno por uno */
+.sii-box{border:2px solid #bfdbfe;border-radius:12px;padding:10px;margin:12px 0;background:#f8fbff}
+.sii-exenta{border-color:#fcd34d;background:#fffbeb}
+.sii-box h3{margin:0 0 8px;font-size:16px}
+.sii-open{display:block;text-align:center;text-decoration:none;padding:11px;border-radius:10px;font-weight:800}
+.sii-chip{display:inline-flex;gap:4px;align-items:center;border:1px solid #93c5fd;background:#fff;color:#1e3a8a;border-radius:8px;padding:5px 7px;font-size:13px;font-weight:700;text-align:left;min-height:34px;cursor:pointer}
+.sii-chip span{font-size:11px;opacity:.7}
+.sii-chip.copied{background:#dcfce7;border-color:#16a34a;color:#166534}
+.sii-note{background:#fef3c7;border-radius:8px;padding:7px 9px}
+.sii-chip.last{outline:3px solid #16a34a}
+.sii-help{background:#eff6ff;border-radius:10px;padding:8px 10px;font-size:13px;line-height:1.45;margin:8px 0}
+.sii-last{position:sticky;bottom:0;background:#dcfce7;color:#166534;border-radius:8px;padding:6px 9px;font-size:13px;margin:6px 0}
+.sii-last:empty{display:none}
+.sii-chip-wrap{display:inline-flex;align-items:center;gap:2px}
+.sii-unmark{display:none;border:0;background:#fee2e2;color:#991b1b;border-radius:50%;width:26px;height:26px;font-size:12px;font-weight:900;padding:0;cursor:pointer}
+.sii-chip.copied+.sii-unmark{display:inline-block}
+.sii-rut{display:inline-block;margin-top:6px;font-size:13px}
+.sii-copy-all{margin:8px 0;font-weight:800}
