@@ -785,7 +785,9 @@ function searchScore(text,q){const t=norm(text),x=norm(q);if(!x)return 99;if(t==
 function searchMatches(text,q){const x=norm(q);return !x||searchScore(text,x)<99}
 function bestSearchScore(texts,q){const x=norm(q);if(!x)return 99;return Math.min(...texts.map(t=>searchScore(t,x)))}
 let inventoryLowOnly=false;
-function refreshLowStockCategories(){const sel=$('lowStockCategory'),wrap=$('lowStockCategoryWrap');if(!sel||!wrap)return;wrap.style.display='block';const selected=sel.value;const categories=[...new Set(getProducts().map(p=>String(p.category||'Otros').trim()))].sort((a,b)=>a.localeCompare(b,'es'));sel.innerHTML='<option value="">Todas las categorías</option>'+categories.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');sel.value=categories.includes(selected)?selected:'';}
+function refreshLowStockCategories(){const sel=$('lowStockCategory'),wrap=$('lowStockCategoryWrap');if(!sel||!wrap)return;wrap.style.display='block';const selected=sel.value;const categories=[...new Set(getProducts().map(p=>String(p.category||'Otros').trim()))].sort((a,b)=>a.localeCompare(b,'es'));// No rehacer la lista si no cambió o si la estás usando (antes parpadeaba y se quedaba pegada al llegar datos de la nube).
+const sig=categories.join('\u0001');if(sel.__sig===sig||document.activeElement===sel)return;sel.__sig=sig;
+sel.innerHTML='<option value="">Todas las categorías</option>'+categories.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');sel.value=categories.includes(selected)?selected:'';}
 
 function productMinimum(p){const raw=getRawProducts().find(x=>String(x.id)===String(p.baseProductId||p.id));const n=Number(raw?.stockMin);return Number.isInteger(n)&&n>=0?n:5}
 const BAR_COLORS=[['rojo','Rojo'],['naranja','Naranja'],['amarillo','Amarillo'],['verde','Verde'],['menta','Menta'],['celeste','Celeste'],['azul','Azul'],['morado','Morado'],['rosado','Rosado'],['cafe','Café'],['gris','Gris'],['negro','Negro']];
@@ -1287,3 +1289,19 @@ loadSeed();
 
 $('salePaymentMethod')?.addEventListener('change',updatePartialFields);
 $('salePartialAmount')?.addEventListener('input',updatePartialFields);
+
+// Actualización al llegar datos de la nube: si estás usando una lista desplegable (ej. categorías),
+// espera a que la cierres (o 5 segundos) para no redibujar la pantalla debajo de tu dedo.
+(function(){
+ const renderAll=()=>['renderHome','renderCash','renderInventory','renderClients','renderHistory'].forEach(n=>{try{if(typeof window[n]==='function')window[n]()}catch(e){console.error(e)}});
+ let waiting=false,timer=null;
+ window.zipperRefreshAfterCloud=function(){
+  const a=document.activeElement;
+  if(a&&a.tagName==='SELECT'){
+   if(waiting)return;waiting=true;
+   const go=()=>{if(!waiting)return;waiting=false;clearTimeout(timer);a.removeEventListener('blur',go);renderAll()};
+   a.addEventListener('blur',go,{once:true});timer=setTimeout(go,5000);return;
+  }
+  renderAll();
+ };
+})();
