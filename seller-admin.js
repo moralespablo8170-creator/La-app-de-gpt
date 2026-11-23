@@ -187,8 +187,8 @@ function render(){
  const slot=openPanel&&document.querySelector('[data-slot="'+CSS.escape(selectedSellerId||'')+'"]');
  if(slot){const id={day:'panelDay',comp:'panelComp',access:'panelAccess',driver:'panelDriver'}[openPanel],el=document.getElementById(id);if(el){el.classList.remove('admin-hidden');slot.appendChild(el)}
   if(openPanel==='driver'){renderDriverPanel();clearInterval(driverTimer);driverTimer=setInterval(()=>{if(openPanel==='driver'&&document.visibilityState==='visible')refresh()},60000)}else clearInterval(driverTimer);
-  if(openPanel==='access'){const x=team.find(v=>v.uid===selectedSellerId),active=x?.active===true;$('accessBody').innerHTML='<p class="admin-muted">Correo: <b>'+safe(x?.email||'sin correo')+'</b> · '+(active?'acceso activo':'acceso desactivado')+'</p>'+(x?.email?'<button type="button" class="admin-btn" id="accWa">📲 Enviar acceso por WhatsApp</button><button type="button" class="admin-btn secondary" id="accReset">📧 Enviarle correo para cambiar clave</button>':'')+'<button type="button" class="admin-btn secondary" id="accToggle">'+(active?'⛔ Desactivar a este vendedor':'✅ Activar a este vendedor')+'</button>';
-   if($('accWa'))$('accWa').onclick=()=>shareSellerAccess(x.displayName,x.email,'',x.role);if($('accReset'))$('accReset').onclick=()=>sendSellerReset(x.uid);$('accToggle').onclick=()=>toggleSeller(x.uid)}
+  if(openPanel==='access'){const x=team.find(v=>v.uid===selectedSellerId),active=x?.active===true;$('accessBody').innerHTML='<p class="admin-muted">Correo: <b>'+safe(x?.email||'sin correo')+'</b> · '+(active?'acceso activo':'acceso desactivado')+'</p>'+(x?.email?'<button type="button" class="admin-btn" id="accWa">📲 Enviar acceso por WhatsApp</button><button type="button" class="admin-btn secondary" id="accReset">📧 Enviarle correo para cambiar clave</button>':'')+'<button type="button" class="admin-btn secondary" id="accEdit">✏️ Editar nombre o correo</button><button type="button" class="admin-btn secondary" id="accToggle">'+(active?'⛔ Desactivar a este vendedor':'✅ Activar a este vendedor')+'</button>';
+   if($('accWa'))$('accWa').onclick=()=>shareSellerAccess(x.displayName,x.email,'',x.role);if($('accReset'))$('accReset').onclick=()=>sendSellerReset(x.uid);$('accToggle').onclick=()=>toggleSeller(x.uid);$('accEdit').onclick=()=>openMemberEdit(x)}
  }
  const seller=sellers.find(s=>s.uid===selectedSellerId),session=seller?sessionFor(seller.uid):null;
  $('adminDetailTitle').textContent=seller?'Detalle de '+(seller.displayName||seller.email||'vendedor'):'Detalle diario · todos los vendedores';
@@ -260,7 +260,7 @@ async function refresh(){
    console.warn('Control de vendedores: lectura fallida en '+name,result.reason);
    return [name,null];
   }));
-  if(docs.members!==null){sellers=docs.members.map(d=>({uid:d.id,...d.data()})).filter(x=>x.role==='seller');drivers=docs.members.map(d=>({uid:d.id,...d.data()})).filter(x=>x.role==='driver')}
+  if(docs.members!==null){sellers=docs.members.map(d=>({uid:d.id,...d.data()})).filter(x=>x.role==='seller'&&!x.replacedBy);drivers=docs.members.map(d=>({uid:d.id,...d.data()})).filter(x=>x.role==='driver'&&!x.replacedBy)}
   if(docs.driverSessions!==null)driverSessions=docs.driverSessions.map(d=>({id:d.id,...d.data()}));
   loadOffice();
   hideRemediesFromSellers().catch(e=>console.warn('Remedios:',e));
@@ -356,9 +356,10 @@ async function createSellerAccount(){
  if(!owner){label.textContent='Inicia sesión como propietario.';return}
  if(navigator.onLine===false){label.textContent='Conéctate a internet para crear la cuenta.';return}
  if(displayName.length<2||displayName.length>80){label.textContent='Escribe el nombre del vendedor (2 a 80 caracteres).';return}
- if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){label.textContent='Escribe un correo electrónico válido.';return}
+ const chk=checkEmail(email);if(chk.state==='bad'){label.textContent=chk.msg;return}
  if(email===String(owner.email||'').toLowerCase()){label.textContent='Usa un correo distinto al de la cuenta propietaria.';return}
  if(password.length<8){label.textContent='La clave inicial debe tener al menos 8 caracteres.';return}
+ if(!window.confirm('Revisa el correo antes de crear la cuenta:\n\n'+email+'\n\n'+(chk.state==='warn'?'⚠️ Parece mal escrito. '+chk.msg+'\n\n':'')+'¿Está bien escrito, letra por letra?'))return;
  button.disabled=true;label.textContent='Creando la cuenta del vendedor…';
  let created=null;
  try{
@@ -391,6 +392,84 @@ async function createSellerAccount(){
   button.disabled=!owner;
  }
 }
+// ===== Validador de correo: avisa al instante si el correo está incompleto o tiene un error típico =====
+const EMAIL_DOMAIN_FIX={'gmai.com':'gmail.com','gmial.com':'gmail.com','gamil.com':'gmail.com','gmal.com':'gmail.com','gnail.com':'gmail.com','gmaill.com':'gmail.com','gmil.com':'gmail.com','gmail.co':'gmail.com','gmail.cl':'gmail.com','gmail.con':'gmail.com','gmail.cm':'gmail.com','gmail.om':'gmail.com','mail.com':'gmail.com','email.com':'gmail.com','gmail.comm':'gmail.com',
+ 'hotmial.com':'hotmail.com','hotmal.com':'hotmail.com','hotmai.com':'hotmail.com','hotamil.com':'hotmail.com','homail.com':'hotmail.com','hotmil.com':'hotmail.com','hotmail.co':'hotmail.com','hotmail.con':'hotmail.com',
+ 'outlok.com':'outlook.com','outloo.com':'outlook.com','outlook.co':'outlook.com','outlook.con':'outlook.com','yaho.com':'yahoo.com','yahoo.con':'yahoo.com','iclod.com':'icloud.com','icloud.co':'icloud.com','icloud.con':'icloud.com'};
+function checkEmail(raw){
+ const email=String(raw||'').trim().toLowerCase().replace(/\s+/g,'');
+ if(!email)return {state:'empty',email,msg:''};
+ if(!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/.test(email)||/\.\.|@\.|\.@/.test(email))return {state:'bad',email,msg:'Correo incompleto o mal escrito (ejemplo: nombre@gmail.com).'};
+ const at=email.lastIndexOf('@'),user=email.slice(0,at),dom=email.slice(at+1);
+ const fix=EMAIL_DOMAIN_FIX[dom]||(dom.endsWith('.con')?dom.slice(0,-4)+'.com':'');
+ if(fix)return {state:'warn',email,suggest:user+'@'+fix,msg:'¿Quisiste decir '+user+'@'+fix+'?'};
+ return {state:'ok',email,msg:'✓ Formato correcto. Revísalo letra por letra: '+email};
+}
+function attachEmailCheck(input){
+ if(!input||!input.isConnected||input.dataset.chk)return;input.dataset.chk='1';
+ const hint=document.createElement('div');input.after(hint);
+ const paint=()=>{const r=checkEmail(input.value);hint.className='email-hint '+r.state;hint.innerHTML=safe(r.msg)+(r.suggest?' <button type="button" class="email-fix">Sí, corregir</button>':'');const b=hint.querySelector('.email-fix');if(b)b.onclick=()=>{input.value=r.suggest;input.dispatchEvent(new Event('input'))}};
+ input.addEventListener('input',paint);paint();
+}
+// ===== Editar nombre o correo de un vendedor / repartidor =====
+// El nombre se cambia directo. El correo de acceso no se puede cambiar desde el navegador en el plan gratuito,
+// así que se crea un acceso nuevo con el correo correcto (mismo nombre y tipo de cuenta) y el anterior queda desactivado.
+function memberHasHistory(uid){
+ return sales.some(x=>x.sellerUid===uid)||sessions.some(x=>x.sellerUid===uid)||driverSessions.some(x=>x.driverUid===uid)||clients.some(c=>Array.isArray(c.assignedSellerUids)&&c.assignedSellerUids.includes(uid));
+}
+function openMemberEdit(x){
+ const body=$('accessBody');
+ body.innerHTML='<div class="member-edit"><strong>✏️ Editar datos de '+safe(x.displayName||'')+'</strong>'
+  +'<label>Nombre<input id="accName" type="text" maxlength="80" value="'+safe(x.displayName||'')+'"></label>'
+  +'<label>Correo de acceso<input id="accEmail" type="email" inputmode="email" autocomplete="off" maxlength="254" value="'+safe(x.email||'')+'"></label>'
+  +'<label id="accPwWrap" hidden>Clave para el correo nuevo (mínimo 8)<input id="accPw" type="text" autocomplete="off" maxlength="128" placeholder="Clave nueva"></label>'
+  +'<p id="accEditNote" class="admin-muted"></p>'
+  +'<button type="button" class="admin-btn" id="accSave">Guardar cambios</button><button type="button" class="admin-btn secondary" id="accCancel">Cancelar</button></div>';
+ const em=$('accEmail');attachEmailCheck(em);
+ const sync=()=>{const changed=checkEmail(em.value).email!==String(x.email||'').toLowerCase();$('accPwWrap').hidden=!changed;$('accEditNote').textContent=changed?'Al cambiar el correo se crea el acceso con el correo nuevo y esta clave; el correo anterior deja de funcionar.':''};
+ em.addEventListener('input',sync);sync();
+ $('accCancel').onclick=()=>render();
+ $('accSave').onclick=()=>saveMemberEdit(x);
+}
+async function saveMemberEdit(x){
+ if(!owner||navigator.onLine===false){status('Necesitas la cuenta propietaria y conexión para guardar.','error');return}
+ const name=$('accName').value.trim(),chk=checkEmail($('accEmail').value),email=chk.email,oldEmail=String(x.email||'').toLowerCase(),btn=$('accSave');
+ if(name.length<2||name.length>80){status('Escribe el nombre (2 a 80 caracteres).','error');return}
+ if(chk.state==='bad'||chk.state==='empty'){status(chk.msg||'Escribe el correo.','error');return}
+ if(email===oldEmail){
+  if(name===(x.displayName||'')){status('No hay cambios que guardar.');return}
+  if(!window.confirm('¿Cambiar el nombre a "'+name+'"?'))return;
+  btn.disabled=true;
+  try{await updateDoc(doc(db,'orgs',ORG,'members',x.uid),{displayName:name,updatedAt:new Date().toISOString()});status('Nombre actualizado.','ok');await refresh()}
+  catch(error){console.error(error);status(error.message||'No se pudo guardar el nombre.','error');btn.disabled=false}
+  return;
+ }
+ if(email===String(owner.email||'').toLowerCase()){status('Usa un correo distinto al de la cuenta propietaria.','error');return}
+ const pw=$('accPw').value;if(pw.length<8){status('Escribe una clave de al menos 8 caracteres para el correo nuevo.','error');$('accPw').focus();return}
+ if(x.role==='seller'&&clients.some(c=>Array.isArray(c.assignedSellerUids)&&c.assignedSellerUids.includes(x.uid))){status('Este vendedor ya tiene clientes asignados: para no perder sus rutas, su correo no se cambia aquí.','error');return}
+ const hist=memberHasHistory(x.uid);
+ if(!window.confirm('¿Cambiar el correo de '+name+'?\n\nAntes: '+(oldEmail||'—')+'\nNuevo: '+email+'\n\n'+(chk.state==='warn'?'⚠️ '+chk.msg+'\n\n':'')+(hist?'⚠️ Ya tiene jornadas o ventas con el correo anterior: ese historial queda guardado en el acceso anterior.\n\n':'')+'El correo anterior dejará de funcionar. ¿Está bien escrito el nuevo?'))return;
+ btn.disabled=true;status('Creando el acceso con el correo nuevo…');
+ let created=null;
+ try{
+  await setPersistence(provisioningAuth,inMemoryPersistence);
+  const cred=await createUserWithEmailAndPassword(provisioningAuth,email,pw);created=cred.user;
+  await updateProfile(created,{displayName:name}).catch(()=>{});
+  const now=new Date().toISOString();const {uid:oldUid,...data}=x;
+  await setDoc(doc(db,'orgs',ORG,'members',created.uid),{...data,displayName:name,email,active:true,replaces:oldUid,provisionedBy:owner.uid,createdAt:now,updatedAt:now});
+  await updateDoc(doc(db,'orgs',ORG,'members',oldUid),{active:false,replacedBy:created.uid,updatedAt:now});
+  selectedSellerId=created.uid;openPanel='access';
+  await refresh();
+  status('✅ Correo cambiado a '+email+'.','ok');
+  if(window.confirm('Listo. ¿Enviarle ahora el acceso nuevo por WhatsApp a '+name+'?'))shareSellerAccess(name,email,pw,x.role);
+ }catch(error){
+  console.error('No se pudo cambiar el correo.',error.code||error.message);
+  if(created)await deleteUser(created).catch(()=>{});
+  const code=String(error.code||'');
+  status(code.includes('email-already-in-use')?'Ese correo ya tiene una cuenta. Revisa si ya existe en la lista.':code.includes('invalid-email')?'El correo no es válido.':code.includes('weak-password')?'La clave es demasiado débil.':(error.message||'No se pudo cambiar el correo.'),'error');
+  btn.disabled=false;
+ }finally{await signOut(provisioningAuth).catch(()=>{})}
+}
 // ===== Entrega de acceso al vendedor =====
 const SELLER_APP_URL=new URL('./vendedor.html',location.href).href;
 const DRIVER_APP_URL=new URL('./repartidor.html',location.href).href;
@@ -405,7 +484,7 @@ function shareSellerAccess(name,email,password,role){
 function showCreatedAccess(name,email,password){
  let box=$('sellerCreatedAccess');
  if(!box){box=document.createElement('div');box.id='sellerCreatedAccess';box.className='admin-row';box.style.cssText='margin-top:10px;background:#f0fdf4;border-color:#86efac';$('sellerProfileStatus').after(box)}
- box.innerHTML='<strong>Datos para '+safe(name)+'</strong><small>Enlace: '+safe(SELLER_APP_URL)+'</small><small>Correo: '+safe(email)+'</small><small>Clave: '+safe(password)+'</small><button type="button" class="admin-btn" id="sellerCreatedWa">📲 Enviar acceso por WhatsApp</button><button type="button" class="admin-btn secondary" id="sellerCreatedDone">Listo, ya se lo envié</button>';
+ box.innerHTML='<strong>Datos para '+safe(name)+'</strong><small>Enlace: '+safe($('memberRole').value==='driver'?DRIVER_APP_URL:SELLER_APP_URL)+'</small><small>Correo: '+safe(email)+'</small><small>Clave: '+safe(password)+'</small><button type="button" class="admin-btn" id="sellerCreatedWa">📲 Enviar acceso por WhatsApp</button><button type="button" class="admin-btn secondary" id="sellerCreatedDone">Listo, ya se lo envié</button>';
  $('sellerCreatedWa').onclick=()=>shareSellerAccess(name,email,password,$('memberRole').value);
  $('sellerCreatedDone').onclick=()=>box.remove();
 }
@@ -417,7 +496,7 @@ async function sendSellerReset(uid){
 }
 async function toggleSeller(uid){
  if(!owner||navigator.onLine===false){status('Necesitas la cuenta propietaria y conexión para cambiar el acceso.','error');return}
- const seller=sellers.find(item=>item.uid===uid);if(!seller)return;
+ const seller=[...sellers,...drivers].find(item=>item.uid===uid);if(!seller)return;
  const nextActive=seller.active!==true;
  if(!nextActive&&!window.confirm('¿Desactivar el acceso de '+(seller.displayName||seller.email||uid)+'?'))return;
  try{
@@ -457,3 +536,4 @@ $('catalogBackupConfirm').onchange=refreshCatalogPrepState;
 $('catalogPrepareButton').onclick=prepareCatalog;
 if($('sellerModeToggle'))$('sellerModeToggle').onclick=toggleSellerMode;
 onAuthStateChanged(auth,user=>verify(user).catch(error=>{console.error(error);status('No se pudo verificar la cuenta.','error')}));
+attachEmailCheck(document.getElementById('sellerEmail'));
