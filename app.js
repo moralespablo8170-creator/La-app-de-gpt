@@ -72,28 +72,33 @@ function copyTextNow(v){let ok=false;try{const t=document.createElement('textare
 function copySiiValue(btn){const v=btn.dataset.copy||'';if(!copyTextNow(v)){prompt('Copia este dato (mantén apretado y Copiar):',v);return}
  siiCopied.add(btn.dataset.key||v);saveSiiCopied();
  document.querySelectorAll('.sii-chip.last').forEach(x=>x.classList.remove('last'));btn.classList.add('copied','last');const m=$('siiLastCopied');if(m)m.innerHTML='Copiado: <strong>'+esc(v)+'</strong> → ahora pégalo en el SII'}
-// Copia todos los datos de una factura uno tras otro, del último al primero,
-// para que en el portapapeles del teclado (lo más nuevo arriba) queden de arriba hacia abajo en el orden del formulario.
+// Copia todos los datos de una factura uno tras otro, del último al primero, para que en el portapapeles
+// del teclado (lo más nuevo arriba) queden de arriba hacia abajo en el orden del formulario.
+// El teclado guarda un valor repetido UNA sola vez (ej: dos productos con cantidad 1), así que las cantidades
+// NO se copian sueltas: antes de cada producto va una "guía" única (ej: "1) Clipper ▸ Cant 1 ▸ Precio 14118")
+// que se lee en el portapapeles. La cantidad se escribe a mano mirando la guía; nombre y precio se pegan.
 let siiCopyRunning=false;
 async function copyAllSii(kind){
  if(siiCopyRunning)return;
  const box=document.querySelector('.sii-'+kind);if(!box)return;
- const chips=[...document.querySelectorAll('.sii-rut .sii-chip'),...box.querySelectorAll('.sii-chip')];if(!chips.length)return;
- siiCopyRunning=true;const m=$('siiLastCopied'),firstSeen=new Set(),uniq=chips.filter(c=>{const v=c.dataset.copy;if(firstSeen.has(v))return false;firstSeen.add(v);return true}),order=uniq.slice().reverse();
- const seen=new Map();chips.forEach(c=>seen.set(c.dataset.copy,(seen.get(c.dataset.copy)||0)+1));
- const dups=[...seen].filter(([v,n])=>n>1).map(([v])=>v);
+ const rut=[...document.querySelectorAll('.sii-rut .sii-chip')];
+ const rows=[...box.querySelectorAll('tbody tr')].map(tr=>[...tr.querySelectorAll('.sii-chip')]).filter(r=>r.length===3);
+ const seq=[];rut.forEach(c=>seq.push({v:c.dataset.copy,chips:[c]}));
+ rows.forEach((r,n)=>{const[name,qty,price]=r;seq.push({v:(n+1)+') '+name.dataset.copy+' ▸ Cant '+qty.dataset.copy+' ▸ Precio '+price.dataset.copy,chips:[qty]});seq.push({v:name.dataset.copy,chips:[name]});seq.push({v:price.dataset.copy,chips:[price]})});
+ if(!seq.length)return;
+ siiCopyRunning=true;const m=$('siiLastCopied'),firstSeen=new Set(),order=seq.filter(x=>{if(firstSeen.has(x.v))return false;firstSeen.add(x.v);return true}).reverse();
  try{
   for(let n=0;n<order.length;n++){
-   const c=order[n],v=c.dataset.copy||'';
-   if(n===0)copyTextNow(v);else await navigator.clipboard.writeText(v);
-   siiCopied.add(c.dataset.key);c.classList.add('copied');chips.forEach(o=>{if(o!==c&&o.dataset.copy===c.dataset.copy){siiCopied.add(o.dataset.key);o.classList.add('copied')}});
-   if(m)m.innerHTML='Copiando '+(n+1)+' de '+order.length+'…';
+   const x=order[n];
+   if(n===0)copyTextNow(x.v);else await navigator.clipboard.writeText(x.v);
+   x.chips.forEach(c=>{siiCopied.add(c.dataset.key);c.classList.add('copied')});
+   if(m)m.innerHTML='Copiando '+(n+1)+' de '+order.length+'… no cambies de pantalla';
    await new Promise(r=>setTimeout(r,1000));
   }
-  saveSiiCopied();
-  if(m)m.innerHTML='✅ Listo: '+chips.length+' datos copiados. En el SII abre el 📋 del teclado: arriba está el RUT y siguen en orden.'+(dups.length?'<br>⚠️ Se repiten y el teclado los guarda <b>una sola vez</b> (en su primer lugar): <strong>'+dups.map(esc).join(', ')+'</strong>. Cuando vuelva a tocar ese valor, búscalo más arriba en el 📋.':'');
+  seq.forEach(x=>x.chips.forEach(c=>{siiCopied.add(c.dataset.key);c.classList.add('copied')}));saveSiiCopied();
+  if(m)m.innerHTML='✅ Listo. En el 📋 del teclado, de arriba hacia abajo: RUT, dígito y por cada producto: <b>la guía</b> (número, nombre, <b>cantidad</b> y precio), el nombre y el precio.<br>👉 La <b>cantidad escríbela a mano</b> leyéndola en la guía.';
  }catch(e){
-  if(m)m.innerHTML='⚠️ El teléfono no dejó copiar todo seguido (se copió hasta el dato '+'marcado en verde). Mantén la app abierta en pantalla mientras copia, o toca los datos que falten uno por uno.';
+  if(m)m.innerHTML='⚠️ El teléfono cortó la copia a la mitad. Mantén la app en pantalla mientras copia y vuelve a tocar el botón.';
  }finally{siiCopyRunning=false}
 }
 function openSii(url){const w=window.open(url,'zipperSII');if(!w)location.href=url}
@@ -106,7 +111,7 @@ function siiSection(kind,items){
  const rows=calc.map((l,n)=>{const k=kind+n+'|'+l.desc+'|';return '<tr><td>'+copyChip(l.desc,null,k+'d')+'</td><td>'+copyChip(String(l.qty),null,k+'q'+l.qty)+'</td><td>'+copyChip(String(l.unit),'$'+l.unit,k+'p'+l.unit)+'</td><td>'+money(l.line)+'</td></tr>'}).join('');
  return '<section class="sii-box sii-'+kind+'"><h3>'+(ex?'🍂 Factura EXENTA (tabacos)':'🧾 Factura normal (con IVA)')+'</h3>'
   +'<button type="button" class="primary wide sii-open" data-url="'+SII_URL[kind]+'">🔗 Abrir SII · '+(ex?'Factura exenta':'Factura electrónica')+' (pestaña aparte)</button>'
-  +'<button type="button" class="secondary wide sii-copy-all" data-kind="'+kind+'">📋 Copiar todo en orden (RUT, dígito y cada producto)</button>'+'<div class="invoice-table-scroll"><table class="invoice-table"><thead><tr><th>Producto</th><th>Cant.</th><th>'+(ex?'Precio unit.':'Precio unit. neto')+'</th><th>'+(ex?'Total':'Neto')+'</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+  +'<button type="button" class="secondary wide sii-copy-all" data-kind="'+kind+'">📋 Copiar todo en orden (RUT, dígito, guía, nombre y precio)</button>'+'<div class="invoice-table-scroll"><table class="invoice-table"><thead><tr><th>Producto</th><th>Cant.</th><th>'+(ex?'Precio unit.':'Precio unit. neto')+'</th><th>'+(ex?'Total':'Neto')+'</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
   +(ex?'<p><strong>Total exento: '+money(siiTotal)+'</strong> (sin IVA)</p>':'<p>Neto: '+money(net)+' · IVA 19%: '+money(iva)+'</p><p><strong>Total factura SII aprox.: '+money(siiTotal)+'</strong></p>')
   +(diff?'<p class="muted">Cobrado en la venta: '+money(charged)+' (diferencia de '+money(Math.abs(diff))+' por redondear los precios a entero).</p>':'')
   +'</section>';
