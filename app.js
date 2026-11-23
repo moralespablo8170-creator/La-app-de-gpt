@@ -79,19 +79,19 @@ async function copyAllSii(kind){
  if(siiCopyRunning)return;
  const box=document.querySelector('.sii-'+kind);if(!box)return;
  const chips=[...document.querySelectorAll('.sii-rut .sii-chip'),...box.querySelectorAll('.sii-chip')];if(!chips.length)return;
- siiCopyRunning=true;const m=$('siiLastCopied'),order=chips.slice().reverse();
+ siiCopyRunning=true;const m=$('siiLastCopied'),firstSeen=new Set(),uniq=chips.filter(c=>{const v=c.dataset.copy;if(firstSeen.has(v))return false;firstSeen.add(v);return true}),order=uniq.slice().reverse();
  const seen=new Map();chips.forEach(c=>seen.set(c.dataset.copy,(seen.get(c.dataset.copy)||0)+1));
  const dups=[...seen].filter(([v,n])=>n>1).map(([v])=>v);
  try{
   for(let n=0;n<order.length;n++){
    const c=order[n],v=c.dataset.copy||'';
    if(n===0)copyTextNow(v);else await navigator.clipboard.writeText(v);
-   siiCopied.add(c.dataset.key);c.classList.add('copied');
+   siiCopied.add(c.dataset.key);c.classList.add('copied');chips.forEach(o=>{if(o!==c&&o.dataset.copy===c.dataset.copy){siiCopied.add(o.dataset.key);o.classList.add('copied')}});
    if(m)m.innerHTML='Copiando '+(n+1)+' de '+order.length+'…';
-   await new Promise(r=>setTimeout(r,700));
+   await new Promise(r=>setTimeout(r,1000));
   }
   saveSiiCopied();
-  if(m)m.innerHTML='✅ Listo: '+order.length+' datos copiados. En el SII abre el 📋 del teclado: arriba está el RUT y siguen en orden.'+(dups.length?'<br>⚠️ Estos valores se repiten y el teclado los guarda una sola vez: <strong>'+dups.map(esc).join(', ')+'</strong>. Usa el mismo cuando toque.':'');
+  if(m)m.innerHTML='✅ Listo: '+chips.length+' datos copiados. En el SII abre el 📋 del teclado: arriba está el RUT y siguen en orden.'+(dups.length?'<br>⚠️ Se repiten y el teclado los guarda <b>una sola vez</b> (en su primer lugar): <strong>'+dups.map(esc).join(', ')+'</strong>. Cuando vuelva a tocar ese valor, búscalo más arriba en el 📋.':'');
  }catch(e){
   if(m)m.innerHTML='⚠️ El teléfono no dejó copiar todo seguido (se copió hasta el dato '+'marcado en verde). Mantén la app abierta en pantalla mientras copia, o toca los datos que falten uno por uno.';
  }finally{siiCopyRunning=false}
