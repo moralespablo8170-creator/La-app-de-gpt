@@ -57,16 +57,22 @@ function itemsTotal(items){return(items||[]).reduce((a,i)=>a+Math.round(Number(i
 function invoiceSaleTotal(s,ids){return itemsTotal(splitInvoiceItems(s.items,ids).yes)}
 function siiNum(n){return String(Math.round(Number(n||0)*100)/100).replace('.',',')}
 function groupInvoiceLines(items){const lines={};(items||[]).forEach(i=>{const k=(i.desc||'Producto')+'|'+Number(i.price||0);if(!lines[k])lines[k]={desc:i.desc||'Producto',price:Number(i.price)||0,qty:0};lines[k].qty+=Number(i.qty)||0});return Object.values(lines).sort((a,b)=>a.desc.localeCompare(b.desc))}
-function copyChip(value,label){return '<button type="button" class="sii-chip" data-copy="'+esc(value)+'">'+esc(label??value)+' <span>📋</span></button>'}
+function copyChip(value,label,key){key=key||value;return '<button type="button" class="sii-chip'+(siiCopied.has(key)?' copied':'')+'" data-key="'+esc(key)+'" data-copy="'+esc(value)+'">'+esc(label??value)+' <span>📋</span></button>'}
 // Copia un dato suelto (RUT, producto, cantidad o precio) para pegarlo en el formulario del SII.
-function copySiiValue(btn){const v=btn.dataset.copy||'';const ok=()=>{const old=btn.innerHTML;btn.classList.add('copied');btn.innerHTML='✓ Copiado';setTimeout(()=>{btn.classList.remove('copied');btn.innerHTML=old},1300)};
- if(navigator.clipboard?.writeText)navigator.clipboard.writeText(v).then(ok).catch(()=>prompt('Copia este dato:',v));else prompt('Copia este dato:',v)}
+// Usa el método clásico (funciona en todos los teléfonos) y además el moderno. Lo copiado queda marcado en verde.
+const siiCopied=new Set((()=>{try{return JSON.parse(sessionStorage.getItem('zipperSiiCopied')||'[]')}catch(e){return[]}})());
+function copyTextNow(v){let ok=false;try{const t=document.createElement('textarea');t.value=v;t.setAttribute('readonly','');t.style.cssText='position:fixed;top:0;left:0;opacity:0;font-size:16px';document.body.appendChild(t);t.focus();t.select();t.setSelectionRange(0,v.length);ok=document.execCommand('copy');t.remove()}catch(e){}
+ try{if(navigator.clipboard?.writeText){navigator.clipboard.writeText(v).catch(()=>{});ok=true}}catch(e){}return ok}
+function copySiiValue(btn){const v=btn.dataset.copy||'';if(!copyTextNow(v)){prompt('Copia este dato (mantén apretado y Copiar):',v);return}
+ siiCopied.add(btn.dataset.key||v);try{sessionStorage.setItem('zipperSiiCopied',JSON.stringify([...siiCopied]))}catch(e){}
+ document.querySelectorAll('.sii-chip.last').forEach(x=>x.classList.remove('last'));btn.classList.add('copied','last');const m=$('siiLastCopied');if(m)m.innerHTML='Copiado: <strong>'+esc(v)+'</strong> → ahora pégalo en el SII'}
+function openSii(url){const w=window.open(url,'zipperSII');if(!w)location.href=url}
 function siiSection(kind,items){
  if(!items.length)return '';
  const ex=kind==='exenta',lines=groupInvoiceLines(items),total=itemsTotal(items),net=Math.round(total/1.19);
- const rows=lines.map(l=>{const unit=ex?l.price:l.price/1.19;return '<tr><td>'+copyChip(l.desc)+'</td><td>'+copyChip(String(l.qty))+'</td><td>'+copyChip(siiNum(unit),'$'+siiNum(unit))+'</td><td>'+money(Math.round(l.qty*unit))+'</td></tr>'}).join('');
+ const rows=lines.map((l,n)=>{const unit=ex?l.price:l.price/1.19,k=kind+n+'|'+l.desc+'|';return '<tr><td>'+copyChip(l.desc,null,k+'d')+'</td><td>'+copyChip(String(l.qty),null,k+'q'+l.qty)+'</td><td>'+copyChip(siiNum(unit),'$'+siiNum(unit),k+'p'+unit)+'</td><td>'+money(Math.round(l.qty*unit))+'</td></tr>'}).join('');
  return '<section class="sii-box sii-'+kind+'"><h3>'+(ex?'🍂 Factura EXENTA (tabacos)':'🧾 Factura normal (con IVA)')+'</h3>'
-  +'<a class="primary wide sii-open" href="'+SII_URL[kind]+'" target="_blank" rel="noopener">🔗 Abrir SII · '+(ex?'Factura exenta':'Factura electrónica')+'</a>'
+  +'<button type="button" class="primary wide sii-open" data-url="'+SII_URL[kind]+'">🔗 Abrir SII · '+(ex?'Factura exenta':'Factura electrónica')+' (pestaña aparte)</button>'
   +'<div class="invoice-table-scroll"><table class="invoice-table"><thead><tr><th>Producto</th><th>Cant.</th><th>'+(ex?'Precio unit.':'Precio unit. neto')+'</th><th>'+(ex?'Total':'Neto')+'</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
   +(ex?'<p><strong>Total exento: '+money(total)+'</strong> (sin IVA)</p>':'<p><strong>Total con IVA: '+money(total)+'</strong></p><p>Neto referencial: '+money(net)+' · IVA referencial: '+money(total-net)+'</p>')
   +'</section>';
@@ -76,10 +82,11 @@ function renderInvoiceBody(title,headHtml,info,allItems){
  const {afecta,exenta,no}=splitInvoiceItems(allItems),noTotal=itemsTotal(no);
  const excluded=no.length?'<p class="muted">💊 No se facturan (Remedios): '+plural(groupInvoiceLines(no).length,'producto','productos')+' · '+money(noTotal)+'.</p>':'';
  const both=afecta.length&&exenta.length?'<p class="sii-note">Este cliente lleva <strong>2 facturas</strong>: una normal y una exenta por los tabacos.</p>':'';
- const help='<p class="muted">Toca cualquier dato para copiarlo y pégalo en su casilla del SII (mantén apretada la casilla → Pegar). Por seguridad, el SII no deja que otra app llene su formulario.</p>';
+ const help='<div class="sii-help"><strong>Cómo usarlo:</strong><br>1) Toca <b>Abrir SII</b>: se abre en otra pestaña y la app queda aquí.<br>2) Toca un dato (queda en <span style="color:#166534">verde</span>), cambia al SII con el botón de apps recientes ▢ y pégalo (mantén apretada la casilla → Pegar).<br>3) Vuelve con apps recientes ▢, <b>no con la flecha atrás</b>: así no se borra lo que llevas en el SII.<br>💡 Más cómodo: pantalla dividida, con la app arriba y el SII abajo.</div><p id="siiLastCopied" class="sii-last"></p>';
  const body=afecta.length||exenta.length?both+help+siiSection('afecta',afecta)+siiSection('exenta',exenta)+excluded+'<p class="muted">Los valores netos son referenciales y pueden diferir por redondeos del SII.</p>':'<p><strong>Esta venta es solo de remedios: no se factura.</strong></p>'+excluded;
  $('invoiceDetailBody').innerHTML='<h2>'+esc(title)+'</h2>'+headHtml.replace(/RUT: <strong>([^<]*)<\/strong>/,(m,r)=>'RUT: '+(info.rut&&info.rut!=='Sin RUT'?copyChip(info.rut):'<strong>'+r+'</strong>'))+body;
  $('invoiceDetailBody').querySelectorAll('.sii-chip').forEach(b=>b.onclick=()=>copySiiValue(b));
+ $('invoiceDetailBody').querySelectorAll('.sii-open').forEach(b=>b.onclick=()=>openSii(b.dataset.url));
 }
 function saleCost(s){return(s.items||[]).reduce((a,i)=>a+Math.round(Number(i.qty||0)*Number(i.purchasePrice||0)),0)}
 function saleProfit(s){return saleTotal(s)-saleCost(s)}
