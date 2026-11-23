@@ -97,14 +97,18 @@ async function copyAllSii(kind){
  }finally{siiCopyRunning=false}
 }
 function openSii(url){const w=window.open(url,'zipperSII');if(!w)location.href=url}
+// Precio unitario para el SII en número ENTERO (el SII no acepta la coma al pegar): ,5 o más sube 1; menos de ,5 queda igual.
 function siiSection(kind,items){
  if(!items.length)return '';
- const ex=kind==='exenta',lines=groupInvoiceLines(items),total=itemsTotal(items),net=Math.round(total/1.19);
- const rows=lines.map((l,n)=>{const unit=ex?l.price:l.price/1.19,k=kind+n+'|'+l.desc+'|';return '<tr><td>'+copyChip(l.desc,null,k+'d')+'</td><td>'+copyChip(String(l.qty),null,k+'q'+l.qty)+'</td><td>'+copyChip(siiNum(unit),'$'+siiNum(unit),k+'p'+unit)+'</td><td>'+money(Math.round(l.qty*unit))+'</td></tr>'}).join('');
+ const ex=kind==='exenta',lines=groupInvoiceLines(items),charged=itemsTotal(items);
+ const calc=lines.map(l=>{const unit=Math.round(ex?l.price:l.price/1.19);return{...l,unit,line:l.qty*unit}});
+ const net=calc.reduce((a,l)=>a+l.line,0),iva=Math.round(net*0.19),siiTotal=ex?net:net+iva,diff=siiTotal-charged;
+ const rows=calc.map((l,n)=>{const k=kind+n+'|'+l.desc+'|';return '<tr><td>'+copyChip(l.desc,null,k+'d')+'</td><td>'+copyChip(String(l.qty),null,k+'q'+l.qty)+'</td><td>'+copyChip(String(l.unit),'$'+l.unit,k+'p'+l.unit)+'</td><td>'+money(l.line)+'</td></tr>'}).join('');
  return '<section class="sii-box sii-'+kind+'"><h3>'+(ex?'🍂 Factura EXENTA (tabacos)':'🧾 Factura normal (con IVA)')+'</h3>'
   +'<button type="button" class="primary wide sii-open" data-url="'+SII_URL[kind]+'">🔗 Abrir SII · '+(ex?'Factura exenta':'Factura electrónica')+' (pestaña aparte)</button>'
   +'<button type="button" class="secondary wide sii-copy-all" data-kind="'+kind+'">📋 Copiar todo en orden (RUT, dígito y cada producto)</button>'+'<div class="invoice-table-scroll"><table class="invoice-table"><thead><tr><th>Producto</th><th>Cant.</th><th>'+(ex?'Precio unit.':'Precio unit. neto')+'</th><th>'+(ex?'Total':'Neto')+'</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
-  +(ex?'<p><strong>Total exento: '+money(total)+'</strong> (sin IVA)</p>':'<p><strong>Total con IVA: '+money(total)+'</strong></p><p>Neto referencial: '+money(net)+' · IVA referencial: '+money(total-net)+'</p>')
+  +(ex?'<p><strong>Total exento: '+money(siiTotal)+'</strong> (sin IVA)</p>':'<p>Neto: '+money(net)+' · IVA 19%: '+money(iva)+'</p><p><strong>Total factura SII aprox.: '+money(siiTotal)+'</strong></p>')
+  +(diff?'<p class="muted">Cobrado en la venta: '+money(charged)+' (diferencia de '+money(Math.abs(diff))+' por redondear los precios a entero).</p>':'')
   +'</section>';
 }
 // Arma la ventana "para facturar": factura normal y factura exenta por separado; los remedios quedan fuera.
