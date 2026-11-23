@@ -57,14 +57,19 @@ function itemsTotal(items){return(items||[]).reduce((a,i)=>a+Math.round(Number(i
 function invoiceSaleTotal(s,ids){return itemsTotal(splitInvoiceItems(s.items,ids).yes)}
 function siiNum(n){return String(Math.round(Number(n||0)*100)/100).replace('.',',')}
 function groupInvoiceLines(items){const lines={};(items||[]).forEach(i=>{const k=(i.desc||'Producto')+'|'+Number(i.price||0);if(!lines[k])lines[k]={desc:i.desc||'Producto',price:Number(i.price)||0,qty:0};lines[k].qty+=Number(i.qty)||0});return Object.values(lines).sort((a,b)=>a.desc.localeCompare(b.desc))}
-function copyChip(value,label,key){key=key||value;return '<button type="button" class="sii-chip'+(siiCopied.has(key)?' copied':'')+'" data-key="'+esc(key)+'" data-copy="'+esc(value)+'">'+esc(label??value)+' <span>📋</span></button>'}
+function copyChip(value,label,key){key=key||value;return '<span class="sii-chip-wrap"><button type="button" class="sii-chip'+(siiCopied.has(key)?' copied':'')+'" data-key="'+esc(key)+'" data-copy="'+esc(value)+'">'+esc(label??value)+' <span>📋</span></button><button type="button" class="sii-unmark" data-key="'+esc(key)+'" aria-label="Desmarcar">✕</button></span>'}
+function saveSiiCopied(){try{sessionStorage.setItem('zipperSiiCopied',JSON.stringify([...siiCopied]))}catch(e){}}
+function unmarkSii(key){siiCopied.delete(key);saveSiiCopied();document.querySelectorAll('.sii-chip').forEach(b=>{if(b.dataset.key===key)b.classList.remove('copied','last')})}
+function clearSiiMarks(){siiCopied.clear();saveSiiCopied();document.querySelectorAll('.sii-chip').forEach(b=>b.classList.remove('copied','last'));const m=$('siiLastCopied');if(m)m.innerHTML=''}
+// RUT para el SII: el número va sin puntos (el SII los pone solo) y el dígito verificador en su casilla aparte.
+function siiRutParts(rut){const c=String(rut||'').toUpperCase().replace(/[^0-9K]/g,'');return c.length>1?{num:c.slice(0,-1),dv:c.slice(-1)}:null}
 // Copia un dato suelto (RUT, producto, cantidad o precio) para pegarlo en el formulario del SII.
 // Usa el método clásico (funciona en todos los teléfonos) y además el moderno. Lo copiado queda marcado en verde.
 const siiCopied=new Set((()=>{try{return JSON.parse(sessionStorage.getItem('zipperSiiCopied')||'[]')}catch(e){return[]}})());
 function copyTextNow(v){let ok=false;try{const t=document.createElement('textarea');t.value=v;t.setAttribute('readonly','');t.style.cssText='position:fixed;top:0;left:0;opacity:0;font-size:16px';document.body.appendChild(t);t.focus();t.select();t.setSelectionRange(0,v.length);ok=document.execCommand('copy');t.remove()}catch(e){}
  try{if(navigator.clipboard?.writeText){navigator.clipboard.writeText(v).catch(()=>{});ok=true}}catch(e){}return ok}
 function copySiiValue(btn){const v=btn.dataset.copy||'';if(!copyTextNow(v)){prompt('Copia este dato (mantén apretado y Copiar):',v);return}
- siiCopied.add(btn.dataset.key||v);try{sessionStorage.setItem('zipperSiiCopied',JSON.stringify([...siiCopied]))}catch(e){}
+ siiCopied.add(btn.dataset.key||v);saveSiiCopied();
  document.querySelectorAll('.sii-chip.last').forEach(x=>x.classList.remove('last'));btn.classList.add('copied','last');const m=$('siiLastCopied');if(m)m.innerHTML='Copiado: <strong>'+esc(v)+'</strong> → ahora pégalo en el SII'}
 function openSii(url){const w=window.open(url,'zipperSII');if(!w)location.href=url}
 function siiSection(kind,items){
@@ -82,11 +87,13 @@ function renderInvoiceBody(title,headHtml,info,allItems){
  const {afecta,exenta,no}=splitInvoiceItems(allItems),noTotal=itemsTotal(no);
  const excluded=no.length?'<p class="muted">💊 No se facturan (Remedios): '+plural(groupInvoiceLines(no).length,'producto','productos')+' · '+money(noTotal)+'.</p>':'';
  const both=afecta.length&&exenta.length?'<p class="sii-note">Este cliente lleva <strong>2 facturas</strong>: una normal y una exenta por los tabacos.</p>':'';
- const help='<div class="sii-help"><strong>Cómo usarlo:</strong><br>1) Toca <b>Abrir SII</b>: se abre en otra pestaña y la app queda aquí.<br>2) Toca un dato (queda en <span style="color:#166534">verde</span>), cambia al SII con el botón de apps recientes ▢ y pégalo (mantén apretada la casilla → Pegar).<br>3) Vuelve con apps recientes ▢, <b>no con la flecha atrás</b>: así no se borra lo que llevas en el SII.<br>💡 Más cómodo: pantalla dividida, con la app arriba y el SII abajo.</div><p id="siiLastCopied" class="sii-last"></p>';
+ const help='<div class="sii-help"><strong>Cómo usarlo:</strong><br>1) Toca <b>Abrir SII</b> y entra con tu clave.<br>2) Toca los datos que vas a pegar: quedan en <span style="color:#166534">verde</span>. Si marcaste uno por error, toca su <b>✕</b>.<br>3) En el SII, toca la casilla y abre el <b>portapapeles del teclado</b> (ícono 📋 de SwiftKey): ahí están todos los datos que copiaste, toca el que va en esa casilla.<br>4) Cambia entre la app y el SII con apps recientes ▢, <b>nunca con la flecha atrás</b>.</div><div class="actions"><button id="siiClearMarks" class="secondary" type="button">↺ Desmarcar todo</button></div><p id="siiLastCopied" class="sii-last"></p>';
  const body=afecta.length||exenta.length?both+help+siiSection('afecta',afecta)+siiSection('exenta',exenta)+excluded+'<p class="muted">Los valores netos son referenciales y pueden diferir por redondeos del SII.</p>':'<p><strong>Esta venta es solo de remedios: no se factura.</strong></p>'+excluded;
- $('invoiceDetailBody').innerHTML='<h2>'+esc(title)+'</h2>'+headHtml.replace(/RUT: <strong>([^<]*)<\/strong>/,(m,r)=>'RUT: '+(info.rut&&info.rut!=='Sin RUT'?copyChip(info.rut):'<strong>'+r+'</strong>'))+body;
+ $('invoiceDetailBody').innerHTML='<h2>'+esc(title)+'</h2>'+headHtml.replace(/RUT: <strong>([^<]*)<\/strong>/,(m,r)=>{const rp=siiRutParts(info.rut);return 'RUT: <strong>'+r+'</strong>'+(rp?'<br><span class="sii-rut">Para el SII: número '+copyChip(rp.num,null,'rutnum'+rp.num)+' – dígito '+copyChip(rp.dv,null,'rutdv'+rp.num)+'</span>':'')})+body;
  $('invoiceDetailBody').querySelectorAll('.sii-chip').forEach(b=>b.onclick=()=>copySiiValue(b));
  $('invoiceDetailBody').querySelectorAll('.sii-open').forEach(b=>b.onclick=()=>openSii(b.dataset.url));
+ $('invoiceDetailBody').querySelectorAll('.sii-unmark').forEach(b=>b.onclick=ev=>{ev.stopPropagation();unmarkSii(b.dataset.key)});
+ const cl=$('siiClearMarks');if(cl)cl.onclick=clearSiiMarks;
 }
 function saleCost(s){return(s.items||[]).reduce((a,i)=>a+Math.round(Number(i.qty||0)*Number(i.purchasePrice||0)),0)}
 function saleProfit(s){return saleTotal(s)-saleCost(s)}
