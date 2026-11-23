@@ -83,7 +83,10 @@ async function copyAllSii(kind){
  const box=document.querySelector('.sii-'+kind);if(!box)return;
  const rut=[...document.querySelectorAll('.sii-rut .sii-chip')];
  const rows=[...box.querySelectorAll('tbody tr')].map(tr=>[...tr.querySelectorAll('.sii-chip')]).filter(r=>r.length===3);
- const seq=[];rut.forEach(c=>seq.push({v:c.dataset.copy,chips:[c]}));
+ const seq=[],now=new Date(),hh=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')+':'+String(now.getSeconds()).padStart(2,'0');
+ // Encabezado único (lleva la hora) para que siempre quede arriba y marque dónde empieza esta factura.
+ seq.push({v:'▶ FACTURA '+(kind==='exenta'?'EXENTA':'NORMAL')+(rut.length===2?' · RUT '+rut[0].dataset.copy+'-'+rut[1].dataset.copy:'')+' · '+hh,chips:[]});
+ rut.forEach(c=>seq.push({v:c.dataset.copy,chips:[c]}));
  rows.forEach((r,n)=>{const[name,qty,price]=r;seq.push({v:(n+1)+') '+name.dataset.copy+' ▸ Cant '+qty.dataset.copy+' ▸ Precio '+price.dataset.copy,chips:[qty]});seq.push({v:name.dataset.copy,chips:[name]});seq.push({v:price.dataset.copy,chips:[price]})});
  if(!seq.length)return;
  siiCopyRunning=true;const m=$('siiLastCopied'),firstSeen=new Set(),order=seq.filter(x=>{if(firstSeen.has(x.v))return false;firstSeen.add(x.v);return true}).reverse();
@@ -96,7 +99,7 @@ async function copyAllSii(kind){
    await new Promise(r=>setTimeout(r,1000));
   }
   seq.forEach(x=>x.chips.forEach(c=>{siiCopied.add(c.dataset.key);c.classList.add('copied')}));saveSiiCopied();
-  if(m)m.innerHTML='✅ Listo. En el 📋 del teclado, de arriba hacia abajo: RUT, dígito y por cada producto: <b>la guía</b> (número, nombre, <b>cantidad</b> y precio), el nombre y el precio.<br>👉 La <b>cantidad escríbela a mano</b> leyéndola en la guía.';
+  if(m)m.innerHTML='✅ Listo. Si no borraste el 📋 antes, un dato que ya estaba (como el RUT) se queda en su lugar antiguo más abajo: bórralo antes de cada factura. En el 📋, de arriba hacia abajo: ▶ encabezado, RUT, dígito y por cada producto: <b>la guía</b> (número, nombre, <b>cantidad</b> y precio), el nombre y el precio.<br>👉 La <b>cantidad escríbela a mano</b> leyéndola en la guía.';
  }catch(e){
   if(m)m.innerHTML='⚠️ El teléfono cortó la copia a la mitad. Mantén la app en pantalla mientras copia y vuelve a tocar el botón.';
  }finally{siiCopyRunning=false}
