@@ -14,6 +14,9 @@
     if(it.promo)return '★ Desde '+it.promo.min+': '+money(it.promo.price)+' c/'+(it.per||'unidad');
     return '';
   }
+  // Paquetes/displays con unidades conocidas (del formato, ej. "Paquete x 12 und"): precio por unidad.
+  const packUnits=it=>!it.box&&Number(it.units)>1?Number(it.units):0;
+  function unitLine(it,money,short){const u=packUnits(it);if(!u)return '';const each=money(Math.round(it.price/u));return short?u+' und · '+each+' c/u':'Trae '+u+' unidades · '+each+' c/u'}
   const isOffer=it=>!!(it.promo||(it.box&&Math.round(it.box.price/it.box.units)<it.price));
 
   // ---------- Dibujo ----------
@@ -51,8 +54,11 @@
     c.fillStyle='#64748b';c.font='500 44px Inter, system-ui, sans-serif';if(it.fmt&&used<160)wrap(c,it.fmt,W/2,1190+used+10,W-200,52,1,'center');
     // Precio
     c.fillStyle='#fff';c.textAlign='center';c.font='900 170px Poppins, system-ui, sans-serif';c.fillText(money(it.price),W/2,1590);
-    c.font='600 50px Inter, system-ui, sans-serif';c.fillStyle='#cbd5e1';c.fillText(it.box?'por unidad':'por '+(it.per||'unidad'),W/2,1660);
-    const off=isOffer(it)||it.box?offerLine(it,money):'';if(off){c.font='800 50px Poppins, system-ui, sans-serif';const w=Math.min(W-120,c.measureText(off).width+80);c.fillStyle='#dc2626';rr(c,(W-w)/2,1710,w,96,48);c.fill();c.fillStyle='#fff';wrap(c,off,W/2,1775,w-60,56,1,'center')}
+    c.font='600 50px Inter, system-ui, sans-serif';c.fillStyle='#cbd5e1';
+    const pu=packUnits(it),promoOff=isOffer(it)||it.box?offerLine(it,money):'';
+    // Paquete: si no hay oferta, la línea roja muestra unidades y precio por unidad; si hay oferta, va bajo el precio.
+    c.fillText(it.box?'por unidad':'por '+(it.per||'unidad')+(pu&&promoOff?' · '+pu+' und a '+money(Math.round(it.price/pu))+' c/u':''),W/2,1660);
+    const off=promoOff||unitLine(it,money);if(off){c.font='800 50px Poppins, system-ui, sans-serif';const w=Math.min(W-120,c.measureText(off).width+80);c.fillStyle='#dc2626';rr(c,(W-w)/2,1710,w,96,48);c.fill();c.fillStyle='#fff';wrap(c,off,W/2,1775,w-60,56,1,'center')}
     return cv}
 
   async function collage(list){
@@ -63,7 +69,7 @@
     const cw=(W-120-(cols-1)*gap)/cols,ch=(H-top-bottom-30-(rows-1)*gap)/rows;
     for(let i=0;i<n;i++){const it=list[i],x=60+(i%cols)*(cw+gap),y=top+Math.floor(i/cols)*(ch+gap);
       c.fillStyle='#fff';rr(c,x,y,cw,ch,28);c.fill();
-      const fs=cols===3?30:36,lh=fs+4,off=offerLine(it,money).replace(/^📦 /,'').replace(/^★ /,'');
+      const fs=cols===3?30:36,lh=fs+4,off=(offerLine(it,money)||unitLine(it,money,true)).replace(/^📦 /,'').replace(/^★ /,'');
       c.font='800 '+fs+'px Poppins, system-ui, sans-serif';const nl=Math.min(2,countLines(c,it.name,cw-30));
       const offY=y+ch-22,priceY=off?offY-(fs-6)-16:y+ch-26,nameLast=priceY-(fs+18)-10,nameFirst=nameLast-(nl-1)*lh;
       fit(c,await loadImg(it.img),x+16,y+14,cw-32,nameFirst-fs-14-(y+14));
@@ -94,7 +100,7 @@
     let html='',last='';
     show.forEach(x=>{const sec=x.offer?'⭐ Ofertas':x.sec;if(sec!==last){html+='<div class="pm-sec">'+esc(sec)+'</div>';last=sec}
       const on=picked.includes(x.it);
-      html+='<button type="button" class="pm-item'+(on?' on':'')+'" data-k="'+esc(x.it.key)+'">'+(x.it.img?'<img src="'+esc(x.it.img)+'" alt="">':'<span style="width:54px;text-align:center">📦</span>')+'<span><b>'+esc(x.it.name)+'</b><small>'+api.money(x.it.price)+(x.offer?' · <span class="pm-of">'+esc(offerLine(x.it,api.money))+'</span>':'')+'</small></span><span class="pm-tick">'+(on?'✅':'⬜')+'</span></button>'});
+      html+='<button type="button" class="pm-item'+(on?' on':'')+'" data-k="'+esc(x.it.key)+'">'+(x.it.img?'<img src="'+esc(x.it.img)+'" alt="">':'<span style="width:54px;text-align:center">📦</span>')+'<span><b>'+esc(x.it.name)+'</b><small>'+api.money(x.it.price)+(packUnits(x.it)?' · '+esc(unitLine(x.it,api.money,true)):'')+(x.offer?' · <span class="pm-of">'+esc(offerLine(x.it,api.money))+'</span>':'')+'</small></span><span class="pm-tick">'+(on?'✅':'⬜')+'</span></button>'});
     box.innerHTML=html||'<p>No hay productos con ese nombre.</p>';
     $('pmStory').disabled=!picked.length;$('pmStory').textContent='🖼 Estado'+(picked.length>1?'s ('+picked.length+')':'');
     $('pmCollage').disabled=picked.length<2;$('pmCollage').textContent='🧩 Collage'+(picked.length>=2?' ('+Math.min(6,picked.length)+')':'');
