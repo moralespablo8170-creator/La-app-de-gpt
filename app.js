@@ -1245,19 +1245,18 @@ async function sendReceiptToSystem(){
  if(!preparedReceipt){alert('Primero selecciona un comprobante.');return}
  if(typeof File!=='undefined'&&navigator.share){
   try{
-   const ready=receiptFileFor===preparedReceipt&&receiptFilePromise;
    const file=await prepareReceiptFile();
    if(!file)throw new Error('sin ticket');
-   if(!ready){alert('Ticket listo. Toca "Imprimir" otra vez para enviarlo a la impresora.');return}
    await navigator.share({files:[file]});
    closeReceiptPreview();
    return;
   }catch(error){
    if(error?.name==='AbortError')return;
    console.warn('No se pudo compartir el ticket con Fun Print',error);
-   // Ya no se manda a la impresión normal (salía hoja carta): la vista previa queda abierta para reintentar.
-   receiptFilePromise=null;receiptFileFor=null;prepareReceiptFile();
-   alert('No se pudo abrir la impresora esta vez. Toca "Imprimir" de nuevo.');
+   // Ya no se manda a la impresión normal (salía hoja carta): se abre la vista previa con el ticket listo
+   // para tocar "Imprimir" una vez más, sin tener que buscar al cliente en Visitados.
+   receiptFilePromise=null;receiptFileFor=null;openReceiptPreview();
+   alert('La impresora no alcanzó a abrirse. Toca "Imprimir" en la vista previa.');
    return;
   }
  }
