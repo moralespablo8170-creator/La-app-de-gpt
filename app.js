@@ -407,7 +407,7 @@ function loadSeed(){return fetch('./data/zipper-seed.json',{cache:'no-store'}).t
 
 
 function latestSalesForClient(id){return getSales().filter(s=>String(s.clienteId)===String(id)).sort((a,b)=>String(b.fecha||'').localeCompare(String(a.fecha||''))||Number(b.folio||0)-Number(a.folio||0))}function renderVisitedSales(id){const rows=latestSalesForClient(id);$('visitedSales').innerHTML=rows.length?'<div class="kicker">VENTAS REGISTRADAS DE ESTE CLIENTE</div>'+rows.map(s=>'<article class="history-row"><div><strong>#'+esc(s.folio)+' · '+esc(s.fecha)+'</strong><span>'+(s.items||[]).map(i=>esc(i.qty)+' × '+esc(i.desc)).join(' · ')+'</span></div><div class="actions-small"><strong>'+money(saleTotal(s))+'</strong>'+(saleDate(s)===localDate()?'<button class="primary edit-visited-sale" data-id="'+esc(s.clienteId)+'" type="button">Modificar venta</button>':'')+'<button class="secondary reprint-visited" data-id="'+esc(s.id)+'" type="button">Reimprimir</button><button class="danger annul-visited" data-id="'+esc(s.id)+'" type="button">Anular venta</button></div></article>').join(''):'<p class="muted">Este cliente aún no tiene ventas registradas.</p>';document.querySelectorAll('.review-visited').forEach(b=>b.onclick=()=>renderReviewForClient(b.dataset.id));document.querySelectorAll('.edit-visited-sale').forEach(b=>b.onclick=()=>openClientSaleForEdit(b.dataset.id));document.querySelectorAll('.annul-visited').forEach(b=>b.onclick=()=>annulSale(b.dataset.id));document.querySelectorAll('.reprint-visited').forEach(b=>b.onclick=()=>{const sale=getSales().find(x=>String(x.id)===String(b.dataset.id));if(sale){renderPrint(sale);openReceiptPreview()}})}function bindVisitedAnnul(){document.querySelectorAll('.annul-visited').forEach(b=>b.onclick=()=>annulSale(b.dataset.id))}
-function renderExtraVisitedRows(ids){return ids.map(id=>{const c=clientById(id),sale=latestSalesForClient(id).find(s=>saleDate(s)===localDate());if(!c)return '';return '<article class="route-client visited-row"><div><strong>'+esc(c.name)+'</strong><span>'+esc(c.address||'Sin dirección')+'</span><span>Atención fuera de ruta · '+esc(localDate())+'</span></div><div class="actions-small"><span class="sale-status-badge '+(sale?'has-sale':'no-sale')+'">'+(sale?'VENTA · '+money(saleTotal(sale)):'VISITADO · SIN VENTA')+'</span><button class="primary review-visited" data-id="'+esc(c.id)+'" type="button">Revisar</button><button class="primary edit-visited-sale" data-id="'+esc(c.id)+'" type="button">Agregar / modificar venta</button>' +(sale?'<button class="danger annul-visited" data-id="'+esc(sale.id)+'" type="button">Anular venta</button>':'')+'</div></article>'}).join('')}
+function renderExtraVisitedRows(ids){return ids.map(id=>{const c=clientById(id),sale=latestSalesForClient(id).find(s=>saleDate(s)===localDate());if(!c)return '';return '<article class="route-client visited-row"><div><strong>'+esc(c.name)+'</strong><span>'+esc(c.address||'Sin dirección')+'</span><span>Atención fuera de ruta · '+esc(localDate())+'</span></div><div class="actions-small"><span class="sale-status-badge '+(sale?'has-sale':'no-sale')+'">'+(sale?'VENTA · '+money(saleTotal(sale)):'VISITADO · SIN VENTA')+'</span><button class="primary review-visited" data-id="'+esc(c.id)+'" type="button">Revisar</button><button class="primary edit-visited-sale" data-id="'+esc(c.id)+'" type="button">Agregar / modificar venta</button>' +(sale?'<button class="secondary reprint-last" data-id="'+esc(c.id)+'" type="button">Reimprimir último</button><button class="danger annul-visited" data-id="'+esc(sale.id)+'" type="button">Anular venta</button>':'')+'</div></article>'}).join('')}
 function renderHome(){
   repairWednesdayBClientOrder();
   const all=getClients().filter(c=>c.active!==false),session=routeSession(),view=viewedRoute();
@@ -426,6 +426,9 @@ function renderHome(){
   const rows=filtered.filter(c=>showVisited?visited.includes(String(c.id)):!visited.includes(String(c.id))).sort((a,b)=>showVisited?visited.indexOf(String(a.id))-visited.indexOf(String(b.id)):clientRoute(a,view.week).position-clientRoute(b,view.week).position||bestSearchScore([a.name,a.address],hn)-bestSearchScore([b.name,b.address],hn)||bestSearchScore([a.address,a.name],ha)-bestSearchScore([b.address,b.name],ha)||a.name.localeCompare(b.name,'es',{sensitivity:'base'}));
   $('routeClients').innerHTML=rows.length?rows.map(c=>{const sale=latestSalesForClient(c.id).find(s=>saleDate(s)===localDate());return '<article class="route-client '+(showVisited?'visited-row':'')+'"><div><strong>'+esc(c.name)+'</strong><span>'+esc(c.address||'Sin dirección')+'</span><span>Semana '+esc(view.week)+' · '+esc(view.day)+'</span></div><div class="actions-small">'+(showVisited?'<span class="sale-status-badge '+(sale?'has-sale':'no-sale')+'">'+(sale?'VENTA · '+money(saleTotal(sale)):'VISITADO · SIN VENTA')+'</span><button class="primary review-visited" data-id="'+esc(c.id)+'" type="button">Revisar</button><button class="primary edit-visited-sale" data-id="'+esc(c.id)+'" type="button">Agregar / modificar venta</button><button class="secondary reprint-last" data-id="'+esc(c.id)+'" type="button">Reimprimir último</button>' +(sale?'<button class="danger annul-visited" data-id="'+esc(sale.id)+'" type="button">Anular venta</button>':'')+'<button class="ghost view-client-sales" data-id="'+esc(c.id)+'" type="button">Ventas anteriores</button>':'<button class="primary select-client" data-id="'+esc(c.id)+'" type="button">Carrito</button><button class="secondary mark-visited" data-id="'+esc(c.id)+'" type="button">Visitado</button>')+'</div></article>'}).join(''):'<p class="muted">'+(showVisited?'Aún no hay clientes visitados.':'No quedan clientes pendientes para esta ruta.')+'</p>';
   if(showVisited&&extraIds.length)$('routeClients').insertAdjacentHTML('beforeend',renderExtraVisitedRows(extraIds));
+  // Visitados: el último cliente atendido siempre arriba, aunque sea de otra ruta (antes los de fuera de ruta quedaban al final).
+  if(showVisited){const box=$('routeClients'),pos=id=>{const i=visited.indexOf(String(id));return i<0?1e6:i};
+    [...box.querySelectorAll(':scope > article.route-client')].map((el,i)=>({el,i,k:pos(el.querySelector('[data-id]')?.dataset.id)})).sort((a,b)=>a.k-b.k||a.i-b.i).forEach(x=>box.appendChild(x.el))}
   $('visitedSales').classList.toggle('hidden',!showVisited);$('visitedBack').classList.toggle('hidden',!showVisited);
   document.querySelectorAll('.review-visited').forEach(b=>b.onclick=()=>renderReviewForClient(b.dataset.id));
   document.querySelectorAll('.edit-visited-sale').forEach(b=>b.onclick=()=>openClientSaleForEdit(b.dataset.id));
@@ -1115,7 +1118,14 @@ let preparedReceipt=null;
 function renderPrint(s){preparedReceipt=s;$('printArea').innerHTML='<div class="receipt"><h2>DISTRIBUIDORA ZIPPER</h2><div>Comprobante #'+esc(s.folio)+' · '+esc(s.fecha)+'</div><div style="margin:6px 0"><strong>'+esc(s.cliente)+'</strong></div>'+(s.items||[]).map(i=>'<div class="line ticket-product-line"><span class="ticket-product">'+esc(i.desc)+(i.promotion?' · OFERTA':'')+'</span><span class="ticket-calculation">'+esc(i.qty)+' × '+money(i.price)+' = <strong>'+money(Math.round(Number(i.qty)*Number(i.price)))+'</strong></span></div>').join('')+'<div class="total"><span>TOTAL</span><strong>'+money(saleTotal(s))+'</strong></div></div>'}
 function receiptFormat(){return '80'}
 function applyReceiptFormat(){const f='80';$('receiptFormat').value=f;localStorage.setItem('zipperPrintFormat',f);const width=f==='58'?'48mm':f==='80'?'72mm':'190mm';const receipt=$('printArea').querySelector('.receipt');if(receipt)receipt.style.width=width;$('receiptPreview').innerHTML=$('printArea').innerHTML;const preview=$('receiptPreview').querySelector('.receipt');if(preview){preview.style.maxWidth='100%';preview.style.margin='0 auto'}let style=$('receiptPageStyle');if(!style){style=document.createElement('style');style.id='receiptPageStyle';document.head.appendChild(style)}const chars=f==='58'?16:28;const lines=(preparedReceipt?.items||[]).reduce((sum,i)=>sum+Math.ceil((String(i.desc||'')+(i.promotion?' · OFERTA':'')).length/chars)+1,0);let height=Math.max(65,50+lines*5);if(f!=='letter'&&receipt){const measure=document.createElement('div');measure.className='print-area';measure.style.cssText='position:fixed;left:-10000px;top:0;visibility:hidden;display:block;pointer-events:none';const copy=receipt.cloneNode(true);copy.style.cssText='width:'+width+';max-width:none;margin:0;font-size:11px;overflow-wrap:anywhere';measure.appendChild(copy);document.body.appendChild(measure);try{const actual=copy.getBoundingClientRect().height;if(actual>0)height=Math.max(65,Math.ceil(actual*25.4/96)+10)}finally{measure.remove()}}style.textContent='@media print{@page{size:'+(f==='letter'?'letter':f+'mm '+height+'mm')+';margin:3mm}.print-area .receipt{width:'+width+';max-width:100%;margin:0;font-size:11px;overflow-wrap:anywhere}.receipt .line{gap:6px}.receipt .line strong{white-space:nowrap;flex:none}}';$('receiptFormatNote').textContent=f==='letter'?'Papel carta. Selecciona también carta en el diálogo de impresión.':'Rollo de '+f+' mm. En el diálogo de Android, selecciona el servicio de impresión y el mismo ancho de papel. Desactiva encabezados y pies del navegador si aparecen.'}
-function openReceiptPreview(){if(!preparedReceipt)return;$('receiptFormat').value=receiptFormat();applyReceiptFormat();$('receiptPrintModal').classList.remove('hidden')}
+// El ticket se arma apenas se abre la vista previa: así, al tocar Imprimir, se comparte al instante a Fun Print.
+// Si se arma recién al tocar, a veces el teléfono vence el permiso de compartir y caía a la impresión normal (hoja carta).
+let receiptFileFor=null,receiptFilePromise=null;
+function prepareReceiptFile(){if(!preparedReceipt)return null;if(receiptFileFor===preparedReceipt&&receiptFilePromise)return receiptFilePromise;receiptFileFor=preparedReceipt;
+ receiptFilePromise=(async()=>{let file=null;try{file=await createReceiptPdfFile(true)}catch(e){console.warn('Ticket de imagen no disponible, se usa el PDF de texto',e)}
+  if(!file||(navigator.canShare&&!navigator.canShare({files:[file]})))file=await createReceiptPdfFile();return file})();
+ receiptFilePromise.catch(()=>{receiptFilePromise=null;receiptFileFor=null});return receiptFilePromise}
+function openReceiptPreview(){if(!preparedReceipt)return;if(typeof File!=='undefined'&&navigator.share)prepareReceiptFile();$('receiptFormat').value=receiptFormat();applyReceiptFormat();$('receiptPrintModal').classList.remove('hidden')}
 function closeReceiptPreview(){$('receiptPrintModal').classList.add('hidden')}
 async function createReceiptPdfFile(asImage){
  if(!preparedReceipt){alert('Primero selecciona un comprobante.');return}
@@ -1235,17 +1245,20 @@ async function sendReceiptToSystem(){
  if(!preparedReceipt){alert('Primero selecciona un comprobante.');return}
  if(typeof File!=='undefined'&&navigator.share){
   try{
-   let file=null;
-   try{file=await createReceiptPdfFile(true)}catch(e){console.warn('Ticket de imagen no disponible, se usa el PDF de texto',e)}
-   if(!file||(navigator.canShare&&!navigator.canShare({files:[file]})))file=await createReceiptPdfFile();
-   if(!navigator.canShare||navigator.canShare({files:[file]})){
-    await navigator.share({files:[file]});
-    closeReceiptPreview();
-    return;
-   }
+   const ready=receiptFileFor===preparedReceipt&&receiptFilePromise;
+   const file=await prepareReceiptFile();
+   if(!file)throw new Error('sin ticket');
+   if(!ready){alert('Ticket listo. Toca "Imprimir" otra vez para enviarlo a la impresora.');return}
+   await navigator.share({files:[file]});
+   closeReceiptPreview();
+   return;
   }catch(error){
    if(error?.name==='AbortError')return;
    console.warn('No se pudo compartir el ticket con Fun Print',error);
+   // Ya no se manda a la impresión normal (salía hoja carta): la vista previa queda abierta para reintentar.
+   receiptFilePromise=null;receiptFileFor=null;prepareReceiptFile();
+   alert('No se pudo abrir la impresora esta vez. Toca "Imprimir" de nuevo.');
+   return;
   }
  }
  applyReceiptFormat();closeReceiptPreview();requestAnimationFrame(()=>window.print());
