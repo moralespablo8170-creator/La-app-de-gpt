@@ -28,7 +28,10 @@
     if(existing)existing.qty+=qty;else cart.push({productId:fresh.id,qty});
     return 'ok';
   }
+  // Desactivado a pedido (quitaba pantalla en el carrito). Para volver a mostrarlo, poner SHOW_SUGGESTED=true.
+  const SHOW_SUGGESTED=false;
   function renderSuggested(){
+    if(!SHOW_SUGGESTED){const b=$('cartSuggested');if(b)b.remove();return}
     const section=$('cartSection');if(!section||section.classList.contains('hidden')||!selectedClientId)return;
     let box=$('cartSuggested');
     if(!box){box=document.createElement('div');box.id='cartSuggested';box.className='cart-suggested';section.querySelector('.cart-search-box')?.before(box)}
