@@ -28,11 +28,14 @@
     const home=$('homeAlerts');if(!home)return;
     let box=$('catOrdersAlert');if(!box){box=document.createElement('div');box.id='catOrdersAlert';home.insertAdjacentElement('afterend',box)}
     const n=pending().length;
-    box.innerHTML=n?'<div class="home-alert alert-stock"><div><strong>🛒 '+n+(n===1?' pedido nuevo':' pedidos nuevos')+' del catálogo</strong><span>'+e(pending().slice(0,3).map(o=>(o.who||'Cliente sin nombre')+' · '+m(o.total)).join(' · '))+'. Cárgalo en la app el día que lo entregues.</span></div><div class="home-alert-actions"><button class="primary" type="button" id="catOrdersOpen">Ver pedidos</button></div></div>':'';
+    box.innerHTML=n?'<div class="home-alert alert-stock"><div><strong>🛒 '+n+(n===1?' pedido nuevo':' pedidos nuevos')+' del catálogo</strong><span>'+e(pending().slice(0,3).map(o=>label(o)+' · '+m(o.total)).join(' · '))+'. Cárgalo en la app el día que lo entregues.</span></div><div class="home-alert-actions"><button class="primary" type="button" id="catOrdersOpen">Ver pedidos</button></div></div>':'';
     $('catOrdersOpen')?.addEventListener('click',open);
   }
+  // Cliente de la app con el mismo teléfono que el pedido (compara los últimos 8 dígitos).
+  function clientFor(o){const t=digits(o&&o.tel);if(t.length<8||typeof getClients!=='function')return null;return getClients().find(c=>c.active!==false&&digits(c.phone)===t)||null}
+  const label=o=>{const c=clientFor(o);return c?c.name+(o.who&&nrm(o.who)!==nrm(c.name)?' ('+o.who+')':''):(o.who||'Cliente sin nombre')};
   function orderHTML(o,canLoad){
-    return '<article class="cat-order'+(o.status!=='nuevo'?' done':'')+'"><div class="cat-order-head"><strong>'+e(o.who||'Cliente sin nombre')+'</strong><span>'+m(o.total)+'</span></div>'+
+    return '<article class="cat-order'+(o.status!=='nuevo'?' done':'')+'"><div class="cat-order-head"><strong>'+(clientFor(o)?'📇 ':'')+e(label(o))+'</strong><span>'+m(o.total)+'</span></div>'+
       '<small>'+(o.status==='nuevo'&&replacedBy(o)?'<b style="color:#b45309">↻ Reemplazado por el pedido #'+e(replacedBy(o).code||'')+' del mismo cliente</b><br>':'')+(!o.who&&!o.tel?'<b style="color:#dc2626">⚠ Llegó sin nombre ni teléfono: búscalo en tu WhatsApp por el código #'+e(o.code||'')+'</b><br>':'')+e(when(o.createdAt))+' · Pedido web #'+e(o.code||'')+(o.tel?' · 📞 '+e(o.tel):'')+(o.seller?' · para '+e(o.sellerName||'vendedor'):'')+(o.status==='cargado'?' · ✅ cargado '+e(when(o.loadedAt)):'')+'</small>'+
       '<ul>'+(o.lines||[]).map(l=>'<li>'+e(l.q)+' × '+e(l.name)+(l.flavor?' · '+e(l.flavor):'')+(l.box?' <b>(caja de '+e(l.units)+')</b>':'')+' — '+m(l.sub)+'</li>').join('')+'</ul>'+
       (o.msg?'<p class="muted">💬 '+e(o.msg)+'</p>':'')+
@@ -81,6 +84,8 @@
   async function loadIntoCart(o,clientId){
     if(typeof openClientCart!=='function')return;
     if(cart.length&&!confirm('Hay productos en el carrito abierto. ¿Reemplazarlos por este pedido?'))return;
+    // Si el cliente no tenía teléfono, se le guarda el del pedido: así los próximos pedidos llegan con su nombre.
+    try{const t=String(o.tel||'').replace(/\D/g,'');if(t.length>=8&&typeof getClients==='function'&&typeof writeArray==='function'){const cs=getClients(),c=cs.find(x=>String(x.id)===String(clientId));if(c&&!String(c.phone||'').replace(/\D/g,'')){c.phone=t.length===8?'569'+t:t.length===9?'56'+t:t;writeArray('zipperClientes',cs)}}}catch(_){}
     if(typeof showView==='function')showView('home');
     openClientCart(clientId);
     const items=[],missing=[];

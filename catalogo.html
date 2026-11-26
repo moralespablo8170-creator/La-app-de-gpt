@@ -39,6 +39,7 @@ main{padding:4px 12px;max-width:1100px;margin:0 auto}
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 @media(min-width:640px){.grid{grid-template-columns:repeat(3,1fr)}}
 @media(min-width:900px){.grid{grid-template-columns:repeat(4,1fr)}}
+.card.oferta{border:2px solid #dc2626;border-top-width:4px;box-shadow:0 4px 14px #dc262626}.oferta-tag{position:absolute;top:8px;right:8px;z-index:2;background:#dc2626;color:#fff;font-size:11px;font-weight:900;border-radius:999px;padding:3px 8px;box-shadow:0 2px 6px #0003}.card.oferta .promo{background:#dc2626;color:#fff;font-size:12px}
 .card{background:#fff;border:1px solid var(--line);border-top:3px solid var(--c);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;position:relative;transition:box-shadow .15s}
 .card.sel{box-shadow:0 0 0 2px var(--wa)}
 .ph{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;padding:6px;border-bottom:1px dashed var(--line)}
@@ -136,7 +137,7 @@ body.printmode .hero p{display:none}
 <div class="sheet" id="sheet"><div class="panel"><h3>Tu pedido <button id="close" type="button" aria-label="Cerrar">×</button></h3><div id="lines"></div>
 <div class="tot"><span>Total estimado</span><span id="stotal"></span></div><p class="note">Precios referenciales. Te confirmamos stock y total por WhatsApp.</p>
 <label>Tu nombre o negocio <b style="color:#dc2626">*</b><input id="who" required autocomplete="organization" placeholder="Ej: Almacén Don Pedro"></label>
-<label>Tu teléfono (opcional)<input id="tel" inputmode="tel" autocomplete="tel" placeholder="Ej: 9 1234 5678"></label>
+<label>Tu teléfono <b style="color:#dc2626">*</b><input id="tel" required inputmode="tel" autocomplete="tel" placeholder="Ej: 9 1234 5678"></label>
 <label>Comentario (opcional)<textarea id="msg" rows="2" placeholder="Ej: entregar el jueves"></textarea></label>
 <button class="send" id="send" type="button">Enviar pedido por WhatsApp</button><button class="clear" id="clear" type="button">Vaciar pedido</button></div></div>
 <script>
@@ -162,7 +163,10 @@ function setQty(k,q){q=Math.max(0,Math.min(999,Math.round(Number(q)||0)));if(q)c
 function stepHTML(k){return PRINT?'':'<div class="step" data-k="'+esc(k)+'"></div>'}
 function paintStep(el,k){const q=qtyOf(k);if(!q&&!el.closest('.flv')&&!el.closest('td')){el.className='';el.innerHTML='<button class="addbtn" style="width:100%" data-a="+">＋ Agregar</button>';return}el.className='step';el.innerHTML='<button data-a="-" aria-label="Quitar">−</button><input inputmode="numeric" value="'+q+'" aria-label="Cantidad"><button class="add" data-a="+" aria-label="Agregar">＋</button>'}
 function paintCard(card,base){const it=items.get(base);const any=Object.keys(cart).some(k=>baseOf(k)===base);card.classList.toggle('sel',any);const pr=card.querySelector('.pr:not(.boxpr) b');if(pr&&it){const q=qtyOf(base);pr.textContent=money(priceFor(it,q))}}
-function card(it,c){const flv=it.wide&&it.fmt.includes(':')?it.fmt.split(': ')[1].split(' · '):null;
+function isOfferItem(it){return !PRINT&&!NOPRICE&&(!!it.promo||!!(it.box&&Math.round(it.box.price/it.box.units)<it.price))}
+function card(it,c){return markOffer(cardBase(it,c),it)}
+function markOffer(h,it){if(!isOfferItem(it))return h;return h.replace('<article class="card','<article class="card oferta').replace(/(data-card="[^"]*">)/,'$1<span class="oferta-tag">⭐ OFERTA</span>')}
+function cardBase(it,c){const flv=it.wide&&it.fmt.includes(':')?it.fmt.split(': ')[1].split(' · '):null;
   if(PRINT&&flv)return '<article class="card wide" style="--c:'+c+'"><div class="ph"><img src="'+esc(it.img)+'" alt=""></div><div class="info"><h3>'+esc(it.name)+'</h3><p class="fmt">'+flv.length+' sabores</p><div class="tags">'+flv.map(f=>'<span>'+esc(f)+'</span>').join('')+'</div>'+(NOPRICE?'':'<div class="pr"><b>'+money(it.price)+'</b><span>por '+esc(it.per)+'</span></div>')+'</div></article>';
   const unit=it.units?'<span class="unit">'+money(it.price/it.units)+' por unidad</span>':'';
   const promo=it.promo?'<span class="promo">★ Desde '+it.promo.min+': '+money(it.promo.price)+' c/'+esc(it.per)+'</span>':'';
@@ -180,7 +184,7 @@ function searchScore(it,s,q){const n=norm(it.name);if(n.startsWith(q))return 0;i
 function unitsFromFmt(f){f=norm(f||'');const m=f.match(/(?:\bx|\bde|·)\s*(\d+)(?!\d|\s*(?:[.,]\d|g\b|gr|kg|cc|ml|lt?\b|litro|cm|mm|mt?\b|oz|mg|%|×|\*))/)||f.match(/(\d+)\s*(?:unidades|unidad|und|uds?\b|u\b)/);const u=m?Number(m[1]):0;return u>1&&u<=1000?u:0}
 function render(){
   const q=norm(filter.trim());const out=[];
-  const of=q?[]:offers();if(of.length)out.push('<section class="sec ofertas" id="sOf" style="--c:#dc2626"><h2>⭐ Ofertas<span>'+of.length+' producto'+(of.length>1?'s':'')+'</span></h2><div class="grid">'+of.map(it=>card(it,'#dc2626')).join('')+'</div></section>');
+  // La sección "⭐ Ofertas" se quitó (repetía productos y confundía): cada oferta se destaca en su propia sección.
   // Al buscar: un solo bloque "Resultados" ordenado por relevancia (primero los que se llaman así).
   if(q){const hits=[];let n=0;data.sections.forEach(s=>{if(s.table)return;s.items.forEach(it=>{if(it.hidden)return;const sc=searchScore(it,s,q);if(sc<9)hits.push({it,c:s.color,sc,n:n++})})});
     hits.sort((a,b)=>a.sc-b.sc||a.n-b.n);
@@ -210,10 +214,15 @@ function orderCode(){const a='ABCDEFGHJKMNPQRSTUVWXYZ23456789';let c='';for(let 
 function saveOrder(order){const ctl=new AbortController();const t=setTimeout(()=>ctl.abort(),2500);
   return fetch(ORDERS_URL,{method:'POST',keepalive:true,signal:ctl.signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({fields:{data:{stringValue:JSON.stringify(order)},createdAt:{stringValue:order.createdAt},status:{stringValue:'nuevo'},seller:{stringValue:SELLER_UID}}})}).catch(()=>null).finally(()=>clearTimeout(t))}
 $('send').onclick=async()=>{const l=lineList();if(!l.length)return;const who=$('who').value.trim(),tel=$('tel').value.trim();
-// El nombre es obligatorio: sin él no se sabe de quién es el pedido. El teléfono es opcional.
+// El nombre y el teléfono son obligatorios: sin ellos no se sabe de quién es el pedido.
   if(!who){const w0=$('who');w0.style.borderColor='#dc2626';w0.style.borderWidth='2px';w0.focus();w0.scrollIntoView({block:'center'});
     let w=$('needData');if(!w){w=document.createElement('p');w.id='needData';w.style.cssText='color:#dc2626;font-weight:700;margin:6px 0';$('send').insertAdjacentElement('beforebegin',w)}
     w.textContent='Escribe tu nombre o el de tu negocio para enviar el pedido.';return}
+  // El teléfono también es obligatorio: con él, el pedido llega con el nombre del cliente tal como está en la app.
+  if(String(tel).replace(/\D/g,'').length<8){const t0=$('tel');t0.style.borderColor='#dc2626';t0.style.borderWidth='2px';t0.focus();t0.scrollIntoView({block:'center'});
+    let w=$('needData');if(!w){w=document.createElement('p');w.id='needData';w.style.cssText='color:#dc2626;font-weight:700;margin:6px 0';$('send').insertAdjacentElement('beforebegin',w)}
+    w.textContent='Escribe tu número de teléfono para enviar el pedido.';return}
+  $('tel').style.borderColor='';
   $('needData')?.remove();$('who').style.borderColor='';
   store.set('zipperCatalogoNombre',who);store.set('zipperCatalogoTel',tel);
   const code=orderCode(),total=l.reduce((a,x)=>a+x.sub,0),m=$('msg').value.trim();
@@ -226,7 +235,7 @@ $('send').onclick=async()=>{const l=lineList();if(!l.length)return;const who=$('
   await saveOrder(order);
   b.disabled=false;b.textContent='Enviar pedido por WhatsApp';
   location.href='https://wa.me/'+data.whatsapp+'?text='+encodeURIComponent(txt.join('\n'))};
-function chips(){$('chips').innerHTML=(offers().length?'<button data-s="Of">⭐ Ofertas</button>':'')+data.sections.map((s,i)=>'<button data-s="'+i+'">'+esc(s.title)+'</button>').join('');$('chips').onclick=e=>{const b=e.target.closest('[data-s]');if(!b)return;filter='';$('q').value='';render();document.getElementById('s'+b.dataset.s)?.scrollIntoView({behavior:'smooth'})}}
+function chips(){$('chips').innerHTML=data.sections.map((s,i)=>'<button data-s="'+i+'">'+esc(s.title)+'</button>').join('');$('chips').onclick=e=>{const b=e.target.closest('[data-s]');if(!b)return;filter='';$('q').value='';render();document.getElementById('s'+b.dataset.s)?.scrollIntoView({behavior:'smooth'})}}
 // Precios publicados desde la app del dueño (si existen) reemplazan los del archivo base.
 function photoURL(k){return FIRESTORE.replace('/publico/catalogo?','/publico/foto-'+String(k).toLowerCase().replace(/[^a-z0-9-]/g,'-').slice(0,80)+'?')}
 async function customPhotos(){const list=[];data.sections.forEach(s=>s.items.forEach(it=>{if(it.custom&&!it.hidden)list.push(it)}));
