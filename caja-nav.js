@@ -14,7 +14,7 @@
   function css(){const s=document.createElement('style');s.textContent=
     '.caja-nav{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}'+
     '.caja-nav button{flex:1 1 30%;min-height:44px;border:0;border-radius:12px;background:#111827;color:#fff;font-weight:800;font-size:13px;padding:8px 6px}'+
-    '.caja-top{float:right;border:0;border-radius:999px;background:#e5e7eb;color:#111827;font-weight:800;font-size:12px;padding:6px 11px;margin:0 0 6px 8px;min-height:32px}'+
+    '.caja-top{display:block;width:max-content;border:0;border-radius:999px;background:#e5e7eb;color:#111827;font-weight:800;font-size:12px;padding:6px 12px;margin:0 0 10px auto;min-height:32px}'+
     '#cashView .caja-target{scroll-margin-top:10px}';
     document.head.appendChild(s)}
   function go(el){if(el)el.scrollIntoView({behavior:'smooth',block:'start'})}
@@ -25,9 +25,9 @@
     LINKS.forEach(l=>{const b=document.createElement('button');b.type='button';b.textContent=l.label;b.onclick=()=>go(l.find(v));nav.appendChild(b)});
     const banner=v.querySelector('.page-banner');if(banner)banner.after(nav);else v.prepend(nav);
     // Botón "Arriba" en cada sección (menos la primera, que ya está arriba)
-    LINKS.slice(1).forEach(l=>{const el=l.find(v);if(!el||el.querySelector(':scope > .caja-top'))return;el.classList.add('caja-target');
+    LINKS.slice(1).forEach(l=>{const el=l.find(v);if(!el||el.querySelector(':scope > .caja-top')||el.previousElementSibling?.classList.contains('caja-top'))return;el.classList.add('caja-target');
       const b=document.createElement('button');b.type='button';b.className='caja-top';b.textContent='⬆ Arriba';b.onclick=()=>go(nav);
-      if(/^H[23]$/.test(el.tagName))el.prepend(b);else el.prepend(b)});
+      if(/^H[1-6]$/.test(el.tagName))el.before(b);else el.prepend(b)});
     LINKS[0].find(v)?.classList.add('caja-target');
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);else setup();
