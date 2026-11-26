@@ -1122,8 +1122,9 @@ function applyReceiptFormat(){const f='80';$('receiptFormat').value=f;localStora
 // Si se arma recién al tocar, a veces el teléfono vence el permiso de compartir y caía a la impresión normal (hoja carta).
 let receiptFileFor=null,receiptFilePromise=null;
 function prepareReceiptFile(){if(!preparedReceipt)return null;if(receiptFileFor===preparedReceipt&&receiptFilePromise)return receiptFilePromise;receiptFileFor=preparedReceipt;
- receiptFilePromise=(async()=>{let file=null;try{file=await createReceiptPdfFile(true)}catch(e){console.warn('Ticket de imagen no disponible, se usa el PDF de texto',e)}
-  if(!file||(navigator.canShare&&!navigator.canShare({files:[file]})))file=await createReceiptPdfFile();return file})();
+ // Se envía el PDF de texto (el que funcionaba bien hasta el 20-11): sale nítido en la térmica y se arma al instante.
+ // El PDF con el ticket como imagen (createReceiptPdfFile(true)) quedó sin uso: salía más difuso y demoraba el envío.
+ receiptFilePromise=createReceiptPdfFile();
  receiptFilePromise.catch(()=>{receiptFilePromise=null;receiptFileFor=null});return receiptFilePromise}
 function openReceiptPreview(){if(!preparedReceipt)return;if(typeof File!=='undefined'&&navigator.share)prepareReceiptFile();$('receiptFormat').value=receiptFormat();applyReceiptFormat();$('receiptPrintModal').classList.remove('hidden')}
 function closeReceiptPreview(){$('receiptPrintModal').classList.add('hidden')}
@@ -1241,13 +1242,17 @@ async function createReceiptPdfFile(asImage){
   return new File([bytes],'Zipper-ticket-'+String(sale.folio||'venta').replace(/[^a-zA-Z0-9_-]/g,'')+'.pdf',{type:'application/pdf'});
  }
 }
+let receiptSharing=false;
 async function sendReceiptToSystem(){
  if(!preparedReceipt){alert('Primero selecciona un comprobante.');return}
+ // Un segundo toque mientras se abre Fun Print hacía fallar el envío: se ignora hasta que termine el primero.
+ if(receiptSharing)return;
  if(typeof File!=='undefined'&&navigator.share){
   try{
    const file=await prepareReceiptFile();
    if(!file)throw new Error('sin ticket');
-   await navigator.share({files:[file]});
+   receiptSharing=true;
+   try{await navigator.share({files:[file]})}finally{receiptSharing=false}
    closeReceiptPreview();
    return;
   }catch(error){
