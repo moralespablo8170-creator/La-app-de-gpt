@@ -156,7 +156,8 @@ function renderSale(){
  const c=selectedClient,r=routeFor(c,'A')||routeFor(c,'B');
  $('cartClientName').textContent=(editingSale?'✏️ Modificando #'+(editingSale.folio||'')+' · ':'')+c.name;$('cartClientMeta').textContent=(c.address||'Sin dirección')+(r?' · '+(routeFor(c,'A')?'Sem A':'Sem B')+' · '+r.day:'');
  // Lo que suele llevar
- const sug=suggestedFor(c),box=$('cartSuggested');box.classList.toggle('hide',!sug.length);
+ // "Lo que suele llevar" desactivado a pedido (quitaba pantalla). Para volver a mostrarlo, quitar el [] y usar suggestedFor(c).
+ const sug=[],box=$('cartSuggested');box.classList.toggle('hide',!sug.length);
  box.innerHTML=sug.length?'<h3>🔁 Lo que suele llevar</h3>'+sug.map((x,i)=>{const inCart=cart.some(k=>String(k.productId)===String(x.p.id)),st=availableStock(x.p);return '<div class="sug-row"><div><strong>'+safeText(x.p.name)+'</strong><small>Lleva ~'+x.qty+' · en '+x.times+' de '+x.of+' compras · stock '+Number(x.p.stock||0)+'</small></div>'+(inCart?'<span class="badge ok">✓ En carrito</span>':st<=0?'<span class="badge warn">Sin stock</span>':'<button type="button" class="sug-add" data-sug="'+i+'">+ '+Math.min(x.qty,st)+'</button>')+'</div>'}).join('')+'<button type="button" id="sugAll" class="full" style="margin-top:8px;background:#7c3aed">＋ Agregar todo lo sugerido</button>':'';
  box.querySelectorAll('[data-sug]').forEach(b=>b.onclick=()=>{const x=sug[Number(b.dataset.sug)];addToCart(x.p,Math.min(x.qty,availableStock(x.p)))});
  if($('sugAll'))$('sugAll').onclick=()=>{let n=0;sug.forEach(x=>{if(cart.some(k=>String(k.productId)===String(x.p.id)))return;const q=Math.min(x.qty,availableStock(x.p));if(q>0&&addToCart(x.p,q,true))n++});renderSale();status(n?'➕ '+n+' productos sugeridos agregados. Revisa la bandeja.':'Nada nuevo para agregar.','ok')};
@@ -576,7 +577,7 @@ function wire(){
  $('sellerLoginButton').onclick=signIn;$('sellerForgot').onclick=resetPassword;$('sellerPassword').onkeydown=e=>{if(e.key==='Enter')signIn()};
  $('sellerLogout').onclick=logout;$('sellerStart').onclick=startSession;$('sellerClose').onclick=closeSession;
  $('otherRoute').onclick=()=>{changingRoute=!changingRoute;render();if(changingRoute)$('routeSetup').scrollIntoView({behavior:'smooth',block:'start'})};
- $('visitedButton').onclick=()=>{visitedMode=!visitedMode;renderClients()};
+ $('visitedButton').onclick=()=>{visitedMode=true;renderClients()};
  $('sellerWeek').onchange=()=>{renderRouteDays();render()};$('sellerDay').onchange=render;
  $('sellerClients').onclick=e=>{const b=e.target.closest('button');if(!b||b.disabled)return;const d=b.dataset;if(d.modsale)return startEdit(d.modsale);if(d.annul)return annulSale(d.annul);if(d.review)return showClientSales(d.review,true);if(d.history)return showClientSales(d.history,false);if(d.resend){const x=clientSalesToday(d.resend).sort((a,b)=>String(b.occurredAt||'').localeCompare(String(a.occurredAt||'')))[0];if(x)sendWhatsApp(x);return}if(d.reopen)return openOrder(d.reopen);if(d.visit)markVisited(d.visit);else if(d.sale)openOrder(d.sale);else if(d.up)moveClient(d.up,-1);else if(d.down)moveClient(d.down,1);else if(d.move)changeClientDay(d.move)};
  $('visitedSales').onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.modsale)return startEdit(b.dataset.modsale);if(b.dataset.annul)return annulSale(b.dataset.annul);if(b.dataset.closesales){$('visitedSales').classList.add('hide');return}if(b.dataset.wa){const x=[...queueRead(),...sales].find(y=>String(y.id)===String(b.dataset.wa));if(x)sendWhatsApp(x)}};
