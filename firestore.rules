@@ -341,9 +341,10 @@ service cloud.firestore {
         && request.resource.data.data.size() < 20000
         && request.resource.data.createdAt is string
         && request.resource.data.createdAt.size() < 40
+        && request.resource.data.createdAt.matches('20[0-9]{2}-[0-9]{2}-[0-9]{2}T[0-9:.]+Z')
         && request.resource.data.status == 'nuevo'
         && request.resource.data.seller is string
-        && request.resource.data.seller.size() < 64;
+        && request.resource.data.seller.matches('[A-Za-z0-9]{0,63}');
       allow read: if isOwner('zipper-a12f1')
         || (isSeller('zipper-a12f1') && resource.data.seller == request.auth.uid);
       allow update: if (isOwner('zipper-a12f1')

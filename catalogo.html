@@ -2,6 +2,8 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.googleapis.com https://www.gstatic.com https://nominatim.openstreetmap.org https://*.firebaseio.com wss://*.firebaseio.com; frame-src 'self' https://zipper-a12f1.firebaseapp.com; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<script src="./seguridad.js?v=20261126-1"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Catálogo · Distribuidora Zipper</title>
 <meta name="description" content="Catálogo de Distribuidora Zipper: marca tus productos y envía tu pedido por WhatsApp.">
@@ -137,7 +139,7 @@ body.printmode .hero p{display:none}
 <div class="sheet" id="sheet"><div class="panel"><h3>Tu pedido <button id="close" type="button" aria-label="Cerrar">×</button></h3><div id="lines"></div>
 <div class="tot"><span>Total estimado</span><span id="stotal"></span></div><p class="note">Precios referenciales. Te confirmamos stock y total por WhatsApp.</p>
 <label>Tu nombre o negocio <b style="color:#dc2626">*</b><input id="who" required autocomplete="organization" placeholder="Ej: Almacén Don Pedro"></label>
-<label>Tu teléfono <b style="color:#dc2626">*</b><input id="tel" required inputmode="tel" autocomplete="tel" placeholder="Ej: 9 1234 5678"></label>
+<input id="web" name="zz_campo_vacio" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0"><label>Tu teléfono <b style="color:#dc2626">*</b><input id="tel" required inputmode="tel" autocomplete="tel" placeholder="Ej: 9 1234 5678"></label>
 <label>Comentario (opcional)<textarea id="msg" rows="2" placeholder="Ej: entregar el jueves"></textarea></label>
 <button class="send" id="send" type="button">Enviar pedido por WhatsApp</button><button class="clear" id="clear" type="button">Vaciar pedido</button></div></div>
 <script>
@@ -224,6 +226,11 @@ $('send').onclick=async()=>{const l=lineList();if(!l.length)return;const who=$('
     w.textContent='Escribe tu número de teléfono para enviar el pedido.';return}
   $('tel').style.borderColor='';
   $('needData')?.remove();$('who').style.borderColor='';
+  // Freno anti-abuso: un programa automático llena el campo oculto "web"; y no se aceptan más de 3 envíos en 10 minutos desde el mismo teléfono.
+  if($('web').value)return;
+  {const now=Date.now(),sent=(store.get('zipperCatalogoEnvios')||'').split(',').map(Number).filter(t=>now-t<600000);
+   if(sent.length>=3){alert('Ya enviaste varios pedidos seguidos. Espera unos minutos o escríbenos directo por WhatsApp.');return}
+   sent.push(now);store.set('zipperCatalogoEnvios',sent.join(','))}
   store.set('zipperCatalogoNombre',who);store.set('zipperCatalogoTel',tel);
   const code=orderCode(),total=l.reduce((a,x)=>a+x.sub,0),m=$('msg').value.trim();
   const txt=[(SELLER_WA?'Hola'+(SELLER_NAME?' '+SELLER_NAME:'')+' (Distribuidora Zipper) 👋':'Hola *Distribuidora Zipper* 👋')+', quiero hacer este pedido:',''].concat(l.map(x=>'• '+x.q+' × '+x.it.name+(x.flavor?' · '+x.flavor:'')+' ('+(x.box?'*caja de '+x.it.box.units+'*':x.per)+') — '+money(x.sub)),['','*Total estimado: '+money(total)+'*']);
